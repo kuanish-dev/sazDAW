@@ -1,8 +1,9 @@
 # Contributing
 
 Thank you for wanting to help. This file explains the code rules and the workflow for people. The strict list of
-rules is in [CLAUDE.md](CLAUDE.md) (it is also the instruction file for AI assistants); the design of layers and areas
-is in [ARCHITECTURE.md](ARCHITECTURE.md). The project language is English: code, comments, documentation and commit
+rules is in [CLAUDE.md](CLAUDE.md) (it is also the instruction file for AI assistants); the map of layers and areas
+is [ARCHITECTURE.md](ARCHITECTURE.md), and each crate and frontend folder describes itself in its own `CLAUDE.md`
+(features that cross layers — in `docs/features/`). The project language is English: code, comments, documentation and commit
 messages. The app interface is bilingual: English (default) and Russian — every new interface text needs both.
 
 The project is in active development. **We don't maintain backward compatibility yet**: the project format, APIs and
@@ -60,7 +61,7 @@ of the log itself doesn't crash the app. Entries are written with `LogEntry::war
 Contract failures are registered error codes, not free text: `daw_contracts::ContractError` built from
 `daw_contracts::codes` (for example `codes::tracks::NOT_FOUND.with("id", id)`). A new failure gets a new line in its
 area module in `crates/daw-contracts/src/codes/` and a Russian translation in `app/src/i18n/errors/ru.ts`. Details —
-the "Errors as codes" section of ARCHITECTURE.md.
+"Errors as codes" in [docs/features/errors.md](docs/features/errors.md).
 
 ## Forbidden
 
@@ -95,23 +96,26 @@ and `BlockTiming::frame_at`, contract failure — a code from `daw_contracts::co
 3. **Implementation.**
 4. **Wiring** in `daw-bootstrap` / `composition.ts`.
 5. **UI** via actions (`session.actions.*`).
-6. **Update [ARCHITECTURE.md](ARCHITECTURE.md):** where it lives, which contract it relies on, how to add a similar one.
+6. **Update the docs:** the `CLAUDE.md` of the area (or `docs/features/<feature>.md` for a feature that crosses layers):
+   where it lives, which contract it relies on, how to add a similar one. [ARCHITECTURE.md](ARCHITECTURE.md), the map, gets a
+   line only for a new crate, area, feature doc or recipe.
 7. **Check the place again:** the code lives where people will look for it.
 
 ### Common tasks
 
-Step-by-step instructions are already in ARCHITECTURE.md — we don't duplicate them here:
+Step-by-step recipes are in `.claude/skills/` (Claude Code uses them as skills; they are plain Markdown for people
+too) — we don't duplicate them here:
 
 - **New operation / RPC method** (contract → implementation → `daw-rpc` → frontend API → mock → action → component) —
-  the section "How to add a new operation (end to end)". A method description and a parameter schema are mandatory:
+  [add-operation](.claude/skills/add-operation/SKILL.md). A method description and a parameter schema are mandatory:
   the MCP tool for AI is built from them.
-- **New error** — the section "Errors as codes".
-- **New effect** — the section "Built-in effects (`daw-effects`)", item "How to add a similar effect" (a module with
-  parameters, a line in the factories, the same kind in the frontend mock catalog).
-- **New instrument** — an `InstrumentFactory` with a parameter table following `daw-drums` / `daw-sampler` (the
-  "Rules" section and the crate table); the engine and the service have no branching on the kind name.
-- **MIDI effect** — the section "Track MIDI effects", item "How to add a similar one".
-- **Another plugin format** — the section "VST3 (`daw-vst3`)", item "How to add a similar one".
+- **New error** — [add-error-code](.claude/skills/add-error-code/SKILL.md).
+- **New effect** — [add-effect](.claude/skills/add-effect/SKILL.md) (a module with parameters, a line in the factories,
+  the same kind in the frontend mock catalog).
+- **New instrument** — [add-instrument](.claude/skills/add-instrument/SKILL.md); the engine and the service have no
+  branching on the kind name.
+- **MIDI effect** — "How to add a similar one" in [crates/daw-note-effects/CLAUDE.md](crates/daw-note-effects/CLAUDE.md).
+- **Another plugin format** — "How to add a similar one" in [crates/daw-vst3/CLAUDE.md](crates/daw-vst3/CLAUDE.md).
 
 ## Tests
 
@@ -162,8 +166,8 @@ The script reads `cargo metadata` of the root workspace and `app/node_modules`, 
 first.
 
 If `--check` reports an unknown license, don't silently add it to the allowed list: describe in the PR what the
-license is and whether the package may be distributed together with SazDAW. More in the "Licenses" section of
-ARCHITECTURE.md.
+license is and whether the package may be distributed together with SazDAW. More in
+[docs/licenses.md](docs/licenses.md).
 
 By submitting changes you agree that they are distributed under the repository's license, GPL-3.0-or-later. A new
 dependency must be compatible with it: permissive licenses (MIT, Apache-2.0, BSD…), MPL-2.0 and (L)GPL-3.0 are.
@@ -189,6 +193,7 @@ Code simplification by the rules: removed extra abstractions, duplicates and rep
   was tested.
 - All checks above pass; new code is covered by contract tests.
 - If a contract changed — say so explicitly and why.
-- `ARCHITECTURE.md` is updated if a feature, role or folder appeared.
+- The doc of the changed area or feature is updated; the map `ARCHITECTURE.md` if a crate, area, feature doc or recipe
+  appeared.
 - If dependencies were added — `THIRD_PARTY_NOTICES.md` is updated.
 - Interface changes — with a screenshot where possible.

@@ -17,5 +17,5 @@
 - [ ] there are contract tests
 - [ ] contract changed — stated above and explained
 - [ ] new errors are registered codes with a Russian translation in `app/src/i18n/errors/ru.ts`
-- [ ] `ARCHITECTURE.md` updated (if a feature, role or folder appeared)
+- [ ] the doc of the changed area or feature updated (its folder's `CLAUDE.md` or `docs/features/`; the map `ARCHITECTURE.md` if a crate, area, feature doc or recipe appeared)
 - [ ] dependencies changed — `python3 scripts/third_party_notices.py --check` passes
