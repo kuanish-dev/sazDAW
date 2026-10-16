@@ -114,6 +114,14 @@ pub struct GainReduction {
     pub db: f32,
 }
 
+/// The dynamic gain of each band of an effect node since the previous read (`Effect::band_gains_db`), in dB, lowest
+/// band first: per band the value farthest from 0 dB, so a short cut or boost between two reads is not lost.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BandGains {
+    pub node: NodeId,
+    pub db: Vec<f32>,
+}
+
 /// What the audio engine dropped to avoid blocking the audio thread. Counters only grow from engine creation; the
 /// control side logs every increase.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -171,6 +179,9 @@ pub trait EngineStats: Send + Sync {
     /// Gain reduction of the effect nodes that report it (compressor, gate, limiter) and were processed since the
     /// previous read (a bypassed effect is not); reading resets it.
     fn gain_reductions(&self) -> Vec<GainReduction>;
+    /// Band gains of the effect nodes that report them (multiband compressor, dynamic EQ) and were processed since the
+    /// previous read (a bypassed effect is not); reading resets them.
+    fn band_gains(&self) -> Vec<BandGains>;
     /// Position of the preview voice in file frames; `None` when it is silent.
     fn preview_position(&self) -> Option<usize>;
     /// Losses since engine creation (see `EngineLosses`).

@@ -107,6 +107,9 @@ impl EngineStats for FakeStats {
     fn gain_reductions(&self) -> Vec<daw_contracts::GainReduction> {
         Vec::new()
     }
+    fn band_gains(&self) -> Vec<daw_contracts::BandGains> {
+        Vec::new()
+    }
     fn preview_position(&self) -> Option<usize> {
         None
     }

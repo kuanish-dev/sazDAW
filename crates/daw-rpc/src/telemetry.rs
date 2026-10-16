@@ -1,4 +1,5 @@
-//! Frequent data for the interface: position, meters, effect gain reduction, load, latency compensation, the mono check.
+//! Frequent data for the interface: position, meters, effect gain reduction and band gains, load, latency compensation,
+//! the mono check.
 
 use daw_contracts::{Controls, TempoMap, TransportState};
 use serde_json::{Value, json};
@@ -28,6 +29,7 @@ impl Telemetry {
         let meters: Vec<Value> =
             controls.stats.meters().into_iter().map(|m| json!({ "node": m.node, "left": m.peak_left, "right": m.peak_right })).collect();
         let reductions: Vec<Value> = controls.stats.gain_reductions().into_iter().map(|r| json!({ "node": r.node, "db": r.db })).collect();
+        let bands: Vec<Value> = controls.stats.band_gains().into_iter().map(|b| json!({ "node": b.node, "db": b.db })).collect();
         let state = controls.transport.state();
         let map = controls.tempo.tempo_map();
         let latency = controls.stats.latency().seconds();
@@ -54,6 +56,7 @@ impl Telemetry {
             "record": controls.record.status(),
             "meters": meters,
             "reductions": reductions,
+            "bands": bands,
         });
         Poll { tick, project_revision: changed.then_some(revision) }
     }

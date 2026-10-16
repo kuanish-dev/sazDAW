@@ -6,7 +6,7 @@ import { playheadAt, rebase, type PlayheadBase } from "../domain/playhead";
 
 const EMPTY_TICK: Tick = {
   state: "stopped", positionTicks: 0, cue: null, tempo: 120, signature: { numerator: 4, denominator: 4 }, wrap: null,
-  songLoop: true, metronome: false, mono: false, automationWrite: "off", cpu: 0, latencyMs: 0, meters: [], reductions: [],
+  songLoop: true, metronome: false, mono: false, automationWrite: "off", cpu: 0, latencyMs: 0, meters: [], reductions: [], bands: [],
   record: { armed: false, capturing: false, takeNotes: 0, quantizeTicks: 0 },
   preview: null,
 };

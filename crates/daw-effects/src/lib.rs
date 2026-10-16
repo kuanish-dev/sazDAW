@@ -4,12 +4,15 @@
 mod biquad;
 mod chorus;
 mod compressor;
+mod crossover;
 mod delay;
 mod distortion;
+mod dynamics;
 mod eq;
 mod filter;
 mod gate;
 mod limiter;
+mod multiband;
 mod reverb;
 mod saturator;
 mod smooth;
@@ -19,7 +22,7 @@ mod testing;
 
 use std::marker::PhantomData;
 
-use daw_contracts::{ContractError, Effect, EffectFactory, L10n, ParamInfo, Params, PluginState, StreamConfig};
+use daw_contracts::{ContractError, Effect, EffectFactory, L10n, ParamInfo, ParamKind, Params, PluginState, StreamConfig};
 
 /// Description of an effect kind: name, label, parameters and constructor.
 /// The factory is built from it, so a new effect is one module and one line.
@@ -31,6 +34,27 @@ pub(crate) trait EffectKind: Effect + Sized + 'static {
     /// The effect for `config` with any initial values: `build` applies the defaults from `PARAMS` through
     /// `set_param`, so they are written only in the table.
     fn new(config: StreamConfig) -> Self;
+
+    /// Starts what the effect needs besides its fields, on the control side, after `build` (the factory calls it):
+    /// the linear-phase EQ's filter designer thread. Nothing by default.
+    fn start(&mut self) -> Result<(), ContractError> {
+        Ok(())
+    }
+}
+
+/// A number param of a table (`PARAMS`): the newer effects write their tables with these three helpers.
+pub(crate) const fn number(name: &'static str, label: L10n, min: f32, max: f32, default: f32) -> ParamInfo {
+    ParamInfo { name, label, min, max, default, kind: ParamKind::Number, choices: &[] }
+}
+
+/// An on/off param, off by default.
+pub(crate) const fn switch(name: &'static str, label: L10n) -> ParamInfo {
+    ParamInfo { name, label, min: 0.0, max: 1.0, default: 0.0, kind: ParamKind::Switch, choices: &[] }
+}
+
+/// A choice param: the value is the index of one of `choices`.
+pub(crate) const fn choice(name: &'static str, label: L10n, choices: &'static [L10n], default: f32) -> ParamInfo {
+    ParamInfo { name, label, min: 0.0, max: (choices.len() - 1) as f32, default, kind: ParamKind::Choice, choices }
 }
 
 /// The effect with the defaults from its table, `params` on top. Then a reset: smoothed parameters jump straight to
@@ -92,7 +116,9 @@ impl<E: EffectKind> EffectFactory for Factory<E> {
 
     // A built-in effect has no state of its own: everything is in the parameters.
     fn create(&self, params: &Params, _state: Option<&PluginState>) -> Result<Box<dyn Effect>, ContractError> {
-        Ok(Box::new(build::<E>(params.iter().map(|(name, value)| (name.as_str(), *value)))))
+        let mut effect = build::<E>(params.iter().map(|(name, value)| (name.as_str(), *value)));
+        effect.start()?;
+        Ok(Box::new(effect))
     }
 }
 
@@ -113,6 +139,7 @@ pub fn factories() -> Vec<Box<dyn EffectFactory>> {
         factory::<filter::Filter>(),
         factory::<gate::Gate>(),
         factory::<saturator::Saturator>(),
+        factory::<multiband::Multiband>(),
     ]
 }
 
@@ -136,18 +163,9 @@ mod tests {
     }
 
     #[test]
-    fn effects_ignore_unknown_and_non_finite_params() {
+    fn every_effect_honours_the_effect_contract() {
         for factory in factories() {
-            let mut effect = factory.create(&Params::new(), None).unwrap();
-            effect.prepare(StreamConfig { sample_rate: 44_100, channels: 2 });
-            effect.set_param("no_such_param", 1.0);
-            for p in factory.describe() {
-                effect.set_param(p.name, f32::NAN);
-                effect.set_param(p.name, f32::INFINITY);
-            }
-            let mut buffer = vec![0.5f32; 512];
-            effect.process(&mut buffer, None);
-            assert!(buffer.iter().all(|v| v.is_finite()), "{}", factory.kind());
+            crate::testing::assert_honours_contract(factory.as_ref());
         }
     }
 }

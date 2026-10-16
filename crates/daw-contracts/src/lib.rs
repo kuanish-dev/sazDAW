@@ -74,11 +74,11 @@ pub use chord_part::{
 pub use clip_processing::{ClipProcessing, DEFAULT_NORMALIZE_PEAK_DB, MIN_NORMALIZE_PEAK_DB};
 pub use clips::{ClipControl, ClipEdit, FadeShape, MAX_CLIP_GAIN, MAX_CLIP_TICK, MAX_CLIPS, NewNoteClip};
 pub use effect::{
-    Effect, EffectCatalog, EffectFactory, EffectGroups, InstalledPlugin, PluginCacheStore, PluginScanner, PluginType, ScanFailure,
-    ScanReport,
+    Effect, EffectCatalog, EffectFactory, EffectGroups, InstalledPlugin, MAX_EFFECT_BANDS, PluginCacheStore, PluginScanner, PluginType,
+    ScanFailure, ScanReport,
 };
 pub use engine::{
-    DspCommand, DspSink, EngineFactory, EngineInstance, EngineLatency, EngineLosses, EngineSnapshot, EngineStats, GainReduction,
+    BandGains, DspCommand, DspSink, EngineFactory, EngineInstance, EngineLatency, EngineLosses, EngineSnapshot, EngineStats, GainReduction,
     InputMonitor, LiveMessage, LiveNoteSink, MASTER_WINDOW_FRAMES, MAX_WATCHED_NODES, MasterWindow, Meter, MonitorStatus,
     NODE_WINDOW_FRAMES, NodeCursor, NodeScope, NodeWindow, RecordSource, RecordedEvent, SnapshotSink, TrackInput,
 };

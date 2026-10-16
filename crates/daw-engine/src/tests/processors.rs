@@ -1,5 +1,7 @@
 //! Effects after buses and on the master: processing order by connections, solo through a bus effect, meters in the chain.
 
+use daw_contracts::BandGains;
+
 use super::*;
 
 /// A bus with volume `volume` and no outputs: the test decides where it goes.
@@ -127,4 +129,35 @@ fn effects_report_gain_reduction_and_reading_resets_it() {
     assert_eq!(reductions.len(), 1, "only a processed effect that reports it: {reductions:?}");
     assert_eq!((reductions[0].node, reductions[0].db), (comp, 6.0));
     assert!(rig.link.gain_reductions().is_empty(), "reading resets the reports");
+}
+
+/// An effect with two bands: one cut by 3 dB, one boosted by 2 dB.
+struct TwoBands;
+
+impl Effect for TwoBands {
+    fn prepare(&mut self, _: StreamConfig) {}
+    fn set_param(&mut self, _: &str, _: f32) {}
+    fn reset(&mut self) {}
+    fn process(&mut self, _: &mut [f32], _: Option<&[f32]>) {}
+    fn band_gains_db(&self) -> &[f32] {
+        &[-3.0, 2.0]
+    }
+}
+
+#[test]
+fn effects_report_band_gains_and_reading_resets_them() {
+    let mut rig = Rig::new();
+    let bands = rig.add_fx(false, Box::new(TwoBands));
+    let plain = rig.add_fx(false, Box::new(Halve));
+    let bypassed = rig.add_fx(true, Box::new(TwoBands));
+    rig.connect(bands, plain, 1.0, false);
+    rig.connect(plain, bypassed, 1.0, false);
+    rig.connect(bypassed, MASTER, 1.0, false);
+    rig.add_track(10, bands);
+    rig.publish();
+    rig.render(2_000);
+
+    let gains = rig.link.band_gains();
+    assert_eq!(gains, vec![BandGains { node: bands, db: vec![-3.0, 2.0] }], "only a processed effect with bands");
+    assert!(rig.link.band_gains().is_empty(), "reading resets the reports");
 }

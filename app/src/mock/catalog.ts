@@ -6,10 +6,12 @@ import { type ErrorCode, fail } from "./errors";
 import { t } from "../i18n";
 
 const SWITCHES = new Set(["sidechain", "ping_pong", "loop", "one_shot", "reverse"]);
+/** Per-band switches of the band-split effects (`band2_solo`): named by band, so matched by their ending. */
+const BAND_SWITCHES = /_(solo|bypass)$/;
 
 const p = (name: string, label: string, min: number, max: number, def: number): ParamInfo => ({
   name, label, min, max, default: def,
-  kind: name === "sample" ? "sample" : SWITCHES.has(name) ? "switch" : "number",
+  kind: name === "sample" ? "sample" : SWITCHES.has(name) || BAND_SWITCHES.test(name) ? "switch" : "number",
 });
 
 /** A choice param: the value is the option index. */
@@ -129,6 +131,22 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
         params: [
           p("drive", q.driveDb, 0, 36, 6), choice("type", q.type, choices.saturatorType, 0),
           p("output", q.outputDb, -24, 6, 0), p("mix", q.mix, 0, 1, 1),
+        ],
+      },
+      {
+        kind: "multiband", label: k.multiband,
+        params: [
+          p("split1", q.splitHz(1), 20, 2000, 120), p("split2", q.splitHz(2), 100, 8000, 1000), p("split3", q.splitHz(3), 500, 18000, 6000),
+          choice("bands", q.bands, ["3", "4"], 1),
+          ...([[20, 200], [10, 150], [5, 100], [3, 80]] as const).flatMap(([attack, release], i) => {
+            const n = i + 1;
+            return [
+              p(`band${n}_threshold`, q.bandThresholdDb(n), -60, 0, -20), p(`band${n}_ratio`, q.bandRatio(n), 1, 20, 3),
+              p(`band${n}_attack`, q.bandAttackMs(n), 0.1, 100, attack), p(`band${n}_release`, q.bandReleaseMs(n), 10, 1000, release),
+              p(`band${n}_gain`, q.bandGainDb(n), -12, 12, 0), p(`band${n}_solo`, q.bandSolo(n), 0, 1, 0), p(`band${n}_bypass`, q.bandBypass(n), 0, 1, 0),
+            ];
+          }),
+          p("output", q.outputDb, -24, 12, 0),
         ],
       },
       ...plugins.effects,

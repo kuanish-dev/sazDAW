@@ -33,7 +33,7 @@ import { tempoHandlers } from "./handlers/tempo";
 import { tracksHandlers } from "./handlers/tracks";
 import { transportHandlers } from "./handlers/transport";
 import type { HandlerSet } from "./handlers/types";
-import { mockMeters, mockReductions } from "./meters";
+import { mockBandGains, mockMeters, mockReductions } from "./meters";
 import { wrapRegion } from "./songLoop";
 import { capturing } from "./take";
 import { MockWorld } from "./world";
@@ -119,6 +119,7 @@ export class MockRpc implements RpcClient {
       wrap, songLoop: w.songLoop, metronome: w.metronome, mono: w.mono, automationWrite: w.automationWrite, cpu: CPU_BASE + CPU_SWING * Math.sin(now / CPU_PERIOD_MS), latencyMs: 0,
       meters: mockMeters(w, now),
       reductions: mockReductions(w, now),
+      bands: mockBandGains(w, now),
       record: { armed: w.armed, capturing: capturing(w), takeNotes: w.takeNotes, quantizeTicks: w.recordQuantize },
       preview: w.previewPosition(),
     };

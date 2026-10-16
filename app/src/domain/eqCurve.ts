@@ -1,7 +1,8 @@
 // EQ graph: the frequency response of the built-in EQ (`crates/daw-effects/src/eq.rs`) on a log-frequency axis and what
-// dragging its band handles changes. The filters MIRROR `crates/daw-effects/src/biquad.rs` (RBJ Audio EQ Cookbook) and
-// the band rules of `eq.rs` (a cut at its extreme frequency is off): a change there must be repeated here.
+// dragging its band handles changes. The filters are the biquad mirror (`biquad.ts`); the band rules MIRROR `eq.rs` (a
+// cut at its extreme frequency is off): a change there must be repeated here.
 import type { ParamInfo, Params } from "../api/types";
+import { BUTTERWORTH_Q, type Coefficients, PASS, magnitudeDb, pass, peaking, shelf } from "./biquad";
 import type { ParamUpdate } from "./catalog";
 import { fractionToFreq, freqX } from "./frequencyAxis";
 import { clamp } from "./math";
@@ -9,66 +10,6 @@ import type { PlotView } from "./plot";
 
 /** The vertical range of the graph, ± dB (the gain range of the bands). */
 export const EQ_RANGE_DB = 18;
-/** Sample rate for drawing: the response near the top of the band differs slightly at other rates. */
-const DRAW_RATE = 48_000;
-/** Butterworth Q of the 12 dB/oct cuts (`BUTTERWORTH_Q`). */
-const BUTTERWORTH_Q = Math.SQRT1_2;
-
-interface Coefficients {
-  b0: number;
-  b1: number;
-  b2: number;
-  a1: number;
-  a2: number;
-}
-
-const PASS: Coefficients = { b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 };
-
-function normalized(b0: number, b1: number, b2: number, a0: number, a1: number, a2: number): Coefficients {
-  return { b0: b0 / a0, b1: b1 / a0, b2: b2 / a0, a1: a1 / a0, a2: a2 / a0 };
-}
-
-/** `side` = 1 low shelf, −1 high shelf (as `Coefficients::shelf`). */
-function shelf(freq: number, gainDb: number, side: number): Coefficients {
-  const a = 10 ** (gainDb / 40);
-  const w = (2 * Math.PI * freq) / DRAW_RATE;
-  const cos = side * Math.cos(w);
-  const beta = 2 * Math.sqrt(a) * ((Math.sin(w) / 2) * Math.SQRT2);
-  return normalized(
-    a * (a + 1 - (a - 1) * cos + beta),
-    side * 2 * a * (a - 1 - (a + 1) * cos),
-    a * (a + 1 - (a - 1) * cos - beta),
-    a + 1 + (a - 1) * cos + beta,
-    side * -2 * (a - 1 + (a + 1) * cos),
-    a + 1 + (a - 1) * cos - beta,
-  );
-}
-
-function peaking(freq: number, gainDb: number, q: number): Coefficients {
-  const a = 10 ** (gainDb / 40);
-  const w = (2 * Math.PI * freq) / DRAW_RATE;
-  const alpha = Math.sin(w) / (2 * q);
-  const cos = Math.cos(w);
-  return normalized(1 + alpha * a, -2 * cos, 1 - alpha * a, 1 + alpha / a, -2 * cos, 1 - alpha / a);
-}
-
-/** `high` = true high-pass, false low-pass. */
-function pass(freq: number, q: number, high: boolean): Coefficients {
-  const w = (2 * Math.PI * Math.min(freq, DRAW_RATE * 0.45)) / DRAW_RATE;
-  const cos = Math.cos(w);
-  const alpha = Math.sin(w) / (2 * q);
-  const edge = high ? (1 + cos) / 2 : (1 - cos) / 2;
-  return normalized(edge, high ? -(1 + cos) : 1 - cos, edge, 1 + alpha, -2 * cos, 1 - alpha);
-}
-
-/** Response of one biquad at `freq`, in dB. */
-function magnitudeDb(c: Coefficients, freq: number): number {
-  const w = (2 * Math.PI * freq) / DRAW_RATE;
-  const [cos1, sin1, cos2, sin2] = [Math.cos(w), Math.sin(w), Math.cos(2 * w), Math.sin(2 * w)];
-  const num = (c.b0 + c.b1 * cos1 + c.b2 * cos2) ** 2 + (c.b1 * sin1 + c.b2 * sin2) ** 2;
-  const den = (1 + c.a1 * cos1 + c.a2 * cos2) ** 2 + (c.a1 * sin1 + c.a2 * sin2) ** 2;
-  return 10 * Math.log10(Math.max(num, 1e-20) / Math.max(den, 1e-20));
-}
 
 const EQ_PARAMS = ["low_cut", "low_gain", "low_freq", "mid_gain", "mid_freq", "mid_q", "high_gain", "high_freq", "high_cut"] as const;
 type EqParam = (typeof EQ_PARAMS)[number];

@@ -1,5 +1,5 @@
-//! Biquad filter (RBJ Audio EQ Cookbook formulas). The EQ graph in the interface draws the response from the same
-//! formulas (`app/src/domain/eqCurve.ts`): a change here must be mirrored there.
+//! Biquad filter (RBJ Audio EQ Cookbook formulas). The effect graphs in the interface draw their responses from the
+//! same formulas (`app/src/domain/biquad.ts`): a change here must be mirrored there.
 
 use std::f32::consts::TAU;
 
@@ -69,6 +69,16 @@ impl Coefficients {
         let alpha = sin / (2.0 * q);
         Self::normalized((1.0 - cos) / 2.0, 1.0 - cos, (1.0 - cos) / 2.0, 1.0 + alpha, -2.0 * cos, 1.0 - alpha)
     }
+
+    /// All-pass: a flat magnitude with the phase of a 2nd-order section. At Butterworth Q it is exactly the sum of the
+    /// two sides of a Linkwitz–Riley split at the same frequency (`crossover.rs`), so the frequency is clamped the same
+    /// way as the low- and high-pass.
+    pub fn all_pass(sample_rate: f32, freq: f32, q: f32) -> Self {
+        let w = TAU * freq.min(sample_rate * 0.45) / sample_rate;
+        let (sin, cos) = w.sin_cos();
+        let alpha = sin / (2.0 * q);
+        Self::normalized(1.0 - alpha, -2.0 * cos, 1.0 + alpha, 1.0 + alpha, -2.0 * cos, 1.0 - alpha)
+    }
 }
 
 /// State of one channel (transposed direct form II).
@@ -88,5 +98,28 @@ impl Biquad {
 
     pub fn reset(&mut self) {
         *self = Self::default();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::testing::{SR, sine, tone};
+
+    #[test]
+    fn the_all_pass_keeps_the_level_of_every_tone() {
+        for hz in [30.0, 300.0, 1_000.0, 3_000.0, 15_000.0] {
+            let all = Coefficients::all_pass(SR as f32, 1_000.0, BUTTERWORTH_Q);
+            let mut state = Biquad::default();
+            let output: Vec<f32> = sine(hz, 0.5, SR as usize)
+                .into_iter()
+                .step_by(2)
+                .flat_map(|v| {
+                    let y = state.process(&all, v);
+                    [y, y]
+                })
+                .collect();
+            assert!((tone(&output[SR as usize..], hz) / 0.5 - 1.0).abs() < 0.01, "{hz} Hz");
+        }
     }
 }

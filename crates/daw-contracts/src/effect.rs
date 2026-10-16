@@ -6,6 +6,9 @@ use schemars::JsonSchema;
 
 use crate::{BlockTiming, ContractError, KindInfo, L10n, Params, PluginState, StreamConfig};
 
+/// The most bands `Effect::band_gains_db` reports: the multiband compressor and the dynamic EQ have four.
+pub const MAX_EFFECT_BANDS: usize = 4;
+
 /// The effect of a graph node. It is created on the control side (where `prepare` is also called); once handed to
 /// the engine, every method is called from the realtime thread on a stereo buffer: no allocations, locks or I/O.
 pub trait Effect: Send {
@@ -28,6 +31,13 @@ pub trait Effect: Send {
     /// (the default) for effects that do not reduce gain.
     fn gain_reduction_db(&self) -> Option<f32> {
         None
+    }
+    /// What each band of a band-split effect (multiband compressor, dynamic EQ) is doing to its own band right now: the
+    /// dynamic gain in dB, lowest band first, negative for a cut and positive for a boost (the bands' static gains are
+    /// in the params, not here). Called from the audio thread after `process` (no allocations or locks); empty (the
+    /// default) for effects without bands. Only the first `MAX_EFFECT_BANDS` are read.
+    fn band_gains_db(&self) -> &[f32] {
+        &[]
     }
     /// Timing of the segment the engine is about to process: called from the audio thread before `process` of every
     /// segment (no allocations or locks). Same contract as `Instrument::set_timing`; does nothing by default.

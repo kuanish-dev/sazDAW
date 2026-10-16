@@ -17,10 +17,10 @@ use arc_swap::{ArcSwapOption, Guard};
 use daw_contracts::codes;
 use daw_contracts::sync::lock;
 use daw_contracts::{
-    AutomationHold, ContractError, ControllerKind, DspCommand, DspSink, Effect, EngineLatency, EngineLosses, EngineSnapshot, EngineStats,
-    GainReduction, InputMonitor, Instrument, LaneId, LiveInput, LiveMessage, LiveNoteSink, MasterFrames, MasterTap, MasterWindow, Meter,
-    MonitorStatus, MonoCheck, NodeCursor, NodeId, NodeScope, NodeWindow, RecordSource, RecordedEvent, SampleData, SnapshotSink, TrackId,
-    TrackInput,
+    AutomationHold, BandGains, ContractError, ControllerKind, DspCommand, DspSink, Effect, EngineLatency, EngineLosses, EngineSnapshot,
+    EngineStats, GainReduction, InputMonitor, Instrument, LaneId, LiveInput, LiveMessage, LiveNoteSink, MasterFrames, MasterTap,
+    MasterWindow, Meter, MonitorStatus, MonoCheck, NodeCursor, NodeId, NodeScope, NodeWindow, RecordSource, RecordedEvent, SampleData,
+    SnapshotSink, TrackId, TrackInput,
 };
 
 use crate::note_effects::Units;
@@ -211,6 +211,10 @@ impl EngineStats for EngineLink {
 
     fn gain_reductions(&self) -> Vec<GainReduction> {
         self.telemetry.meters.take_reductions()
+    }
+
+    fn band_gains(&self) -> Vec<BandGains> {
+        self.telemetry.meters.take_bands()
     }
 
     fn preview_position(&self) -> Option<usize> {
