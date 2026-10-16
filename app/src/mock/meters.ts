@@ -25,7 +25,7 @@ export function mockMeters(w: MockWorld, now: number): MeterReading[] {
 }
 
 /** Effects that report gain reduction, as in the backend (`Effect::gain_reduction_db`). */
-const REDUCING = new Set(["compressor", "gate", "limiter", "multiband"]);
+const REDUCING = new Set(["compressor", "gate", "limiter", "multiband", "de_esser"]);
 /** Pseudo gain reduction of a playing compressor or limiter, in dB: 0 to 6, wobbling with the meters. */
 const SWING_REDUCTION_DB = 6;
 

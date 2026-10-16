@@ -5,7 +5,7 @@ import { clamp } from "../domain/math";
 import { type ErrorCode, fail } from "./errors";
 import { t } from "../i18n";
 
-const SWITCHES = new Set(["sidechain", "ping_pong", "loop", "one_shot", "reverse"]);
+const SWITCHES = new Set(["sidechain", "ping_pong", "loop", "one_shot", "reverse", "listen"]);
 /** Per-band switches of the band-split effects (`band2_solo`): named by band, so matched by their ending. */
 const BAND_SWITCHES = /_(solo|bypass)$/;
 
@@ -162,6 +162,13 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
             ];
           }),
           p("sidechain", q.sidechain, 0, 1, 0),
+        ],
+      },
+      {
+        kind: "de_esser", label: k.deEsser,
+        params: [
+          p("freq", q.frequencyHz, 2000, 12000, 6500), p("threshold", q.thresholdDb, -60, 0, -30), p("range", q.rangeDb, 0, 24, 10),
+          choice("mode", q.mode, choices.deEsserMode, 0), p("listen", q.listenBand, 0, 1, 0),
         ],
       },
       ...plugins.effects,

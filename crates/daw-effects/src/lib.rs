@@ -5,6 +5,7 @@ mod biquad;
 mod chorus;
 mod compressor;
 mod crossover;
+mod de_esser;
 mod delay;
 mod distortion;
 mod dynamic_eq;
@@ -142,6 +143,7 @@ pub fn factories() -> Vec<Box<dyn EffectFactory>> {
         factory::<saturator::Saturator>(),
         factory::<multiband::Multiband>(),
         factory::<dynamic_eq::DynamicEq>(),
+        factory::<de_esser::DeEsser>(),
     ]
 }
 

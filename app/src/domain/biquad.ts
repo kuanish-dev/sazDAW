@@ -57,6 +57,12 @@ export function pass(freq: number, q: number, high: boolean): Coefficients {
   return normalized(edge, high ? -(1 + cos) : 1 - cos, edge, 1 + alpha, -2 * cos, 1 - alpha);
 }
 
+/** Band-pass with 0 dB at its centre; with the notch of the same frequency and Q it sums to the input. */
+export function bandPass(freq: number, q: number): Coefficients {
+  const { cos, alpha } = clampedAngle(freq, q);
+  return normalized(alpha, 0, -alpha, 1 + alpha, -2 * cos, 1 - alpha);
+}
+
 /** All-pass: flat magnitude, the phase a Linkwitz–Riley split puts on its summed sides (at Butterworth Q). */
 export function allPass(freq: number, q: number): Coefficients {
   const { cos, alpha } = clampedAngle(freq, q);
