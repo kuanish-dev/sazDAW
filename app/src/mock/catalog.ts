@@ -171,6 +171,10 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
           choice("mode", q.mode, choices.deEsserMode, 0), p("listen", q.listenBand, 0, 1, 0),
         ],
       },
+      {
+        kind: "transient", label: k.transient,
+        params: [p("attack", q.attackPercent, -100, 100, 0), p("sustain", q.sustainPercent, -100, 100, 0), p("output", q.outputDb, -24, 12, 0)],
+      },
       ...plugins.effects,
     ],
     noteEffects: [

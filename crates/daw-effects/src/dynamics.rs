@@ -44,9 +44,11 @@ pub struct Follower {
 }
 
 impl Follower {
+    /// The attack and release times; 0 ms is instant (the value jumps to its target that way).
     pub fn set_times(&mut self, attack_ms: f32, release_ms: f32, sample_rate: f32) {
-        self.attack = time_coefficient(attack_ms, sample_rate);
-        self.release = time_coefficient(release_ms, sample_rate);
+        let coefficient = |ms: f32| if ms > 0.0 { time_coefficient(ms, sample_rate) } else { 0.0 };
+        self.attack = coefficient(attack_ms);
+        self.release = coefficient(release_ms);
     }
 
     /// One frame step toward `target`; returns the new value.
@@ -94,5 +96,8 @@ mod tests {
         assert!(follower.value() > 8.5, "a tenth of the release time: {}", follower.value());
         follower.reset();
         assert_eq!(follower.value(), 0.0);
+
+        follower.set_times(0.0, 100.0, 48_000.0);
+        assert_eq!(follower.follow(0.7), 0.7, "0 ms is instant");
     }
 }

@@ -22,6 +22,7 @@ import { FilterGraph } from "./FilterGraph";
 import { MultibandGraph } from "./MultibandGraph";
 import { ReverbGraph } from "./ReverbGraph";
 import { ShaperGraph } from "./ShaperGraph";
+import { TransientGraph } from "./TransientGraph";
 
 type Curve<T> = (infos: ParamInfo[], values: Params) => T | null;
 
@@ -36,7 +37,7 @@ const DYNAMICS: Record<string, { curve: Curve<DynamicsCurve>; label: () => strin
 const SHAPERS: Record<string, Curve<Transfer>> = { distortion: distortionTransfer, saturator: saturatorTransfer };
 
 /** The kinds with a graph of their own (the rest). */
-const OWN_GRAPHS = new Set(["eq", "filter", "delay", "chorus", "reverb", "multiband", "dynamic_eq", "de_esser"]);
+const OWN_GRAPHS = new Set(["eq", "filter", "delay", "chorus", "reverb", "multiband", "dynamic_eq", "de_esser", "transient"]);
 
 /** Whether effect kind `kind` has a graph. */
 export const hasEffectGraph = (kind: string) => OWN_GRAPHS.has(kind) || kind in DYNAMICS || kind in SHAPERS;
@@ -88,6 +89,9 @@ export function EffectGraph(props: { node: GraphNode }) {
         <DeEsserGraph
           node={props.node.id} infos={params()} values={kind().params} reduction={session.reductions[props.node.id] ?? 0} onChange={setParam}
         />
+      </Match>
+      <Match when={kind().effect === "transient"}>
+        <TransientGraph node={props.node.id} infos={params()} values={kind().params} />
       </Match>
     </Switch>
   );

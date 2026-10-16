@@ -18,6 +18,7 @@ mod multiband;
 mod reverb;
 mod saturator;
 mod smooth;
+mod transient;
 
 #[cfg(test)]
 mod testing;
@@ -144,6 +145,7 @@ pub fn factories() -> Vec<Box<dyn EffectFactory>> {
         factory::<multiband::Multiband>(),
         factory::<dynamic_eq::DynamicEq>(),
         factory::<de_esser::DeEsser>(),
+        factory::<transient::Transient>(),
     ]
 }
 
