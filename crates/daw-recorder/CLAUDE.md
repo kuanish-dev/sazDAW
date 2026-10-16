@@ -8,4 +8,4 @@ Map of the whole code: [ARCHITECTURE.md](../../ARCHITECTURE.md). Cross-layer fea
 
 ## Code layout
 
-The note recorder (`daw-recorder`: `lib.rs` — polling and the take, `pairing.rs` — press–release pairs, `take.rs` — each track's clip and loop passes, `shape.rs` — note shape) logs lost records (`source: "record"`, one entry per take; "clip deleted" is normal and not logged); a new clip starts at the beginning of a bar of the current time signature.
+`lib.rs` — polling and the take (lost records are logged, `source: "record"`), `pairing.rs` — press–release pairs, `take.rs` — each track's clip and loop passes, `shape.rs` — note shape, `controllers.rs` — pitch bend, CC and pressure into the clip's controller lanes.

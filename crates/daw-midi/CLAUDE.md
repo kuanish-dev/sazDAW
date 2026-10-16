@@ -1,6 +1,6 @@
 # `daw-midi`
 
-MIDI files (midly; on export the author from preferences goes into the Copyright event of the service track; notes and controller lanes) and live input (midir: notes, pitch bend, CC, channel pressure; CC goes to MIDI learn mappings first), value conversion — `values.rs` (see "MIDI controllers" ([docs/features/midi-controllers.md](../../docs/features/midi-controllers.md))).
+MIDI files (midly: notes and controller lanes; on export the author from preferences goes into the Copyright event) and live input (midir: notes and controllers; a CC goes to MIDI learn mappings first). Value conversion shared by both — `values.rs`. See "MIDI controllers" ([docs/features/midi-controllers.md](../../docs/features/midi-controllers.md)).
 
 Depends on: contracts.
 

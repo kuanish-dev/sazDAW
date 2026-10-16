@@ -8,8 +8,8 @@ Map of the whole code: [ARCHITECTURE.md](../../ARCHITECTURE.md). Cross-layer fea
 
 ## Small app state
 
-Small app state (`recent.json`, `sound-sources.json`, `preferences.json`; `audio.json` and `metronome.json` are read with the same `read_or_default`) is in `daw-persistence/src/json_state.rs` (`JsonState<T>`: reading, lock, atomic write; a corrupted file and a write failure go to the log with `source: "persist"`, the app does not crash).
+`recent.json`, `sound-sources.json` and `preferences.json` go through `JsonState<T>` (`json_state.rs`); `audio.json` and `metronome.json` are read with the same `read_or_default`. A corrupted file and a write failure go to the log (`source: "persist"`), the app does not crash.
 
 ## Autosave
 
-Autosave (`daw-persistence/src/autosave.rs`) logs write failures (`source: "autosave"`), one entry per run of consecutive failures; otherwise edits would silently stop being saved (rule 11). `Autosaver` receives the interval as a function (`AutosaveInterval = Box<dyn Fn() -> Option<Duration>>`, `None` means off) and asks it on every step; the thread wakes up at least once a second (`RECHECK`), so a settings change takes effect immediately. `Session::start_autosave()` passes `preferences.get().autosave_interval()`.
+`autosave.rs` logs write failures (`source: "autosave"`), one entry per run of consecutive failures; otherwise edits would silently stop being saved (rule 11). `Autosaver` receives the interval as a function (`AutosaveInterval`, `None` means off) and asks it on every step, waking at least every `RECHECK`, so a settings change takes effect immediately. `Session::start_autosave` (`daw-bootstrap/src/services.rs`) passes `preferences.get().autosave_interval()`.

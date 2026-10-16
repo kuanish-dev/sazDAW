@@ -1,6 +1,6 @@
 # `daw-stretch`
 
-**Time stretching and pitch** for audio clips (see "Fitting audio clips to tempo" ([docs/features/warping.md](../../docs/features/warping.md))): `process` — WSOLA + resampling (pure DSP), `StretchCache` (`ProcessedAudio`: ready processed sounds and a background computation thread).
+**Time stretching and pitch** for audio clips (see "Warping audio clips to tempo" ([docs/features/warping.md](../../docs/features/warping.md))): `process` — WSOLA + resampling (pure DSP), `StretchCache` (`ProcessedAudio`: ready processed sounds and a background computation thread).
 
 Depends on: contracts.
 

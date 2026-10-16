@@ -1,6 +1,6 @@
 # `daw-bootstrap`
 
-**Session assembly**: the only place where implementations are chosen. `lib.rs` — `Session`, state folders, `build_session*`; wiring by area — `wiring/` (`catalogs.rs`, `project.rs`, `audio.rs`, `drums.rs`, the overall order and `Controls` — `mod.rs`); background services — `services.rs` (`start_autosave()` takes the interval from user preferences). Integration tests of the full session — `tests/` (`session.rs`, `render_*.rs` with shared helpers in `tests/common/`).
+**Session assembly**: the only place where implementations are chosen. `lib.rs` — `Session`, state folders, `build_session*`; wiring by area — `wiring/` (`catalogs.rs`, `project.rs`, `audio.rs`, `parts.rs`, `arrangement.rs`, the overall order and `Controls` — `mod.rs`); background services — `services.rs` (`start_autosave()` takes the interval from user preferences). Integration tests of the full session — `tests/all/` (one test program: `session.rs`, `render_*.rs`, `architecture.rs`…; shared helpers in `tests/common/`); tests with process-global state are separate programs (`tests/panic_log.rs`, `tests/language.rs`).
 
 Depends on: everything.
 

@@ -8,4 +8,6 @@ Map of the whole code: [ARCHITECTURE.md](../../ARCHITECTURE.md). Cross-layer fea
 
 ## Console commands
 
-The `daw-app` console is `src/commands/`: `mod.rs` (word parsing `Words`, help, dispatcher), one file per area (`transport`, `tracks`, `clips`, `graph`, `project`, `library`), each returns `true` if the command is its own; a new command is a line in the right area and in `HELP`; errors are printed by `report`/`checked`; `mute`/`solo` work on tracks and buses.
+The console is `src/commands/`: `mod.rs` (word parsing `Words`, `HELP`, the dispatcher, `report`/`checked` for errors), one file per area (`transport`, `tracks`, `clips`, `graph`, `project`, `library`), each returning `true` if the command is its own. A new command is a line in the right area and in `HELP`.
+
+The windowless `daw-mcp` binary is `src/mcp_main.rs` (see "AI interface" in [daw-rpc](../daw-rpc/CLAUDE.md)).
