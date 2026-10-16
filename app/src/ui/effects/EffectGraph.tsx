@@ -9,7 +9,7 @@ import { compressorCurve } from "../../domain/compressorCurve";
 import type { DynamicsCurve } from "../../domain/dynamicsGraph";
 import { gateCurve } from "../../domain/gateCurve";
 import { limiterCurve } from "../../domain/limiterCurve";
-import { type Transfer, distortionTransfer, saturatorTransfer } from "../../domain/shaperCurve";
+import { type Transfer, distortionTransfer, saturatorTransfer, tapeTransfer } from "../../domain/shaperCurve";
 import { t } from "../../i18n";
 import { useSession } from "../../state/session";
 import { ChorusGraph } from "./ChorusGraph";
@@ -35,7 +35,7 @@ const DYNAMICS: Record<string, { curve: Curve<DynamicsCurve>; label: () => strin
 };
 
 /** The waveshapers: their transfer curve. */
-const SHAPERS: Record<string, Curve<Transfer>> = { distortion: distortionTransfer, saturator: saturatorTransfer };
+const SHAPERS: Record<string, Curve<Transfer>> = { distortion: distortionTransfer, saturator: saturatorTransfer, tape: tapeTransfer };
 
 /** The kinds with a graph of their own (the rest). */
 const OWN_GRAPHS = new Set(["eq", "linear_eq", "filter", "delay", "chorus", "reverb", "multiband", "dynamic_eq", "de_esser", "transient"]);

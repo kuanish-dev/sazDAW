@@ -17,9 +17,11 @@ mod gate;
 mod limiter;
 mod linear_eq;
 mod multiband;
+mod oversample;
 mod reverb;
 mod saturator;
 mod smooth;
+mod tape;
 mod transient;
 
 #[cfg(test)]
@@ -149,6 +151,7 @@ pub fn factories() -> Vec<Box<dyn EffectFactory>> {
         factory::<de_esser::DeEsser>(),
         factory::<transient::Transient>(),
         factory::<linear_eq::LinearEq>(),
+        factory::<tape::Tape>(),
     ]
 }
 

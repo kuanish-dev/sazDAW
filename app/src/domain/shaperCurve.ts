@@ -1,9 +1,10 @@
-// The graph of the waveshaping effects — distortion and saturator (`ui/effects/ShaperGraph.tsx`): the transfer curve
-// (an input sample → the output sample, both −1..1) and the live sound drawn on it and as waves. The curves MIRROR
-// `Shape::apply` and the drive/mix/output path of `crates/daw-effects/src/distortion.rs` and `shapes` with the type
-// weights of `saturator.rs`: a change there must be repeated here. What shapes the sound over time rather than sample by
-// sample — the distortion's tone filter, the saturator's oversampling and DC blocker — is left out of the curve; the live
-// trace shows it as a loop around the curve.
+// The graph of the waveshaping effects — distortion, saturator, tape/console (`ui/effects/ShaperGraph.tsx`): the
+// transfer curve (an input sample → the output sample, both −1..1) and the live sound drawn on it and as waves. The
+// curves MIRROR `Shape::apply` and the drive/mix/output path of `crates/daw-effects/src/distortion.rs`, `shapes` with the
+// type weights of `saturator.rs`, and `soft_knee`/`shape` with the mode characters and drive compensation of `tape.rs`:
+// a change there must be repeated here. What shapes the sound over time rather than sample by sample — the
+// distortion's tone filter, the oversampling and DC blockers, the tape's head bump and roll-off, the console's crosstalk
+// — is left out of the curve; the live trace shows it as a loop around the curve.
 import type { ParamInfo, Params } from "../api/types";
 import { namedParams } from "./catalog";
 import { clamp } from "./math";
@@ -44,6 +45,25 @@ export function saturatorTransfer(infos: ParamInfo[], values: Params): Transfer 
   if (!s) return null;
   const type = SATURATOR_TYPES[clamp(Math.trunc(s.type), 0, SATURATOR_TYPES.length - 1)]!;
   return around(type, dbToGain(s.drive), s.mix, dbToGain(s.output));
+}
+
+/** The tape/console curve (`soft_knee`): linear up to `knee`, then rounding off toward ±1 with no corner. */
+function softKnee(x: number, knee: number): number {
+  const size = Math.abs(x);
+  return size <= knee ? x : Math.sign(x) * (knee + (1 - knee) * Math.tanh((size - knee) / (1 - knee)));
+}
+
+/** The modes' knee and offset in the order of the `mode` choice: tape, console (`TAPE`, `CONSOLE`). */
+const TAPE_MODES = [{ knee: 0.4, bias: 0.08 }, { knee: 0.75, bias: 0.02 }];
+
+export function tapeTransfer(infos: ParamInfo[], values: Params): Transfer | null {
+  const s = namedParams(infos, values, ["mode", "drive", "output"]);
+  if (!s) return null;
+  const { knee, bias } = TAPE_MODES[clamp(Math.trunc(s.mode), 0, TAPE_MODES.length - 1)]!;
+  const drive = dbToGain(s.drive);
+  const output = dbToGain(s.output);
+  // Driven into the knee and divided by the drive again: quiet samples keep their level, the peaks round off.
+  return (x) => ((softKnee(x * drive + bias, knee) - softKnee(bias, knee)) / drive) * output;
 }
 
 /** A sample (−1..1) as a position in a view: x across the width, y up from the bottom; louder is clipped to the edge. */

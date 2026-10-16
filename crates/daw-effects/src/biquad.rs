@@ -120,6 +120,27 @@ impl Biquad {
     }
 }
 
+/// First-order DC blocker: a high-pass a few hertz up, for curves that offset the signal (asymmetric saturation).
+#[derive(Clone, Copy, Default)]
+pub struct DcBlocker {
+    input: f32,
+    output: f32,
+}
+
+impl DcBlocker {
+    /// The pole for a cutoff of `hz`.
+    pub fn pole(sample_rate: f32, hz: f32) -> f32 {
+        (-TAU * hz / sample_rate).exp()
+    }
+
+    pub fn process(&mut self, pole: f32, input: f32) -> f32 {
+        let output = input - self.input + pole * self.output;
+        self.input = input;
+        self.output = output;
+        output
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

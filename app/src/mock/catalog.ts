@@ -175,6 +175,10 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
         kind: "transient", label: k.transient,
         params: [p("attack", q.attackPercent, -100, 100, 0), p("sustain", q.sustainPercent, -100, 100, 0), p("output", q.outputDb, -24, 12, 0)],
       },
+      {
+        kind: "tape", label: k.tape,
+        params: [choice("mode", q.mode, choices.tapeMode, 0), p("drive", q.driveDb, 0, 24, 6), p("output", q.outputDb, -24, 6, 0)],
+      },
       ...plugins.effects,
     ],
     noteEffects: [
