@@ -1,5 +1,6 @@
 //! Contract tests of the MIDI effects: arpeggiator steps on the grid, order, octaves, length, swing, free clock;
-//! chords by type, inversion, scale; chains in different orders; the catalog.
+//! chords by type, inversion, scale; note repeat on the grid, without flams, with a velocity ramp; chains in different
+//! orders; the catalog.
 
 use daw_contracts::{BlockTiming, Bpm, NoteBuffer, NoteEffect, NoteEffectCatalog, NoteEvent, Params, TimeSignature};
 
@@ -238,8 +239,90 @@ fn chain_order_matters_arp_then_chord_versus_chord_then_arp() {
 #[test]
 fn catalog_lists_kinds_and_rejects_unknown_ones() {
     let kinds: Vec<_> = NoteEffects.kinds().into_iter().map(|k| k.kind).collect();
-    assert_eq!(kinds, ["arp", "chord"]);
+    assert_eq!(kinds, ["arp", "chord", "repeat"]);
     assert_eq!(NoteEffects.defaults("arp").unwrap()["rate"], 3.0);
     assert!(NoteEffects.create("nope", &Params::new()).is_err());
     assert!(NoteEffects.defaults("nope").is_err());
+}
+
+/// Velocities of the presses of one effect, as `(absolute frame, velocity)`.
+fn press_velocities(effect: &mut dyn NoteEffect, playing: bool, inputs: &[Input], total: usize) -> Vec<(usize, f32)> {
+    let mut result = Vec::new();
+    for start in (0..total).step_by(SEGMENT) {
+        let mut buffer = NoteBuffer::new();
+        for &(frame, pitch, velocity) in inputs.iter().filter(|(frame, ..)| (start..start + SEGMENT).contains(frame)) {
+            buffer.push(NoteEvent { frame: frame - start, pitch, velocity });
+        }
+        let mut out = NoteBuffer::new();
+        effect.process(buffer.events(), &timing(playing, if playing { start as f64 * TPF } else { 0.0 }), &mut out);
+        result.extend(out.events().iter().filter(|e| e.is_on()).map(|e| (start + e.frame, e.velocity)));
+    }
+    result
+}
+
+#[test]
+fn a_held_key_repeats_on_the_grid_and_stops_when_released() {
+    let mut chain = [effect("repeat", &[("rate", 3.0)])];
+    let inputs = [(0, 42, 0.8), (4 * SIXTEENTH, 42, 0.0)];
+    let out = run(&mut chain, true, &inputs, 6 * SIXTEENTH);
+    assert_eq!(ons(&out), [(0, 42), (SIXTEENTH, 42), (2 * SIXTEENTH, 42), (3 * SIXTEENTH, 42)], "a note on the grid is hit once there");
+    let offs: Vec<usize> = out.iter().filter(|e| !e.2).map(|e| e.0).collect();
+    assert_eq!(offs, [SIXTEENTH / 2, 3 * SIXTEENTH / 2, 5 * SIXTEENTH / 2, 7 * SIXTEENTH / 2], "half-step notes by default");
+}
+
+#[test]
+fn rate_choices_set_the_repeat_length() {
+    for (rate, step) in [(0.0, 4 * SIXTEENTH), (2.0, 4 * SIXTEENTH / 3), (5.0, SIXTEENTH / 2), (7.0, SIXTEENTH / 4)] {
+        let mut chain = [effect("repeat", &[("rate", rate)])];
+        let out = run(&mut chain, true, &held(&[42]), 2 * step + 1);
+        assert_eq!(ons(&out), [(0, 42), (step, 42), (2 * step, 42)], "rate {rate}");
+    }
+}
+
+#[test]
+fn a_press_between_grid_lines_sounds_at_once_and_does_not_flam_on_the_next_step() {
+    // Half a step before the grid line: hit at the press, and again on the line.
+    let mut chain = [effect("repeat", &[("rate", 3.0)])];
+    let out = run(&mut chain, true, &[(SIXTEENTH / 2, 42, 0.8)], 2 * SIXTEENTH + 1);
+    assert_eq!(ons(&out), [(SIXTEENTH / 2, 42), (SIXTEENTH, 42), (2 * SIXTEENTH, 42)]);
+    // A third of a step before it (a humanized note): the line is skipped, the roll goes on from the next one.
+    let mut chain = [effect("repeat", &[("rate", 3.0)])];
+    let out = run(&mut chain, true, &[(2 * SIXTEENTH / 3, 42, 0.8)], 2 * SIXTEENTH + 1);
+    assert_eq!(ons(&out), [(2 * SIXTEENTH / 3, 42), (2 * SIXTEENTH, 42)]);
+}
+
+#[test]
+fn every_held_key_repeats_and_full_length_notes_touch() {
+    let mut chain = [effect("repeat", &[("rate", 3.0), ("gate", 100.0)])];
+    let inputs = [(0, 42, 0.8), (0, 46, 0.8), (SIXTEENTH + 100, 42, 0.0), (SIXTEENTH + 100, 46, 0.0)];
+    let out = run(&mut chain, true, &inputs, 3 * SIXTEENTH);
+    assert_eq!(ons(&out), [(0, 42), (0, 46), (SIXTEENTH, 42), (SIXTEENTH, 46)]);
+    assert_eq!(out.iter().filter(|e| !e.2 && e.0 == SIXTEENTH).count(), 2, "each note ends where the next hit starts");
+    assert_eq!(out.iter().filter(|e| !e.2 && e.0 == SIXTEENTH + 100).count(), 2, "the release ends what sounds");
+}
+
+#[test]
+fn a_velocity_ramp_fades_or_swells_the_roll() {
+    let fade = press_velocities(effect("repeat", &[("rate", 3.0), ("ramp", -20.0)]).as_mut(), true, &held(&[42]), 3 * SIXTEENTH + 1);
+    let velocities: Vec<f32> = fade.iter().map(|e| e.1).collect();
+    let expected = [0.8, 0.64, 0.512, 0.4096];
+    assert!(velocities.iter().zip(expected).all(|(v, e)| (v - e).abs() < 1e-4), "{velocities:?}");
+    let swell = press_velocities(effect("repeat", &[("rate", 3.0), ("ramp", 50.0)]).as_mut(), true, &held(&[42]), 3 * SIXTEENTH + 1);
+    assert_eq!(swell.last().map(|e| e.1), Some(1.0), "a swell stops at full velocity");
+}
+
+#[test]
+fn a_stopped_transport_repeats_from_the_first_press() {
+    let mut chain = [effect("repeat", &[("rate", 3.0)])];
+    let out = run(&mut chain, false, &[(1000, 42, 0.8)], 1000 + 2 * SIXTEENTH + 1);
+    assert_eq!(ons(&out), [(1000, 42), (1000 + SIXTEENTH, 42), (1000 + 2 * SIXTEENTH, 42)]);
+}
+
+#[test]
+fn reset_forgets_the_repeating_keys() {
+    let mut repeat = effect("repeat", &[("rate", 3.0)]);
+    repeat.process(&[NoteEvent::on(0, 42, 0.8)], &timing(true, 0.0), &mut NoteBuffer::new());
+    repeat.reset();
+    let out = press_velocities(repeat.as_mut(), true, &[], 2 * SIXTEENTH);
+    assert!(out.is_empty(), "{out:?}");
 }

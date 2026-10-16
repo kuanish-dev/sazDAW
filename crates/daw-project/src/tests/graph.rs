@@ -45,7 +45,7 @@ fn source_faders_set_volume_pan_mute_and_solo() {
 #[test]
 fn per_kind_controls_reject_the_wrong_nodes() {
     let rig = Rig::new();
-    let fx = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     use codes::graph::{NO_MUTE, NO_PAN, NO_SOLO, NO_VOLUME, NODE_NOT_EFFECT};
     assert!(matches!(rig.graph.set_volume(fx, 1.0), Err(e) if e.is(NO_VOLUME)), "an effect has no volume");
     assert!(matches!(rig.graph.set_pan(MASTER, 0.0), Err(e) if e.is(NO_PAN)), "the master has no pan");
@@ -64,21 +64,21 @@ fn per_kind_controls_reject_the_wrong_nodes() {
 #[test]
 fn effects_are_created_from_the_catalog_and_params_are_clamped() {
     let rig = Rig::new();
-    let fx = rig.graph.add_effect("eq", 1.0, 2.0).unwrap();
+    let fx = rig.graph.add_effect("eq", &Params::new(), 1.0, 2.0).unwrap();
     assert_eq!(effect_params(&rig, fx)["gain"], 0.0);
     assert_eq!(edge_count(&rig, fx, MASTER) + rig.graph.graph().incoming(fx).count(), 0, "no edges");
     rig.graph.set_effect_param(fx, "gain", 50.0).unwrap();
     assert_eq!(effect_params(&rig, fx)["gain"], 12.0);
     assert!(matches!(rig.graph.set_effect_param(fx, "nope", 1.0), Err(e) if e.is(codes::graph::UNKNOWN_EFFECT_PARAM)));
-    assert!(matches!(rig.graph.add_effect("nope", 0.0, 0.0), Err(e) if e.is(codes::graph::UNKNOWN_EFFECT)));
+    assert!(matches!(rig.graph.add_effect("nope", &Params::new(), 0.0, 0.0), Err(e) if e.is(codes::graph::UNKNOWN_EFFECT)));
 }
 
 #[test]
 fn connect_follows_the_graph_rules_and_failures_change_nothing() {
     let (rig, track, _) = rig_with_clip();
     let source = source(&rig, track);
-    let fx1 = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
-    let fx2 = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let fx1 = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
+    let fx2 = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     let bus = rig.graph.add_bus("Bus", 0.0, 0.0).unwrap();
     rig.graph.connect(source, fx1, 1.0, false).unwrap();
     rig.graph.connect(fx1, fx2, 1.0, false).unwrap();
@@ -137,11 +137,11 @@ fn removing_a_node_cleans_edges_and_automation_but_sources_and_master_stay() {
 fn graph_limits_are_enforced() {
     let rig = Rig::new();
     while rig.graph.graph().nodes.len() < MAX_NODES {
-        rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+        rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     }
-    assert!(matches!(rig.graph.add_effect("eq", 0.0, 0.0), Err(e) if e.is(codes::graph::TOO_MANY_NODES)));
+    assert!(matches!(rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0), Err(e) if e.is(codes::graph::TOO_MANY_NODES)));
     assert!(matches!(rig.graph.add_bus("x", 0.0, 0.0), Err(e) if e.is(codes::graph::TOO_MANY_NODES)));
-    assert!(rig.graph.insert_effect(MASTER, "eq", 0.0, 0.0).is_err());
+    assert!(rig.graph.insert_effect(MASTER, "eq", &Params::new(), 0.0, 0.0).is_err());
     assert!(matches!(rig.tracks.add_track("x", Some("synth"), 60), Err(e) if e.is(codes::graph::TOO_MANY_NODES)));
 }
 
@@ -175,8 +175,8 @@ fn chain_rig() -> (Rig, NodeId, NodeId, NodeId) {
     let rig = Rig::new();
     let track = rig.tracks.add_track("Synth", Some("synth"), 60).unwrap();
     let src = source(&rig, track);
-    let fx1 = rig.graph.insert_effect(src, "eq", 0.0, 0.0).unwrap();
-    let fx2 = rig.graph.insert_effect(fx1, "eq", 0.0, 0.0).unwrap();
+    let fx1 = rig.graph.insert_effect(src, "eq", &Params::new(), 0.0, 0.0).unwrap();
+    let fx2 = rig.graph.insert_effect(fx1, "eq", &Params::new(), 0.0, 0.0).unwrap();
     (rig, src, fx1, fx2)
 }
 
@@ -189,7 +189,7 @@ fn insert_effect_rewires_outputs_and_keeps_levels() {
     rig.graph.connect(src, bus, 0.5, false).unwrap();
     rig.graph.connect(src, MASTER, 0.3, false).unwrap();
 
-    let fx = rig.graph.insert_effect(src, "eq", 5.0, 6.0).unwrap();
+    let fx = rig.graph.insert_effect(src, "eq", &Params::new(), 5.0, 6.0).unwrap();
     let graph = rig.graph.graph();
     let node = graph.node(fx).unwrap();
     assert_eq!((node.x, node.y, node.name.as_str()), (5.0, 6.0, "EQ"));
@@ -209,7 +209,7 @@ fn insert_effect_builds_a_chain_the_ui_can_show() {
     assert_eq!(graph.chain(src), TrackChain { effects: vec![fx1, fx2], output: Some(MASTER) });
 
     // Inserting in the middle of the chain.
-    let mid = rig.graph.insert_effect(fx1, "eq", 0.0, 0.0).unwrap();
+    let mid = rig.graph.insert_effect(fx1, "eq", &Params::new(), 0.0, 0.0).unwrap();
     assert_eq!(rig.graph.graph().chain(src).effects, [fx1, mid, fx2]);
 }
 
@@ -219,10 +219,10 @@ fn insert_effect_validates_and_leaves_sidechains_untouched() {
     let kick = rig.tracks.add_track("Kick", Some("synth"), 60).unwrap();
     let bass = rig.tracks.add_track("Bass", Some("synth"), 60).unwrap();
     let (kick_node, bass_node) = (source(&rig, kick), source(&rig, bass));
-    let comp = rig.graph.insert_effect(bass_node, "eq", 0.0, 0.0).unwrap();
+    let comp = rig.graph.insert_effect(bass_node, "eq", &Params::new(), 0.0, 0.0).unwrap();
     rig.graph.connect(kick_node, comp, 0.7, true).unwrap();
 
-    let fx = rig.graph.insert_effect(kick_node, "eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.insert_effect(kick_node, "eq", &Params::new(), 0.0, 0.0).unwrap();
     let graph = rig.graph.graph();
     assert!(
         graph.edges.contains(&Edge { from: kick_node, to: comp, level: 0.7, sidechain: true, pre_fader: false }),
@@ -232,15 +232,15 @@ fn insert_effect_validates_and_leaves_sidechains_untouched() {
 
     // Inserting after an effect with a sidechain output: regular edges move, the sidechain stays.
     rig.graph.connect(fx, comp, 0.4, true).unwrap();
-    let after = rig.graph.insert_effect(fx, "eq", 0.0, 0.0).unwrap();
+    let after = rig.graph.insert_effect(fx, "eq", &Params::new(), 0.0, 0.0).unwrap();
     let graph = rig.graph.graph();
     assert!(graph.edges.contains(&Edge { from: fx, to: comp, level: 0.4, sidechain: true, pre_fader: false }));
     assert_eq!(graph.chain(kick_node).effects, [fx, after]);
 
     let before = rig.service.snapshot();
-    assert!(rig.graph.insert_effect(MASTER, "eq", 0.0, 0.0).is_err(), "the master has no outputs");
-    assert!(rig.graph.insert_effect(9999, "eq", 0.0, 0.0).is_err());
-    assert!(rig.graph.insert_effect(kick_node, "nope", 0.0, 0.0).is_err());
+    assert!(rig.graph.insert_effect(MASTER, "eq", &Params::new(), 0.0, 0.0).is_err(), "the master has no outputs");
+    assert!(rig.graph.insert_effect(9999, "eq", &Params::new(), 0.0, 0.0).is_err());
+    assert!(rig.graph.insert_effect(kick_node, "nope", &Params::new(), 0.0, 0.0).is_err());
     assert_eq!(rig.service.snapshot(), before, "errors change nothing");
 }
 
@@ -250,7 +250,7 @@ fn remove_effect_keep_path_restores_the_direct_path() {
     let track = rig.tracks.add_track("Synth", Some("synth"), 60).unwrap();
     let src = source(&rig, track);
     let before = rig.graph.graph().edges;
-    let fx = rig.graph.insert_effect(src, "eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.insert_effect(src, "eq", &Params::new(), 0.0, 0.0).unwrap();
     rig.graph.remove_effect_keep_path(fx).unwrap();
     let graph = rig.graph.graph();
     assert!(graph.node(fx).is_none());
@@ -268,12 +268,12 @@ fn remove_effect_keep_path_multiplies_levels_and_drops_sidechain_inputs() {
     let b = rig.tracks.add_track("B", Some("synth"), 60).unwrap();
     let (a_node, b_node) = (source(&rig, a), source(&rig, b));
     let bus = rig.graph.add_bus("Bus", 0.0, 0.0).unwrap();
-    let fx = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     rig.graph.connect(a_node, fx, 0.5, false).unwrap();
     rig.graph.connect(b_node, fx, 1.0, false).unwrap();
     rig.graph.connect(fx, bus, 0.5, false).unwrap();
     rig.graph.connect(fx, MASTER, 1.0, false).unwrap();
-    let side = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let side = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     rig.graph.connect(a_node, side, 1.0, true).unwrap();
     rig.graph.connect(side, fx, 1.0, false).unwrap();
     rig.graph.connect(a_node, fx, 1.0, true).unwrap();
@@ -333,4 +333,43 @@ fn set_output_follows_graph_rules_and_keeps_sidechains() {
         rig.graph.graph().edges.contains(&Edge { from: src, to: fx1, level: 0.5, sidechain: true, pre_fader: false }),
         "the sidechain is left alone"
     );
+}
+
+#[test]
+fn new_effects_take_params_on_top_of_defaults_in_one_undo_step() {
+    let rig = Rig::new();
+    let src = source(&rig, rig.tracks.add_track("Synth", Some("synth"), 60).unwrap());
+    let gain = |value: f32| Params::from([("gain".to_string(), value)]);
+
+    let added = rig.graph.add_effect("eq", &gain(5.0), 0.0, 0.0).unwrap();
+    assert_eq!(effect_params(&rig, added)["gain"], 5.0);
+    let after = rig.graph.insert_effect(src, "eq", &gain(50.0), 0.0, 0.0).unwrap();
+    assert_eq!(effect_params(&rig, after)["gain"], 12.0, "clamped to the catalog range");
+    let before = rig.graph.insert_effect_before(MASTER, "eq", &gain(-3.0), 0.0, 0.0).unwrap();
+    assert_eq!(effect_params(&rig, before)["gain"], -3.0);
+    let default = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
+    assert_eq!(effect_params(&rig, default)["gain"], 0.0, "no params means the catalog defaults");
+
+    assert!(rig.service.undo(), "the effect and its params are one undo step");
+    assert!(rig.graph.graph().node(default).is_none());
+    assert!(rig.service.undo());
+    assert!(rig.graph.graph().node(before).is_none());
+    assert_eq!(effect_params(&rig, after)["gain"], 12.0, "the previous effect keeps its params");
+}
+
+#[test]
+fn a_bad_param_creates_no_effect() {
+    let rig = Rig::new();
+    let src = source(&rig, rig.tracks.add_track("Synth", Some("synth"), 60).unwrap());
+    let before = rig.service.snapshot();
+    let unknown = Params::from([("nope".to_string(), 1.0)]);
+    let not_a_number = Params::from([("gain".to_string(), f32::NAN)]);
+
+    assert!(matches!(rig.graph.add_effect("eq", &unknown, 0.0, 0.0), Err(e) if e.is(codes::graph::UNKNOWN_EFFECT_PARAM)));
+    assert!(matches!(rig.graph.insert_effect(src, "eq", &unknown, 0.0, 0.0), Err(e) if e.is(codes::graph::UNKNOWN_EFFECT_PARAM)));
+    assert!(matches!(
+        rig.graph.insert_effect_before(MASTER, "eq", &not_a_number, 0.0, 0.0),
+        Err(e) if e.is(codes::graph::PARAM_NOT_A_NUMBER)
+    ));
+    assert_eq!(rig.service.snapshot(), before, "nothing is created");
 }

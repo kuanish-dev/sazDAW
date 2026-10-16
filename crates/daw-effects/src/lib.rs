@@ -5,6 +5,7 @@ mod biquad;
 mod chorus;
 mod compressor;
 mod crossover;
+mod crusher;
 mod de_esser;
 mod delay;
 mod distortion;
@@ -18,6 +19,7 @@ mod limiter;
 mod linear_eq;
 mod multiband;
 mod oversample;
+mod phaser;
 mod reverb;
 mod saturator;
 mod smooth;
@@ -152,6 +154,8 @@ pub fn factories() -> Vec<Box<dyn EffectFactory>> {
         factory::<transient::Transient>(),
         factory::<linear_eq::LinearEq>(),
         factory::<tape::Tape>(),
+        factory::<crusher::Crusher>(),
+        factory::<phaser::Phaser>(),
     ]
 }
 

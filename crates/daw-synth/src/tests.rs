@@ -1,5 +1,7 @@
 //! The synth as an `Instrument`: catalog description, parameters, notes and controllers through the contract.
 
+use daw_contracts::{Bpm, TimeSignature};
+
 use super::*;
 
 const SR: usize = 48_000;
@@ -37,12 +39,49 @@ fn describes_itself_with_the_envelope_names_and_a_waveform_choice() {
     assert_eq!(f.kind(), SYNTH_KIND);
     let params = f.describe();
     let names: Vec<_> = params.iter().map(|p| p.name).collect();
-    assert_eq!(names, ["waveform", "attack", "hold", "decay", "sustain", "release", "low_cut", "high_cut", "gain"]);
+    assert_eq!(
+        names,
+        [
+            "waveform",
+            "osc2_level",
+            "osc2_waveform",
+            "osc2_semitones",
+            "osc2_detune",
+            "unison",
+            "unison_detune",
+            "unison_width",
+            "attack",
+            "hold",
+            "decay",
+            "sustain",
+            "release",
+            "low_cut",
+            "high_cut",
+            "resonance",
+            "filter_env",
+            "filter_attack",
+            "filter_decay",
+            "pitch_env",
+            "pitch_decay",
+            "mono",
+            "glide",
+            "lfo_shape",
+            "lfo_rate",
+            "lfo_sync",
+            "lfo_pitch",
+            "lfo_filter",
+            "lfo_volume",
+            "gain",
+        ]
+    );
     let waveform = &params[0];
-    assert_eq!((waveform.kind, waveform.choices.len(), waveform.max), (ParamKind::Choice, 4, 3.0));
+    assert_eq!((waveform.kind, waveform.choices.len(), waveform.max), (ParamKind::Choice, 5, 4.0));
     for p in &params {
         assert!(p.min <= p.default && p.default <= p.max, "{}", p.name);
         assert!(!p.label.en.is_empty() && !p.label.ru.is_empty(), "{}", p.name);
+        if p.kind == ParamKind::Choice {
+            assert_eq!(p.max as usize + 1, p.choices.len(), "every option of {} has a label", p.name);
+        }
     }
     assert!(f.rebuild_on().is_empty(), "every parameter arrives through set_param");
 }
@@ -155,5 +194,57 @@ fn out_of_range_values_are_clamped() {
     let mut synth = make(&[("high_cut", 1e9), ("gain", 1e9), ("waveform", 42.0), ("sustain", 7.0)]);
     synth.note_on(60, 1.0);
     let out = render(synth.as_mut(), 4_800);
-    assert!(out.iter().all(|v| v.is_finite() && v.abs() <= 1.0));
+    // Waveform 42 is noise; through a filter open near the top it may overshoot a little (at most 1.31).
+    assert!(out.iter().all(|v| v.is_finite() && v.abs() < 1.35));
+}
+
+#[test]
+fn unison_width_puts_the_copies_apart_in_the_two_channels() {
+    let mut synth = make(&[("unison", 5.0), ("unison_detune", 30.0), ("unison_width", 100.0), ("high_cut", 18_000.0)]);
+    synth.note_on(57, 1.0);
+    let out = render(synth.as_mut(), 9_600);
+    assert!(out.chunks(2).any(|f| (f[0] - f[1]).abs() > 0.01), "a stereo sound");
+}
+
+#[test]
+fn a_mono_synth_slides_between_held_keys() {
+    let mut synth = make(&[("mono", 1.0), ("glide", 0.1), ("waveform", 0.0), ("high_cut", 18_000.0), ("sustain", 1.0), ("gain", 100.0)]);
+    synth.note_on(57, 1.0);
+    render(synth.as_mut(), SR / 4);
+    synth.note_on(69, 1.0);
+    render(synth.as_mut(), SR / 2);
+    assert!((frequency(&render(synth.as_mut(), SR / 2)) - 440.0).abs() < 3.0, "arrived at A4");
+    synth.note_off(69);
+    render(synth.as_mut(), SR / 2);
+    assert!((frequency(&render(synth.as_mut(), SR / 2)) - 220.0).abs() < 3.0, "back at A3, still held");
+}
+
+#[test]
+fn a_synced_lfo_takes_the_tempo_from_the_song() {
+    let mut synth = make(&[
+        ("waveform", 0.0),
+        ("high_cut", 18_000.0),
+        ("sustain", 1.0),
+        ("gain", 100.0),
+        ("lfo_shape", 3.0),
+        ("lfo_sync", 3.0),
+        ("lfo_volume", 100.0),
+    ]);
+    // 120 BPM at 48 kHz, 1/4 sync: a beat is half a second, the square is on for the first quarter of a second.
+    let tempo = Bpm::try_from(120.0).unwrap();
+    let timing = BlockTiming {
+        frames: SR,
+        playing: true,
+        start_tick: 0.0,
+        ticks_per_frame: tempo.ticks_per_frame(SR as u32),
+        tempo,
+        time_signature: TimeSignature::default(),
+        signature_start: 0.0,
+        loop_region: None,
+    };
+    synth.set_timing(&timing);
+    synth.note_on(69, 1.0);
+    let out = render(synth.as_mut(), SR);
+    let window = |from: f32, to: f32| peak(&out[(from * SR as f32) as usize * 2..(to * SR as f32) as usize * 2]);
+    assert!(window(0.05, 0.2) > 0.9 && window(0.3, 0.45) < 1e-3 && window(0.55, 0.7) > 0.9);
 }

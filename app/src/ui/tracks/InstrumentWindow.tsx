@@ -72,7 +72,7 @@ export function InstrumentWindow() {
             </div>
             <PresetBar target={{ type: "instrument", track: tr().id }} kind={tr().instrument.kind} />
             <Show when={tr().instrument.kind === SYNTH_KIND}>
-              <SynthGraph waveform={values().waveform ?? 0} lowCut={values().low_cut ?? 20} highCut={values().high_cut ?? 18_000} />
+              <SynthGraph waveform={values().waveform ?? 0} lowCut={values().low_cut ?? 20} highCut={values().high_cut ?? 18_000} resonance={values().resonance ?? 0} />
             </Show>
             <EnvelopeGraph infos={infos()} values={values()} onChange={change} />
             <div class="grid grid-cols-4 gap-x-1 gap-y-3">

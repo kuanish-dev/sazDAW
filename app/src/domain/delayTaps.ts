@@ -1,7 +1,8 @@
 // Delay graph (`ui/effects/DelayGraph.tsx`): when the echoes of one sound come and how loud, from the delay's params and
 // the tempo, and how the live input lights them up. MIRRORS `crates/daw-effects/src/delay.rs` (the `SYNC_QUARTERS`
 // lengths, the time from the tempo or from milliseconds within `MAX_SECONDS`, the feedback per repeat, the ping-pong
-// crossing that starts on the left) and `mix_over_dry` in `lib.rs`: a change there must be repeated here.
+// crossing that starts on the left) and `mix_over_dry` in `lib.rs`: a change there must be repeated here. The low and
+// high cut in the delay's loop change the echoes' tone, not their level in the passband, so the taps leave them out.
 import type { ParamInfo, Params } from "../api/types";
 import { namedParams } from "./catalog";
 import { clamp } from "./math";

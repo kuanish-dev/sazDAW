@@ -39,7 +39,7 @@ fn song(name: &str) -> Song {
     let clip = note_clip(&controls, other, 0, 1);
     controls.notes.add_note(clip.id, note(72, 0, 960)).unwrap();
     let source = source_node(&controls, bass);
-    let eq = controls.graph.insert_effect(source, "eq", 0.0, 0.0).unwrap();
+    let eq = controls.graph.insert_effect(source, "eq", &Params::new(), 0.0, 0.0).unwrap();
     controls.graph.set_effect_param(eq, "low_gain", 6.0).unwrap();
     controls.graph.set_volume(source, 0.6).unwrap();
     controls.graph.set_pan(source, -0.4).unwrap();

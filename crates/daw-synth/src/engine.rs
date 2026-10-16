@@ -1,50 +1,116 @@
-//! The synth's sound core: 8 voices, oscillator, AHDSR envelope, highpass (low cut) and lowpass (high cut); pitch wheel (pitch bend, ±2 semitones)
-//! and mod wheel (CC1: opens the filter up to four octaves above the cutoff).
+//! The synth's sound core: 8 voices, each with two oscillators (and their unison copies spread across the stereo field),
+//! an AHDSR volume envelope, a resonant lowpass with its own envelope and a pitch envelope; a mono mode that slides
+//! between held notes; one LFO for all voices; a low cut on the mix. Pitch wheel (pitch bend, ±2 semitones) and mod
+//! wheel (CC1: opens the filter up to four octaves above the cutoff).
 //! Pure math without the contracts: the `Instrument` glue in `lib.rs` feeds it notes and settings.
 
-use std::f32::consts::TAU;
+use crate::envelope::{Ahdsr, AttackDecay, Envelope};
+use crate::filter::{Coefficients, Svf};
+use crate::lfo::{Lfo, LfoShape};
+use crate::osc::{Noise, Waveform, wave};
 
 pub(crate) const VOICES: usize = 8;
+/// The most unison copies of each oscillator.
+pub(crate) const MAX_UNISON: usize = 7;
 /// How far pitch bend at the end of the wheel shifts the pitch, in semitones.
 pub(crate) const BEND_RANGE_SEMITONES: f32 = 2.0;
 /// The low cut at or below this frequency is off (its minimum; a little above it for the glide's rounding).
 const LOW_CUT_OFF_HZ: f32 = 20.01;
-
 /// How many octaves the mod wheel at its maximum raises the filter cutoff.
 pub(crate) const MODULATION_OCTAVES: f32 = 4.0;
+/// Time constants per glide or pitch-decay time: after the set time a slide or the pitch envelope is 95 % done.
+const SETTLE: f32 = 3.0;
+/// The voice filter never goes below this, whatever the envelope and the LFO do.
+const MIN_CUTOFF_HZ: f32 = 20.0;
+/// Keys mono mode remembers to slide back to.
+const HELD_NOTES: usize = 16;
+/// Phase offsets of the unison copies (golden-ratio steps): copies starting in step would sound like one hard attack.
+const GOLDEN: f32 = 0.618_034;
+/// The song tempo for a synced LFO until the engine reports one (previews, tests).
+const DEFAULT_BPM: f64 = 120.0;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub(crate) enum Waveform {
-    Sine,
-    Triangle,
-    Saw,
-    Square,
+/// Unison: how many detuned copies each oscillator plays and where they sit in the stereo field.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct Unison {
+    count: usize,
+    /// Frequency ratio of each copy.
+    ratios: [f32; MAX_UNISON],
+    /// Left and right gain of each copy.
+    pans: [[f32; 2]; MAX_UNISON],
+    /// Keeps the loudness about the same whatever the count.
+    norm: f32,
 }
 
-impl Waveform {
-    /// In the order of the `waveform` parameter options.
-    pub(crate) const ALL: [Waveform; 4] = [Waveform::Sine, Waveform::Triangle, Waveform::Saw, Waveform::Square];
-
-    /// The option by its index (the parameter value); out-of-range values take the nearest option.
-    pub(crate) fn from_index(value: f32) -> Self {
-        Self::ALL[(value.round().max(0.0) as usize).min(Self::ALL.len() - 1)]
+impl Unison {
+    /// `voices` copies (`1..=MAX_UNISON`, rounded) spread over `detune_cents` (the outer two are that far apart) and
+    /// over `width` (0 all in the centre, 1 the outer two at the sides). One copy is the plain oscillator in the centre.
+    pub(crate) fn new(voices: f32, detune_cents: f32, width: f32) -> Self {
+        let count = (voices.round().max(1.0) as usize).min(MAX_UNISON);
+        let mut unison = Self { count, ratios: [1.0; MAX_UNISON], pans: [[1.0; 2]; MAX_UNISON], norm: 1.0 / (count as f32).sqrt() };
+        if count > 1 {
+            for k in 0..count {
+                let position = 2.0 * k as f32 / (count - 1) as f32 - 1.0;
+                unison.ratios[k] = (position * detune_cents / 2.0 / 1200.0).exp2();
+                let pan = position * width.clamp(0.0, 1.0);
+                unison.pans[k] = [(1.0 - pan).min(1.0), (1.0 + pan).min(1.0)];
+            }
+        }
+        unison
     }
 }
 
-/// Current parameter values (seconds, Hz, linear gain; sustain is a level `0..=1`).
+impl Default for Unison {
+    fn default() -> Self {
+        Self::new(1.0, 0.0, 0.0)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct LfoSettings {
+    pub shape: LfoShape,
+    pub rate_hz: f32,
+    /// The cycle in beats when the LFO follows the song grid; `None` runs at `rate_hz`.
+    pub sync_beats: Option<f64>,
+    pub pitch_cents: f32,
+    pub filter_octaves: f32,
+    /// How deep it dips the volume, `0..=1`.
+    pub volume: f32,
+}
+
+impl Default for LfoSettings {
+    fn default() -> Self {
+        Self { shape: LfoShape::Sine, rate_hz: 5.0, sync_beats: None, pitch_cents: 0.0, filter_octaves: 0.0, volume: 0.0 }
+    }
+}
+
+/// Current parameter values (seconds, Hz, linear gain; levels and amounts `0..=1` unless the name says otherwise).
 #[derive(Debug, Clone, Copy, PartialEq)]
 pub(crate) struct Settings {
     pub waveform: Waveform,
-    pub attack: f32,
-    /// How many seconds the level holds at maximum after the attack.
-    pub hold: f32,
-    pub decay: f32,
-    pub sustain: f32,
-    pub release: f32,
-    /// Lowpass corner (the mod wheel raises it).
+    pub osc2: Waveform,
+    /// Level of the second oscillator next to the first, `0..=1` (0 is off).
+    pub osc2_level: f32,
+    /// Frequency ratio of the second oscillator to the first.
+    pub osc2_ratio: f32,
+    pub unison: Unison,
+    pub envelope: Ahdsr,
+    /// Voice filter cutoff (the filter envelope, the LFO and the mod wheel move it from here).
     pub high_cut_hz: f32,
-    /// Highpass corner: removes lows below it; 20 Hz leaves the sound untouched.
+    /// Highpass corner on the mix: removes lows below it; 20 Hz leaves the sound untouched.
     pub low_cut_hz: f32,
+    pub resonance: f32,
+    /// How many octaves the filter envelope at its top moves the cutoff (negative closes it).
+    pub filter_env_octaves: f32,
+    pub filter_attack: f32,
+    pub filter_decay: f32,
+    /// Semitones the pitch starts away from the note (a kick's punch, a falling riser); it settles in `pitch_decay`.
+    pub pitch_env_semitones: f32,
+    pub pitch_decay: f32,
+    /// One voice: a key pressed while another is held slides to it without restarting the envelopes (808 slides).
+    pub mono: bool,
+    /// Seconds a mono slide takes; 0 jumps.
+    pub glide: f32,
+    pub lfo: LfoSettings,
     pub gain: f32,
 }
 
@@ -52,108 +118,183 @@ impl Default for Settings {
     fn default() -> Self {
         Self {
             waveform: Waveform::Saw,
-            attack: 0.005,
-            hold: 0.0,
-            decay: 0.15,
-            sustain: 0.6,
-            release: 0.12,
+            osc2: Waveform::Saw,
+            osc2_level: 0.0,
+            osc2_ratio: 1.0,
+            unison: Unison::default(),
+            envelope: Ahdsr::default(),
             high_cut_hz: 1_800.0,
             low_cut_hz: 20.0,
+            resonance: 0.0,
+            filter_env_octaves: 0.0,
+            filter_attack: 0.005,
+            filter_decay: 0.3,
+            pitch_env_semitones: 0.0,
+            pitch_decay: 0.08,
+            mono: false,
+            glide: 0.0,
+            lfo: LfoSettings::default(),
             gain: 0.25,
         }
     }
 }
 
-#[derive(Clone, Copy, PartialEq)]
-enum Stage {
-    Idle,
-    Attack,
-    Hold,
-    Decay,
-    Sustain,
-    Release,
-}
-
-#[derive(Clone, Copy)]
+#[derive(Debug, Clone, Copy)]
 struct Voice {
     note: u8,
-    phase: f32,
-    step: f32,
-    level: f32,
     velocity: f32,
-    stage: Stage,
     age: u64,
-    /// How many frames to keep holding the maximum (the Hold stage).
-    hold_left: f32,
-    /// Level drop per frame in the Release stage: from the current level to zero in exactly `release` seconds.
-    release_step: f32,
+    amp: Envelope,
+    filter_env: AttackDecay,
+    /// Share of the pitch envelope still left: 1 at the note start, settling to 0.
+    pitch_env: f32,
+    /// Current pitch (a MIDI note number, fractional while sliding) and the note it slides to.
+    pitch: f32,
+    target: f32,
+    /// Phase (`0..1` of a cycle) of every unison copy of both oscillators.
+    phases: [[f32; MAX_UNISON]; 2],
+    /// The voice filter, per channel.
+    filters: [Svf; 2],
 }
 
 impl Voice {
-    const IDLE: Voice =
-        Voice { note: 0, phase: 0.0, step: 0.0, level: 0.0, velocity: 0.0, stage: Stage::Idle, age: 0, hold_left: 0.0, release_step: 0.0 };
-}
+    const IDLE: Voice = Voice {
+        note: 0,
+        velocity: 0.0,
+        age: 0,
+        amp: Envelope::IDLE,
+        filter_env: AttackDecay::REST,
+        pitch_env: 0.0,
+        pitch: 0.0,
+        target: 0.0,
+        phases: [[0.0; MAX_UNISON]; 2],
+        filters: [Svf::REST; 2],
+    };
 
-pub(crate) fn midi_to_hz(note: u8) -> f32 {
-    440.0 * 2f32.powf((f32::from(note) - 69.0) / 12.0)
-}
-
-/// Waveform by phase `0..TAU`; the result is in `[-1, 1]`.
-pub(crate) fn oscillator(waveform: Waveform, phase: f32) -> f32 {
-    let t = phase / TAU;
-    match waveform {
-        Waveform::Sine => phase.sin(),
-        Waveform::Triangle => 4.0 * (t - 0.5).abs() - 1.0,
-        Waveform::Saw => 2.0 * t - 1.0,
-        Waveform::Square => {
-            if t < 0.5 {
-                1.0
-            } else {
-                -1.0
-            }
+    fn new(note: u8, velocity: f32, age: u64) -> Self {
+        let mut phases = [[0.0; MAX_UNISON]; 2];
+        for (k, phase) in phases[0].iter_mut().enumerate() {
+            *phase = (k as f32 * GOLDEN).fract();
         }
+        phases[1] = phases[0];
+        let mut voice = Self { phases, ..Self::IDLE };
+        voice.retrigger(note, velocity, age);
+        voice
+    }
+
+    /// Starts the note's envelopes on this voice, keeping its phases and filter memory (no click on a retrigger).
+    fn retrigger(&mut self, note: u8, velocity: f32, age: u64) {
+        self.note = note;
+        self.velocity = velocity;
+        self.age = age;
+        self.pitch = f32::from(note);
+        self.target = self.pitch;
+        self.pitch_env = 1.0;
+        self.amp.start();
+        self.filter_env.start();
+    }
+
+    /// Slides to `note` with the envelopes running on (mono legato).
+    fn slide(&mut self, note: u8, glide: f32) {
+        self.note = note;
+        self.target = f32::from(note);
+        if glide <= 0.0 {
+            self.pitch = self.target;
+        }
+    }
+}
+
+/// Keys held down in mono mode, oldest first: letting go of the sounding one slides back to the newest one left.
+#[derive(Debug, Clone, Copy)]
+struct HeldNotes {
+    notes: [u8; HELD_NOTES],
+    len: usize,
+}
+
+impl HeldNotes {
+    const EMPTY: HeldNotes = HeldNotes { notes: [0; HELD_NOTES], len: 0 };
+
+    fn push(&mut self, note: u8) {
+        self.remove(note);
+        if self.len == HELD_NOTES {
+            self.notes.copy_within(1.., 0);
+            self.len -= 1;
+        }
+        self.notes[self.len] = note;
+        self.len += 1;
+    }
+
+    fn remove(&mut self, note: u8) {
+        if let Some(i) = self.notes[..self.len].iter().position(|n| *n == note) {
+            self.notes.copy_within(i + 1..self.len, i);
+            self.len -= 1;
+        }
+    }
+
+    fn last(&self) -> Option<u8> {
+        self.len.checked_sub(1).map(|i| self.notes[i])
+    }
+
+    fn is_empty(&self) -> bool {
+        self.len == 0
     }
 }
 
 pub(crate) struct Engine {
     sample_rate: f32,
     voices: [Voice; VOICES],
-    filter_state: f32,
-    /// Lowpass of the mix at the low cut; subtracting it leaves the highpassed signal.
-    low_state: f32,
+    /// Lowpass of the mix at the low cut, per channel; subtracting it leaves the highpassed signal.
+    low_state: [f32; 2],
     clock: u64,
     /// How much pitch bend speeds up the phase of all voices (1 means the wheel is centered).
     bend_ratio: f32,
     /// Mod wheel, `0..=1`.
     modulation: f32,
+    noise: Noise,
+    lfo: Lfo,
+    /// The song tempo for a synced LFO.
+    beats_per_frame: f64,
+    held: HeldNotes,
 }
 
 impl Default for Engine {
     fn default() -> Self {
+        let sample_rate = 48_000.0;
         Self {
-            sample_rate: 48_000.0,
+            sample_rate,
             voices: [Voice::IDLE; VOICES],
-            filter_state: 0.0,
-            low_state: 0.0,
+            low_state: [0.0; 2],
             clock: 0,
             bend_ratio: 1.0,
             modulation: 0.0,
+            noise: Noise::new(),
+            lfo: Lfo::new(),
+            beats_per_frame: DEFAULT_BPM / 60.0 / f64::from(sample_rate),
+            held: HeldNotes::EMPTY,
         }
     }
+}
+
+#[cfg(test)]
+pub(crate) fn midi_to_hz(note: u8) -> f32 {
+    440.0 * 2f32.powf((f32::from(note) - 69.0) / 12.0)
 }
 
 impl Engine {
     pub(crate) fn prepare(&mut self, sample_rate: f32) {
         self.sample_rate = sample_rate;
+        self.beats_per_frame = DEFAULT_BPM / 60.0 / f64::from(sample_rate);
         self.reset();
     }
 
     pub(crate) fn reset(&mut self) {
         self.voices = [Voice::IDLE; VOICES];
-        self.filter_state = 0.0;
-        self.low_state = 0.0;
+        self.low_state = [0.0; 2];
         self.bend_ratio = 1.0;
         self.modulation = 0.0;
+        self.noise = Noise::new();
+        self.lfo = Lfo::new();
+        self.held = HeldNotes::EMPTY;
     }
 
     /// Pitch wheel: `-1..=1` (0 is the middle), the end is ±[`BEND_RANGE_SEMITONES`].
@@ -166,270 +307,126 @@ impl Engine {
         self.modulation = amount.clamp(0.0, 1.0);
     }
 
-    /// Linear envelope increment per frame for a given duration.
-    fn rate(&self, seconds: f32) -> f32 {
-        1.0 / (seconds.max(0.0005) * self.sample_rate)
+    /// The song position (in beats) and tempo at the start of a segment: while playing, a synced LFO is put back on
+    /// the grid, so it stays on the beat after a seek or a loop.
+    pub(crate) fn set_timing(&mut self, start_beat: f64, beats_per_frame: f64, playing: bool, sync_beats: Option<f64>) {
+        if beats_per_frame > 0.0 {
+            self.beats_per_frame = beats_per_frame;
+        }
+        if let (true, Some(cycle)) = (playing, sync_beats) {
+            self.lfo.align(start_beat, cycle);
+        }
     }
 
-    pub(crate) fn note_on(&mut self, note: u8, velocity: f32) {
+    pub(crate) fn note_on(&mut self, note: u8, velocity: f32, s: &Settings) {
         self.clock += 1;
+        let velocity = velocity.clamp(0.0, 1.0);
+        if s.mono {
+            let legato = !self.held.is_empty() && self.voices[0].amp.is_held();
+            self.held.push(note);
+            let voice = &mut self.voices[0];
+            if legato {
+                voice.slide(note, s.glide);
+            } else if voice.amp.is_idle() {
+                *voice = Voice::new(note, velocity, self.clock);
+            } else {
+                voice.retrigger(note, velocity, self.clock);
+            }
+            return;
+        }
         // A free voice, otherwise the oldest one.
         let index = self
             .voices
             .iter()
-            .position(|v| v.stage == Stage::Idle)
+            .position(|v| v.amp.is_idle())
             .or_else(|| self.voices.iter().enumerate().min_by_key(|(_, v)| v.age).map(|(i, _)| i))
             .unwrap_or(0);
-        self.voices[index] = Voice {
-            note,
-            phase: 0.0,
-            step: TAU * midi_to_hz(note) / self.sample_rate,
-            level: 0.0,
-            velocity: velocity.clamp(0.0, 1.0),
-            stage: Stage::Attack,
-            age: self.clock,
-            hold_left: 0.0,
-            release_step: 0.0,
-        };
+        self.voices[index] = Voice::new(note, velocity, self.clock);
     }
 
-    pub(crate) fn note_off(&mut self, note: u8, release: f32) {
-        let rate = self.rate(release);
-        for voice in &mut self.voices {
-            if voice.note == note && !matches!(voice.stage, Stage::Idle | Stage::Release) {
-                voice.stage = Stage::Release;
-                voice.release_step = voice.level * rate;
+    pub(crate) fn note_off(&mut self, note: u8, s: &Settings) {
+        if s.mono {
+            self.held.remove(note);
+            let back = self.held.last();
+            let voice = &mut self.voices[0];
+            if let (true, Some(back)) = (voice.note == note && voice.amp.is_held(), back) {
+                voice.slide(back, s.glide);
+                return;
             }
+        }
+        let sample_rate = self.sample_rate;
+        for voice in self.voices.iter_mut().filter(|v| v.note == note) {
+            voice.amp.release(s.envelope.release, sample_rate);
         }
     }
 
     pub(crate) fn all_notes_off(&mut self, release: f32) {
-        let rate = self.rate(release);
+        self.held = HeldNotes::EMPTY;
+        let sample_rate = self.sample_rate;
         for voice in &mut self.voices {
-            if voice.stage != Stage::Idle {
-                voice.stage = Stage::Release;
-                voice.release_step = voice.level * rate;
-            }
+            voice.amp.release(release, sample_rate);
         }
     }
 
-    fn advance_envelope(&self, voice: &mut Voice, s: &Settings) {
-        match voice.stage {
-            Stage::Idle | Stage::Sustain => {}
-            Stage::Attack => {
-                voice.level += self.rate(s.attack);
-                if voice.level >= 1.0 {
-                    voice.level = 1.0;
-                    if s.hold > 0.0 {
-                        voice.hold_left = s.hold * self.sample_rate;
-                        voice.stage = Stage::Hold;
-                    } else {
-                        voice.stage = Stage::Decay;
-                    }
-                }
+    /// One stereo frame `[left, right]`.
+    pub(crate) fn next_frame(&mut self, s: &Settings) -> [f32; 2] {
+        let sr = self.sample_rate;
+        let cycles = s.lfo.sync_beats.map_or(f64::from(s.lfo.rate_hz / sr), |beats| self.beats_per_frame / beats);
+        let lfo = self.lfo.advance(s.lfo.shape, cycles);
+        let glide = if s.glide > 0.0 { 1.0 - (-SETTLE / (s.glide * sr)).exp() } else { 1.0 };
+        let pitch_settle = (-SETTLE / (s.pitch_decay.max(0.0005) * sr)).exp();
+        let pitch_lfo = lfo * s.lfo.pitch_cents / 100.0;
+        // The mod wheel and the LFO move every voice's cutoff the same way; each voice adds its own envelope.
+        let cutoff_octaves = self.modulation * MODULATION_OCTAVES + lfo * s.lfo.filter_octaves;
+        let max_cutoff = 0.45 * sr;
+        let osc2_share = 1.0 / (1.0 + s.osc2_level);
+        let bend = self.bend_ratio;
+        let mut mix = [0.0f32; 2];
+        let Self { voices, noise, .. } = self;
+        for voice in voices.iter_mut() {
+            if voice.amp.is_idle() {
+                continue;
             }
-            Stage::Hold => {
-                voice.hold_left -= 1.0;
-                if voice.hold_left <= 0.0 {
-                    voice.stage = Stage::Decay;
-                }
+            let level = voice.amp.advance(&s.envelope, sr);
+            if voice.amp.is_idle() {
+                *voice = Voice::IDLE;
+                continue;
             }
-            Stage::Decay => {
-                voice.level -= self.rate(s.decay) * (1.0 - s.sustain).max(0.0001);
-                if voice.level <= s.sustain {
-                    voice.level = s.sustain;
-                    voice.stage = Stage::Sustain;
-                }
+            voice.pitch += (voice.target - voice.pitch) * glide;
+            voice.pitch_env *= pitch_settle;
+            let semitones = voice.pitch - 69.0 + voice.pitch_env * s.pitch_env_semitones + pitch_lfo;
+            let step = 440.0 * (semitones / 12.0).exp2() * bend / sr;
+            let noise_now = noise.sample();
+            let mut frame = [0.0f32; 2];
+            for k in 0..s.unison.count {
+                let (first, second) = (voice.phases[0][k], voice.phases[1][k]);
+                let value = wave(s.waveform, first, noise_now) + s.osc2_level * wave(s.osc2, second, noise_now);
+                frame[0] += value * s.unison.pans[k][0];
+                frame[1] += value * s.unison.pans[k][1];
+                let copy_step = step * s.unison.ratios[k];
+                voice.phases[0][k] = (first + copy_step).fract();
+                voice.phases[1][k] = (second + copy_step * s.osc2_ratio).fract();
             }
-            Stage::Release => {
-                voice.level -= voice.release_step;
-                if voice.level <= 0.0 {
-                    *voice = Voice::IDLE;
-                }
+            let scale = level * voice.velocity * s.unison.norm * osc2_share;
+            let envelope = voice.filter_env.advance(s.filter_attack, s.filter_decay, sr);
+            let cutoff = (s.high_cut_hz * (cutoff_octaves + envelope * s.filter_env_octaves).exp2()).clamp(MIN_CUTOFF_HZ, max_cutoff);
+            let coefficients = Coefficients::lowpass(cutoff, s.resonance, sr);
+            for ((out, filter), x) in mix.iter_mut().zip(&mut voice.filters).zip(frame) {
+                *out += filter.lowpass(&coefficients, x * scale);
             }
         }
-    }
-
-    /// One frame (mono; duplicating to channels is the caller's job).
-    pub(crate) fn next_sample(&mut self, s: &Settings) -> f32 {
-        // Modulation raises the cutoff, but not above almost half the sample rate: the filter cuts nothing there anyway.
-        let cutoff = (s.high_cut_hz * 2f32.powf(self.modulation * MODULATION_OCTAVES)).min(0.45 * self.sample_rate);
-        let alpha = 1.0 - (-TAU * cutoff / self.sample_rate).exp();
         // At its minimum the low cut is off, not a 20 Hz filter: even that slightly reshapes a square (overshoot).
-        let low_alpha = if s.low_cut_hz <= LOW_CUT_OFF_HZ {
-            0.0
-        } else {
-            1.0 - (-TAU * s.low_cut_hz.min(0.45 * self.sample_rate) / self.sample_rate).exp()
-        };
-        let mut mix = 0.0;
-        let mut voices = self.voices;
-        for voice in &mut voices {
-            if voice.stage == Stage::Idle {
-                continue;
-            }
-            self.advance_envelope(voice, s);
-            if voice.stage == Stage::Idle {
-                continue;
-            }
-            mix += oscillator(s.waveform, voice.phase) * voice.level * voice.velocity;
-            voice.phase = (voice.phase + voice.step * self.bend_ratio) % TAU;
+        let low_alpha =
+            if s.low_cut_hz <= LOW_CUT_OFF_HZ { 0.0 } else { 1.0 - (-std::f32::consts::TAU * s.low_cut_hz.min(max_cutoff) / sr).exp() };
+        let gain = s.gain * (1.0 - s.lfo.volume * (1.0 - lfo) * 0.5);
+        let mut out = [0.0f32; 2];
+        for ((out, low), x) in out.iter_mut().zip(&mut self.low_state).zip(mix) {
+            *low += low_alpha * (x - *low);
+            *out = (x - *low) * gain;
         }
-        self.voices = voices;
-        self.low_state += low_alpha * (mix - self.low_state);
-        self.filter_state += alpha * ((mix - self.low_state) - self.filter_state);
-        self.filter_state * s.gain
+        out
     }
 }
 
 #[cfg(test)]
-mod tests {
-    use super::*;
-
-    const SR: u32 = 48_000;
-
-    fn engine() -> Engine {
-        let mut e = Engine::default();
-        e.prepare(SR as f32);
-        e
-    }
-
-    fn render(e: &mut Engine, s: &Settings, frames: usize) -> Vec<f32> {
-        (0..frames).map(|_| e.next_sample(s)).collect()
-    }
-
-    fn peak(buffer: &[f32]) -> f32 {
-        buffer.iter().fold(0.0, |a, b| a.max(b.abs()))
-    }
-
-    /// Peak in the window `[from, to)` seconds from the start of the rendered sound.
-    fn window_peak(out: &[f32], from: f32, to: f32) -> f32 {
-        peak(&out[(from * SR as f32) as usize..(to * SR as f32) as usize])
-    }
-
-    fn open_sine() -> Settings {
-        Settings { waveform: Waveform::Sine, high_cut_hz: 18_000.0, gain: 1.0, ..Settings::default() }
-    }
-
-    #[test]
-    fn silent_without_notes_and_audible_with_one() {
-        let (mut e, s) = (engine(), Settings::default());
-        assert_eq!(peak(&render(&mut e, &s, 1024)), 0.0);
-        e.note_on(60, 1.0);
-        let out = render(&mut e, &s, 4800);
-        assert!(peak(&out) > 0.01);
-        assert!(out.iter().all(|v| v.is_finite() && v.abs() <= 1.0));
-    }
-
-    #[test]
-    fn note_off_decays_to_silence() {
-        let (mut e, s) = (engine(), Settings::default());
-        e.note_on(48, 1.0);
-        render(&mut e, &s, 9600);
-        e.note_off(48, s.release);
-        render(&mut e, &s, SR as usize / 4);
-        assert!(peak(&render(&mut e, &s, 4800)) < 1e-3);
-    }
-
-    #[test]
-    fn plays_chords_and_survives_voice_overflow() {
-        let (mut e, s) = (engine(), Settings::default());
-        for note in 40..60 {
-            e.note_on(note, 0.8);
-        }
-        assert!(render(&mut e, &s, 2048).iter().all(|v| v.is_finite()));
-        e.all_notes_off(s.release);
-        render(&mut e, &s, SR as usize);
-        assert!(peak(&render(&mut e, &s, 512)) < 1e-3);
-    }
-
-    #[test]
-    fn hold_keeps_the_maximum_before_decay_starts() {
-        let s = Settings { attack: 0.001, hold: 0.2, decay: 0.05, sustain: 0.2, ..open_sine() };
-        let mut e = engine();
-        e.note_on(69, 1.0);
-        let out = render(&mut e, &s, (0.5 * SR as f32) as usize);
-        assert!(window_peak(&out, 0.05, 0.19) > 0.85, "during hold the level is at maximum");
-        let after = window_peak(&out, 0.35, 0.5);
-        assert!((after - 0.2).abs() < 0.04, "after decay sustain 0.2 remains, not {after}");
-    }
-
-    #[test]
-    fn release_lasts_the_set_time_regardless_of_the_level_it_starts_from() {
-        for sustain in [1.0, 0.3] {
-            let s = Settings { attack: 0.001, decay: 0.001, sustain, release: 0.2, ..open_sine() };
-            let mut e = engine();
-            e.note_on(69, 1.0);
-            render(&mut e, &s, SR as usize / 2);
-            e.note_off(69, s.release);
-            let out = render(&mut e, &s, SR as usize / 2);
-            assert!(window_peak(&out, 0.0, 0.1) > 0.05, "at the start of release the sound is still audible (sustain {sustain})");
-            assert!(window_peak(&out, 0.22, 0.5) < 1e-3, "after 0.2 s silence (sustain {sustain})");
-        }
-    }
-
-    /// Frequency from the number of upward zero crossings.
-    fn frequency(out: &[f32]) -> f32 {
-        let rising = out.windows(2).filter(|w| w[0] < 0.0 && w[1] >= 0.0).count();
-        rising as f32 * SR as f32 / out.len() as f32
-    }
-
-    #[test]
-    fn pitch_bend_shifts_the_pitch_by_up_to_two_semitones() {
-        let s = Settings { attack: 0.0005, sustain: 1.0, ..open_sine() };
-        let mut e = engine();
-        e.note_on(69, 1.0);
-        render(&mut e, &s, 4800);
-        let straight = frequency(&render(&mut e, &s, SR as usize));
-        e.set_pitch_bend(1.0);
-        let up = frequency(&render(&mut e, &s, SR as usize));
-        e.set_pitch_bend(-1.0);
-        let down = frequency(&render(&mut e, &s, SR as usize));
-        assert!((straight - 440.0).abs() < 2.0, "{straight}");
-        assert!((up - midi_to_hz(71)).abs() < 2.0, "{up}");
-        assert!((down - midi_to_hz(67)).abs() < 2.0, "{down}");
-    }
-
-    #[test]
-    fn modulation_wheel_opens_the_filter() {
-        // A sine at 880 Hz with a 100 Hz cutoff is almost inaudible; full modulation raises the cutoff to 1600 Hz.
-        let s = Settings { high_cut_hz: 100.0, sustain: 1.0, ..open_sine() };
-        let level = |modulation: f32| {
-            let mut e = engine();
-            e.set_modulation(modulation);
-            e.note_on(81, 1.0);
-            peak(&render(&mut e, &s, 9600)[4800..])
-        };
-        let (closed, open) = (level(0.0), level(1.0));
-        assert!(open > closed * 4.0, "without modulation {closed}, with modulation {open}");
-    }
-
-    #[test]
-    fn reset_returns_the_wheels_to_rest() {
-        let mut e = engine();
-        e.set_pitch_bend(1.0);
-        e.set_modulation(1.0);
-        e.reset();
-        assert_eq!((e.bend_ratio, e.modulation), (1.0, 0.0));
-    }
-
-    #[test]
-    fn midi_pitch_is_correct() {
-        assert!((midi_to_hz(69) - 440.0).abs() < 1e-3);
-        assert!((midi_to_hz(57) - 220.0).abs() < 1e-2);
-    }
-
-    #[test]
-    fn every_waveform_stays_within_one() {
-        for waveform in Waveform::ALL {
-            assert!((0..64).all(|i| oscillator(waveform, TAU * i as f32 / 64.0).abs() <= 1.0), "{waveform:?}");
-        }
-    }
-
-    #[test]
-    fn waveform_index_picks_the_nearest_option() {
-        assert_eq!(Waveform::from_index(0.0), Waveform::Sine);
-        assert_eq!(Waveform::from_index(2.4), Waveform::Saw);
-        assert_eq!(Waveform::from_index(9.0), Waveform::Square);
-        assert_eq!(Waveform::from_index(-3.0), Waveform::Sine);
-    }
-}
+mod tests;

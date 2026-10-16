@@ -4,7 +4,7 @@
 
 use daw_contracts::{BlockTiming, L10n, NoteBuffer, NoteEffect, NoteEvent, PPQ, ParamInfo, ParamKind};
 
-use crate::fit;
+use crate::{Clock, fit};
 
 pub const KIND: &str = "arp";
 pub const LABEL: L10n = L10n { en: "Arpeggiator", ru: "Арпеджиатор" };
@@ -243,25 +243,6 @@ impl Arpeggiator {
         output.push(NoteEvent::on(frame, pitch, velocity));
         self.sounding = Some((pitch, tick + self.gate * self.step_ticks));
         self.position += 1;
-    }
-}
-
-/// Converts segment ticks to frames: the segment's start tick and ticks per frame.
-#[derive(Clone, Copy)]
-struct Clock {
-    base: f64,
-    tpf: f64,
-    frames: usize,
-}
-
-impl Clock {
-    /// The first frame not earlier than `tick` (like `BlockTiming::frame_at`), within the segment.
-    fn frame(self, tick: f64) -> usize {
-        (((tick - self.base) / self.tpf - 1e-6).ceil().max(0.0) as usize).min(self.frames)
-    }
-
-    fn end(self) -> f64 {
-        self.base + self.frames as f64 * self.tpf
     }
 }
 

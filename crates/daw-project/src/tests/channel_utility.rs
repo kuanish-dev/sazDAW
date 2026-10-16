@@ -57,7 +57,7 @@ fn values_that_are_not_numbers_are_refused_and_change_nothing() {
 #[test]
 fn the_master_effects_and_unknown_nodes_have_no_utility() {
     let rig = Rig::new();
-    let fx = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     use codes::graph::{NO_UTILITY, NODE_NOT_FOUND};
     for node in [MASTER, fx] {
         assert!(matches!(rig.graph.set_polarity(node, Polarity::default()), Err(e) if e.is(NO_UTILITY)));

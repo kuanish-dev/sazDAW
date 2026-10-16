@@ -46,6 +46,8 @@ edit can be undone with `history_undo` (a compound edit as a whole). Make each r
 `history_checkpoint` before your first edit and, when the request is done, `history_squash` with that mark and a short label \
 (\"AI: drum part\"); to throw away a failed attempt — squash, then `history_undo`. Errors come as `CODE: message` (for example \
 `TR-001: Track 5 not found`): the code names the situation, the message explains it; fix the request and try again. \
+Fewer calls: an effect takes its params at creation (`graph_insertEffect`, `graph_insertEffectBefore`, `graph_addEffect` with \
+`params`), and a param is automated in one call with `automation_addDrawnClip` (lane, clip and shape or points at once). \
 You cannot hear the sound, so check your work with numbers: after building or changing a track, call `analysis_check` and fix the \
 findings (silent or quiet tracks, master overload, mute/solo, params at their minimum) BEFORE reporting that it is done; levels of \
 tracks, buses and the master per bar — `analysis_levels`.";

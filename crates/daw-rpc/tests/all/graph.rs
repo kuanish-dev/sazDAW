@@ -244,3 +244,31 @@ fn graph_set_sidechain_picks_and_clears_the_key_source() {
     let err = table.call(c, "graph.setSidechain", json!({ "effect": reverb, "source": source })).unwrap_err();
     assert!(err.is(codes::graph::NO_SIDECHAIN_INPUT), "{err}");
 }
+
+#[test]
+fn new_effects_take_params_through_rpc() {
+    let session = build_session(false);
+    let (table, c) = (RpcTable::new(), &session.controls);
+    let params_of = |id: &Value| {
+        let graph = call(&table, c, "project.get", Value::Null)["graph"].clone();
+        graph["nodes"].as_array().unwrap().iter().find(|n| n["id"] == *id).unwrap()["kind"]["params"].clone()
+    };
+
+    let reverb =
+        call(&table, c, "graph.addEffect", json!({ "effect": "reverb", "params": { "mix": 1.0, "room": 0.9 }, "x": 0.0, "y": 0.0 }));
+    let params = params_of(&reverb);
+    assert_eq!(params["mix"], 1.0);
+    assert!((params["room"].as_f64().unwrap() - 0.9).abs() < 1e-6, "{params}");
+    let limiter = call(
+        &table,
+        c,
+        "graph.insertEffectBefore",
+        json!({ "node": 0, "effect": "limiter", "params": { "ceiling": -1.0 }, "x": 0.0, "y": 0.0 }),
+    );
+    assert_eq!(params_of(&limiter)["ceiling"], -1.0);
+    let plain = call(&table, c, "graph.addEffect", json!({ "effect": "reverb", "x": 0.0, "y": 0.0 }));
+    assert!(params_of(&plain)["mix"].is_number(), "params are optional");
+
+    let error = table.call(c, "graph.addEffect", json!({ "effect": "reverb", "params": { "nope": 1.0 }, "x": 0.0, "y": 0.0 })).unwrap_err();
+    assert!(error.is(codes::graph::UNKNOWN_EFFECT_PARAM), "{error}");
+}

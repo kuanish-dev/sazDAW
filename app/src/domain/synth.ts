@@ -1,12 +1,22 @@
 // The built-in synth's picture in the instrument window: one cycle of its waveform and its filter response.
-// The math mirrors the synth itself (`crates/daw-synth/src/engine.rs`): the same four waveforms, a one-pole highpass
-// (low cut) and a one-pole lowpass (high cut).
+// The math mirrors the synth itself (`crates/daw-synth/src/osc.rs`, `filter.rs`, `engine.rs`): the same five waveforms,
+// a one-pole highpass (low cut) and a resonant 12 dB/octave lowpass (high cut).
 import { clamp } from "./math";
 
 /** Kind of the built-in synth in the instrument catalog. */
 export const SYNTH_KIND = "synth";
 
-/** Value of waveform option `index` (Sine, Triangle, Saw, Square) at phase `t` (`0..1`); the result is in `[-1, 1]`. */
+/** As `MAX_RESONANCE` in `filter.rs`: how far full resonance lowers the lowpass damping from 2. */
+const MAX_RESONANCE = 1.9;
+
+/** A fixed jagged line for the noise option: the same picture every time. */
+function noiseAt(t: number): number {
+  const x = Math.sin(t * 12_989.8) * 43_758.5453;
+  return 2 * (x - Math.floor(x)) - 1;
+}
+
+/** Value of waveform option `index` (Sine, Triangle, Saw, Square, Noise) at phase `t` (`0..1`); the result is in
+ *  `[-1, 1]`. */
 export function oscillator(index: number, t: number): number {
   switch (Math.round(index)) {
     case 0:
@@ -15,15 +25,20 @@ export function oscillator(index: number, t: number): number {
       return 4 * Math.abs(t - 0.5) - 1;
     case 2:
       return 2 * t - 1;
-    default:
+    case 3:
       return t < 0.5 ? 1 : -1;
+    default:
+      return noiseAt(t);
   }
 }
 
-/** Response in dB at `hz` of the one-pole highpass at `lowCutHz` followed by the one-pole lowpass at `highCutHz`
- *  (each −3 dB at its corner). */
-export function filterDb(hz: number, lowCutHz: number, highCutHz: number): number {
-  return -10 * Math.log10(1 + (hz / highCutHz) ** 2) - 10 * Math.log10(1 + (lowCutHz / hz) ** 2);
+/** Response in dB at `hz` of the one-pole highpass at `lowCutHz` (−3 dB at its corner) followed by the 12 dB/octave
+ *  lowpass at `highCutHz` with `resonancePercent` (`0..100`: −6 dB at the corner without resonance, a peak with it). */
+export function filterDb(hz: number, lowCutHz: number, highCutHz: number, resonancePercent = 0): number {
+  const x = hz / highCutHz;
+  const damping = 2 - MAX_RESONANCE * clamp(resonancePercent / 100, 0, 1);
+  const lowpass = -10 * Math.log10((1 - x * x) ** 2 + (damping * x) ** 2);
+  return lowpass - 10 * Math.log10(1 + (lowCutHz / hz) ** 2);
 }
 
 const MIN_HZ = 20;
@@ -57,13 +72,17 @@ export function wavePath(index: number, width: number, height: number, pad: numb
   return unitPath(points, width, height, pad);
 }
 
-/** The filter response from 20 Hz to 20 kHz, 0 dB at the top, `FLOOR_DB` at the bottom. */
-export function filterPath(lowCutHz: number, highCutHz: number, width: number, height: number, pad: number): string {
+/** The headroom above 0 dB for a resonance peak. */
+const CEILING_DB = 12;
+
+/** The filter response from 20 Hz to 20 kHz, `CEILING_DB` at the top, `FLOOR_DB` at the bottom. */
+export function filterPath(lowCutHz: number, highCutHz: number, resonancePercent: number, width: number, height: number, pad: number): string {
   const points: [number, number][] = [];
   for (let i = 0; i <= STEPS; i++) {
     const x = i / STEPS;
     const hz = MIN_HZ * (MAX_HZ / MIN_HZ) ** x;
-    points.push([x, clamp(1 - filterDb(hz, lowCutHz, highCutHz) / FLOOR_DB, 0, 1)]);
+    const db = filterDb(hz, lowCutHz, highCutHz, resonancePercent);
+    points.push([x, clamp((db - FLOOR_DB) / (CEILING_DB - FLOOR_DB), 0, 1)]);
   }
   return unitPath(points, width, height, pad);
 }

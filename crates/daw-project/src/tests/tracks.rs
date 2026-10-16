@@ -104,7 +104,7 @@ fn removing_a_track_cleans_clips_node_edges_and_automation() {
     let (rig, track, clip) = rig_with_clip();
     rig.notes.add_note(clip, note(60, 0, 240)).unwrap();
     let node = source(&rig, track);
-    let fx = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     rig.graph.connect(node, fx, 1.0, false).unwrap();
     rig.automation.add_lane(ParamTarget::InstrumentParam { track, param: "gain".into() }).unwrap();
     rig.automation.add_lane(ParamTarget::NodeVolume { node }).unwrap();

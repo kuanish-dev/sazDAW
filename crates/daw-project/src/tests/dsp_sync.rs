@@ -63,8 +63,8 @@ fn changing_the_sample_param_rebuilds_the_instrument() {
 #[test]
 fn effect_dsp_objects_follow_effect_nodes() {
     let rig = Rig::new();
-    let a = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
-    let b = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let a = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
+    let b = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     rig.graph.add_bus("Bus", 0.0, 0.0).unwrap();
     let log = rig.dsp_log();
     assert_eq!(log, [format!("add_effect:{a}"), format!("add_effect:{b}")], "buses have no DSP objects");
@@ -81,7 +81,7 @@ fn effect_dsp_objects_follow_effect_nodes() {
 #[test]
 fn snapshot_order_covers_every_node_and_ends_with_master() {
     let (rig, track, _) = rig_with_clip();
-    let fx = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     let bus = rig.graph.add_bus("Bus", 0.0, 0.0).unwrap();
     rig.graph.connect(fx, bus, 1.0, false).unwrap();
     let snapshot = rig.last_snapshot();

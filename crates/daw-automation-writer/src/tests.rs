@@ -7,8 +7,9 @@ use std::time::{Duration, Instant};
 use daw_contracts::codes::automation;
 use daw_contracts::{
     AppLog, AutoPoint, AutomationClip, AutomationClipEdit, AutomationClipId, AutomationControl, AutomationHold, AutomationLane,
-    AutomationWriteMode, AutomationWriter, Bpm, ContractError, HistoryControl, HistoryMark, LaneId, LogEntry, ParamTarget, ShapeRequest,
-    SignatureChange, TempoChange, TempoControl, TempoMap, TimeSignature, TouchEnd, TransportControl, TransportState,
+    AutomationWriteMode, AutomationWriter, Bpm, ClipDrawing, ContractError, DrawnClip, HistoryControl, HistoryMark, LaneId, LogEntry,
+    ParamTarget, ShapeRequest, SignatureChange, TempoChange, TempoControl, TempoMap, TimeSignature, TouchEnd, TransportControl,
+    TransportState,
 };
 
 use crate::{LiveAutomationWriter, WriterDeps};
@@ -136,6 +137,9 @@ impl AutomationControl for FakeLanes {
     }
     fn draw_shape(&self, _: LaneId, _: AutomationClipId, _: ShapeRequest) -> Result<(), ContractError> {
         Ok(())
+    }
+    fn add_drawn_clip(&self, _: ParamTarget, _: u32, _: u32, _: ClipDrawing) -> Result<DrawnClip, ContractError> {
+        Ok(DrawnClip { lane: 0, clip: 0 })
     }
 }
 

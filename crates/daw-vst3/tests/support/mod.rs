@@ -60,7 +60,7 @@ impl GraphControl for Graphs {
     fn graph(&self) -> Graph {
         self.0.lock().unwrap().clone()
     }
-    fn add_effect(&self, _: &str, _: f32, _: f32) -> Result<NodeId, ContractError> {
+    fn add_effect(&self, _: &str, _: &Params, _: f32, _: f32) -> Result<NodeId, ContractError> {
         Err(no("add_effect"))
     }
     fn add_bus(&self, _: &str, _: f32, _: f32) -> Result<NodeId, ContractError> {
@@ -118,10 +118,10 @@ impl GraphControl for Graphs {
     fn set_effect_bypass(&self, _: NodeId, _: bool) -> Result<(), ContractError> {
         Err(no("set_effect_bypass"))
     }
-    fn insert_effect(&self, _: NodeId, _: &str, _: f32, _: f32) -> Result<NodeId, ContractError> {
+    fn insert_effect(&self, _: NodeId, _: &str, _: &Params, _: f32, _: f32) -> Result<NodeId, ContractError> {
         Err(no("insert_effect"))
     }
-    fn insert_effect_before(&self, _: NodeId, _: &str, _: f32, _: f32) -> Result<NodeId, ContractError> {
+    fn insert_effect_before(&self, _: NodeId, _: &str, _: &Params, _: f32, _: f32) -> Result<NodeId, ContractError> {
         Err(no("insert_effect_before"))
     }
     fn remove_effect_keep_path(&self, _: NodeId) -> Result<(), ContractError> {

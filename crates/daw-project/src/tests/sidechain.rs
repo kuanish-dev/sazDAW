@@ -12,7 +12,7 @@ fn duck_rig() -> (Rig, NodeId, NodeId, NodeId) {
     let kick = rig.tracks.add_track("Kick", Some("synth"), 60).unwrap();
     let bass = rig.tracks.add_track("Bass", Some("synth"), 60).unwrap();
     let (kick, bass) = (source(&rig, kick), source(&rig, bass));
-    let comp = rig.graph.insert_effect(bass, "compressor", 0.0, 0.0).unwrap();
+    let comp = rig.graph.insert_effect(bass, "compressor", &Params::new(), 0.0, 0.0).unwrap();
     (rig, kick, bass, comp)
 }
 
@@ -58,7 +58,7 @@ fn picking_a_source_is_one_undo_step() {
 fn wrong_targets_and_sources_are_refused_without_changes() {
     let (rig, kick, bass, comp) = duck_rig();
     rig.graph.set_sidechain(comp, Some(kick)).unwrap();
-    let eq = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let eq = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     let before = rig.service.snapshot();
 
     assert!(matches!(rig.graph.set_sidechain(eq, Some(kick)), Err(e) if e.is(codes::graph::NO_SIDECHAIN_INPUT)));

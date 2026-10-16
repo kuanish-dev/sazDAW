@@ -52,7 +52,7 @@ fn effect_preset_round_trip_and_bad_targets() {
     let session = start(false);
     let controls = &session.controls;
     let track = controls.tracks.add_track("Voice", None, 60).unwrap();
-    let eq = controls.graph.insert_effect(source_node(controls, track), "eq", 0.0, 0.0).unwrap();
+    let eq = controls.graph.insert_effect(source_node(controls, track), "eq", &Params::new(), 0.0, 0.0).unwrap();
     let target = EditorTarget::Effect { node: eq };
     controls.graph.set_effect_param(eq, "low_gain", 6.0).unwrap();
     controls.presets.save(target, "Warm").unwrap();
@@ -88,7 +88,7 @@ fn template_keeps_the_structure_and_sampler_sounds_but_not_clips() {
     let voice = controls.tracks.add_track("Voice", None, 60).unwrap();
     controls.clips.add_audio_clip(voice, 0, vocal.id).unwrap();
     let bus = controls.graph.add_bus("Group", 0.0, 0.0).unwrap();
-    controls.graph.insert_effect(bus, "eq", 0.0, 0.0).unwrap();
+    controls.graph.insert_effect(bus, "eq", &Params::new(), 0.0, 0.0).unwrap();
     let graph_before = controls.graph.graph();
 
     controls.templates.save("Beat").unwrap();

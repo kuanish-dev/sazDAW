@@ -1,7 +1,8 @@
 // Reverb graph (`ui/effects/ReverbGraph.tsx`): how fast the tail dies away, from the room size and damping, and the
 // level of the reverb itself in the live sound. MIRRORS `crates/daw-effects/src/reverb.rs` (Freeverb: comb feedback
 // `ROOM_OFFSET + room × ROOM_SCALE`, a one-pole damping lowpass `damp × DAMP_SCALE` inside each comb, the comb lengths
-// `COMB_TUNING` at 44.1 kHz, the dry part `input × (1 − mix)`): a change there must be repeated here.
+// `COMB_TUNING` at 44.1 kHz, the dry part `input × (1 − mix)`): a change there must be repeated here. The pre-delay and
+// the input low cut do not change how fast the tail dies, so the decay leaves them out.
 import type { ParamInfo, Params } from "../api/types";
 import { namedParams } from "./catalog";
 import { READING_SECONDS } from "./liveLevels";

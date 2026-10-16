@@ -1,4 +1,5 @@
-// The built-in synth's picture: one cycle of the chosen waveform and the lowpass response with the cutoff marker.
+// The built-in synth's picture: one cycle of the chosen waveform and the filter response (with its resonance peak) with
+// the cut markers.
 // Read-only (the knobs below change the values); drawn in the same style as the envelope graph.
 import { For, type JSX } from "solid-js";
 import { cutoffX, filterPath, wavePath } from "../../domain/synth";
@@ -21,8 +22,8 @@ function Panel(props: { label: string; children: JSX.Element }) {
   );
 }
 
-/** `waveform` is the option index, the cuts are in hertz (the synth's own parameter values). */
-export function SynthGraph(props: { waveform: number; lowCut: number; highCut: number }) {
+/** `waveform` is the option index, the cuts are in hertz, `resonance` in percent (the synth's own parameter values). */
+export function SynthGraph(props: { waveform: number; lowCut: number; highCut: number; resonance: number }) {
   const marker = (hz: number) => (
     <line x1={cutoffX(hz, WIDTH, PAD)} x2={cutoffX(hz, WIDTH, PAD)} y1="0" y2={HEIGHT} stroke="var(--color-accent)" stroke-opacity="0.4" stroke-width="1" />
   );
@@ -34,7 +35,7 @@ export function SynthGraph(props: { waveform: number; lowCut: number; highCut: n
       <Panel label={t().tracks.synthGraph.filter}>
         {marker(props.lowCut)}
         {marker(props.highCut)}
-        <path d={filterPath(props.lowCut, props.highCut, WIDTH, HEIGHT, PAD)} fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linejoin="round" />
+        <path d={filterPath(props.lowCut, props.highCut, props.resonance, WIDTH, HEIGHT, PAD)} fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linejoin="round" />
       </Panel>
     </div>
   );

@@ -1,8 +1,8 @@
-// Track MIDI effects: a short label of the active chain for the track header ("ARP", "CH", "ARP·CH").
+// Track MIDI effects: a short label of the active chain for the track header ("ARP", "CH", "RPT", "ARP·CH").
 import type { NoteEffectSpec } from "../api/types";
 
 /** Labels of built-in kinds; an unknown kind uses its first three letters. */
-const BADGES: Record<string, string> = { arp: "ARP", chord: "CH" };
+const BADGES: Record<string, string> = { arp: "ARP", chord: "CH", repeat: "RPT" };
 
 export const noteEffectBadge = (kind: string): string => BADGES[kind] ?? kind.slice(0, 3).toUpperCase();
 

@@ -1,4 +1,5 @@
-//! `noteEffects.*` methods: thin adapters over `NoteEffectControl` — a track's MIDI effects (arpeggiator, chord).
+//! `noteEffects.*` methods: thin adapters over `NoteEffectControl` — a track's MIDI effects (arpeggiator, chord, note
+//! repeat).
 
 use daw_contracts::{NoteEffectId, Params, TrackId};
 use schemars::JsonSchema;
@@ -9,7 +10,7 @@ use crate::RpcTable;
 #[derive(Deserialize, JsonSchema)]
 struct Add {
     track: TrackId,
-    /// Kind from `catalog.get` → `noteEffects` (`arp` is the arpeggiator, `chord` the chord).
+    /// Kind from `catalog.get` → `noteEffects` (`arp` is the arpeggiator, `chord` the chord, `repeat` the note repeat).
     kind: String,
     /// Param values on top of the defaults (the option index for choice).
     #[serde(default)]
@@ -50,7 +51,8 @@ pub(crate) fn register(table: &mut RpcTable) {
     table.add(
         "noteEffects.add",
         "Adds a MIDI effect to the end of an instrument track's chain (clip notes and live notes pass the chain in order \
-         before the instrument): arp is an arpeggiator (held notes one at a time, in steps on the tempo grid), chord builds a chord from each note. \
+         before the instrument): arp is an arpeggiator (held notes one at a time, in steps on the tempo grid), chord builds a chord from each note, \
+         repeat plays every held note again and again on the tempo grid (hi-hat rolls from one long note; `ramp` fades or swells them). \
          Params are the defaults plus params. Returns the effect id. What is played gets recorded, not the effects' output.",
         |c, p: Add| c.note_effects.add(p.track, &p.kind, p.params),
     );

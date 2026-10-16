@@ -35,7 +35,7 @@ fn buses_stand_on_the_stage_too_but_effects_and_the_master_do_not() {
     rig.stage.place(bus, 0.0, StagePlace::DEFAULT).unwrap();
     assert_eq!(strip(&rig, bus).stage, Some(StagePlace::DEFAULT));
 
-    let fx = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     for node in [fx, MASTER] {
         assert!(matches!(rig.stage.place(node, 0.0, StagePlace::DEFAULT), Err(e) if e.is(codes::graph::NO_STAGE_PLACE)));
         assert!(matches!(rig.stage.take_off(node), Err(e) if e.is(codes::graph::NO_STAGE_PLACE)));
@@ -103,7 +103,7 @@ fn depth_and_height_lanes_live_while_the_channel_stands_on_the_stage() {
     let node = source(&rig, track);
     let depth = ParamTarget::StageDepth { node };
     assert!(matches!(rig.automation.add_lane(depth.clone()), Err(e) if e.is(codes::graph::NOT_ON_STAGE)));
-    let bus_effect = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let bus_effect = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     let height_of_effect = ParamTarget::StageHeight { node: bus_effect };
     assert!(matches!(rig.automation.add_lane(height_of_effect), Err(e) if e.is(codes::graph::NO_STAGE_PLACE)));
 

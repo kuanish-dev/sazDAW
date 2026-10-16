@@ -5,7 +5,7 @@ import { clamp } from "../domain/math";
 import { type ErrorCode, fail } from "./errors";
 import { t } from "../i18n";
 
-const SWITCHES = new Set(["sidechain", "ping_pong", "loop", "one_shot", "reverse", "listen"]);
+const SWITCHES = new Set(["sidechain", "ping_pong", "loop", "one_shot", "reverse", "listen", "mono"]);
 /** Per-band switches of the band-split effects (`band2_solo`): named by band, so matched by their ending. */
 const BAND_SWITCHES = /_(solo|bypass)$/;
 
@@ -65,10 +65,23 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
       },
       {
         kind: "synth", label: k.synth,
+        // The order and ranges of `daw-synth/src/lib.rs: PARAMS`.
         params: [
-          choice("waveform", q.waveform, choices.waveform, 2), p("attack", q.attackS, 0.0005, 4, 0.005), p("hold", q.holdS, 0, 4, 0),
+          choice("waveform", q.waveform, choices.waveform, 2), p("osc2_level", q.osc2Level, 0, 100, 0),
+          choice("osc2_waveform", q.osc2Waveform, choices.waveform, 2), p("osc2_semitones", q.osc2Semitones, -24, 24, 0),
+          p("osc2_detune", q.osc2DetuneCents, -50, 50, 0), p("unison", q.unisonVoices, 1, 7, 1),
+          p("unison_detune", q.unisonDetuneCents, 0, 100, 20), p("unison_width", q.unisonWidthPercent, 0, 100, 50),
+          p("attack", q.attackS, 0.0005, 4, 0.005), p("hold", q.holdS, 0, 4, 0),
           p("decay", q.decayS, 0.0005, 4, 0.15), p("sustain", q.sustain, 0, 1, 0.6), p("release", q.releaseS, 0.0005, 8, 0.12),
-          p("low_cut", q.lowCutHz, 20, 2000, 20), p("high_cut", q.highCutHz, 40, 18000, 1800), p("gain", q.volumePercent, 0, 100, 25),
+          p("low_cut", q.lowCutHz, 20, 2000, 20), p("high_cut", q.highCutHz, 40, 18000, 1800),
+          p("resonance", q.resonancePercent, 0, 100, 0), p("filter_env", q.filterEnvOctaves, -6, 6, 0),
+          p("filter_attack", q.filterAttackS, 0.0005, 4, 0.005), p("filter_decay", q.filterDecayS, 0.0005, 4, 0.3),
+          p("pitch_env", q.pitchEnvSemitones, -48, 48, 0), p("pitch_decay", q.pitchDecayS, 0.001, 2, 0.08),
+          p("mono", q.mono, 0, 1, 0), p("glide", q.glideS, 0, 2, 0),
+          choice("lfo_shape", q.lfoShape, choices.lfoShape, 0), p("lfo_rate", q.lfoRateHz, 0.05, 20, 5),
+          choice("lfo_sync", q.lfoSync, choices.lfoSync, 0), p("lfo_pitch", q.lfoPitchCents, 0, 100, 0),
+          p("lfo_filter", q.lfoFilterOctaves, 0, 4, 0), p("lfo_volume", q.lfoVolumePercent, 0, 100, 0),
+          p("gain", q.volumePercent, 0, 100, 25),
         ],
       },
       plucked("guitar", k.guitar, [4, 55, 50, 60]), plucked("electric_guitar", k.electricGuitar, [7, 60, 40, 55], 0),
@@ -88,13 +101,17 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
       },
       {
         kind: "reverb", label: k.reverb,
-        params: [p("room", q.room, 0, 1, 0.6), p("damp", q.damping, 0, 1, 0.5), p("width", q.width, 0, 1, 1), p("mix", q.mix, 0, 1, 0.25)],
+        params: [
+          p("room", q.room, 0, 1, 0.6), p("damp", q.damping, 0, 1, 0.5), p("width", q.width, 0, 1, 1), p("mix", q.mix, 0, 1, 0.25),
+          p("predelay", q.predelayMs, 0, 250, 0), p("low_cut", q.lowCutHz, 20, 1000, 20),
+        ],
       },
       {
         kind: "delay", label: k.delay,
         params: [
           p("time", q.timeMs, 1, 2000, 350), p("feedback", q.feedback, 0, 0.95, 0.4), p("mix", q.mix, 0, 1, 0.3), p("ping_pong", q.pingPong, 0, 1, 0),
-          choice("sync", q.sync, choices.sync, 0),
+          choice("sync", q.sync, choices.sync, 0), p("low_cut", q.echoLowCutHz, 20, 2000, 20),
+          p("high_cut", q.echoHighCutHz, 1000, 20000, 20000),
         ],
       },
       {
@@ -179,6 +196,18 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
         kind: "tape", label: k.tape,
         params: [choice("mode", q.mode, choices.tapeMode, 0), p("drive", q.driveDb, 0, 24, 6), p("output", q.outputDb, -24, 6, 0)],
       },
+      {
+        kind: "crusher", label: k.crusher,
+        params: [p("bits", q.bits, 1, 16, 8), p("downsample", q.downsampleTimes, 1, 50, 1), p("mix", q.mix, 0, 1, 1), p("output", q.outputDb, -24, 6, 0)],
+      },
+      {
+        kind: "phaser", label: k.phaser,
+        params: [
+          p("rate", q.rateHz, 0.02, 10, 0.4), p("low", q.lowHz, 40, 4000, 200), p("high", q.highHz, 200, 16000, 3000),
+          choice("stages", q.stages, ["4", "6", "8", "12"], 1), p("feedback", q.feedback, -0.9, 0.9, 0.5),
+          p("spread", q.spreadDegrees, 0, 180, 90), p("mix", q.mix, 0, 1, 0.5),
+        ],
+      },
       ...plugins.effects,
     ],
     noteEffects: [
@@ -197,6 +226,13 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
           p("inversion", q.inversion, 0, 3, 0), { ...p("spread", q.spread, 0, 1, 0), kind: "switch" },
           choice("scale", q.scale, choices.scale, 0),
           choice("root", q.root, ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"], 0),
+        ],
+      },
+      {
+        kind: "repeat", label: k.repeat,
+        params: [
+          choice("rate", q.step, ["1/4", "1/8", "1/8T", "1/16", "1/16T", "1/32", "1/32T", "1/64"], 5),
+          p("gate", q.gatePercent, 10, 100, 50), p("ramp", q.rampPercent, -50, 50, 0),
         ],
       },
     ],

@@ -1,10 +1,11 @@
-// The graph of the waveshaping effects — distortion, saturator, tape/console (`ui/effects/ShaperGraph.tsx`): the
-// transfer curve (an input sample → the output sample, both −1..1) and the live sound drawn on it and as waves. The
+// The graph of the waveshaping effects — distortion, saturator, tape/console, bitcrusher (`ui/effects/ShaperGraph.tsx`):
+// the transfer curve (an input sample → the output sample, both −1..1) and the live sound drawn on it and as waves. The
 // curves MIRROR `Shape::apply` and the drive/mix/output path of `crates/daw-effects/src/distortion.rs`, `shapes` with the
-// type weights of `saturator.rs`, and `soft_knee`/`shape` with the mode characters and drive compensation of `tape.rs`:
-// a change there must be repeated here. What shapes the sound over time rather than sample by sample — the
-// distortion's tone filter, the oversampling and DC blockers, the tape's head bump and roll-off, the console's crosstalk
-// — is left out of the curve; the live trace shows it as a loop around the curve.
+// type weights of `saturator.rs`, `soft_knee`/`shape` with the mode characters and drive compensation of `tape.rs`, and
+// `quantize` with the mix/output path of `crusher.rs`: a change there must be repeated here. What shapes the sound over
+// time rather than sample by sample — the distortion's tone filter, the oversampling and DC blockers, the tape's head
+// bump and roll-off, the console's crosstalk, the crusher's downsampling — is left out of the curve; the live trace shows
+// it as a loop around the curve.
 import type { ParamInfo, Params } from "../api/types";
 import { namedParams } from "./catalog";
 import { clamp } from "./math";
@@ -64,6 +65,15 @@ export function tapeTransfer(infos: ParamInfo[], values: Params): Transfer | nul
   const output = dbToGain(s.output);
   // Driven into the knee and divided by the drive again: quiet samples keep their level, the peaks round off.
   return (x) => ((softKnee(x * drive + bias, knee) - softKnee(bias, knee)) / drive) * output;
+}
+
+/** The bitcrusher's staircase: every sample rounded to `2^(bits−1)` steps each side of zero, mixed with the clean one. */
+export function crusherTransfer(infos: ParamInfo[], values: Params): Transfer | null {
+  const s = namedParams(infos, values, ["bits", "mix", "output"]);
+  if (!s) return null;
+  const steps = 2 ** (s.bits - 1);
+  const output = dbToGain(s.output);
+  return (x) => (x * (1 - s.mix) + (Math.round(x * steps) / steps) * s.mix) * output;
 }
 
 /** A sample (−1..1) as a position in a view: x across the width, y up from the bottom; louder is clipped to the edge. */

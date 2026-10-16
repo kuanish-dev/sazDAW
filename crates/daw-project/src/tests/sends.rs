@@ -44,7 +44,7 @@ fn new_edges_are_post_fader_and_the_toggle_is_one_undo_step() {
 #[test]
 fn pre_fader_is_rejected_from_effects_master_and_missing_edges() {
     let (rig, src, bus) = send_rig();
-    let fx = rig.graph.insert_effect(bus, "eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.insert_effect(bus, "eq", &Params::new(), 0.0, 0.0).unwrap();
     let fails = |r: Result<(), ContractError>, code| matches!(r, Err(e) if e.is(code));
     assert!(fails(rig.graph.set_edge_pre_fader(fx, MASTER, true), codes::graph::PRE_FADER_NEEDS_STRIP), "an effect has no fader");
     assert!(fails(rig.graph.set_edge_pre_fader(src, fx, true), codes::graph::NO_SUCH_EDGE), "there is no edge src → fx");
@@ -61,7 +61,7 @@ fn pre_fader_is_rejected_from_effects_master_and_missing_edges() {
 fn pre_fader_sends_stay_with_the_node_when_the_path_changes() {
     let (rig, src, bus) = send_rig();
     rig.graph.set_edge_pre_fader(src, bus, true).unwrap();
-    let fx = rig.graph.insert_effect(src, "eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.insert_effect(src, "eq", &Params::new(), 0.0, 0.0).unwrap();
     assert!(edge(&rig, src, bus).pre_fader, "the send stayed with the track instead of moving to the effect");
     assert_eq!(rig.graph.graph().chain(src).effects, [fx]);
     let other = rig.graph.add_bus("Other", 0.0, 0.0).unwrap();
@@ -95,7 +95,7 @@ fn edge_level_lanes_need_an_existing_edge_and_die_with_it() {
 #[test]
 fn sidechain_levels_are_automatable_separately() {
     let (rig, src, _) = send_rig();
-    let comp = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let comp = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     rig.graph.connect(src, comp, 1.0, false).unwrap();
     rig.graph.connect(src, comp, 0.5, true).unwrap();
     let key = ParamTarget::EdgeLevel { from: src, to: comp, sidechain: true };
@@ -110,9 +110,9 @@ fn edge_level_lanes_follow_edges_moved_by_effect_insertion() {
     let (rig, src, bus) = send_rig();
     rig.automation.add_lane(level_lane(src, MASTER)).unwrap();
     rig.automation.add_lane(level_lane(bus, MASTER)).unwrap();
-    let fx = rig.graph.insert_effect(src, "eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.insert_effect(src, "eq", &Params::new(), 0.0, 0.0).unwrap();
     assert!(has_lane(&rig, &level_lane(fx, MASTER)), "the edge src → master moved to the effect with its lane");
-    let limiter = rig.graph.insert_effect_before(MASTER, "eq", 0.0, 0.0).unwrap();
+    let limiter = rig.graph.insert_effect_before(MASTER, "eq", &Params::new(), 0.0, 0.0).unwrap();
     assert!(has_lane(&rig, &level_lane(bus, limiter)), "the master input moved to the effect with its lane");
     rig.graph.remove_effect_keep_path(limiter).unwrap();
     assert_eq!(rig.automation.lanes().len(), 0, "the effect's edges are gone, and so are their lanes");
@@ -121,7 +121,7 @@ fn edge_level_lanes_follow_edges_moved_by_effect_insertion() {
 #[test]
 fn removing_an_effect_keeps_the_pre_fader_kind_of_its_input() {
     let (rig, src, bus) = send_rig();
-    let fx = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     rig.graph.connect(src, fx, 1.0, false).unwrap();
     rig.graph.connect(fx, MASTER, 1.0, false).unwrap();
     rig.graph.disconnect(src, MASTER, false).unwrap();

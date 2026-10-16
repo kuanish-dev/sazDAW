@@ -1,6 +1,6 @@
 # `daw-effects`
 
-Built-in effects: eq, compressor, reverb, delay (tempo-synced), distortion, limiter, chorus, filter, gate, saturator, multiband compressor, dynamic EQ, de-esser, transient shaper, linear-phase EQ, tape/console (see "Built-in effects"); the shared DSP blocks they are built from (`biquad.rs`, `smooth.rs`, `dynamics.rs`, `crossover.rs`, `oversample.rs`, `fft.rs`).
+Built-in effects: eq, compressor, reverb, delay (tempo-synced), distortion, limiter, chorus, filter, gate, saturator, multiband compressor, dynamic EQ, de-esser, transient shaper, linear-phase EQ, tape/console, bitcrusher, phaser (see "Built-in effects"); the shared DSP blocks they are built from (`biquad.rs`, `smooth.rs`, `dynamics.rs`, `crossover.rs`, `oversample.rs`, `fft.rs`).
 
 Depends on: contracts.
 
@@ -20,16 +20,19 @@ Every module's `//!` header explains how it works and names the frontend module 
 * `oversample.rs` — a curve at twice the rate (saturator, tape): aliasing roughly 20 times weaker, not gone;
 * `fft.rs` — a radix-2 complex FFT set up in `new`, so a transform never allocates.
 
-**Effects worth a note** (the rest — eq, compressor, limiter, reverb, chorus — are told by their headers):
+**Effects worth a note** (the rest — eq, compressor, limiter, chorus — are told by their headers):
 * **`filter`** (`filter.rs`): Simper's SVF rather than a biquad — stable under fast cutoff and resonance automation, and a type change crossfades its three outputs.
 * **`gate`** (`gate.rs`): hysteresis (`HYSTERESIS_DB`) plus hold, so it does not chatter; `sidechain` keys it like the compressor.
 * **`distortion`** (`distortion.rs`) and **`saturator`** (`saturator.rs`, curve at twice the rate): waveshapers; a NaN/inf input sample becomes silence in the distortion.
-* **`delay`** (`delay.rs`): with `sync` on, the time comes from the tempo the engine passes in `Effect::set_timing` (`BlockTiming::tempo`; `Bpm::DEFAULT` before the first segment); "Off" (the default) uses `time` in ms, up to `MAX_SECONDS`. A time change crossfades from the old echo to the new (`FADE_MS`) instead of sliding: a fast slide squeals.
+* **`delay`** (`delay.rs`): with `sync` on, the time comes from the tempo the engine passes in `Effect::set_timing` (`BlockTiming::tempo`; `Bpm::DEFAULT` before the first segment); "Off" (the default) uses `time` in ms, up to `MAX_SECONDS`. A time change crossfades from the old echo to the new (`FADE_MS`) instead of sliding: a fast slide squeals. `low_cut`/`high_cut` filter the echo as it is read, inside the loop, so every repeat is thinner and darker than the last; at their ends they are off.
+* **`reverb`** (`reverb.rs`): Freeverb; the mono input first waits `predelay` (a ring allocated for `MAX_PREDELAY_MS` in `new`/`prepare`) and passes a low cut, so the room starts after the hit and the lows stay out of the tail.
 * **`multiband`** (`multiband.rs`): four bands, or three (the top two play as one with band 3's settings), split by `crossover.rs`. Reports each band's reduction as band gains and the deepest as its gain reduction. No latency.
 * **`dynamic_eq`** (`dynamic_eq.rs`): four peaking bands that move only while their band (or the `sidechain` key) is loud; gain 0 leaves a band flat, so a new one is transparent. Reports each band's signed gain. No latency.
 * **`de_esser`** (`de_esser.rs`): split-band (only the band is turned down; with no reduction the sound is untouched, phase included) or wideband; `listen` plays the detected band alone. Reports its gain reduction. No latency.
 * **`transient`** (`transient.rs`): attack and sustain at any level (no threshold), from two follower pairs. No lookahead: the first fraction of a millisecond of a hit is shaped as the peak follower catches it.
 * **`linear_eq`** (`linear_eq/`), for mastering: the EQ's table and bands (`eq::PARAMS`, `eq::filters`) as a linear-phase FIR. Three jobs, three files: `design.rs` (settings → kernel), `worker.rs` (the designer thread), `convolver.rs` (FFT overlap-save, crossfading to a new kernel at the next block). Why a thread: params arrive on the audio thread, where designing a kernel has no place, so each instance has its own (`daw-linear-eq`, started in `EffectKind::start`; failing to start is GR-412 `EFFECT_WORKER_FAILED`). The kernel crosses as a seqlock over atomics: no lock, no `unsafe`, the audio side never waits. Allocations only in `new`/`prepare` (control side). `kernel_len` grows with the rate so the low end keeps its shape to about 25 Hz; **latency** `len + len/2` (6,144 frames, 128 ms at 48 kHz) is reported by `latency_samples` for PDC. Limitation: a setting is heard after the designer's poll and the next block; an offline render faster than real time may hear an automated move a block or two late.
 * **`tape`** (`tape.rs`): Tape and Console voices on an off-centre soft knee at twice the rate; both voices run and `mode` crossfades between them. No latency.
+* **`crusher`** (`crusher.rs`): bit depth (a continuous grid of `2^(bits-1)` steps, so automation sweeps it without jumps of the setting) and downsampling (a held sample on a phase, so a fractional factor is allowed; both channels held at the same moments). Not oversampled on purpose: the aliasing is the sound. No latency.
+* **`phaser`** (`phaser.rs`): 4–12 first-order all-pass stages swept in octaves by a sine LFO, feedback around the chain, the right channel's LFO `spread` degrees later. Stages that a `stages` change brings in start from silence. No latency.
 
 **How to add a similar effect:** the recipe [add-effect](../../.claude/skills/add-effect/SKILL.md). Tests live in the module (helpers in `testing.rs`); the shared contract check (`testing.rs: assert_honours_contract`) runs on every kind in `factories()` by itself.

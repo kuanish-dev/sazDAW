@@ -41,7 +41,7 @@ fn the_builtin_synth_is_an_instrument_not_a_plugin() {
     let session = build_session(false);
     let synth = session.controls.instruments.kinds().into_iter().find(|k| k.kind == SYNTH_KIND).expect("the built-in synth");
     assert_eq!(synth.label.get(), "Synth");
-    assert_eq!(synth.params.len(), 9, "waveform, AHDSR, low cut, high cut, gain");
+    assert_eq!(synth.params.len(), 30, "oscillators, unison, AHDSR, filter, pitch envelope, mono, LFO, gain");
     assert!(session.controls.plugins.installed().is_empty(), "nothing in the plugin list without a scan");
 }
 
@@ -137,7 +137,7 @@ fn builtin_instruments_and_effects_have_no_plugin_window() {
     let track = session.controls.tracks.tracks().into_iter().find(|t| t.instrument.is_some()).expect("the demo has an instrument");
     let error = session.controls.plugin_editors.open(EditorTarget::Instrument { track: track.id }).unwrap_err();
     assert!(error.is(codes::BUILTIN_INSTRUMENT_HAS_NO_WINDOW), "{error}");
-    let effect = session.controls.graph.add_effect("reverb", 0.0, 0.0).unwrap();
+    let effect = session.controls.graph.add_effect("reverb", &Params::new(), 0.0, 0.0).unwrap();
     let error = session.controls.plugin_editors.open(EditorTarget::Effect { node: effect }).unwrap_err();
     assert!(error.is(codes::BUILTIN_EFFECT_HAS_NO_WINDOW), "{error}");
 }

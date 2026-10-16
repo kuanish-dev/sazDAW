@@ -9,7 +9,7 @@ import { compressorCurve } from "../../domain/compressorCurve";
 import type { DynamicsCurve } from "../../domain/dynamicsGraph";
 import { gateCurve } from "../../domain/gateCurve";
 import { limiterCurve } from "../../domain/limiterCurve";
-import { type Transfer, distortionTransfer, saturatorTransfer, tapeTransfer } from "../../domain/shaperCurve";
+import { type Transfer, crusherTransfer, distortionTransfer, saturatorTransfer, tapeTransfer } from "../../domain/shaperCurve";
 import { t } from "../../i18n";
 import { useSession } from "../../state/session";
 import { ChorusGraph } from "./ChorusGraph";
@@ -21,6 +21,7 @@ import { EqGraph } from "./EqGraph";
 import { FilterGraph } from "./FilterGraph";
 import { LinearEqGraph } from "./LinearEqGraph";
 import { MultibandGraph } from "./MultibandGraph";
+import { PhaserGraph } from "./PhaserGraph";
 import { ReverbGraph } from "./ReverbGraph";
 import { ShaperGraph } from "./ShaperGraph";
 import { TransientGraph } from "./TransientGraph";
@@ -35,10 +36,15 @@ const DYNAMICS: Record<string, { curve: Curve<DynamicsCurve>; label: () => strin
 };
 
 /** The waveshapers: their transfer curve. */
-const SHAPERS: Record<string, Curve<Transfer>> = { distortion: distortionTransfer, saturator: saturatorTransfer, tape: tapeTransfer };
+const SHAPERS: Record<string, Curve<Transfer>> = {
+  distortion: distortionTransfer,
+  saturator: saturatorTransfer,
+  tape: tapeTransfer,
+  crusher: crusherTransfer,
+};
 
 /** The kinds with a graph of their own (the rest). */
-const OWN_GRAPHS = new Set(["eq", "linear_eq", "filter", "delay", "chorus", "reverb", "multiband", "dynamic_eq", "de_esser", "transient"]);
+const OWN_GRAPHS = new Set(["eq", "linear_eq", "filter", "delay", "chorus", "phaser", "reverb", "multiband", "dynamic_eq", "de_esser", "transient"]);
 
 /** Whether effect kind `kind` has a graph. */
 export const hasEffectGraph = (kind: string) => OWN_GRAPHS.has(kind) || kind in DYNAMICS || kind in SHAPERS;
@@ -79,6 +85,9 @@ export function EffectGraph(props: { node: GraphNode }) {
       </Match>
       <Match when={kind().effect === "chorus"}>
         <ChorusGraph node={props.node.id} infos={params()} values={kind().params} />
+      </Match>
+      <Match when={kind().effect === "phaser"}>
+        <PhaserGraph node={props.node.id} infos={params()} values={kind().params} />
       </Match>
       <Match when={kind().effect === "reverb"}>
         <ReverbGraph node={props.node.id} infos={params()} values={kind().params} />

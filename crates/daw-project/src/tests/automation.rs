@@ -189,3 +189,56 @@ fn a_duplicate_follows_the_clip_and_removal_forgets_it() {
     assert_eq!(rig.automation.lanes()[0].clips.iter().map(|c| c.id).collect::<Vec<_>>(), [copy]);
     assert!(matches!(rig.automation.remove_clip(lane, clip), Err(e) if e.is(codes::automation::CLIP_NOT_FOUND)));
 }
+
+fn sine(period_ticks: u32) -> ClipDrawing {
+    ClipDrawing::Shape { shape: AutomationShape::Sine, period_ticks, min: 0.2, max: 0.8 }
+}
+
+#[test]
+fn a_drawn_clip_creates_its_lane_and_clip_in_one_undo_step() {
+    let rig = Rig::new();
+    let target = ParamTarget::NodeVolume { node: MASTER };
+    let drawn = rig.automation.add_drawn_clip(target.clone(), 3_840, 7_680, sine(960)).unwrap();
+    let lanes = rig.automation.lanes();
+    assert_eq!((lanes.len(), lanes[0].id, lanes[0].target.clone()), (1, drawn.lane, target.clone()));
+    let clip = &lanes[0].clips[0];
+    assert_eq!((clip.id, clip.start_tick, clip.length_ticks, clip.loop_ticks), (drawn.clip, 3_840, 7_680, 7_680));
+    assert_eq!(clip.points.first().map(|p| (p.tick, p.value)), Some((0, 0.5)), "a sine starts in the middle");
+    assert_eq!(clip.points.last().map(|p| p.tick), Some(7_680), "and covers the whole pattern");
+    assert!(clip.points.iter().all(|p| (0.2 - 1e-6..=0.8 + 1e-6).contains(&p.value)));
+
+    assert!(rig.service.undo(), "one step");
+    assert!(rig.automation.lanes().is_empty(), "the lane goes with its clip");
+}
+
+#[test]
+fn a_drawn_clip_joins_the_lane_already_there_and_takes_points() {
+    let rig = Rig::new();
+    let (lane, _) = master_clip(&rig);
+    let points = vec![AutoPoint::new(960, 1.0), AutoPoint::new(0, 0.0)];
+    let drawn =
+        rig.automation.add_drawn_clip(ParamTarget::NodeVolume { node: MASTER }, 10_000, 3_840, ClipDrawing::Points { points }).unwrap();
+    assert_eq!(drawn.lane, lane);
+    let lanes = rig.automation.lanes();
+    assert_eq!((lanes.len(), lanes[0].clips.len()), (1, 2));
+    assert_eq!(lanes[0].clips[1].points, [AutoPoint::new(0, 0.0), AutoPoint::new(960, 1.0)], "sorted like set_points");
+}
+
+#[test]
+fn a_refused_drawn_clip_leaves_nothing_behind() {
+    let rig = Rig::new();
+    let before = rig.service.snapshot();
+    let missing = rig.automation.add_drawn_clip(ParamTarget::NodePan { node: 9_999 }, 0, 3_840, sine(960));
+    assert!(matches!(missing, Err(e) if e.is(codes::graph::NODE_NOT_FOUND)));
+    let short = rig.automation.add_drawn_clip(ParamTarget::NodeVolume { node: MASTER }, 0, 3_840, sine(1));
+    assert!(short.is_err(), "a period under MIN_SHAPE_PERIOD");
+    let outside = ClipDrawing::Points { points: vec![AutoPoint::new(5_000, 0.5)] };
+    let late = rig.automation.add_drawn_clip(ParamTarget::NodeVolume { node: MASTER }, 0, 3_840, outside);
+    assert!(matches!(late, Err(e) if e.is(codes::automation::POINT_OUTSIDE_PATTERN)));
+    assert_eq!(rig.service.snapshot(), before, "no empty lane is left");
+
+    let (lane, _) = master_clip(&rig);
+    let overlap = rig.automation.add_drawn_clip(ParamTarget::NodeVolume { node: MASTER }, 5_000, 3_840, sine(960));
+    assert!(matches!(overlap, Err(e) if e.is(codes::automation::CLIP_OVERLAPS)));
+    assert_eq!(rig.automation.lanes()[0].clips.len(), 1, "the lane {lane} keeps its one clip");
+}

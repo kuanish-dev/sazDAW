@@ -1,7 +1,9 @@
 //! `automation.*` methods: thin adapters over `AutomationControl` (lanes, their clips and pattern points) and
 //! `AutomationWriter` (writing param moves live while the song plays).
 
-use daw_contracts::{AutoPoint, AutomationClipEdit, AutomationClipId, AutomationWriteMode, LaneId, ParamTarget, ShapeRequest, TouchEnd};
+use daw_contracts::{
+    AutoPoint, AutomationClipEdit, AutomationClipId, AutomationWriteMode, ClipDrawing, LaneId, ParamTarget, ShapeRequest, TouchEnd,
+};
 use schemars::JsonSchema;
 use serde::Deserialize;
 
@@ -11,6 +13,17 @@ use crate::params::Id;
 #[derive(Deserialize, JsonSchema)]
 struct AddLane {
     target: ParamTarget,
+}
+
+#[derive(Deserialize, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+struct AddDrawnClip {
+    /// The parameter: its lane is found or created.
+    target: ParamTarget,
+    start_tick: u32,
+    length_ticks: u32,
+    /// What the clip plays over its whole pattern: a shape or points.
+    drawing: ClipDrawing,
 }
 
 #[derive(Deserialize, JsonSchema)]
@@ -108,6 +121,14 @@ pub(crate) fn register(table: &mut RpcTable) {
          loopTicks), replacing the points there (one undo step): sine, triangle, saw, square (repeating every \
          periodTicks, e.g. 960 = a quarter note) or rampUp/rampDown (one line), between min and max in parameter units.",
         |c, p: DrawShape| c.automation.draw_shape(p.lane, p.clip, p.shape),
+    );
+    table.add(
+        "automation.addDrawnClip",
+        "Automates a parameter in ONE call and one undo step: finds the target's lane or creates it, adds a clip at \
+         startTick, lengthTicks long, and draws it over its whole pattern — drawing { type: \"shape\", shape (sine, \
+         triangle, saw, square, rampUp, rampDown), periodTicks, min, max } or { type: \"points\", points }. Prefer it to \
+         addLane + addClip + drawShape. Returns { lane, clip }.",
+        |c, p: AddDrawnClip| c.automation.add_drawn_clip(p.target, p.start_tick, p.length_ticks, p.drawing),
     );
     table.add(
         "automation.writeMode",

@@ -62,8 +62,8 @@ pub use audio::{
     InputLevel, LiveInput, StreamConfig,
 };
 pub use automation::{
-    AutomationClipEdit, AutomationControl, AutomationShape, CURVE_STRENGTH, MAX_AUTOMATION_CLIPS, MAX_LANES, MAX_POINTS, MIN_SHAPE_PERIOD,
-    ShapeRequest, clip_value_at, curve_shape, lane_value_at, value_at,
+    AutomationClipEdit, AutomationControl, AutomationShape, CURVE_STRENGTH, ClipDrawing, DrawnClip, MAX_AUTOMATION_CLIPS, MAX_LANES,
+    MAX_POINTS, MIN_SHAPE_PERIOD, ShapeRequest, clip_value_at, curve_shape, lane_value_at, value_at,
 };
 pub use automation_write::{AutomationHold, AutomationWriteMode, AutomationWriter, MAX_HELD_LANES, TOUCH_IDLE_MS, TouchEnd};
 pub use bounce::{TrackBounce, TrackRender, TrackSound};

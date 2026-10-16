@@ -10,7 +10,7 @@ fn full_rig() -> (Rig, ProjectCleaner) {
     let rig = Rig::new();
     let track = rig.tracks.add_track("Synth", Some("synth"), 60).unwrap();
     rig.clips.add_note_clip(NewNoteClip::empty(track, 0, None)).unwrap();
-    rig.graph.insert_effect_before(MASTER, "eq", 0.0, 0.0).unwrap();
+    rig.graph.insert_effect_before(MASTER, "eq", &Params::new(), 0.0, 0.0).unwrap();
     rig.graph.add_bus("Bus", 0.0, 0.0).unwrap();
     rig.automation.add_lane(ParamTarget::InstrumentParam { track, param: "gain".into() }).unwrap();
     rig.markers.add_marker(0, "Intro").unwrap();

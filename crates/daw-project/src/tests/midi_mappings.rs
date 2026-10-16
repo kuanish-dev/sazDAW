@@ -92,7 +92,7 @@ fn a_width_knob_spans_mono_to_twice_as_wide() {
 fn effect_and_instrument_params_use_their_catalog_range() {
     let (rig, track, _) = rig_with_clip();
     let midi = mappings(&rig);
-    let fx = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     midi.learn(ParamTarget::EffectParam { node: fx, param: "gain".into() }).unwrap();
     midi.control_change(0, 1, 0);
     midi.control_change(0, 1, 127);
@@ -113,7 +113,7 @@ fn bad_targets_are_refused_and_vanished_ones_are_hidden_until_undo() {
     let not_effect = midi.learn(ParamTarget::EffectParam { node: MASTER, param: "gain".into() });
     assert!(matches!(not_effect, Err(e) if e.is(codes::graph::NODE_NOT_EFFECT)));
 
-    let fx = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     let target = ParamTarget::EffectParam { node: fx, param: "gain".into() };
     midi.learn(target.clone()).unwrap();
     midi.control_change(0, 5, 0);

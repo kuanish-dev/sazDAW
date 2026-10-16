@@ -15,7 +15,7 @@ fn bus_compressor_goes_after_the_bus() {
     let bus = rig.graph.add_bus("Bus", 0.0, 0.0).unwrap();
     rig.graph.set_output(src, bus).unwrap();
 
-    let comp = rig.graph.insert_effect(bus, "eq", 0.0, 0.0).unwrap();
+    let comp = rig.graph.insert_effect(bus, "eq", &Params::new(), 0.0, 0.0).unwrap();
     let graph = rig.graph.graph();
     assert_eq!((level(&graph, bus, comp), level(&graph, comp, MASTER)), (Some(1.0), Some(1.0)), "bus → effect → master");
     assert_eq!(level(&graph, bus, MASTER), None);
@@ -33,7 +33,7 @@ fn master_limiter_takes_every_master_input() {
     let bus = rig.graph.add_bus("Bus", 0.0, 0.0).unwrap();
     rig.graph.connect(b, MASTER, 0.4, false).unwrap();
 
-    let limiter = rig.graph.insert_effect_before(MASTER, "eq", 7.0, 8.0).unwrap();
+    let limiter = rig.graph.insert_effect_before(MASTER, "eq", &Params::new(), 7.0, 8.0).unwrap();
     let graph = rig.graph.graph();
     let node = graph.node(limiter).unwrap();
     assert_eq!((node.x, node.y), (7.0, 8.0));
@@ -57,11 +57,11 @@ fn insert_before_a_bus_keeps_sidechains_and_chains_in_front() {
     let src = source(&rig, rig.tracks.add_track("Synth", Some("synth"), 60).unwrap());
     let bus = rig.graph.add_bus("Bus", 0.0, 0.0).unwrap();
     rig.graph.set_output(src, bus).unwrap();
-    let first = rig.graph.insert_effect_before(bus, "eq", 0.0, 0.0).unwrap();
+    let first = rig.graph.insert_effect_before(bus, "eq", &Params::new(), 0.0, 0.0).unwrap();
     // Before an effect works too: the effect's sidechain input stays with it.
     let key = source(&rig, rig.tracks.add_track("Kick", Some("synth"), 60).unwrap());
     rig.graph.connect(key, first, 0.5, true).unwrap();
-    let second = rig.graph.insert_effect_before(first, "eq", 0.0, 0.0).unwrap();
+    let second = rig.graph.insert_effect_before(first, "eq", &Params::new(), 0.0, 0.0).unwrap();
     let graph = rig.graph.graph();
     assert_eq!(graph.chain(src), TrackChain { effects: vec![second, first], output: Some(bus) });
     assert!(graph.edges.contains(&Edge { from: key, to: first, level: 0.5, sidechain: true, pre_fader: false }));
@@ -73,26 +73,28 @@ fn insert_before_validates_and_failures_change_nothing() {
     let src = source(&rig, rig.tracks.add_track("Synth", Some("synth"), 60).unwrap());
     let before = rig.service.snapshot();
     assert!(
-        matches!(rig.graph.insert_effect_before(src, "eq", 0.0, 0.0), Err(e) if e.is(codes::graph::SOURCE_HAS_NO_INPUT)),
+        matches!(rig.graph.insert_effect_before(src, "eq", &Params::new(), 0.0, 0.0), Err(e) if e.is(codes::graph::SOURCE_HAS_NO_INPUT)),
         "a source has no inputs"
     );
-    assert!(matches!(rig.graph.insert_effect_before(MASTER, "nope", 0.0, 0.0), Err(e) if e.is(codes::graph::UNKNOWN_EFFECT)));
-    assert!(matches!(rig.graph.insert_effect_before(9999, "eq", 0.0, 0.0), Err(e) if e.is(codes::graph::NODE_NOT_FOUND)));
-    let nan = rig.graph.insert_effect_before(MASTER, "eq", f32::NAN, 0.0);
+    assert!(
+        matches!(rig.graph.insert_effect_before(MASTER, "nope", &Params::new(), 0.0, 0.0), Err(e) if e.is(codes::graph::UNKNOWN_EFFECT))
+    );
+    assert!(matches!(rig.graph.insert_effect_before(9999, "eq", &Params::new(), 0.0, 0.0), Err(e) if e.is(codes::graph::NODE_NOT_FOUND)));
+    let nan = rig.graph.insert_effect_before(MASTER, "eq", &Params::new(), f32::NAN, 0.0);
     assert!(matches!(nan, Err(e) if e.is(codes::graph::POSITION_NOT_A_NUMBER)));
     assert_eq!(rig.service.snapshot(), before);
 
     while rig.graph.graph().nodes.len() < MAX_NODES {
-        rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+        rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     }
-    assert!(matches!(rig.graph.insert_effect_before(MASTER, "eq", 0.0, 0.0), Err(e) if e.is(codes::graph::TOO_MANY_NODES)));
+    assert!(matches!(rig.graph.insert_effect_before(MASTER, "eq", &Params::new(), 0.0, 0.0), Err(e) if e.is(codes::graph::TOO_MANY_NODES)));
 }
 
 #[test]
 fn cycles_through_buses_and_effects_are_rejected() {
     let rig = Rig::new();
     let bus = rig.graph.add_bus("Bus", 0.0, 0.0).unwrap();
-    let fx = rig.graph.insert_effect(bus, "eq", 0.0, 0.0).unwrap();
+    let fx = rig.graph.insert_effect(bus, "eq", &Params::new(), 0.0, 0.0).unwrap();
     let err = rig.graph.connect(fx, bus, 1.0, false).unwrap_err();
     assert!(err.is(codes::graph::EDGE_MAKES_LOOP), "{err}");
     let other = rig.graph.add_bus("Other", 0.0, 0.0).unwrap();

@@ -1,6 +1,6 @@
 //! `graph.*` methods: thin adapters over `GraphControl`. The graph itself comes inside `project.get`.
 
-use daw_contracts::{NodeId, Polarity};
+use daw_contracts::{NodeId, Params, Polarity};
 use schemars::JsonSchema;
 use serde::Deserialize;
 
@@ -10,6 +10,10 @@ use crate::params::{Id, IdName};
 #[derive(Deserialize, JsonSchema)]
 struct AddEffect {
     effect: String,
+    /// Parameter values on top of the kind's catalog defaults (`catalog.get` → effects → params), each clamped to its
+    /// range; an unknown name is an error and creates nothing.
+    #[serde(default)]
+    params: Params,
     x: f32,
     y: f32,
 }
@@ -119,6 +123,10 @@ struct EffectParam {
 struct InsertEffect {
     after: NodeId,
     effect: String,
+    /// Parameter values on top of the kind's catalog defaults (`catalog.get` → effects → params), each clamped to its
+    /// range; an unknown name is an error and creates nothing.
+    #[serde(default)]
+    params: Params,
     x: f32,
     y: f32,
 }
@@ -127,6 +135,10 @@ struct InsertEffect {
 struct InsertEffectBefore {
     node: NodeId,
     effect: String,
+    /// Parameter values on top of the kind's catalog defaults (`catalog.get` → effects → params), each clamped to its
+    /// range; an unknown name is an error and creates nothing.
+    #[serde(default)]
+    params: Params,
     x: f32,
     y: f32,
 }
@@ -144,9 +156,11 @@ struct Bypass {
 }
 
 pub(crate) fn register(table: &mut RpcTable) {
-    table.add("graph.addEffect", "Creates an effect of a catalog kind (without connections).", |c, p: AddEffect| {
-        c.graph.add_effect(&p.effect, p.x, p.y)
-    });
+    table.add(
+        "graph.addEffect",
+        "Creates an effect of a catalog kind (without connections), with `params` set in the same undo step.",
+        |c, p: AddEffect| c.graph.add_effect(&p.effect, &p.params, p.x, p.y),
+    );
     table.add("graph.addBus", "Creates a bus already connected to the master.", |c, p: AddBus| c.graph.add_bus(&p.name, p.x, p.y));
     table.add("graph.removeNode", "Removes an effect or a bus together with its connections.", |c, p: Id| c.graph.remove_node(p.id));
     table.add("graph.renameNode", "Renames a node.", |c, p: IdName| c.graph.rename_node(p.id, &p.name));
@@ -197,13 +211,13 @@ pub(crate) fn register(table: &mut RpcTable) {
     });
     table.add(
         "graph.insertEffect",
-        "Inserts an effect right after a node (source, effect or bus): the node's outputs move to the effect, and the node connects to the effect (the track's and bus's \"+ Effect\" button). Returns the effect id.",
-        |c, p: InsertEffect| c.graph.insert_effect(p.after, &p.effect, p.x, p.y),
+        "Inserts an effect right after a node (source, effect or bus): the node's outputs move to the effect, and the node connects to the effect (the track's and bus's \"+ Effect\" button); `params` are set in the same undo step. Returns the effect id.",
+        |c, p: InsertEffect| c.graph.insert_effect(p.after, &p.effect, &p.params, p.x, p.y),
     );
     table.add(
         "graph.insertEffectBefore",
-        "Inserts an effect right before a node (master, bus or effect): all normal inputs of the node move to the effect, and the effect connects to the node; sidechain inputs stay. This is how a limiter goes on the master (node = 0) or a compressor on a bus. Not allowed before a source. Returns the effect id.",
-        |c, p: InsertEffectBefore| c.graph.insert_effect_before(p.node, &p.effect, p.x, p.y),
+        "Inserts an effect right before a node (master, bus or effect): all normal inputs of the node move to the effect, and the effect connects to the node; sidechain inputs stay. This is how a limiter goes on the master (node = 0) or a compressor on a bus. Not allowed before a source; `params` are set in the same undo step. Returns the effect id.",
+        |c, p: InsertEffectBefore| c.graph.insert_effect_before(p.node, &p.effect, &p.params, p.x, p.y),
     );
     table.add("graph.removeEffectKeepPath", "Removes an effect, connecting its input directly to its output.", |c, p: Id| {
         c.graph.remove_effect_keep_path(p.id)
