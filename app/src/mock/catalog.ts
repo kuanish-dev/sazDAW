@@ -42,6 +42,13 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
       ...(drive === undefined ? [] : [p("drive", q.drivePercent, 0, 100, drive)]),
     ],
   });
+  // The EQ's bands, shared by the linear-phase EQ (`eq::PARAMS` in the backend).
+  const eqParams = [
+    p("low_cut", q.lowCutHz, 20, 1000, 20), p("low_gain", q.lowDb, -18, 18, 0), p("low_freq", q.lowHz, 40, 400, 100), p("mid_gain", q.midDb, -18, 18, 0),
+    p("mid_freq", q.midHz, 200, 8000, 1000), p("mid_q", q.midQ, 0.3, 8, 1),
+    p("high_gain", q.highDb, -18, 18, 0), p("high_freq", q.highHz, 2000, 16000, 8000),
+    p("high_cut", q.highCutHz, 1000, 20000, 20000),
+  ];
   return {
     instruments: [
       drum("kick", k.kick), drum("snare", k.snare), drum("hat", k.hat), drum("clap", k.clap),
@@ -69,15 +76,8 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
       ...plugins.instruments,
     ],
     effects: [
-      {
-        kind: "eq", label: k.eq,
-        params: [
-          p("low_cut", q.lowCutHz, 20, 1000, 20), p("low_gain", q.lowDb, -18, 18, 0), p("low_freq", q.lowHz, 40, 400, 100), p("mid_gain", q.midDb, -18, 18, 0),
-          p("mid_freq", q.midHz, 200, 8000, 1000), p("mid_q", q.midQ, 0.3, 8, 1),
-          p("high_gain", q.highDb, -18, 18, 0), p("high_freq", q.highHz, 2000, 16000, 8000),
-          p("high_cut", q.highCutHz, 1000, 20000, 20000),
-        ],
-      },
+      { kind: "eq", label: k.eq, params: eqParams },
+      { kind: "linear_eq", label: k.linearEq, params: eqParams },
       {
         kind: "compressor", label: k.compressor,
         params: [

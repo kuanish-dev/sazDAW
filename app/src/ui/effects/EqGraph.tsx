@@ -1,6 +1,7 @@
 // EQ graph: the frequency response curve (20 Hz–20 kHz, ±18 dB) with draggable band handles over the live spectrum of
 // the node's output (`LiveSpectrum`). Dragging sets frequency and gain, the wheel over the middle handle sets its width
-// (Q), double-click resets the band; every change goes through `onChange` like a knob. The math is in `domain/eqCurve`.
+// (Q), double-click resets the band; every change goes through `onChange` like a knob. An optional caption (the
+// linear-phase EQ's latency) sits in the top corner. The math is in `domain/eqCurve`.
 import { For, Index, Show, createMemo } from "solid-js";
 import type { Id, ParamInfo, Params } from "../../api/types";
 import { EQ_GRID_DB, type EqHandle, HANDLE_PARAMS, dragEqHandle, eqCurvePath, eqHandles, eqSpec, gridY, wheelQ } from "../../domain/eqCurve";
@@ -13,7 +14,7 @@ const VIEW = { width: 300, height: 140 };
 
 const LABELS: Record<EqHandle, string> = { low_cut: "LC", low: "L", mid: "M", high: "H", high_cut: "HC" };
 
-export function EqGraph(props: { node: Id; infos: ParamInfo[]; values: Params; onChange: (name: string, value: number) => void }) {
+export function EqGraph(props: { node: Id; infos: ParamInfo[]; values: Params; caption?: string; onChange: (name: string, value: number) => void }) {
   let svg!: SVGSVGElement;
   /** The handle being dragged now: the others ignore mouse movement. */
   let active: EqHandle | null = null;
@@ -68,6 +69,9 @@ export function EqGraph(props: { node: Id; infos: ParamInfo[]; values: Params; o
               )}
             </For>
             <path d={eqCurvePath(s(), props.values, VIEW)} fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linejoin="round" />
+            <Show when={props.caption}>
+              {(caption) => <text x={VIEW.width - 3} y="9" text-anchor="end" font-size="8" fill="var(--color-muted)">{caption()}</text>}
+            </Show>
             {/* `Index`, not `For`: handle objects are rebuilt on every value change, and a recreated element would lose the pointer capture mid-drag. */}
             <Index each={eqHandles(s(), props.values, VIEW)}>
               {(h) => (

@@ -11,9 +11,11 @@ mod distortion;
 mod dynamic_eq;
 mod dynamics;
 mod eq;
+mod fft;
 mod filter;
 mod gate;
 mod limiter;
+mod linear_eq;
 mod multiband;
 mod reverb;
 mod saturator;
@@ -146,6 +148,7 @@ pub fn factories() -> Vec<Box<dyn EffectFactory>> {
         factory::<dynamic_eq::DynamicEq>(),
         factory::<de_esser::DeEsser>(),
         factory::<transient::Transient>(),
+        factory::<linear_eq::LinearEq>(),
     ]
 }
 

@@ -88,6 +88,16 @@ impl Coefficients {
         let alpha = sin / (2.0 * q);
         Self::normalized(1.0 - alpha, -2.0 * cos, 1.0 + alpha, 1.0 + alpha, -2.0 * cos, 1.0 - alpha)
     }
+
+    /// The magnitude of the response at `freq`, as a gain (1 = 0 dB): what the filter does to a steady tone there.
+    pub fn magnitude(&self, sample_rate: f32, freq: f32) -> f32 {
+        let w = TAU * freq / sample_rate;
+        let (sin1, cos1) = w.sin_cos();
+        let (sin2, cos2) = (2.0 * w).sin_cos();
+        let num = (self.b0 + self.b1 * cos1 + self.b2 * cos2).powi(2) + (self.b1 * sin1 + self.b2 * sin2).powi(2);
+        let den = (1.0 + self.a1 * cos1 + self.a2 * cos2).powi(2) + (self.a1 * sin1 + self.a2 * sin2).powi(2);
+        (num / den.max(1e-20)).sqrt()
+    }
 }
 
 /// State of one channel (transposed direct form II).
@@ -134,6 +144,14 @@ mod tests {
         let all = Coefficients::all_pass(SR as f32, 1_000.0, BUTTERWORTH_Q);
         for hz in [30.0, 300.0, 1_000.0, 3_000.0, 15_000.0] {
             assert!((gain_at(&all, hz) - 1.0).abs() < 0.01, "{hz} Hz");
+        }
+    }
+
+    #[test]
+    fn magnitude_is_the_gain_a_steady_tone_gets() {
+        let peak = Coefficients::peaking(SR as f32, 1_000.0, 12.0, 1.0);
+        for hz in [200.0, 1_000.0, 3_000.0] {
+            assert!((peak.magnitude(SR as f32, hz) - gain_at(&peak, hz)).abs() < 0.01, "{hz} Hz");
         }
     }
 
