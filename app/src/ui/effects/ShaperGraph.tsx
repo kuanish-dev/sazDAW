@@ -1,4 +1,4 @@
-// Shaper graph of the distortion and saturator. Left: the transfer curve (input sample → output sample, −1..1) with the
+// Shaper graph of the distortion, saturator and tape. Left: the transfer curve (input sample → output sample, −1..1) with the
 // sound now traced over it as an X-Y scope (each frame's input against its output: a pure shaper draws its own curve,
 // the tone filter opens it into a loop). Right: the newest wave going in (dim) and coming out (bright), started at a
 // rising zero crossing so a steady note stands still. The curve follows the knobs at once; the trace and the waves come

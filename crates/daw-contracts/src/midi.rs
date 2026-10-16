@@ -52,7 +52,8 @@ pub trait MidiMappingControl: Send + Sync {
     fn remove_mapping(&self, target: &ParamTarget) -> Result<(), ContractError>;
     /// An incoming CC from a device: `channel` 0..=15, `cc` 0..=127, `value` 0..=127. If learning is armed, creates a
     /// mapping; if this CC has mappings, sets their params (like moving a knob in the interface: an undo step merged
-    /// with its neighbours, not written to automation). `true` means the CC was taken and does not reach the track's
+    /// with its neighbours) and hands each move to `AutomationWriter::touch` first, so it is written to the lane while
+    /// automation writing is on and the song plays. `true` means the CC was taken and does not reach the track's
     /// instrument. An edit failure is logged.
     fn control_change(&self, channel: u8, cc: u8, value: u8) -> bool;
 }

@@ -137,7 +137,8 @@ UI/CLI ──(contracts *Control)──▶ ProjectService ──snapshot Arc<Eng
 
 1. A new entity = its own crate (or module) + a trait in `daw-contracts`.
 2. A new instrument or effect is a factory with a parameter table; the engine and the service have no branching on the kind name.
-   Parameters that require rebuilding are declared by the factory (`rebuild_on`).
+   An instrument factory declares the parameters that require recreating the instrument (`rebuild_on`); an effect is
+   never recreated on a parameter change: every effect parameter goes through `Effect::set_param`.
 3. Entities with two sides (UI and audio thread) are split into `*Control` (any thread, non-blocking) and a realtime side.
 4. The audio callback has no allocations, locks or I/O. Engine tables are preallocated; project limits
    (64 tracks, 64 channels, 12 effects per track) match the capacities.

@@ -36,8 +36,8 @@ pub trait ProjectIo: Send + Sync {
 /// Reading the whole project. Job: hand out a consistent copy of the whole project and tell whether it has changed.
 /// For those who look at the project as a whole (export, autosave, interface) rather than edit a part of it.
 pub trait ProjectView: Send + Sync {
-    /// A copy of the whole project; tempo and time signature are the transport's current values (see
-    /// `TransportControl`).
+    /// A copy of the whole project, tempo and time signature included (`Project::tempo_map`; the transport holds no
+    /// tempo).
     fn snapshot(&self) -> Project;
     /// Project version counter: grows with every published change.
     fn revision(&self) -> u64;

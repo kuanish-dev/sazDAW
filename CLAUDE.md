@@ -37,12 +37,12 @@ These rules matter more than convenience and speed. The map of the code is `ARCH
 - Inheritance (in TS: `class … extends`, `interface … extends`; Rust doesn't have it anyway — don't imitate it with "base" traits that carry implementations). Only composition and implementing interfaces.
 - A layer depending on a concrete implementation of another layer (except `daw-bootstrap` and `composition.ts`).
 - Allocations and locks in the audio callback.
-- `unsafe` anywhere except the `daw-vst3` crate (it is unavoidable there for VST3 C interfaces; every block carries a `// SAFETY: …` comment). `daw-vst3` has its own lint set: the same strict rules but `unsafe_code = "allow"`; guarded by `crates/daw-bootstrap/tests/architecture.rs`.
+- `unsafe` anywhere except the `daw-vst3` crate (it is unavoidable there for VST3 C interfaces; every block carries a `// SAFETY: …` comment). `daw-vst3` has its own lint set: the same strict rules but `unsafe_code = "allow"`; guarded by `crates/daw-bootstrap/tests/all/architecture.rs`.
 - Editing an implementation so that it stops honouring the contract, for the sake of a quick result.
 
 ## How it is checked
 
-- Rust: `crates/daw-bootstrap/tests/architecture.rs` — crates depend only on `daw-contracts`, application roots only on `daw-bootstrap`, `daw-rpc`, `daw-mcp` and the contracts; only `daw-vst3` does not inherit the workspace lint rules (`unsafe` is allowed there).
+- Rust: `crates/daw-bootstrap/tests/all/architecture.rs` — crates depend only on `daw-contracts`, application roots only on `daw-bootstrap`, `daw-rpc`, `daw-mcp` and the contracts; only `daw-vst3` does not inherit the workspace lint rules (`unsafe` is allowed there).
 - Frontend: the Biome linter (`npm run lint` in `app/`, config `app/biome.json`): layers as import rules (`ui` doesn't see `api`/`rpc`/dialogs/mocks, `actions` sees only `api` and `domain`, `domain` is pure functions, `api` and `mock` don't know the upper layers), inheritance ban (classes via the plugin `app/lint/no-extends.grit`, interfaces via a `grep` check in the same script), empty blocks (we don't swallow errors), unused code. Implementations are chosen only in `composition.ts` — this is checked by eye.
 - Rust is strict: the workspace `Cargo.toml` has `unsafe_code = "forbid"` (except `daw-vst3`), `clippy::pedantic` (without DSP noise: numeric casts etc. are turned off), and bans `unwrap`/`expect`/`panic`/`todo`/`dbg!`/`println!` in production code (allowed in tests via `clippy.toml`). An exception is written as `#[allow(..., reason = "...")]` with a reason, not silently.
 - Every implementation has tests for honouring its contract; a new crate/layer without tests is not accepted. Tests are organised by area: `src/tests/<area>.rs` or `tests/<area>.rs` with shared helpers in `tests/common/`.

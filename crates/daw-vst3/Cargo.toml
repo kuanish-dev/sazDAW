@@ -29,7 +29,7 @@ path = "src/bin/daw_plugin_scan.rs"
 
 # The only crate in the project where `unsafe` is allowed (VST3 C interfaces cannot be called otherwise).
 # The other rules are the same as in the workspace (its `[lints]` cannot be inherited: it has `unsafe_code = "forbid"`);
-# matching the workspace is checked by `crates/daw-bootstrap/tests/architecture.rs`.
+# matching the workspace is checked by `crates/daw-bootstrap/tests/all/architecture.rs`.
 # Every `unsafe` block must have a `// SAFETY: …` comment (`undocumented_unsafe_blocks`) and do one
 # unsafe operation (`multiple_unsafe_ops_per_block`), so the comment explains exactly that one.
 [lints.rust]

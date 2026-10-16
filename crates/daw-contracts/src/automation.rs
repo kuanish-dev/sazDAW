@@ -20,7 +20,7 @@ pub const CURVE_STRENGTH: f32 = 4.0;
 /// The bent progress `0..=1` at linear progress `t` (`0..=1`) along a segment with `curve` (`-1..=1`, clamped):
 /// `curve = 0` is a straight line `t`; `curve > 0` starts slowly and speeds up, `t^e`; `curve < 0` starts fast and
 /// slows down, `1 - (1 - t)^e`; where `e = CURVE_STRENGTH^|curve|`. Mirror-symmetric: `curve` and `-curve` bend the
-/// same amount in opposite directions. The interface draws with the same formula (`app/src/domain/automation.ts`).
+/// same amount in opposite directions. The interface draws with the same formula (`app/src/domain/automationCurve.ts`, `curveShape`).
 pub fn curve_shape(t: f32, curve: f32) -> f32 {
     let t = t.clamp(0.0, 1.0);
     let curve = if curve.is_finite() { curve.clamp(-1.0, 1.0) } else { 0.0 };

@@ -18,7 +18,8 @@ reuses an existing graph: `b4e3c2a` (tape, drawn by `ShaperGraph`).
      real app shows these labels;
    - `impl EffectKind` (`KIND`, `LABEL`, `PARAMS`) and `impl Effect` (`set_param` through `clamp_param`, `prepare`,
      `reset`, `process` with no allocations, locks or I/O). Latency, if any, is reported (see "Plugin delay
-     compensation" in `docs/features/pdc.md`). Params that need a new instance go into `rebuild_on`.
+     compensation" in `docs/features/pdc.md`). There is no `rebuild_on` for effects: every param changes through
+     `set_param`, so whatever a param's range needs is allocated in `new`/`prepare`.
    - Reuse the shared DSP blocks: `biquad.rs`, `smooth.rs`, `dynamics.rs` (`Follower`), `crossover.rs`, `oversample.rs`, `fft.rs`.
 2. **Register** in `crates/daw-effects/src/lib.rs`: `mod <name>;` and `factory::<<name>::Type>()` in `factories()`.
    That is all on the Rust side: the engine and the service have no branching on the kind name.
