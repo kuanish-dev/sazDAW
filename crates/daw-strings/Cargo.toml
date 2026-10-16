@@ -1,0 +1,11 @@
+[package]
+name = "daw-strings"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+daw-contracts = { path = "../daw-contracts" }
+
+[lints]
+workspace = true

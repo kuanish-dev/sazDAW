@@ -1,0 +1,66 @@
+[workspace]
+members = [".", "xtask"]
+resolver = "2"
+
+# The same strict rules as the main workspace (a copy: the plugin is a separate workspace and cannot inherit them).
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+chunks_exact_to_as_chunks = "allow"
+needless_range_loop = "allow"
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+pedantic = { level = "warn", priority = -1 }
+# Noise for audio code and public contracts: numeric casts in DSP are deliberate, error docs and must_use are not needed.
+cast_possible_truncation = "allow"
+cast_precision_loss = "allow"
+cast_sign_loss = "allow"
+cast_possible_wrap = "allow"
+cast_lossless = "allow"
+must_use_candidate = "allow"
+return_self_not_must_use = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+module_name_repetitions = "allow"
+too_many_lines = "allow"
+similar_names = "allow"
+many_single_char_names = "allow"
+doc_markdown = "allow"
+float_cmp = "allow"
+struct_excessive_bools = "allow"
+needless_pass_by_value = "allow"
+wildcard_imports = "allow"
+items_after_statements = "allow"
+unreadable_literal = "allow"
+assert_is_empty = "allow"
+default_trait_access = "allow"
+struct_field_names = "allow"
+
+[package]
+name = "synth"
+version = "0.1.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+description = "Polyphonic subtractive synth (VST3) with a visual editor"
+
+[lints]
+workspace = true
+
+[lib]
+crate-type = ["cdylib", "lib"]
+
+[dependencies]
+nih_plug = { git = "https://github.com/robbert-vdh/nih-plug", rev = "de421011f41a6d10fc8c7a6084e4f4dee0143683", default-features = false, features = ["vst3"] }
+# The plugin's own window (egui over baseview); the same rev as nih_plug.
+nih_plug_egui = { git = "https://github.com/robbert-vdh/nih-plug", rev = "de421011f41a6d10fc8c7a6084e4f4dee0143683" }
+
+[profile.release]
+lto = "thin"
+strip = "symbols"

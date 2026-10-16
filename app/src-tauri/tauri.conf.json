@@ -1,0 +1,40 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "SazDAW",
+  "version": "0.1.0-beta.1",
+  "identifier": "dev.daw.app",
+  "build": {
+    "devUrl": "http://localhost:1420",
+    "frontendDist": "../dist",
+    "beforeDevCommand": "cargo build -p daw-vst3 --bin daw-plugin-scan && npm run dev",
+    "beforeBuildCommand": "cargo build --release -p daw-vst3 --bin daw-plugin-scan && npm run build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "SazDAW",
+        "width": 1200,
+        "height": 760,
+        "minWidth": 900,
+        "minHeight": 500,
+        "maximized": true
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": [
+      "app"
+    ],
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

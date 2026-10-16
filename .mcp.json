@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "daw": {
+      "type": "http",
+      "url": "http://127.0.0.1:47321/mcp"
+    },
+    "daw-headless": {
+      "command": "./target/release/daw-mcp",
+      "args": []
+    }
+  }
+}

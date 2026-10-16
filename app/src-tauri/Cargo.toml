@@ -1,0 +1,21 @@
+[package]
+name = "daw-desktop"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# unstable: windows without a web page (`tauri::window::WindowBuilder`) — the plugin's own window lives in them.
+tauri = { version = "2", features = ["unstable"] }
+serde_json = "1"
+daw-contracts = { path = "../../crates/daw-contracts" }
+daw-bootstrap = { path = "../../crates/daw-bootstrap" }
+daw-rpc = { path = "../../crates/daw-rpc" }
+daw-mcp = { path = "../../crates/daw-mcp" }
+tauri-plugin-dialog = "2.8.1"
+
+[lints]
+workspace = true

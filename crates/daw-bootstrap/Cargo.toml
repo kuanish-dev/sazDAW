@@ -1,0 +1,39 @@
+[package]
+name = "daw-bootstrap"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+daw-contracts = { path = "../daw-contracts" }
+daw-transport = { path = "../daw-transport" }
+daw-metronome = { path = "../daw-metronome" }
+daw-engine = { path = "../daw-engine" }
+daw-drums = { path = "../daw-drums" }
+daw-patterns = { path = "../daw-patterns" }
+daw-demo = { path = "../daw-demo" }
+daw-sampler = { path = "../daw-sampler" }
+daw-synth = { path = "../daw-synth" }
+daw-strings = { path = "../daw-strings" }
+daw-samples = { path = "../daw-samples" }
+daw-stretch = { path = "../daw-stretch" }
+daw-effects = { path = "../daw-effects" }
+daw-note-effects = { path = "../daw-note-effects" }
+daw-catalog = { path = "../daw-catalog" }
+daw-project = { path = "../daw-project" }
+daw-persistence = { path = "../daw-persistence" }
+daw-render = { path = "../daw-render" }
+daw-mixcheck = { path = "../daw-mixcheck" }
+daw-summary = { path = "../daw-summary" }
+daw-midi = { path = "../daw-midi" }
+daw-recorder = { path = "../daw-recorder" }
+daw-automation-writer = { path = "../daw-automation-writer" }
+daw-audio-recorder = { path = "../daw-audio-recorder" }
+daw-audio-cpal = { path = "../daw-audio-cpal" }
+daw-vst3 = { path = "../daw-vst3" }
+
+[dev-dependencies]
+hound = "3"
+
+[lints]
+workspace = true

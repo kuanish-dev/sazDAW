@@ -1,0 +1,16 @@
+[package]
+name = "daw-persistence"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+daw-contracts = { path = "../daw-contracts" }
+serde_json = "1"
+
+[dependencies.serde]
+version = "1"
+features = ["derive"]
+
+[lints]
+workspace = true

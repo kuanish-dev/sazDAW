@@ -1,0 +1,13 @@
+[package]
+name = "daw-audio-cpal"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+daw-contracts = { path = "../daw-contracts" }
+cpal = "0.18.2"
+rtrb = "0.3"
+
+[lints]
+workspace = true

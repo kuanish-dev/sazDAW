@@ -1,0 +1,20 @@
+[package]
+name = "daw-render"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+daw-contracts = { path = "../daw-contracts" }
+hound = "3"
+# FLAC in pure Rust (Apache-2.0); no multithreading or serde: frames are encoded one by one as the render goes.
+flacenc = { version = "0.5.1", default-features = false }
+# MP3 via LAME 3.100 (LGPL), built from C sources during the build (needs a C compiler) and linked statically.
+mp3lame-encoder = "0.2.5"
+
+[dev-dependencies]
+# Exports are checked by reading them back with the same decoder that reads project samples.
+symphonia = { version = "0.6.1", default-features = false, features = ["flac", "mp3", "wav"] }
+
+[lints]
+workspace = true

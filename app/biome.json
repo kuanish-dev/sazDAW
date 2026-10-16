@@ -1,0 +1,130 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
+  "files": { "includes": ["src/**", "!**/node_modules", "!src/index.css"] },
+  "formatter": { "enabled": false },
+  "assist": { "enabled": false },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "suspicious": {
+        "noConsole": { "level": "warn", "options": { "allow": ["error", "warn"] } },
+        "noEmptyBlockStatements": "error"
+      },
+      "a11y": "off",
+      "style": { "noNonNullAssertion": "off", "useImportType": "error" },
+      "correctness": { "noUnusedImports": "error", "noUnusedVariables": "error" },
+      "complexity": { "noExcessiveCognitiveComplexity": "off" }
+    }
+  },
+  "plugins": ["./lint/no-extends.grit"],
+  "overrides": [
+    {
+      "includes": ["src/i18n/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {},
+                "patterns": [
+                  { "group": ["**/ui/**", "**/state/**", "**/actions/**", "**/domain/**", "**/api/**", "**/mock/**", "**/log/**", "**/composition"], "message": "i18n is a leaf: every layer imports it, so it imports no layer itself (only solid-js)." }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/ui/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {},
+                "patterns": [
+                  { "group": ["**/api/api", "**/api/rpc", "**/api/dialogs", "**/api/tauri*", "**/mock/**", "**/composition"], "message": "The ui layer only goes through session.actions (via state/session); api, rpc, dialogs and mocks are off limits." }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/actions/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {},
+                "patterns": [
+                  { "group": ["**/ui/**", "**/state/**", "**/mock/**", "**/composition", "**/api/tauri*"], "message": "The actions layer knows only api and domain (plus the i18n leaf)." }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/domain/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {},
+                "patterns": [
+                  { "group": ["**/ui/**", "**/state/**", "**/actions/**", "**/mock/**", "**/composition", "**/api/api", "**/api/rpc", "**/api/dialogs", "**/api/tauri*"], "message": "domain is pure functions: it may use only types from api/types and the i18n dictionary." }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/api/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {},
+                "patterns": [
+                  { "group": ["**/ui/**", "**/state/**", "**/actions/**", "**/domain/**", "**/mock/**", "**/composition"], "message": "The api layer (backend client) knows nothing about upper layers." }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
+      "includes": ["src/mock/**"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {},
+                "patterns": [
+                  { "group": ["**/ui/**", "**/state/**", "**/actions/**", "**/composition"], "message": "The mock stands in for the backend and knows nothing about upper layers." }
+                ]
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

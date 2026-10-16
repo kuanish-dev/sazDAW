@@ -1,0 +1,12 @@
+[package]
+name = "daw-effects"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+daw-contracts = { path = "../daw-contracts" }
+
+
+[lints]
+workspace = true

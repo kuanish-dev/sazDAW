@@ -1,0 +1,28 @@
+{
+  "name": "daw-app-ui",
+  "license": "GPL-3.0-or-later",
+  "private": true,
+  "version": "0.1.0-beta.1",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "tauri": "tauri",
+    "lint": "biome lint && ! grep -rEn \"interface +[A-Za-z0-9_]+(<[^>]*>)? +extends\" src --include=*.ts --include=*.tsx"
+  },
+  "dependencies": {
+    "@tauri-apps/api": "^2.12.1",
+    "@tauri-apps/plugin-dialog": "^2.8.1",
+    "solid-js": "^1.9.16"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@tailwindcss/vite": "^4.3.3",
+    "@tauri-apps/cli": "^2.12.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.3",
+    "vite-plugin-solid": "^2.11.14"
+  }
+}

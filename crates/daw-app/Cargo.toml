@@ -1,0 +1,25 @@
+[package]
+name = "daw-app"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[[bin]]
+name = "daw-app"
+path = "src/main.rs"
+
+# Windowless MCP server (stdio); the server inside the app window lives in `app/src-tauri`.
+[[bin]]
+name = "daw-mcp"
+path = "src/mcp_main.rs"
+
+[dependencies]
+daw-contracts = { path = "../daw-contracts" }
+daw-bootstrap = { path = "../daw-bootstrap" }
+daw-mcp = { path = "../daw-mcp" }
+
+[dev-dependencies]
+serde_json = "1"
+
+[lints]
+workspace = true

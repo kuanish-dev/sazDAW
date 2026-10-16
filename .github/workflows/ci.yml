@@ -1,0 +1,79 @@
+# The checks from CLAUDE.md ("How it is checked"), the same commands in the same order.
+# Rust and plugins run on macOS only: the app is macOS-only (AppKit/objc2, CoreAudio, macOS VST3 bundles);
+# the frontend and licenses don't depend on the platform and run on Linux (faster and cheaper).
+name: CI
+
+on:
+  push:
+    # Work is committed straight to `dev`, so every push there is checked; `dev` is merged into `main` when it is stable
+    # (CONTRIBUTING.md).
+    branches: [main, dev]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # Incremental builds in CI only waste cache space.
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  rust:
+    name: Rust (fmt, test plugins, clippy, tests)
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            . -> target
+            test-plugins/synth -> target
+            test-plugins/distortion -> target
+
+      - name: cargo fmt
+        run: cargo fmt --all --check
+
+      # Tests, clippy and the bundles of the dev-only VST3 fixtures (test-plugins/*/target/bundled): the VST3 host
+      # tests load them (without the bundles those tests are skipped, so CI builds them to really run the host).
+      - name: Build test plugins
+        run: scripts/build-test-plugins.sh
+
+      - name: cargo clippy
+        run: cargo clippy --workspace --all-targets --locked -- -D warnings
+
+      # Third-party plugins (Surge XT) are not installed in CI: their tests print a skip message and pass.
+      - name: cargo test
+        run: cargo test --workspace --locked
+
+  frontend:
+    name: Frontend and licenses
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - run: npm ci
+      - run: npx tsc --noEmit
+      - run: npm run lint
+      - run: npx vite build
+
+      # Needs node_modules (above) and `cargo metadata` of the root workspace;
+      # cargo is already on the runner, nothing has to be built.
+      - name: Third-party notices are up to date
+        working-directory: .
+        run: python3 scripts/third_party_notices.py --check

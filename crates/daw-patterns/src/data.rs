@@ -1,0 +1,777 @@
+//! The pattern table: data, not code. Every row is a beat on a grid of sixteenths (see `daw_contracts::patterns`):
+//! `X` accent, `x` normal, `o` quiet, `.` rest; spaces and `|` are ignored. In a two-bar pattern a row holds
+//! 32 steps. A new pattern is a new entry in `PATTERNS`; the `library::tests` tests check lengths and drums.
+//!
+//! Fills (`Fill`) are a full bar: the first half keeps the rhythm, the second "breaks". Put them as the LAST bar of
+//! a phrase (4 or 8 bars), and start the next phrase with a crash (`intro_crash_start`) or a regular groove.
+
+use daw_contracts::L10n;
+use daw_contracts::PatternRole::{self, Break, Ending, Fill, Groove, Intro};
+
+pub struct Def {
+    pub id: &'static str,
+    pub name: L10n,
+    pub style: &'static str,
+    pub role: PatternRole,
+    pub bars: u32,
+    pub description: L10n,
+    /// (drum, grid).
+    pub lanes: &'static [(&'static str, &'static str)],
+}
+
+const FLOOR: &str = "X... X... X... X...";
+const ONE_THREE: &str = "X... .... X... ....";
+const BACKBEAT: &str = ".... X... .... X...";
+const HAT8: &str = "x.x. x.x. x.x. x.x.";
+const HAT16: &str = "xoxo xoxo xoxo xoxo";
+const OFFBEAT_OPEN: &str = "..X. ..X. ..X. ..X.";
+
+pub const PATTERNS: &[Def] = &[
+    // ---------- ROCK AND PUNK ----------
+    Def {
+        id: "rock_basic",
+        name: L10n { en: "Rock: basic", ru: "Рок: базовый" },
+        style: "rock",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Classic rock beat: kick on 1 and 3, snare on 2 and 4, eighth-note hi-hat. Fits almost anything.",
+            ru: "Классический рок-бит: кик на 1 и 3, снейр на 2 и 4, хэт восьмыми. Подходит почти ко всему.",
+        },
+        lanes: &[("kick", ONE_THREE), ("snare", BACKBEAT), ("hat", HAT8)],
+    },
+    Def {
+        id: "rock_drive",
+        name: L10n { en: "Rock: drive", ru: "Рок: драйв" },
+        style: "rock",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Rock with a pushing kick before beat three and hi-hat accents on the downbeats.",
+            ru: "Рок с подгоняющим киком перед третьей долей и акцентами хэта на сильные доли.",
+        },
+        lanes: &[("kick", "X... ..x. x.x. ...."), ("snare", BACKBEAT), ("hat", "X.x. X.x. X.x. X.x.")],
+    },
+    Def {
+        id: "rock_halftime",
+        name: L10n { en: "Rock: half-time", ru: "Рок: хаф-тайм" },
+        style: "rock",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Heavy and slow: snare only on beat three, feels half the tempo.",
+            ru: "Тяжёлый и медленный: снейр только на третьей доле, ощущение вдвое медленнее темпа.",
+        },
+        lanes: &[("kick", "X... .... .... ..x."), ("snare", ".... .... X... ...."), ("hat", HAT8)],
+    },
+    Def {
+        id: "rock_sixteenth_hat",
+        name: L10n { en: "Rock: sixteenth hi-hat", ru: "Рок: хэт шестнадцатыми" },
+        style: "rock",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Pop-rock with a busy hi-hat; the quiet hi-hat notes add motion.",
+            ru: "Поп-рок с плотным хэтом, тихие доли хэта дают движение.",
+        },
+        lanes: &[("kick", "X... ..x. X... ...."), ("snare", BACKBEAT), ("hat", HAT16)],
+    },
+    Def {
+        id: "rock_ride",
+        name: L10n { en: "Rock: ride", ru: "Рок: райд" },
+        style: "rock",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Verse or bridge: a ride instead of the hi-hat, wider and calmer.",
+            ru: "Куплет или бридж: вместо хэта играет райд, звук шире и спокойнее.",
+        },
+        lanes: &[("kick", ONE_THREE), ("snare", BACKBEAT), ("ride", HAT8)],
+    },
+    Def {
+        id: "rock_two_bars",
+        name: L10n { en: "Rock: two bars with pickup", ru: "Рок: два такта с подводкой" },
+        style: "rock",
+        role: Groove,
+        bars: 2,
+        description: L10n {
+            en: "Two-bar rock: in the second bar the kick pushes into the next round.",
+            ru: "Рок на два такта: во втором такте кик подгоняет к следующему кругу.",
+        },
+        lanes: &[
+            ("kick", "X... .... X... .... | X... .... X... ..xx"),
+            ("snare", ".... X... .... X... | .... X... .... X..."),
+            ("hat", "x.x. x.x. x.x. x.x. | x.x. x.x. x.x. x.x."),
+        ],
+    },
+    Def {
+        id: "punk_polka",
+        name: L10n { en: "Punk: polka", ru: "Панк: полька" },
+        style: "punk",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Fast punk: kick and snare alternate on every beat, eighth-note hi-hat.",
+            ru: "Быстрый панк: кик и снейр чередуются на каждую долю, хэт восьмыми.",
+        },
+        lanes: &[("kick", FLOOR), ("snare", BACKBEAT), ("hat", "X.x. X.x. X.x. X.x.")],
+    },
+    Def {
+        id: "ballad_rimshot",
+        name: L10n { en: "Ballad: rimshot", ru: "Баллада: римшот" },
+        style: "ballad",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Quiet ballad: rimshot instead of snare, soft ride.",
+            ru: "Тихая баллада: римшот вместо снейра, райд мягко.",
+        },
+        lanes: &[("kick", "X... .... ..x. ...."), ("rim", BACKBEAT), ("ride", "x.x. x.x. x.x. x.x.")],
+    },
+    // ---------- DANCE ----------
+    Def {
+        id: "house_four",
+        name: L10n { en: "House: four on the floor", ru: "Хаус: четыре в пол" },
+        style: "house",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Kick on every beat, clap on 2 and 4, open hi-hat between the kicks.",
+            ru: "Кик на каждую долю, клэп на 2 и 4, открытый хэт между ударами кика.",
+        },
+        lanes: &[("kick", FLOOR), ("clap", BACKBEAT), ("hat", ".o.o .o.o .o.o .o.o"), ("openhat", OFFBEAT_OPEN)],
+    },
+    Def {
+        id: "house_two_bars",
+        name: L10n { en: "House: two bars", ru: "Хаус: два такта" },
+        style: "house",
+        role: Groove,
+        bars: 2,
+        description: L10n {
+            en: "Two-bar house: the second bar adds rims and a clap phrase to keep it interesting.",
+            ru: "Хаус на два такта: во втором такте добавлены риммы и клэп-фразочка, чтобы не наскучить.",
+        },
+        lanes: &[
+            ("kick", "X... X... X... X... | X... X... X... X..."),
+            ("clap", ".... X... .... X... | .... X... ..o. X..x"),
+            ("hat", ".o.o .o.o .o.o .o.o | .o.o .o.o .o.o .oxo"),
+            ("openhat", "..X. ..X. ..X. ..X. | ..X. ..X. ..X. ..X."),
+            ("rim", ".... .... .... .... | .... ..o. .... o..."),
+        ],
+    },
+    Def {
+        id: "techno_drive",
+        name: L10n { en: "Techno: drive", ru: "Техно: драйв" },
+        style: "techno",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Straight techno beat: four-on-the-floor kick, quiet clap and sixteenth hi-hat.",
+            ru: "Прямой техно-бит: кик в пол, тихий клэп и хэт шестнадцатыми.",
+        },
+        lanes: &[("kick", FLOOR), ("clap", ".... o... .... o..."), ("hat", HAT16)],
+    },
+    Def {
+        id: "disco_open_hat",
+        name: L10n { en: "Disco: open hi-hat", ru: "Диско: открытый хэт" },
+        style: "disco",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Disco: four-on-the-floor kick, snare on 2 and 4, open hi-hat on every «and».",
+            ru: "Диско: кик в пол, снейр на 2 и 4, открытый хэт на каждую «и».",
+        },
+        lanes: &[("kick", FLOOR), ("snare", BACKBEAT), ("hat", "xo.o xo.o xo.o xo.o"), ("openhat", OFFBEAT_OPEN)],
+    },
+    Def {
+        id: "uk_garage",
+        name: L10n { en: "UK garage", ru: "UK гэридж" },
+        style: "garage",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Skippy garage: shifted kicks and a shuffling hi-hat.",
+            ru: "Перекошенный гэридж: смещённые кики и пересыпающийся хэт.",
+        },
+        lanes: &[("kick", "X... .... ..X. ...."), ("snare", BACKBEAT), ("hat", "x.xx .x.x x.xx .x.x")],
+    },
+    // ---------- HIP-HOP, TRAP ----------
+    Def {
+        id: "boom_bap",
+        name: L10n { en: "Hip-hop: boom bap", ru: "Хип-хоп: бум-бэп" },
+        style: "hiphop",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Old-school hip-hop: heavy kick with a pickup, snare on 2 and 4, eighth-note hi-hat.",
+            ru: "Старый хип-хоп: тяжёлый кик с отступлением, снейр на 2 и 4, хэт восьмыми.",
+        },
+        lanes: &[("kick", "X... ..x. x... ...."), ("snare", BACKBEAT), ("hat", HAT8)],
+    },
+    Def {
+        id: "boom_bap_two_bars",
+        name: L10n { en: "Hip-hop: boom bap, two bars", ru: "Хип-хоп: бум-бэп, два такта" },
+        style: "hiphop",
+        role: Groove,
+        bars: 2,
+        description: L10n {
+            en: "Boom bap with a variation: the second bar adds a kick before the last beat and a ghost snare.",
+            ru: "Бум-бэп с вариацией: второй такт добавляет кик перед последней долей и призрачный снейр.",
+        },
+        lanes: &[
+            ("kick", "X... ..x. .... .... | X... ..x. ..x. ...."),
+            ("snare", ".... X... .... X... | .... X..o .... X..."),
+            ("hat", "x.x. x.x. x.x. x.x. | x.x. x.x. x.x. x.xx"),
+        ],
+    },
+    Def {
+        id: "lofi_hiphop",
+        name: L10n { en: "Lo-fi hip-hop", ru: "Лоу-фай хип-хоп" },
+        style: "hiphop",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Lazy lo-fi: quiet ghost hi-hats, soft snare.",
+            ru: "Ленивый лоу-фай: тихие призрачные хэты, мягкий снейр.",
+        },
+        lanes: &[("kick", "X... ..o. .... ..x."), ("snare", ".... x... .... x..."), ("hat", "o.x. o.x. o.x. o.xo")],
+    },
+    Def {
+        id: "trap_basic",
+        name: L10n { en: "Trap: basic", ru: "Трэп: базовый" },
+        style: "trap",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Half-time trap: snare or clap on beat three, hi-hat with small runs.",
+            ru: "Трэп в хаф-тайме: снейр или клэп на третьей доле, хэт с мелкими пробежками.",
+        },
+        lanes: &[("kick", "X... .... ..x. ..x."), ("clap", ".... .... X... ...."), ("hat", "x.x. x.xo x.x. xoxo")],
+    },
+    Def {
+        id: "trap_hat_rolls",
+        name: L10n { en: "Trap: hi-hat rolls", ru: "Трэп: хэт-роллы" },
+        style: "trap",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Trap with dense hi-hat rolls at the end of the bar and an open hi-hat on the last beat.",
+            ru: "Трэп с густыми роллами хэта в конце такта и открытым хэтом на последней доле.",
+        },
+        lanes: &[
+            ("kick", "X... .... ..x. .x.."),
+            ("snare", ".... .... X... ...."),
+            ("hat", "x.x. x.x. x.xx xxxo"),
+            ("openhat", ".... .... .... ...X"),
+        ],
+    },
+    Def {
+        id: "trap_two_bars",
+        name: L10n { en: "Trap: two bars", ru: "Трэп: два такта" },
+        style: "trap",
+        role: Groove,
+        bars: 2,
+        description: L10n {
+            en: "Two-bar trap: in the second bar the kick shuffles and the hi-hat pours sixteenths.",
+            ru: "Трэп на два такта: во втором такте кик «ёрзает», а хэт сыплет шестнадцатыми.",
+        },
+        lanes: &[
+            ("kick", "X... .... ..x. ..x. | X... ..x. .... x..x"),
+            ("clap", ".... .... X... .... | .... .... X... ...."),
+            ("hat", "x.x. x.xo x.x. xoxo | xxxx xxxx x.xx xoxo"),
+        ],
+    },
+    Def {
+        id: "reggaeton_dembow",
+        name: L10n { en: "Reggaeton: dembow", ru: "Реггетон: дембоу" },
+        style: "reggaeton",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Dembow: four-on-the-floor kick and the signature syncopated snare.",
+            ru: "Дембоу: четыре кика в пол и характерный синкопированный снейр.",
+        },
+        lanes: &[("kick", FLOOR), ("snare", "...X ..X. ...X ..X."), ("hat", HAT8)],
+    },
+    // ---------- DRUM AND BASS, BREAKBEATS, FUNK ----------
+    Def {
+        id: "dnb_two_step",
+        name: L10n { en: "Drum and bass: two-step", ru: "Драм-н-бейс: двухшаговый" },
+        style: "dnb",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Classic drum and bass at 170 BPM: kick on 1 and before 3, snare on 2 and 4 with ghost notes.",
+            ru: "Классика драм-н-бейс на 170 уд/мин: кик на 1 и перед 3, снейр на 2 и 4 с призраками.",
+        },
+        lanes: &[("kick", "X... .... ..X. ...."), ("snare", ".... X..o .... X.o."), ("hat", HAT8)],
+    },
+    Def {
+        id: "dnb_rolling",
+        name: L10n { en: "Drum and bass: rolling", ru: "Драм-н-бейс: накатывающий" },
+        style: "dnb",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Dense DnB with a syncopated kick and sixteenth hi-hat.",
+            ru: "Плотный DnB с синкопированным киком и хэтом шестнадцатыми.",
+        },
+        lanes: &[("kick", "X... ..X. .X.. ...."), ("snare", BACKBEAT), ("hat", HAT16)],
+    },
+    Def {
+        id: "breakbeat_classic",
+        name: L10n { en: "Breakbeat: classic", ru: "Брейкбит: классика" },
+        style: "breakbeat",
+        role: Groove,
+        bars: 2,
+        description: L10n {
+            en: "Broken breakbeat in the spirit of old sampled breaks: kick and snare interrupt each other.",
+            ru: "Рваный брейкбит в духе старых сэмплированных брейков: кик и снейр перебивают друг друга.",
+        },
+        lanes: &[
+            ("kick", "X.X. .... ..X. .... | .X.. ..X. X... ...."),
+            ("snare", ".... X..o .X.. X... | .... X... .o.X ...."),
+            ("hat", "x.x. x.x. x.x. x.x. | x.x. x.x. x.xx x.x."),
+        ],
+    },
+    Def {
+        id: "funk_sixteenth",
+        name: L10n { en: "Funk: ghost notes", ru: "Фанк: призрачные ноты" },
+        style: "funk",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Funk: syncopated kick, snare with ghost notes, sixteenth hi-hat.",
+            ru: "Фанк: синкопированный кик, снейр с призрачными нотами, хэт шестнадцатыми.",
+        },
+        lanes: &[("kick", "X..x ..x. ..x. ...."), ("snare", ".o.o X.o. .o.o X..o"), ("hat", HAT16)],
+    },
+    Def {
+        id: "funk_two_bars",
+        name: L10n { en: "Funk: two bars", ru: "Фанк: два такта" },
+        style: "funk",
+        role: Groove,
+        bars: 2,
+        description: L10n {
+            en: "Two-bar funk: the second bar answers the first with a shifted kick pattern.",
+            ru: "Фанк на два такта: второй такт отвечает первому смещённым кик-паттерном.",
+        },
+        lanes: &[
+            ("kick", "X..x ..x. ..x. .... | X... .x.x ..x. ..x."),
+            ("snare", ".o.o X.o. .o.o X..o | .o.o X.o. .o.o X.xo"),
+            ("hat", "xoxo xoxo xoxo xoxo | xoxo xoxo xoxo xxxo"),
+        ],
+    },
+    // ---------- WORLD GENRES AND HEAVY MUSIC ----------
+    Def {
+        id: "reggae_one_drop",
+        name: L10n { en: "Reggae: one drop", ru: "Регги: ван-дроп" },
+        style: "reggae",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "One drop: all the weight on beat three (kick and rimshot together), beat one is empty.",
+            ru: "Ван-дроп: вся тяжесть на третьей доле (кик и римшот вместе), первая доля пустая.",
+        },
+        lanes: &[("kick", ".... .... X... ...."), ("rim", ".... .... X... ...."), ("hat", HAT8)],
+    },
+    Def {
+        id: "bossa_nova",
+        name: L10n { en: "Bossa nova", ru: "Босса-нова" },
+        style: "latin",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Bossa nova: the signature rimshot (clave) figure over a soft kick.",
+            ru: "Босса-нова: характерный рисунок римшота (клаве) поверх мягкого кика.",
+        },
+        lanes: &[("kick", "X... ..x. X... ..x."), ("rim", "X..x ..X. ..X. .x.."), ("hat", HAT8)],
+    },
+    Def {
+        id: "metal_double_kick",
+        name: L10n { en: "Metal: double kick", ru: "Метал: двойной кик" },
+        style: "metal",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Fast metal: sixteenth double kick, snare on 2 and 4, ride.",
+            ru: "Быстрый метал: двойной кик шестнадцатыми, снейр на 2 и 4, райд.",
+        },
+        lanes: &[("kick", "XxXx XxXx XxXx XxXx"), ("snare", BACKBEAT), ("ride", HAT8), ("crash", "X... .... .... ....")],
+    },
+    Def {
+        id: "metal_blast",
+        name: L10n { en: "Metal: blast beat", ru: "Метал: бласт-бит" },
+        style: "metal",
+        role: Groove,
+        bars: 1,
+        description: L10n {
+            en: "Blast beat: kick and snare alternate in sixteenths — maximum speed.",
+            ru: "Бласт-бит: кик и снейр бьют вперемешку шестнадцатыми — максимум скорости.",
+        },
+        lanes: &[("kick", "X.X. X.X. X.X. X.X."), ("snare", ".X.X .X.X .X.X .X.X"), ("hat", "x.x. x.x. x.x. x.x.")],
+    },
+    // ---------- FILLS (the last bar of a phrase) ----------
+    Def {
+        id: "fill_snare_roll",
+        name: L10n { en: "Fill: snare roll", ru: "Перебивка: ролл на снейре" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "Classic fill: the groove for the first half of the bar and a rising snare roll in the second.",
+            ru: "Классическая перебивка: ритм на первую половину такта и нарастающий ролл снейра на вторую.",
+        },
+        lanes: &[("kick", ONE_THREE), ("snare", ".... X... oxox xxXX"), ("hat", "x.x. x.x. .... ....")],
+    },
+    Def {
+        id: "fill_tom_cascade",
+        name: L10n { en: "Fill: tom cascade", ru: "Перебивка: каскад по томам" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "Rock fill: a falling cascade over the toms, high to low, in the second half of the bar.",
+            ru: "Рок-перебивка: падающий каскад по томам сверху вниз во второй половине такта.",
+        },
+        lanes: &[
+            ("kick", "X... .... X... ...X"),
+            ("snare", ".... X... .... ...."),
+            ("tom_hi", ".... .... xx.. ...."),
+            ("tom_mid", ".... .... ..xx ...."),
+            ("tom_lo", ".... .... .... xxX."),
+            ("hat", "x.x. x.x. .... ...."),
+        ],
+    },
+    Def {
+        id: "fill_tom_sixteenths",
+        name: L10n { en: "Fill: sixteenth tom roll", ru: "Перебивка: том-ролл шестнадцатыми" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "Fast roll over two toms on beats three and four; the snare holds beat two.",
+            ru: "Быстрый ролл по двум томам на третьей и четвёртой долях, снейр держит вторую.",
+        },
+        lanes: &[
+            ("kick", ONE_THREE),
+            ("snare", ".... X... .... ...."),
+            ("tom_hi", ".... .... xxxx ...."),
+            ("tom_mid", ".... .... .... xxxX"),
+            ("hat", "x.x. x.x. .... ...."),
+        ],
+    },
+    Def {
+        id: "fill_snare_and_toms",
+        name: L10n { en: "Fill: snare and toms", ru: "Перебивка: снейр и томы" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "Mixed fill: snare and toms answer each other, ending on the low tom.",
+            ru: "Смешанная перебивка: снейр и томы отвечают друг другу, в конце — низкий том.",
+        },
+        lanes: &[
+            ("kick", ONE_THREE),
+            ("snare", ".... X... xx.. x..."),
+            ("tom_mid", ".... .... ..x. .x.."),
+            ("tom_lo", ".... .... .... ..XX"),
+            ("hat", "x.x. x.x. .... ...."),
+        ],
+    },
+    Def {
+        id: "fill_kick_snare",
+        name: L10n { en: "Fill: kick and snare", ru: "Перебивка: кик и снейр" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "Heavy fill without toms: kick and snare chop the second half of the bar (metal, hard rock).",
+            ru: "Тяжёлая перебивка без томов: кик и снейр рубят вторую половину такта (метал, хард-рок).",
+        },
+        lanes: &[("kick", "X... .... X.x. xxXX"), ("snare", ".... X... .x.x ...."), ("crash", "X... .... .... ....")],
+    },
+    Def {
+        id: "fill_build_sixteenths",
+        name: L10n { en: "Fill: snare build-up", ru: "Перебивка: нарастание снейром" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "Rising sixteenth snare over the whole bar with a four-on-the-floor kick: a lift before a chorus or a drop.",
+            ru: "Снейр шестнадцатыми по нарастающей на весь такт, кик в пол: подъём перед припевом или дропом.",
+        },
+        lanes: &[("kick", FLOOR), ("snare", "oooo xxxx xxxx XXXX")],
+    },
+    Def {
+        id: "fill_snare_double",
+        name: L10n { en: "Fill: snare doubles", ru: "Перебивка: двойные удары снейра" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "The snare plays pairs on every beat of the second half of the bar — a light pop fill.",
+            ru: "Снейр играет парами на каждую долю второй половины такта — лёгкая поп-перебивка.",
+        },
+        lanes: &[("kick", ONE_THREE), ("snare", ".... X... XxXx XxXX"), ("hat", "x.x. x.x. .... ....")],
+    },
+    Def {
+        id: "fill_floor_tom",
+        name: L10n { en: "Fill: floor tom", ru: "Перебивка: напольный том" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "Sparse heavy hits on the big tom at the end of the bar: half-time, blues, ballads.",
+            ru: "Редкие тяжёлые удары по большому тому в конце такта: хаф-тайм, блюз, баллады.",
+        },
+        lanes: &[
+            ("kick", "X... .... x... ...."),
+            ("snare", ".... X... .... ...."),
+            ("tom_lo", ".... .... X... X..x"),
+            ("ride", "x.x. x.x. .... ...."),
+        ],
+    },
+    Def {
+        id: "fill_edm_rush",
+        name: L10n { en: "Fill: clap rush", ru: "Перебивка: рашь на клэпе" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "Electronic fill: four-on-the-floor kick, the clap speeds up before the drop.",
+            ru: "Электронная перебивка: кик в пол, клэп частит перед дропом.",
+        },
+        lanes: &[("kick", FLOOR), ("clap", ".... x... x.x. xxxX")],
+    },
+    Def {
+        id: "fill_hiphop_stutter",
+        name: L10n { en: "Fill: stutter", ru: "Перебивка: заикание" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "For hip-hop and trap: fast snare and hi-hat repeats at the end of the bar.",
+            ru: "Для хип-хопа и трэпа: быстрые повторы снейра и хэта в конце такта.",
+        },
+        lanes: &[("kick", "X... ..x. x... ...."), ("snare", ".... X... .... .xxX"), ("hat", "x.x. x.x. xxxx xoxo")],
+    },
+    Def {
+        id: "fill_dnb_roll",
+        name: L10n { en: "Fill: drum and bass", ru: "Перебивка: драм-н-бейс" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "Fast DnB fill: sixteenth snare roll in the second half.",
+            ru: "Быстрая DnB-перебивка: снейр-ролл шестнадцатыми во второй половине.",
+        },
+        lanes: &[("kick", "X... .... ..X. ...."), ("snare", ".... X... xxxx XxXx"), ("hat", "x.x. x.x. .... ....")],
+    },
+    Def {
+        id: "fill_half_bar_toms",
+        name: L10n { en: "Fill: short, two beats", ru: "Перебивка: короткая, на две доли" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "Short fill: only the last beat — two toms. The groove barely stops.",
+            ru: "Короткая перебивка: только последняя доля — два тома. Ритм почти не прерывается.",
+        },
+        lanes: &[
+            ("kick", ONE_THREE),
+            ("snare", BACKBEAT),
+            ("hat", "x.x. x.x. x.x. ...."),
+            ("tom_hi", ".... .... .... xx.."),
+            ("tom_lo", ".... .... .... ..xX"),
+        ],
+    },
+    Def {
+        id: "fill_crash_ending",
+        name: L10n { en: "Fill: crash hit", ru: "Перебивка: удар с крэшем" },
+        style: "fills",
+        role: Fill,
+        bars: 1,
+        description: L10n {
+            en: "Simple «bang» fill: the groove with a crash and a kick hit on the last beat.",
+            ru: "Простая перебивка в стиле «бах»: ритм с крэшем и кик-ударом на последней доле.",
+        },
+        lanes: &[
+            ("kick", "X... .... X... ..XX"),
+            ("snare", ".... X... .... ...."),
+            ("crash", ".... .... .... ...X"),
+            ("hat", "x.x. x.x. x.x. ...."),
+        ],
+    },
+    // ---------- BREAKS (stops) ----------
+    Def {
+        id: "break_stop",
+        name: L10n { en: "Break: stop", ru: "Брейк: остановка" },
+        style: "breaks",
+        role: Break,
+        bars: 1,
+        description: L10n {
+            en: "One hit on beat one (kick and crash) and silence to the end of the bar: a stop before a new section.",
+            ru: "Один удар на первой доле (кик и крэш) и тишина до конца такта: стоп перед новой частью.",
+        },
+        lanes: &[("kick", "X... .... .... ...."), ("crash", "X... .... .... ....")],
+    },
+    Def {
+        id: "break_kick_only",
+        name: L10n { en: "Break: kick only", ru: "Брейк: только кик" },
+        style: "breaks",
+        role: Break,
+        bars: 1,
+        description: L10n {
+            en: "Only a four-on-the-floor kick is left: the groove drops out and sets up the return.",
+            ru: "Остаётся один кик в пол: ритм «проваливается» и готовит возвращение.",
+        },
+        lanes: &[("kick", FLOOR)],
+    },
+    Def {
+        id: "break_hats_only",
+        name: L10n { en: "Break: hi-hat only", ru: "Брейк: только хэт" },
+        style: "breaks",
+        role: Break,
+        bars: 1,
+        description: L10n {
+            en: "Only the eighth-note hi-hat is left, open at the end: a light drop.",
+            ru: "Остаётся хэт восьмыми, в конце — открытый: лёгкий провал.",
+        },
+        lanes: &[("hat", "x.x. x.x. x.x. x.x."), ("openhat", ".... .... .... ..X.")],
+    },
+    Def {
+        id: "break_dropout",
+        name: L10n { en: "Break: silent second half", ru: "Брейк: вторая половина тишины" },
+        style: "breaks",
+        role: Break,
+        bars: 1,
+        description: L10n {
+            en: "The first half of the bar plays the groove, the second is a rest. Good before a new section.",
+            ru: "Первая половина такта играет ритм, вторая — пауза. Хорошо перед новой частью.",
+        },
+        lanes: &[("kick", "X... .... .... ...."), ("snare", ".... X... .... ...."), ("hat", "x.x. x.x. .... ....")],
+    },
+    Def {
+        id: "break_stabs",
+        name: L10n { en: "Break: syncopated hits", ru: "Брейк: синкопированные удары" },
+        style: "breaks",
+        role: Break,
+        bars: 1,
+        description: L10n {
+            en: "Sharp kick and clap hits off the beat, like a stop-time: builds tension.",
+            ru: "Резкие удары кика и клэпа вне ритма, как стоп-тайм: создаёт напряжение.",
+        },
+        lanes: &[("kick", "X.x. ..x. X... ...."), ("clap", "..x. ..x. .... ....")],
+    },
+    Def {
+        id: "break_clap_build",
+        name: L10n { en: "Break: clap build-up", ru: "Брейк: клэп-нарастание" },
+        style: "breaks",
+        role: Break,
+        bars: 1,
+        description: L10n {
+            en: "The clap gets faster: from quarters to sixteenths. No kick — rising tension.",
+            ru: "Клэп всё чаще: от четвертей к шестнадцатым. Без кика — подъём напряжения.",
+        },
+        lanes: &[("clap", "x... x... x.x. xxxx")],
+    },
+    // ---------- INTROS ----------
+    Def {
+        id: "intro_hat_count",
+        name: L10n { en: "Intro: hi-hat count-in", ru: "Вступление: счёт хэтом" },
+        style: "intros",
+        role: Intro,
+        bars: 1,
+        description: L10n {
+            en: "Four quarter-note hi-hat hits — a count-in before the start.",
+            ru: "Четыре удара хэта по четвертям — отсчёт перед началом.",
+        },
+        lanes: &[("hat", "X... x... x... x...")],
+    },
+    Def {
+        id: "intro_rim_count",
+        name: L10n { en: "Intro: rimshot count-in", ru: "Вступление: счёт римшотом" },
+        style: "intros",
+        role: Intro,
+        bars: 1,
+        description: L10n {
+            en: "Four rimshot hits, the first one strong: a soft count-in.",
+            ru: "Четыре удара римшота, первый сильный: мягкий отсчёт.",
+        },
+        lanes: &[("rim", "X... x... x... x...")],
+    },
+    Def {
+        id: "intro_crash_start",
+        name: L10n { en: "Intro: crash start", ru: "Вступление: старт с крэшем" },
+        style: "intros",
+        role: Intro,
+        bars: 1,
+        description: L10n {
+            en: "Rock groove with a crash on beat one: how a new section starts after a fill.",
+            ru: "Рок-ритм с крэшем на первой доле: так начинают новую часть после перебивки.",
+        },
+        lanes: &[("kick", ONE_THREE), ("snare", BACKBEAT), ("hat", HAT8), ("crash", "X... .... .... ....")],
+    },
+    Def {
+        id: "intro_hat_kick_build",
+        name: L10n { en: "Intro: hi-hat and kick build-up", ru: "Вступление: хэт и кик по нарастающей" },
+        style: "intros",
+        role: Intro,
+        bars: 2,
+        description: L10n {
+            en: "Two bars: first the hi-hat alone, then a kick on 1 and 3 joins it.",
+            ru: "Два такта: сначала один хэт, потом к нему добавляется кик на 1 и 3.",
+        },
+        lanes: &[("hat", "x.x. x.x. x.x. x.x. | x.x. x.x. x.x. x.x."), ("kick", ".... .... .... .... | X... .... X... ....")],
+    },
+    Def {
+        id: "intro_snare_build",
+        name: L10n { en: "Intro: snare build-up", ru: "Вступление: нарастание снейром" },
+        style: "intros",
+        role: Intro,
+        bars: 2,
+        description: L10n {
+            en: "Two bars of snare: eighths, then rising sixteenths — a lift before the first groove.",
+            ru: "Два такта снейра: сначала восьмыми, затем шестнадцатыми по нарастающей — подъём перед первым грувом.",
+        },
+        lanes: &[("snare", "o.o. o.o. o.o. o.o. | oooo xxxx xxxx XXXX"), ("kick", "X... .... .... .... | X... .... X... ....")],
+    },
+    // ---------- ENDINGS ----------
+    Def {
+        id: "ending_crash_stop",
+        name: L10n { en: "Ending: final hit", ru: "Концовка: финальный удар" },
+        style: "endings",
+        role: Ending,
+        bars: 1,
+        description: L10n {
+            en: "The final drum chord: kick, snare and crash together on beat one, then silence.",
+            ru: "Финальный аккорд ударных: кик, снейр и крэш разом на первой доле, дальше тишина.",
+        },
+        lanes: &[("kick", "X... .... .... ...."), ("snare", "X... .... .... ...."), ("crash", "X... .... .... ....")],
+    },
+    Def {
+        id: "ending_roll_out",
+        name: L10n { en: "Ending: roll and hit", ru: "Концовка: ролл и удар" },
+        style: "endings",
+        role: Ending,
+        bars: 1,
+        description: L10n {
+            en: "A snare roll in the first half of the bar and a full hit with a crash on beat three.",
+            ru: "Снейр-ролл на первой половине такта и общий удар с крэшем на третьей доле.",
+        },
+        lanes: &[("snare", "xxxx xxXX X... ...."), ("kick", ".... .... X... ...."), ("crash", ".... .... X... ....")],
+    },
+    Def {
+        id: "ending_double_hit",
+        name: L10n { en: "Ending: two hits", ru: "Концовка: два удара" },
+        style: "endings",
+        role: Ending,
+        bars: 1,
+        description: L10n {
+            en: "Two full hits in a row on 1 and the «and» of beat two — a chopped ending.",
+            ru: "Два общих удара подряд на 1 и «и» второй доли — рубленая концовка.",
+        },
+        lanes: &[("kick", "X... x... .... ...."), ("snare", "X... x... .... ...."), ("crash", "X... x... .... ....")],
+    },
+];

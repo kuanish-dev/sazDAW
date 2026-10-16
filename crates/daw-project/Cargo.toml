@@ -1,0 +1,15 @@
+[package]
+name = "daw-project"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+daw-contracts = { path = "../daw-contracts" }
+
+
+[dev-dependencies]
+daw-transport = { path = "../daw-transport" }
+
+[lints]
+workspace = true

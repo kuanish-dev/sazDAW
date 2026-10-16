@@ -1,0 +1,17 @@
+[package]
+name = "daw-engine"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+daw-contracts = { path = "../daw-contracts" }
+arc-swap = "1"
+rtrb = "0.3"
+
+[dev-dependencies]
+daw-transport = { path = "../daw-transport" }
+daw-note-effects = { path = "../daw-note-effects" }
+
+[lints]
+workspace = true

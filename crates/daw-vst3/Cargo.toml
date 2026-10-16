@@ -1,0 +1,74 @@
+[package]
+name = "daw-vst3"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+daw-contracts = { path = "../daw-contracts" }
+vst3 = "0.3"
+libloading = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+# The "who is processing now" marker (`guard/`): the audio thread writes to the mapped file with atomics only, no system calls.
+memmap2 = "0.9"
+
+[target.'cfg(target_os = "macos")'.dependencies]
+core-foundation = "0.10"
+# Plugin window keys (`keys/`).
+block2 = "0.6"
+objc2 = "0.6"
+objc2-app-kit = "0.3"
+objc2-foundation = "0.3"
+
+# Attaching a plugin window requires the main thread: its own `main` instead of the test runner.
+# Scan helper: loads one bundle in a separate process (`isolated.rs`) so a plugin crash does not bring the app down.
+[[bin]]
+name = "daw-plugin-scan"
+path = "src/bin/daw_plugin_scan.rs"
+
+# The only crate in the project where `unsafe` is allowed (VST3 C interfaces cannot be called otherwise).
+# The other rules are the same as in the workspace (its `[lints]` cannot be inherited: it has `unsafe_code = "forbid"`);
+# matching the workspace is checked by `crates/daw-bootstrap/tests/architecture.rs`.
+# Every `unsafe` block must have a `// SAFETY: …` comment (`undocumented_unsafe_blocks`) and do one
+# unsafe operation (`multiple_unsafe_ops_per_block`), so the comment explains exactly that one.
+[lints.rust]
+unsafe_code = "allow"
+
+[lints.clippy]
+undocumented_unsafe_blocks = "warn"
+multiple_unsafe_ops_per_block = "warn"
+chunks_exact_to_as_chunks = "allow"
+needless_range_loop = "allow"
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "warn"
+todo = "warn"
+unimplemented = "warn"
+dbg_macro = "warn"
+print_stdout = "warn"
+print_stderr = "warn"
+pedantic = { level = "warn", priority = -1 }
+cast_possible_truncation = "allow"
+cast_precision_loss = "allow"
+cast_sign_loss = "allow"
+cast_possible_wrap = "allow"
+cast_lossless = "allow"
+must_use_candidate = "allow"
+return_self_not_must_use = "allow"
+missing_errors_doc = "allow"
+missing_panics_doc = "allow"
+module_name_repetitions = "allow"
+too_many_lines = "allow"
+similar_names = "allow"
+many_single_char_names = "allow"
+doc_markdown = "allow"
+float_cmp = "allow"
+struct_excessive_bools = "allow"
+needless_pass_by_value = "allow"
+wildcard_imports = "allow"
+items_after_statements = "allow"
+unreadable_literal = "allow"
+assert_is_empty = "allow"
+default_trait_access = "allow"
+struct_field_names = "allow"

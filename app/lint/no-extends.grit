@@ -1,0 +1,6 @@
+language js
+
+// Project rule: no inheritance, only composition and interface implementation.
+or { `class $name extends $base { $body }`, `interface $name extends $base { $body }` } as $found where {
+  register_diagnostic(span = $found, message = "Inheritance is forbidden: use composition (CLAUDE.md rule).", severity = "error")
+}

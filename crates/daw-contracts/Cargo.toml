@@ -1,0 +1,18 @@
+[package]
+name = "daw-contracts"
+edition.workspace = true
+version.workspace = true
+license.workspace = true
+
+[dependencies]
+thiserror = "2.0.21"
+serde = { version = "1", features = ["derive", "rc"] }
+# Plugin state (`plugin_state.rs`) is stored in the project JSON as base64 strings.
+base64 = "0.22"
+schemars = "1"
+
+[dev-dependencies]
+serde_json = "1"
+
+[lints]
+workspace = true

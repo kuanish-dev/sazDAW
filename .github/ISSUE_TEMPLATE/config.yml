@@ -1,0 +1,4 @@
+contact_links:
+  - name: Report a security vulnerability
+    url: https://github.com/kuanish-dev/sazDAW/security/advisories/new
+    about: Please report vulnerabilities privately, not as public issues (see SECURITY.md).
