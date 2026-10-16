@@ -46,7 +46,7 @@ export type {
 export interface Actions {
   /** Play, position, cue, loop region, song loop, metronome. */
   readonly transport: TransportActions;
-  /** Undo and redo. */
+  /** Moving through the edit history: undo, redo, the list of steps, a jump to one of them. */
   readonly history: HistoryActions;
   /** Song tempo and meter: tempo points, meter changes. */
   readonly tempo: TempoActions;

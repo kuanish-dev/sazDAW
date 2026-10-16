@@ -128,6 +128,13 @@ pub(crate) fn register(table: &mut RpcTable) {
     table.add("history.undo", "Undoes the last project edit (a compound edit is undone as a whole).", |c, ()| Ok(c.history.undo()));
     table.add("history.redo", "Redoes an undone edit.", |c, ()| Ok(c.history.redo()));
     table.add(
+        "history.list",
+        "Lists the undo history without changing it: `done` — the steps undo takes back, oldest first (the last one is the \
+         next undo); `undone` — the undone steps redo brings back, the next redo first. A step is its undo label; a squashed \
+         change is one step under its label (\"AI: drum part\").",
+        |c, ()| Ok(c.history.steps()),
+    );
+    table.add(
         "history.checkpoint",
         "Marks the current point in the undo history and returns it (a number): call it before a change made of many \
          calls, then `history.squash` turns the whole change into one undo step.",

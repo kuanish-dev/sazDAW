@@ -25,6 +25,8 @@
   --color-ok: #4cd08a;
   --color-danger: #f14c4c;
   --color-blue: #3794ff;
+  /* What the AI made (its steps in the history panel): violet, apart from the accent and the status colors. */
+  --color-ai: #b48cff;
   --canvas-bg: #1a1a1a;
   --canvas-bg-deep: #141414;
   --canvas-row-a: #1c1c1c;
@@ -160,6 +162,7 @@
   --color-ok: #1b9a60;
   --color-danger: #d13438;
   --color-blue: #005fb8;
+  --color-ai: #8a5cf0;
   --canvas-bg: #ffffff;
   --canvas-bg-deep: #f0f0f0;
   --canvas-row-a: #f5f5f5;

@@ -3,7 +3,7 @@
 use std::collections::VecDeque;
 
 use daw_contracts::codes::history;
-use daw_contracts::{ContractError, HistoryControl, HistoryMark, Project};
+use daw_contracts::{ContractError, HistoryControl, HistoryMark, HistorySteps, Project};
 
 use super::ProjectService;
 
@@ -127,6 +127,16 @@ impl HistoryControl for ProjectService {
 
     fn undo_label(&self) -> Option<String> {
         self.lock().history.undo.back().map(|entry| entry.label.clone())
+    }
+
+    fn steps(&self) -> HistorySteps {
+        let inner = self.lock();
+        let label = |entry: &Entry| entry.label.clone();
+        HistorySteps {
+            done: inner.history.undo.iter().map(label).collect(),
+            // Redo pops from the end of its stack: the next redo is the last entry.
+            undone: inner.history.redo.iter().rev().map(label).collect(),
+        }
     }
 
     fn begin_group(&self, label: &str) {

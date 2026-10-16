@@ -68,6 +68,14 @@ export const IconMetronome = (p: IconProps) => (
 );
 export const IconUndo = (p: IconProps) => <Svg {...p}><path d="M5 3.5 2.5 6 5 8.5" /><path d="M2.5 6H10a3.5 3.5 0 0 1 0 7H6" /></Svg>;
 export const IconRedo = (p: IconProps) => <Svg {...p}><path d="M11 3.5 13.5 6 11 8.5" /><path d="M13.5 6H6a3.5 3.5 0 0 0 0 7h4" /></Svg>;
+/** A clock with a turn-back arrow: the edit history. */
+export const IconHistory = (p: IconProps) => (
+  <Svg {...p}><path d="M2.5 8a5.5 5.5 0 1 0 1.6-3.9" /><path d="M4.1 1.8v2.3h2.3" /><path d="M8 5v3.2l2.2 1.3" /></Svg>
+);
+/** A four-point spark: something the AI made. */
+export const IconSparkle = (p: IconProps) => (
+  <Svg {...p} filled><path d="M8 1.5C8.5 5.4 10.6 7.5 14.5 8 10.6 8.5 8.5 10.6 8 14.5 7.5 10.6 5.4 8.5 1.5 8 5.4 7.5 7.5 5.4 8 1.5Z" /></Svg>
+);
 
 // ── General ───────────────────────────────────────────────────────────
 

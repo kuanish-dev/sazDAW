@@ -7,9 +7,9 @@ use std::sync::{Arc, Mutex};
 use daw_contracts::codes::{clips, general, record};
 use daw_contracts::{
     AppLog, BAR_TICKS, Bpm, Clip, ClipContent, ClipControl, ClipEdit, ClipId, ContractError, ControllerKind, ControllerLane,
-    ControllerPoint, HistoryControl, HistoryMark, LiveMessage, LogEntry, LogLevel, NewNote, NewNoteClip, Note, NoteContent, NoteControl,
-    NoteId, RecordControl, RecordSource, RecordedEvent, SampleId, SignatureChange, TempoChange, TempoControl, TempoMap, TimeSignature,
-    TrackId, TransportControl, TransportState,
+    ControllerPoint, HistoryControl, HistoryMark, HistorySteps, LiveMessage, LogEntry, LogLevel, NewNote, NewNoteClip, Note, NoteContent,
+    NoteControl, NoteId, RecordControl, RecordSource, RecordedEvent, SampleId, SignatureChange, TempoChange, TempoControl, TempoMap,
+    TimeSignature, TrackId, TransportControl, TransportState,
 };
 
 use crate::Recorder;
@@ -238,6 +238,9 @@ impl HistoryControl for FakeHistory {
     }
     fn undo_label(&self) -> Option<String> {
         None
+    }
+    fn steps(&self) -> HistorySteps {
+        HistorySteps::default()
     }
     fn begin_group(&self, _: &str) {
         *self.begun.lock().unwrap() += 1;

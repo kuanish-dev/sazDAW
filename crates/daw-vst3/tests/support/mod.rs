@@ -13,9 +13,9 @@ use std::sync::{Arc, Mutex};
 
 use daw_contracts::codes::{general, graph, tracks};
 use daw_contracts::{
-    AppLog, ContractError, EditorTarget, EffectFactory, EffectGroups, Graph, GraphControl, HistoryControl, HistoryMark, InstrumentFactory,
-    InstrumentGroups, InstrumentSpec, LiveNoteSink, LogEntry, MonitorMode, NewTrack, Node, NodeId, NodeKind, Params, PluginCacheStore,
-    PluginScanner, PluginState, PluginStates, Polarity, Track, TrackControl, TrackId,
+    AppLog, ContractError, EditorTarget, EffectFactory, EffectGroups, Graph, GraphControl, HistoryControl, HistoryMark, HistorySteps,
+    InstrumentFactory, InstrumentGroups, InstrumentSpec, LiveNoteSink, LogEntry, MonitorMode, NewTrack, Node, NodeId, NodeKind, Params,
+    PluginCacheStore, PluginScanner, PluginState, PluginStates, Polarity, Track, TrackControl, TrackId,
 };
 use daw_vst3::{Vst3Editors, Vst3Plugins};
 
@@ -242,6 +242,9 @@ impl HistoryControl for History {
     }
     fn undo_label(&self) -> Option<String> {
         None
+    }
+    fn steps(&self) -> HistorySteps {
+        HistorySteps::default()
     }
     fn begin_group(&self, _: &str) {
         self.0.lock().unwrap().push("begin".into());

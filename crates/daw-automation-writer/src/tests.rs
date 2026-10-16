@@ -7,8 +7,8 @@ use std::time::{Duration, Instant};
 use daw_contracts::codes::automation;
 use daw_contracts::{
     AppLog, AutoPoint, AutomationClip, AutomationClipEdit, AutomationClipId, AutomationControl, AutomationHold, AutomationLane,
-    AutomationWriteMode, AutomationWriter, Bpm, ClipDrawing, ContractError, DrawnClip, HistoryControl, HistoryMark, LaneId, LogEntry,
-    ParamTarget, ShapeRequest, SignatureChange, TempoChange, TempoControl, TempoMap, TimeSignature, TouchEnd, TransportControl,
+    AutomationWriteMode, AutomationWriter, Bpm, ClipDrawing, ContractError, DrawnClip, HistoryControl, HistoryMark, HistorySteps, LaneId,
+    LogEntry, ParamTarget, ShapeRequest, SignatureChange, TempoChange, TempoControl, TempoMap, TimeSignature, TouchEnd, TransportControl,
     TransportState,
 };
 
@@ -164,6 +164,9 @@ impl HistoryControl for FakeHistory {
     }
     fn undo_label(&self) -> Option<String> {
         None
+    }
+    fn steps(&self) -> HistorySteps {
+        HistorySteps::default()
     }
     fn begin_group(&self, _: &str) {
         self.begun.fetch_add(1, Ordering::SeqCst);

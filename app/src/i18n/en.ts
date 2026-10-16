@@ -399,6 +399,21 @@ export const en = {
       pdcHint: "Plugin delay compensation: how far the sound lags behind the position",
       cpuHint: "Audio engine load",
     },
+    history: {
+      open: "Edit history",
+      title: "History",
+      hint: "Click a step to go back or forward to it",
+      count: (done: number, undone: number) =>
+        `${done} ${plural(done, ["step", "steps"])}${undone > 0 ? ` · ${undone} undone` : ""}`,
+      empty: "No edits yet. Every change will appear here, and you can return to any of them.",
+      now: "Now",
+      ai: "AI",
+      start: "Start of history",
+      here: "The project is here",
+      undoTo: (steps: number) => `Undo back to here: ${steps} ${plural(steps, ["step", "steps"])}`,
+      redoTo: (steps: number) => `Redo up to here: ${steps} ${plural(steps, ["step", "steps"])}`,
+      startHint: "The project before the oldest step the history keeps",
+    },
   },
 
   presets: {

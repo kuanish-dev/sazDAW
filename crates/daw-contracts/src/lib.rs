@@ -90,7 +90,7 @@ pub use graph::{
     NodeKind, Polarity, Strip, TrackChain,
 };
 pub use graph_control::GraphControl;
-pub use history::{HistoryControl, HistoryMark};
+pub use history::{HistoryControl, HistoryMark, HistorySteps};
 pub use i18n::{L10n, Language};
 pub use instrument::{
     BASS_GUITAR_KIND, ELECTRIC_GUITAR_KIND, GUITAR_KIND, Instrument, InstrumentCatalog, InstrumentFactory, InstrumentGroups, KindInfo,

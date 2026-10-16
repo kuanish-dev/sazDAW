@@ -14,9 +14,10 @@ use daw_contracts::codes::{audio, clips, general, tracks};
 use daw_contracts::{
     AppLog, AssetStore, AudioCapture, AudioDeviceInfo, AudioDevices, AudioRecordControl, AudioSettings, AudioStatus, Bpm, Clip,
     ClipContent, ClipControl, ClipEdit, ClipId, CompSegment, ContractError, EngineLatency, EngineLosses, EngineStats, HistoryControl,
-    HistoryMark, InputChannels, InputLevel, InputMonitor, InstrumentSpec, LiveInput, LogEntry, LogLevel, MonitorMode, MonitorStatus,
-    NewNoteClip, ProjectIo, SampleCatalog, SampleData, SampleId, SampleInfo, SampleWriter, SignatureChange, StreamConfig, TakeControl,
-    TempoChange, TempoControl, TempoMap, TimeSignature, Track, TrackControl, TrackId, TrackInput, TransportControl, TransportState,
+    HistoryMark, HistorySteps, InputChannels, InputLevel, InputMonitor, InstrumentSpec, LiveInput, LogEntry, LogLevel, MonitorMode,
+    MonitorStatus, NewNoteClip, ProjectIo, SampleCatalog, SampleData, SampleId, SampleInfo, SampleWriter, SignatureChange, StreamConfig,
+    TakeControl, TempoChange, TempoControl, TempoMap, TimeSignature, Track, TrackControl, TrackId, TrackInput, TransportControl,
+    TransportState,
 };
 
 use crate::{AudioRecorder, Deps};
@@ -480,6 +481,9 @@ impl HistoryControl for FakeHistory {
     }
     fn undo_label(&self) -> Option<String> {
         None
+    }
+    fn steps(&self) -> HistorySteps {
+        HistorySteps::default()
     }
     fn begin_group(&self, label: &str) {
         self.events.lock().unwrap().push(format!("group.begin {label}"));

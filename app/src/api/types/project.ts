@@ -13,6 +13,14 @@ export interface Status {
   folder: string | null;
 }
 
+/** The undo history as a list (`history.list`): each step is its undo label; the project sits after the last done step. */
+export interface HistorySteps {
+  /** Steps undo takes back, oldest first: the last one is the next undo. */
+  done: string[];
+  /** Undone steps redo brings back, the next redo first. */
+  undone: string[];
+}
+
 export interface RecentProject {
   name: string;
   path: string;

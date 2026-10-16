@@ -4,7 +4,7 @@ import type { BackendError } from "../i18n/errors";
 import type { RpcClient } from "./rpc";
 import type {
   AudioDevices, AudioRecordStatus, AudioSettings, AudioStatus, AutoPoint, AutomationClip, AutomationClipEdit, AutomationWriteMode, Catalog, ChordPartReport, ChordPartRequest, Clip, ClipEdit, CompSegment, ControllerKind, ControllerPoint, DrumPartReport,
-  DrumPartRequest, DrumPattern, EditorTarget, ExportOptions, ExportResult, FolderEdit, GrooveTemplate, Id, InputChannels, InputLevel, LibraryEntry, LogEntry, LogRecord,
+  DrumPartRequest, DrumPattern, EditorTarget, ExportOptions, ExportResult, FolderEdit, GrooveTemplate, HistorySteps, Id, InputChannels, InputLevel, LibraryEntry, LogEntry, LogRecord,
   MasterReading, MasterWindow, MidiMappings, MonitorMode, NewNote, NewNoteClip, NewTrack, NodeCursor, NodeWindow, Note, ParamTarget, Params, PluginCrash, PluginList, Polarity, Preferences, Project, RecentProject, Room, SampleInfo, ScanReport,
   Scale, ShapeRequest, SignatureChange, StagePlace, Status, StrumPattern, TempoChange, TrackColor, Variation, Waveform,
 } from "./types";
@@ -53,6 +53,8 @@ export function createApi(rpc: RpcClient) {
     history: {
       undo: () => call<boolean>("history.undo"),
       redo: () => call<boolean>("history.redo"),
+      /** The undo history: done steps oldest first, undone steps in redo order. Reading changes nothing. */
+      list: () => call<HistorySteps>("history.list"),
       /** Marks the current point of the undo history, for `squash`. */
       checkpoint: () => call<number>("history.checkpoint"),
       /** Folds every undo step since `since` into one named `label` (a change made of many calls); false — nothing changed. */

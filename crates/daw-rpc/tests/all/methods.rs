@@ -59,6 +59,7 @@ fn every_documented_method_group_is_registered() {
         "project.summary",
         "project.export",
         "history.undo",
+        "history.list",
         "chords.strums",
         "chords.build",
         "chords.preview",

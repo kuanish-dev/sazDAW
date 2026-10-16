@@ -3,7 +3,7 @@
 use std::path::PathBuf;
 use std::sync::Mutex;
 
-use daw_contracts::{AppLog, ContractError, HistoryControl, HistoryMark, LogEntry, Params};
+use daw_contracts::{AppLog, ContractError, HistoryControl, HistoryMark, HistorySteps, LogEntry, Params};
 
 use crate::param_bridge::ProjectParams;
 
@@ -62,6 +62,9 @@ impl HistoryControl for History {
     }
     fn undo_label(&self) -> Option<String> {
         None
+    }
+    fn steps(&self) -> HistorySteps {
+        HistorySteps::default()
     }
     fn begin_group(&self, label: &str) {
         self.0.lock().unwrap().push(format!("begin {label}"));
