@@ -149,6 +149,21 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
           p("output", q.outputDb, -24, 12, 0),
         ],
       },
+      {
+        kind: "dynamic_eq", label: k.dynamicEq,
+        params: [
+          ...[100, 500, 2000, 8000].flatMap((freq, i) => {
+            const n = i + 1;
+            return [
+              p(`band${n}_freq`, q.bandFreqHz(n), 20, 20000, freq), p(`band${n}_q`, q.bandQ(n), 0.3, 10, 1),
+              p(`band${n}_gain`, q.bandGainDb(n), -18, 18, 0), p(`band${n}_threshold`, q.bandThresholdDb(n), -60, 0, -24),
+              p(`band${n}_ratio`, q.bandRatio(n), 1, 20, 4), p(`band${n}_attack`, q.bandAttackMs(n), 0.1, 100, 5),
+              p(`band${n}_release`, q.bandReleaseMs(n), 10, 1000, 120),
+            ];
+          }),
+          p("sidechain", q.sidechain, 0, 1, 0),
+        ],
+      },
       ...plugins.effects,
     ],
     noteEffects: [

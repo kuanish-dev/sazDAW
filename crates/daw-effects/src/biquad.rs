@@ -70,6 +70,15 @@ impl Coefficients {
         Self::normalized((1.0 - cos) / 2.0, 1.0 - cos, (1.0 - cos) / 2.0, 1.0 + alpha, -2.0 * cos, 1.0 - alpha)
     }
 
+    /// Band-pass with 0 dB at its centre. With a notch of the same frequency and Q it sums to the input exactly
+    /// (the numerators add up to the shared denominator), so `input − (1 − g) · band` turns only this band by `g`.
+    pub fn band_pass(sample_rate: f32, freq: f32, q: f32) -> Self {
+        let w = TAU * freq.min(sample_rate * 0.45) / sample_rate;
+        let (sin, cos) = w.sin_cos();
+        let alpha = sin / (2.0 * q);
+        Self::normalized(alpha, 0.0, -alpha, 1.0 + alpha, -2.0 * cos, 1.0 - alpha)
+    }
+
     /// All-pass: a flat magnitude with the phase of a 2nd-order section. At Butterworth Q it is exactly the sum of the
     /// two sides of a Linkwitz–Riley split at the same frequency (`crossover.rs`), so the frequency is clamped the same
     /// way as the low- and high-pass.
@@ -106,20 +115,32 @@ mod tests {
     use super::*;
     use crate::testing::{SR, sine, tone};
 
+    /// The gain of the filter for a steady tone of `hz` (half a second to settle, half to measure).
+    fn gain_at(c: &Coefficients, hz: f32) -> f32 {
+        let mut state = Biquad::default();
+        let output: Vec<f32> = sine(hz, 0.5, SR as usize)
+            .into_iter()
+            .step_by(2)
+            .flat_map(|v| {
+                let y = state.process(c, v);
+                [y, y]
+            })
+            .collect();
+        tone(&output[SR as usize..], hz) / 0.5
+    }
+
     #[test]
     fn the_all_pass_keeps_the_level_of_every_tone() {
+        let all = Coefficients::all_pass(SR as f32, 1_000.0, BUTTERWORTH_Q);
         for hz in [30.0, 300.0, 1_000.0, 3_000.0, 15_000.0] {
-            let all = Coefficients::all_pass(SR as f32, 1_000.0, BUTTERWORTH_Q);
-            let mut state = Biquad::default();
-            let output: Vec<f32> = sine(hz, 0.5, SR as usize)
-                .into_iter()
-                .step_by(2)
-                .flat_map(|v| {
-                    let y = state.process(&all, v);
-                    [y, y]
-                })
-                .collect();
-            assert!((tone(&output[SR as usize..], hz) / 0.5 - 1.0).abs() < 0.01, "{hz} Hz");
+            assert!((gain_at(&all, hz) - 1.0).abs() < 0.01, "{hz} Hz");
         }
+    }
+
+    #[test]
+    fn the_band_pass_is_0_db_at_its_centre_and_falls_away_from_it() {
+        let band = Coefficients::band_pass(SR as f32, 6_000.0, 1.0);
+        assert!((gain_at(&band, 6_000.0) - 1.0).abs() < 0.01);
+        assert!(gain_at(&band, 600.0) < 0.2);
     }
 }

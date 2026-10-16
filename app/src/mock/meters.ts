@@ -40,20 +40,20 @@ export function mockReductions(w: MockWorld, now: number): GainReductionReading[
   });
 }
 
-/** Band-split effects and how many bands they report now, as in the backend (`Effect::band_gains_db`). */
-const BANDED: Record<string, (params: Record<string, number>) => number> = {
-  multiband: (params) => ((params.bands ?? 1) >= 1 ? 4 : 3),
+/** Band-split effects as in the backend (`Effect::band_gains_db`): each band's gain at full swing (`engaged` = 1). */
+const BANDED: Record<string, (params: Record<string, number>, engaged: (band: number) => number) => number[]> = {
+  multiband: (params, engaged) => Array.from({ length: (params.bands ?? 1) >= 1 ? 4 : 3 }, (_, band) => -SWING_REDUCTION_DB * engaged(band)),
+  dynamic_eq: (params, engaged) => Array.from({ length: 4 }, (_, band) => (params[`band${band + 1}_gain`] ?? 0) * engaged(band)),
 };
 
-/** Plausible band gains of non-bypassed band-split effects: each band wobbles on its own between 0 and the swing. */
+/** Plausible band gains of non-bypassed band-split effects: each band wobbles on its own while playing. */
 export function mockBandGains(w: MockWorld, now: number): BandGainsReading[] {
   return w.project.graph.nodes.flatMap((node) => {
     const kind = node.kind;
-    const count = kind.type === "effect" && !kind.bypass ? BANDED[kind.effect]?.(kind.params) : undefined;
-    if (count === undefined) return [];
+    const gains = kind.type === "effect" && !kind.bypass ? BANDED[kind.effect] : undefined;
+    if (kind.type !== "effect" || !gains) return [];
     const playing = w.state === "playing";
-    const db = Array.from({ length: count }, (_, band) =>
-      playing ? -SWING_REDUCTION_DB * Math.abs(Math.sin(now / (SWING_PERIOD_MS * (band + 1)) + node.id)) : 0);
-    return [{ node: node.id, db }];
+    const engaged = (band: number) => (playing ? Math.abs(Math.sin(now / (SWING_PERIOD_MS * (band + 1)) + node.id)) : 0);
+    return [{ node: node.id, db: gains(kind.params, engaged) }];
   });
 }

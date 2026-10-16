@@ -7,6 +7,7 @@ mod compressor;
 mod crossover;
 mod delay;
 mod distortion;
+mod dynamic_eq;
 mod dynamics;
 mod eq;
 mod filter;
@@ -140,6 +141,7 @@ pub fn factories() -> Vec<Box<dyn EffectFactory>> {
         factory::<gate::Gate>(),
         factory::<saturator::Saturator>(),
         factory::<multiband::Multiband>(),
+        factory::<dynamic_eq::DynamicEq>(),
     ]
 }
 

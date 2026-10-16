@@ -14,6 +14,7 @@ import { t } from "../../i18n";
 import { useSession } from "../../state/session";
 import { ChorusGraph } from "./ChorusGraph";
 import { DelayGraph } from "./DelayGraph";
+import { DynamicEqGraph } from "./DynamicEqGraph";
 import { DynamicsGraph } from "./DynamicsGraph";
 import { EqGraph } from "./EqGraph";
 import { FilterGraph } from "./FilterGraph";
@@ -34,7 +35,7 @@ const DYNAMICS: Record<string, { curve: Curve<DynamicsCurve>; label: () => strin
 const SHAPERS: Record<string, Curve<Transfer>> = { distortion: distortionTransfer, saturator: saturatorTransfer };
 
 /** The kinds with a graph of their own (the rest). */
-const OWN_GRAPHS = new Set(["eq", "filter", "delay", "chorus", "reverb", "multiband"]);
+const OWN_GRAPHS = new Set(["eq", "filter", "delay", "chorus", "reverb", "multiband", "dynamic_eq"]);
 
 /** Whether effect kind `kind` has a graph. */
 export const hasEffectGraph = (kind: string) => OWN_GRAPHS.has(kind) || kind in DYNAMICS || kind in SHAPERS;
@@ -78,6 +79,9 @@ export function EffectGraph(props: { node: GraphNode }) {
       </Match>
       <Match when={kind().effect === "multiband"}>
         <MultibandGraph node={props.node.id} infos={params()} values={kind().params} onChange={setParam} />
+      </Match>
+      <Match when={kind().effect === "dynamic_eq"}>
+        <DynamicEqGraph node={props.node.id} infos={params()} values={kind().params} onChange={setParam} />
       </Match>
     </Switch>
   );
