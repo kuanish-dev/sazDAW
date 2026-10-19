@@ -1,65 +1,43 @@
 //! Frequent data for the interface: position, meters, effect gain reduction and band gains, load, latency compensation,
-//! the mono check.
+//! the mono check. The project itself comes through the feed (`feed.rs`).
 
 use daw_contracts::{Controls, TempoMap, TransportState};
 use serde_json::{Value, json};
 
-/// What to send to the interface in one poll.
-pub struct Poll {
-    pub tick: Value,
-    /// The new project revision, if it changed since the last poll.
-    pub project_revision: Option<u64>,
-}
-
-#[derive(Default)]
-pub struct Telemetry {
-    last_revision: Option<u64>,
-}
-
-impl Telemetry {
-    pub fn new() -> Self {
-        Self::default()
-    }
-
-    pub fn poll(&mut self, controls: &Controls) -> Poll {
-        let revision = controls.view.revision();
-        let changed = self.last_revision != Some(revision);
-        self.last_revision = Some(revision);
-
-        let meters: Vec<Value> =
-            controls.stats.meters().into_iter().map(|m| json!({ "node": m.node, "left": m.peak_left, "right": m.peak_right })).collect();
-        let reductions: Vec<Value> = controls.stats.gain_reductions().into_iter().map(|r| json!({ "node": r.node, "db": r.db })).collect();
-        let bands: Vec<Value> = controls.stats.band_gains().into_iter().map(|b| json!({ "node": b.node, "db": b.db })).collect();
-        let state = controls.transport.state();
-        let map = controls.tempo.tempo_map();
-        let latency = controls.stats.latency().seconds();
-        let position = heard_position(controls.transport.position_ticks(), state == TransportState::Playing, latency, &map);
-        // Tempo and signature at the heard position: the transport panel shows what sounds now.
-        let at = position as f64;
-        let tick = json!({
-            "state": state,
-            "positionTicks": position,
-            "cue": controls.transport.cue(),
-            "tempo": map.tempo_at(at).get(),
-            "signature": map.signature_at(at).signature,
-            // What playback wraps around now (the loop region or the song): the interface cursor stops there until the
-            // next tick brings the jump.
-            "wrap": controls.transport.wrap_region(),
-            "songLoop": controls.transport.song_loop(),
-            "metronome": controls.metronome.is_enabled(),
-            // The mono check is a monitoring mode of this run, like the song loop: shown wherever the interface is.
-            "mono": controls.mono.is_mono(),
-            "automationWrite": controls.automation_writer.mode(),
-            "cpu": controls.stats.cpu_load(),
-            "latencyMs": latency * 1000.0,
-            "preview": controls.preview.position(),
-            "record": controls.record.status(),
-            "meters": meters,
-            "reductions": reductions,
-            "bands": bands,
-        });
-        Poll { tick, project_revision: changed.then_some(revision) }
-    }
+/// The `tick` the interface gets now.
+pub fn tick(controls: &Controls) -> Value {
+    let meters: Vec<Value> =
+        controls.stats.meters().into_iter().map(|m| json!({ "node": m.node, "left": m.peak_left, "right": m.peak_right })).collect();
+    let reductions: Vec<Value> = controls.stats.gain_reductions().into_iter().map(|r| json!({ "node": r.node, "db": r.db })).collect();
+    let bands: Vec<Value> = controls.stats.band_gains().into_iter().map(|b| json!({ "node": b.node, "db": b.db })).collect();
+    let state = controls.transport.state();
+    let map = controls.tempo.tempo_map();
+    let latency = controls.stats.latency().seconds();
+    let position = heard_position(controls.transport.position_ticks(), state == TransportState::Playing, latency, &map);
+    // Tempo and signature at the heard position: the transport panel shows what sounds now.
+    let at = position as f64;
+    json!({
+        "state": state,
+        "positionTicks": position,
+        "cue": controls.transport.cue(),
+        "tempo": map.tempo_at(at).get(),
+        "signature": map.signature_at(at).signature,
+        // What playback wraps around now (the loop region or the song): the interface cursor stops there until the
+        // next tick brings the jump.
+        "wrap": controls.transport.wrap_region(),
+        "songLoop": controls.transport.song_loop(),
+        "metronome": controls.metronome.is_enabled(),
+        // The mono check is a monitoring mode of this run, like the song loop: shown wherever the interface is.
+        "mono": controls.mono.is_mono(),
+        "automationWrite": controls.automation_writer.mode(),
+        "cpu": controls.stats.cpu_load(),
+        "latencyMs": latency * 1000.0,
+        "preview": controls.preview.position(),
+        "record": controls.record.status(),
+        "meters": meters,
+        "reductions": reductions,
+        "bands": bands,
+    })
 }
 
 /// The position heard now: with plugin latency compensation the master lags behind the transport by `latency`

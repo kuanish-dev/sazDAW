@@ -1,6 +1,6 @@
 //! The desktop root of the app: picks the audio output and autosave, and starts the window.
-//! The implementations are assembled by `daw-bootstrap`; the interface only gets `daw-rpc` commands: JSON, and bytes for
-//! the live sound windows.
+//! The implementations are assembled by `daw-bootstrap`; the interface only gets `daw-rpc` commands (JSON, and bytes for
+//! the live sound windows) and two event streams: `tick` and the project feed (`project`).
 
 mod ai_server;
 mod plugin_window;
@@ -12,7 +12,7 @@ use std::time::Duration;
 use daw_bootstrap::{AutosaveRun, SessionConfig, build_session_in, default_state_dir, install_panic_hook};
 use daw_contracts::codes::rpc;
 use daw_contracts::{ContractError, Controls, LogEntry};
-use daw_rpc::{RpcTable, Telemetry};
+use daw_rpc::{ProjectFeed, RpcTable, WholeRequest};
 use plugin_window::{OPEN_METHOD, PluginWindows};
 use serde_json::Value;
 use tauri::ipc::Response;
@@ -31,6 +31,8 @@ struct AppState {
     plugin_windows: Arc<PluginWindows>,
     /// The AI server (MCP over HTTP): listens while the app is alive.
     ai_server: Arc<Mutex<Option<daw_mcp::HttpEndpoint>>>,
+    /// Where the window asks the project feed for the whole project (`project_whole`).
+    whole_project: WholeRequest,
 }
 
 /// The interface's command: calls a `daw-rpc` method by name.
@@ -66,6 +68,19 @@ async fn rpc_binary(state: State<'_, Arc<AppState>>, method: String, params: Val
     .map_err(|e| rpc::TASK_FAILED.with("method", name).with("details", e))?
 }
 
+/// The window asks for the whole project with the next `project` event: when it starts (its copy is empty) and after a
+/// refused call (its copy may show a value the backend did not take). Like any call, it waits for the start project.
+#[tauri::command]
+async fn project_whole(state: State<'_, Arc<AppState>>) -> Result<(), ContractError> {
+    let state = Arc::clone(&state);
+    tauri::async_runtime::spawn_blocking(move || {
+        state.wait_for_startup();
+        state.whole_project.ask();
+    })
+    .await
+    .map_err(|e| rpc::TASK_FAILED.with("method", "project_whole").with("details", e))
+}
+
 impl AppState {
     /// Interface calls wait until the start project is open.
     fn wait_for_startup(&self) {
@@ -87,18 +102,16 @@ impl Drop for StartupDone {
     }
 }
 
-/// Every ~33 ms sends the interface the position and meters; on project edits, the `project` event.
-fn spawn_telemetry(app: AppHandle, controls: Controls) {
+/// Every ~33 ms sends the interface the position and meters (`tick`) and, after project edits, what changed (`project`).
+fn spawn_telemetry(app: AppHandle, controls: Controls, mut feed: ProjectFeed) {
     thread::spawn(move || {
-        let mut telemetry = Telemetry::new();
         loop {
-            let poll = telemetry.poll(&controls);
-            if app.emit("tick", poll.tick).is_err() {
+            if app.emit("tick", daw_rpc::tick(&controls)).is_err() {
                 return;
             }
             // The window is closing: nobody can receive the event, and the next `tick` above ends the thread.
-            if let Some(revision) = poll.project_revision {
-                let _ = app.emit("project", revision);
+            if let Some(update) = feed.poll(&controls) {
+                let _ = app.emit("project", update);
             }
             thread::sleep(TICK_INTERVAL);
         }
@@ -138,6 +151,7 @@ fn main() {
         });
     }
 
+    let feed = ProjectFeed::new();
     let state = Arc::new(AppState {
         controls: controls.clone(),
         table,
@@ -145,15 +159,16 @@ fn main() {
         autosaver: Mutex::new(Some(autosaver)),
         plugin_windows: Arc::clone(&plugin_windows),
         ai_server,
+        whole_project: feed.whole_request(),
     });
 
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(Arc::clone(&state))
-        .invoke_handler(tauri::generate_handler![rpc, rpc_binary])
+        .invoke_handler(tauri::generate_handler![rpc, rpc_binary, project_whole])
         .setup(move |app| {
             plugin_windows.bind(app.handle().clone());
-            spawn_telemetry(app.handle().clone(), controls.clone());
+            spawn_telemetry(app.handle().clone(), controls.clone(), feed);
             plugin_window::spawn_sync_timer(app.handle().clone(), Arc::clone(&plugin_windows));
             Ok(())
         })

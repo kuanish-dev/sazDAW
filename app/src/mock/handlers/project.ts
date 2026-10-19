@@ -9,26 +9,31 @@ import type { HandlerSet } from "./types";
 
 const stem = (path: string) => (path.split("/").pop() ?? "").replace(/\.[^.]+$/, "") || t().mock.projectName;
 
+/** The project status, as `project.status` and the feed's updates bring it. */
+export function projectStatus(w: MockWorld): Status {
+  return {
+    name: w.project.name, dirty: w.dirty, canUndo: w.undoStack.length > 0, canRedo: w.redoStack.length > 0,
+    undoLabel: w.undoStack.at(-1)?.label ?? null, path: w.path, folder: w.folder(),
+  };
+}
+
+/** The whole project as changes: the mock's feed always sends it (which the contract allows), the backend only what
+ *  changed (`daw-rpc/src/feed.rs`). */
+export function wholeChanges(w: MockWorld): ProjectChanges {
+  const p = w.clone(w.project);
+  const list = <T extends { id: number }>(items: T[]) => ({ ids: items.map((item) => item.id), changed: items });
+  return {
+    name: p.name, tempoMap: p.tempoMap, tracks: list(p.tracks), clips: list(p.clips), loopRegion: p.loopRegion,
+    nodes: list(p.graph.nodes), edges: p.graph.edges, room: p.room, automation: list(p.automation),
+    samples: list(p.samples), markers: list(p.markers), folders: list(p.folders), midiMappings: p.midiMappings ?? [],
+    nextId: p.nextId,
+  };
+}
+
 export function projectHandlers(w: MockWorld): HandlerSet {
   const h: HandlerSet = {};
   h["project.get"] = () => w.clone(w.project);
-  // Simplified: always the whole project as changes, which the contract allows (a part may come although it did not
-  // change); the backend sends only what changed (`ProjectView::changes_since`).
-  h["project.changes"] = (): ProjectChanges => {
-    const p = w.clone(w.project);
-    const list = <T extends { id: number }>(items: T[]) => ({ ids: items.map((item) => item.id), changed: items });
-    return {
-      revision: w.revision, name: p.name, tempoMap: p.tempoMap, tracks: list(p.tracks), clips: list(p.clips),
-      loopRegion: p.loopRegion, nodes: list(p.graph.nodes), edges: p.graph.edges, room: p.room,
-      automation: list(p.automation), samples: list(p.samples), markers: list(p.markers), folders: list(p.folders),
-      midiMappings: p.midiMappings ?? [], nextId: p.nextId,
-    };
-  };
-  h["project.status"] = (): Status => ({
-    name: w.project.name, dirty: w.dirty, canUndo: w.undoStack.length > 0, canRedo: w.redoStack.length > 0,
-    undoLabel: w.undoStack.at(-1)?.label ?? null, revision: w.revision, path: w.path,
-    folder: w.folder(),
-  });
+  h["project.status"] = () => projectStatus(w);
   // Built anew on each call, in the current language: the interface re-reads the catalog after a language switch.
   h["catalog.get"] = () => w.catalog;
   h["project.new"] = () => { w.install(emptyProject(), null, false); };

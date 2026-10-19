@@ -18,6 +18,7 @@ mod bounce;
 mod catalog;
 mod chords;
 mod clips;
+mod feed;
 mod folders;
 mod graph;
 mod live;
@@ -57,7 +58,8 @@ use serde::Serialize;
 use serde::de::DeserializeOwned;
 use serde_json::Value;
 
-pub use telemetry::{Poll, Telemetry};
+pub use feed::{ProjectFeed, ProjectUpdate, WholeRequest};
+pub use telemetry::tick;
 
 type Handler = Box<dyn Fn(&Controls, Value) -> Result<Value, ContractError> + Send + Sync>;
 type BinaryHandler = Box<dyn Fn(&Controls, Value) -> Result<Vec<u8>, ContractError> + Send + Sync>;

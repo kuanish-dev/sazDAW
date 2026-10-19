@@ -83,12 +83,11 @@ fn the_master_meter_starts_on_reading_and_the_mono_check_shows_in_the_tick() {
     }
     assert_eq!(call(&table, c, "audio.resetMasterMeter", Value::Null), Value::Null);
 
-    let mut telemetry = daw_rpc::Telemetry::new();
-    assert_eq!(telemetry.poll(c).tick["mono"], false, "stereo at the start");
+    assert_eq!(daw_rpc::tick(c)["mono"], false, "stereo at the start");
     assert_eq!(call(&table, c, "audio.setMono", json!({ "on": true })), Value::Null);
-    assert_eq!(telemetry.poll(c).tick["mono"], true);
+    assert_eq!(daw_rpc::tick(c)["mono"], true);
     call(&table, c, "audio.setMono", json!({ "on": false }));
-    assert_eq!(telemetry.poll(c).tick["mono"], false);
+    assert_eq!(daw_rpc::tick(c)["mono"], false);
 }
 
 #[test]

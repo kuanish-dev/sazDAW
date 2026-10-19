@@ -5,7 +5,6 @@
 mod automation;
 mod batch;
 mod bounce;
-mod changes;
 mod channel_utility;
 mod clear;
 mod clip_processing;

@@ -1,39 +1,44 @@
-//! `project.*`, `history.*` and `library.home` methods: the whole project and what changed in it, files, recent
-//! projects, autosave, export, undo.
+//! `project.*`, `history.*` and `library.home` methods: the whole project, files, recent projects, autosave, export,
+//! undo.
 
 use std::path::PathBuf;
 
-use daw_contracts::{ClearOptions, ExportRequest, HistoryMark, ListChanges, Node, NodeKind, Project, ProjectChanges, Track};
+use daw_contracts::{ClearOptions, Controls, ExportRequest, HistoryMark, Node, NodeKind, Project, Track};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::RpcTable;
 use crate::params::Path;
 
-#[derive(Serialize)]
+/// A short status of the project: for `project.status` and with each update of the window's feed (`feed.rs`).
+#[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-struct Status {
+pub(crate) struct Status {
     name: String,
     dirty: bool,
     can_undo: bool,
     can_redo: bool,
     undo_label: Option<String>,
-    revision: u64,
     path: Option<PathBuf>,
     folder: Option<PathBuf>,
+}
+
+pub(crate) fn status(c: &Controls) -> Status {
+    Status {
+        name: c.project.project_name(),
+        dirty: c.project.is_dirty(),
+        can_undo: c.history.can_undo(),
+        can_redo: c.history.can_redo(),
+        undo_label: c.history.undo_label(),
+        path: c.project.path(),
+        folder: c.project.folder(),
+    }
 }
 
 #[derive(Serialize)]
 struct Recent {
     path: PathBuf,
     name: String,
-}
-
-#[derive(Deserialize, JsonSchema)]
-struct Changes {
-    /// The `revision` of the previous reply; absent or null for the whole project.
-    #[serde(default)]
-    since: Option<u64>,
 }
 
 #[derive(Deserialize, JsonSchema)]
@@ -45,18 +50,12 @@ struct Squash {
 }
 
 /// The project for the interface and AI without saved plugin states. Those are opaque bytes (~70 KB of base64 for Surge XT)
-/// needed only by the plugins themselves, while `project.get` is called after every edit and read by AI in full.
-fn without_plugin_states(mut project: Project) -> Project {
+/// needed only by the plugins themselves, while AI reads `project.get` in full and the window's feed (`feed.rs`) compares and
+/// sends the project after every edit.
+pub(crate) fn without_plugin_states(mut project: Project) -> Project {
     project.tracks.iter_mut().for_each(strip_track);
     project.graph.nodes.iter_mut().for_each(strip_node);
     project
-}
-
-/// The same for the changes (`project.changes`): the tracks and nodes that come travel without their plugin states.
-fn changes_without_plugin_states(mut changes: ProjectChanges) -> ProjectChanges {
-    changes.tracks.iter_mut().flat_map(|list: &mut ListChanges<Track>| &mut list.changed).for_each(strip_track);
-    changes.nodes.iter_mut().flat_map(|list: &mut ListChanges<Node>| &mut list.changed).for_each(strip_node);
-    changes
 }
 
 fn strip_track(track: &mut Track) {
@@ -78,23 +77,7 @@ pub(crate) fn register(table: &mut RpcTable) {
          those are bytes for the plugins themselves). The main way to see the state.",
         |c, ()| Ok(without_plugin_states(c.view.snapshot())),
     );
-    table.add(
-        "project.changes",
-        "Returns what changed in the project after revision `since` (the `revision` of the previous reply), without saved plugin states: each part that changed, whole (absent when it did not); a list (tracks, clips, nodes, automation, samples, markers, folders) as `ids` in order plus the `changed` entities, an id that is gone was removed; without `since`, the whole project in this form. The way to follow a project as it changes without re-reading all of it.",
-        |c, p: Changes| Ok(changes_without_plugin_states(c.view.changes_since(p.since))),
-    );
-    table.add("project.status", "Returns a short status: file path, unsaved edits, revision, whether undo is possible.", |c, ()| {
-        Ok(Status {
-            name: c.project.project_name(),
-            dirty: c.project.is_dirty(),
-            can_undo: c.history.can_undo(),
-            can_redo: c.history.can_redo(),
-            undo_label: c.history.undo_label(),
-            revision: c.view.revision(),
-            path: c.project.path(),
-            folder: c.project.folder(),
-        })
-    });
+    table.add("project.status", "Returns a short status: file path, unsaved edits, whether undo is possible.", |c, ()| Ok(status(c)));
     table.add("project.new", "Creates a new empty project without a file.", |c, ()| Ok(c.project.new_project()));
     table
         .add_flushing("project.create", "Creates a project folder at a path and makes it current.", |c, p: Path| c.project.create(&p.path));

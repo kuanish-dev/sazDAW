@@ -248,9 +248,6 @@ mod tests {
             self.snapshots.fetch_add(1, Ordering::AcqRel);
             Project::empty()
         }
-        fn changes_since(&self, _: Option<u64>) -> daw_contracts::ProjectChanges {
-            daw_contracts::ProjectChanges::whole(&Project::empty(), 0)
-        }
     }
 
     fn fake(name: &str) -> Arc<FakeProject> {

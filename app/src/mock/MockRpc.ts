@@ -1,8 +1,8 @@
 // In-memory backend for developing the interface in a browser without Rust (implements `RpcClient`). Mirrors the shape
 // of `daw-rpc` answers, with simplified checks. State lives in `MockWorld`, methods by area in `handlers/`; here only
-// assembly, the call and the `tick` stream.
+// assembly, the call, the `tick` stream and the project feed.
 import type { RpcClient } from "../api/rpc";
-import type { Tick } from "../api/types";
+import type { ProjectUpdate, Tick } from "../api/types";
 import { secondsAt, signatureAt, tempoAt, tickAtSeconds } from "../common/tempoMap";
 import { fillDemo } from "./demo";
 import { fail } from "./errors";
@@ -25,7 +25,7 @@ import { notesHandlers } from "./handlers/notes";
 import { pluginsHandlers } from "./handlers/plugins";
 import { preferencesHandlers } from "./handlers/preferences";
 import { presetsHandlers } from "./handlers/presets";
-import { projectHandlers } from "./handlers/project";
+import { projectHandlers, projectStatus, wholeChanges } from "./handlers/project";
 import { recordHandlers } from "./handlers/record";
 import { stageHandlers } from "./handlers/stage";
 import { templatesHandlers } from "./handlers/templates";
@@ -49,12 +49,16 @@ export class MockRpc implements RpcClient {
   private world: MockWorld;
   private handlers: HandlerSet;
   private tickListeners = new Set<(t: Tick) => void>();
+  private projectListeners = new Set<(update: ProjectUpdate) => void>();
+  /** An update is on its way: the edits of one moment come as one, like the backend's feed polls. */
+  private updatePending = false;
   private timer: ReturnType<typeof setInterval> | null = null;
   private lastTime = 0;
 
   constructor(options: { withProject?: boolean } = {}) {
     this.world = new MockWorld();
     this.world.needTicks = () => this.ensureTimer();
+    this.world.projectChanged = () => this.sendProjectUpdate();
     const w = this.world;
     this.handlers = {
       ...transportHandlers(w), ...tempoHandlers(w), ...recordHandlers(w), ...projectHandlers(w), ...tracksHandlers(w),
@@ -94,9 +98,26 @@ export class MockRpc implements RpcClient {
     return () => this.tickListeners.delete(listener);
   }
 
-  onProject(listener: (r: number) => void) {
-    this.world.projectListeners.add(listener);
-    return () => this.world.projectListeners.delete(listener);
+  onProject(listener: (update: ProjectUpdate) => void) {
+    this.projectListeners.add(listener);
+    this.sendProjectUpdate();
+    return () => this.projectListeners.delete(listener);
+  }
+
+  async askWholeProject() {
+    this.sendProjectUpdate();
+  }
+
+  /** Like the backend's feed (`daw-rpc/src/feed.rs`), but always the whole project, which the contract allows. Sent
+   *  after the call that made the edits, as the real update comes after its call. */
+  private sendProjectUpdate() {
+    if (this.updatePending) return;
+    this.updatePending = true;
+    queueMicrotask(() => {
+      this.updatePending = false;
+      const update: ProjectUpdate = { whole: true, changes: wholeChanges(this.world), status: projectStatus(this.world) };
+      for (const listener of this.projectListeners) listener(update);
+    });
   }
 
   private ensureTimer() {

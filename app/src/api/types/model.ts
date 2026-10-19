@@ -349,12 +349,10 @@ export interface ListChanges<T> {
   changed: T[];
 }
 
-/** What changed in the project after a revision (`project.changes`, `ProjectChanges` in Rust): each part that
- *  changed, whole; absent when it did not. The graph comes as `nodes` and `edges`. `core/projectChanges.ts` takes it
- *  into the interface's copy. */
+/** What changed in the project (`ProjectChanges` in Rust, sent by the project feed): each part that changed, whole;
+ *  absent when it did not. The graph comes as `nodes` and `edges`. `core/projectChanges.ts` takes it into the
+ *  interface's copy. */
 export interface ProjectChanges {
-  /** The revision the changes bring the copy to: the `since` of the next call. */
-  revision: number;
   name?: string;
   tempoMap?: TempoMap;
   tracks?: ListChanges<Track>;

@@ -1,4 +1,4 @@
-//! `project.*` and `log.*` methods: project JSON, files, demo, the error log.
+//! `project.*` and `log.*` methods and the window's project feed: project JSON, files, demo, the error log.
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,
@@ -7,6 +7,7 @@
 )]
 
 use crate::common::*;
+use daw_rpc::ProjectFeed;
 
 #[test]
 fn project_json_uses_camel_case_and_tagged_enums() {
@@ -190,23 +191,55 @@ fn export_takes_format_normalize_and_range_over_the_wire() {
 }
 
 #[test]
-fn project_changes_bring_the_whole_project_first_and_then_only_what_changed() {
+fn the_feed_sends_the_whole_project_first_and_then_only_what_changed() {
     let session = build_session(true);
     let (table, c) = (RpcTable::new(), &session.controls);
-    let whole = call(&table, c, "project.changes", json!({}));
+    let mut feed = ProjectFeed::new();
+    let first = update(&mut feed, c).expect("the first poll sends the project");
     let project = project(&table, c);
-    assert_eq!(whole["tracks"]["ids"].as_array().unwrap().len(), project["tracks"].as_array().unwrap().len());
-    assert_eq!(whole["nodes"]["changed"], project["graph"]["nodes"], "the whole graph, without plugin states like project.get");
-    assert_eq!(whole["loopRegion"], project["loopRegion"]);
+    assert_eq!(first["whole"], true);
+    assert_eq!(first["changes"]["tracks"]["ids"].as_array().unwrap().len(), project["tracks"].as_array().unwrap().len());
+    assert_eq!(first["changes"]["nodes"]["changed"], project["graph"]["nodes"], "the whole graph, without plugin states like project.get");
+    assert_eq!(first["status"]["canUndo"], false);
+    assert!(first["status"].get("revision").is_none(), "the window keeps no revision");
+    assert!(update(&mut feed, c).is_none(), "without edits there is nothing to send");
 
     call(&table, c, "graph.setVolume", json!({ "id": 0, "volume": 0.5 }));
-    let changes = call(&table, c, "project.changes", json!({ "since": whole["revision"] }));
-    let mut keys: Vec<&String> = changes.as_object().unwrap().keys().collect();
-    keys.sort();
-    assert_eq!(keys, ["nodes", "revision"], "only the graph nodes changed: {changes}");
-    assert_eq!(changes["nodes"]["changed"].as_array().unwrap().len(), 1, "only the master: {changes}");
-    assert_eq!(changes["nodes"]["changed"][0]["id"], 0);
+    let changed = update(&mut feed, c).expect("an edit is sent with the next poll");
+    assert_eq!(changed["whole"], false);
+    assert_eq!(
+        changed["changes"],
+        json!({ "nodes": { "ids": changed["changes"]["nodes"]["ids"], "changed": [project_node(&table, c, 0)] } }),
+        "only the master"
+    );
+    assert_eq!(changed["status"]["canUndo"], true, "the status comes with the changes");
 
-    let nothing = call(&table, c, "project.changes", json!({ "since": changes["revision"] }));
-    assert_eq!(nothing, json!({ "revision": changes["revision"] }));
+    call(&table, c, "history.undo", Value::Null);
+    let undone = update(&mut feed, c).unwrap();
+    assert_eq!(undone["changes"]["nodes"]["changed"][0]["id"], 0, "undo comes like any edit");
+}
+
+#[test]
+fn a_window_that_asks_gets_the_whole_project_with_the_next_poll() {
+    let session = build_session(true);
+    let c = &session.controls;
+    let mut feed = ProjectFeed::new();
+    let first = update(&mut feed, c).unwrap();
+    assert!(update(&mut feed, c).is_none());
+
+    feed.whole_request().ask();
+    let again = update(&mut feed, c).expect("asked for the whole project");
+    assert_eq!((&again["whole"], &again["changes"]), (&first["whole"], &first["changes"]));
+    assert!(update(&mut feed, c).is_none(), "asked once, sent once");
+}
+
+/// The feed's next update as the window gets it.
+fn update(feed: &mut ProjectFeed, c: &daw_contracts::Controls) -> Option<Value> {
+    feed.poll(c).map(|update| serde_json::to_value(update).unwrap())
+}
+
+/// One graph node as `project.get` returns it.
+fn project_node(table: &RpcTable, c: &daw_contracts::Controls, id: u64) -> Value {
+    let project = project(table, c);
+    project["graph"]["nodes"].as_array().unwrap().iter().find(|node| node["id"] == id).unwrap().clone()
 }

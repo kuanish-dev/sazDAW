@@ -1,11 +1,11 @@
-// How a call to the backend runs: a failure becomes a notification and the project copy is re-read whole (the refused
-// value may already be on screen, `patchProject`); a long operation shows the loading indicator (`busy`). Part of the
+// How a call to the backend runs: a failure becomes a notification and the whole project is asked for again (the
+// refused value may already be on screen, `patchProject`); a long operation shows the loading indicator (`busy`). Part of the
 // shared core (`core.ts`).
 import { createSignal } from "solid-js";
 import type { Notifications } from "./notifications";
 
 export interface Calls {
-  /** Runs a call; a failure is shown (`showFailure`) and the project is re-read. */
+  /** Runs a call; a failure is shown (`showFailure`) and the whole project is asked for again. */
   run<T>(action: Promise<T>): Promise<T | undefined>;
   /** Like `run`, but returns whether the action succeeded. */
   attempt(action: Promise<unknown>): Promise<boolean>;
@@ -20,7 +20,7 @@ export interface Calls {
 export function createCalls(notifications: Pick<Notifications, "showFailure">, reload: () => Promise<void>): Calls {
   const [busy, setBusy] = createSignal<string | null>(null);
 
-  /** The call's result, or `failed` once the failure is shown and the copy re-read. */
+  /** The call's result, or `failed` once the failure is shown and the whole project asked for. */
   const settle = async <T>(action: Promise<T>): Promise<{ value: T } | "failed"> => {
     try {
       return { value: await action };

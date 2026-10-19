@@ -59,7 +59,6 @@ export class MockWorld {
   heldNotes = new Map<string, { tick: number; velocity: number }>();
   /** Held meter peaks per node (smooth fall-off and bursts from live notes). */
   peaks = new Map<number, number>();
-  projectListeners = new Set<(r: number) => void>();
   files: Record<string, { name: string; isDir: boolean }[]> = {
     "/home/user": [{ name: "Samples", isDir: true }, { name: "Projects", isDir: true }, { name: "notes.wav", isDir: false }],
     "/home/user/Samples": [{ name: "Kicks", isDir: true }, { name: "kick.wav", isDir: false }, { name: "snare.wav", isDir: false }, { name: "loop.wav", isDir: false }],
@@ -82,6 +81,8 @@ export class MockWorld {
 
   /** Asks to start the `tick` stream (set by `MockRpc`); called when playback starts. */
   needTicks: () => void = () => undefined;
+  /** Told after each edit: the mock's project feed (`MockRpc`) sends the window an update. */
+  projectChanged: () => void = () => undefined;
 
   /** The app's start project in the browser: already saved in its folder and listed in recent projects. */
   openStartProject() {
@@ -197,7 +198,7 @@ export class MockWorld {
 
   touch() {
     this.revision += 1;
-    for (const listener of this.projectListeners) listener(this.revision);
+    this.projectChanged();
   }
 
   id(p: Project = this.project): Id {
