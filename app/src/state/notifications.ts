@@ -14,9 +14,14 @@ export interface Toast {
 const ERROR_TOAST_MS = 6000;
 const INFO_TOAST_MS = 2500;
 
-export interface Toasts {
+/** What the UI reads of the notifications. */
+export interface ToastReads {
   toasts(): Toast[];
-  dismiss(id: number): void;
+  dismissToast(id: number): void;
+}
+
+/** The notifications: what the UI reads, and how the rest of the session shows something. */
+export type Toasts = ToastReads & {
   /** A notification from the interface: an error also goes to the log (console.error → errorReporter), otherwise it would be lost. */
   toast(kind: Toast["kind"], text: string): void;
   /**
@@ -24,24 +29,24 @@ export interface Toasts {
    * in our own code, a failed re-read) was logged by no one, so it goes to the log too.
    */
   showFailure(error: unknown): void;
-}
+};
 
 export function createToasts(): Toasts {
   const [toasts, setToasts] = createSignal<Toast[]>([]);
   let lastId = 0;
 
-  const dismiss = (id: number) => setToasts((list) => list.filter((t) => t.id !== id));
+  const dismissToast = (id: number) => setToasts((list) => list.filter((t) => t.id !== id));
 
   /** Backend errors are logged by the backend itself — use `showFailure` for them. */
   const show = (kind: Toast["kind"], text: string) => {
     const id = ++lastId;
     setToasts((list) => [...list, { id, kind, text }]);
-    setTimeout(() => dismiss(id), kind === "error" ? ERROR_TOAST_MS : INFO_TOAST_MS);
+    setTimeout(() => dismissToast(id), kind === "error" ? ERROR_TOAST_MS : INFO_TOAST_MS);
   };
 
   return {
     toasts,
-    dismiss,
+    dismissToast,
     toast(kind, text) {
       if (kind === "error") console.error(text);
       show(kind, text);

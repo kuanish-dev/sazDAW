@@ -48,21 +48,30 @@ function createSmoothPlayhead(tick: Accessor<Tick>): Accessor<number | null> {
   return position;
 }
 
-export function createPlayback(rpc: RpcClient) {
+/** What the UI reads of playback. */
+export interface PlaybackReads {
+  /** The latest backend tick (~30 per second): position, transport state, meters, load. */
+  tick(): Tick;
+  /**
+   * Position for drawing: derived from `tick`, it does not fire while the value is unchanged. Canvases read it rather
+   * than `tick()`: ticks always arrive (meters are live), and redrawing on every tick would redraw everything even with
+   * the player stopped. `null` means the transport is stopped.
+   */
+  playhead(): number | null;
+  /** Sample audition position in file frames; `null` when nothing is playing. */
+  previewPlayhead(): number | null;
+  /** Same as `playhead`, but on every screen frame (extrapolated between ticks): for light elements like the timeline cursor. */
+  smoothPlayhead(): number | null;
+}
+
+export function createPlayback(rpc: RpcClient): PlaybackReads {
   const [tick, setTick] = createSignal<Tick>(EMPTY_TICK);
   onCleanup(rpc.onTick(setTick));
 
   return {
     tick,
-    /**
-     * Positions for drawing: derived from `tick`, they do not fire while the value is unchanged. Canvases read these
-     * rather than `tick()`: ticks always arrive (meters are live), and redrawing on every tick would redraw everything
-     * even with the player stopped. `null` means the transport is stopped.
-     */
     playhead: createMemo(() => (tick().state === "stopped" ? null : tick().positionTicks)),
-    /** Sample audition position in file frames; `null` when nothing is playing. */
     previewPlayhead: createMemo(() => tick().preview),
-    /** Same as `playhead`, but on every screen frame (extrapolated between ticks): for light elements like the timeline cursor. */
     smoothPlayhead: createSmoothPlayhead(tick),
   };
 }

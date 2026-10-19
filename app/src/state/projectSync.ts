@@ -21,8 +21,17 @@ export interface ProjectSyncDeps {
   rpc: RpcClient;
   /** Backend failure while reading: show it to the user. */
   onError(error: unknown): void;
-  /** Called in the same update batch as the new project (so the selection can give way to vanished items). */
-  onLoaded(project: Project): void;
+}
+
+/** What the UI reads of the project copy. */
+export interface ProjectReads {
+  readonly project: Project;
+  status(): Status;
+  catalog(): Catalog | null;
+  /** The first project read is done: the views can be shown. */
+  ready(): boolean;
+  /** A project is open (saved in its own folder). */
+  hasProject(): boolean;
 }
 
 export function createProjectSync(deps: ProjectSyncDeps) {
@@ -34,6 +43,8 @@ export function createProjectSync(deps: ProjectSyncDeps) {
 
   /** The revision the copy is at; `null` before the first read (which therefore takes the whole project). */
   let revision: number | null = null;
+  /** Hears each new copy in the same update batch (so the selection can give way to vanished items). */
+  let loaded: ((project: Project) => void) | null = null;
 
   /** Takes in what changed since the copy's revision, or the whole project. */
   const read = async (whole: boolean) => {
@@ -44,7 +55,7 @@ export function createProjectSync(deps: ProjectSyncDeps) {
     batch(() => {
       setProject(reconcile(next, { key: "id", merge: true }));
       setStatus(nextStatus);
-      deps.onLoaded(next);
+      loaded?.(next);
     });
   };
 
@@ -86,10 +97,13 @@ export function createProjectSync(deps: ProjectSyncDeps) {
     reload,
     refreshCatalog,
     start,
-    /** Whether a project is open (saved in its own folder). */
     hasProject: () => status().path !== null,
     /** Instant edit of the copy before the backend replies (sliders); the backend's value of the part arrives with the
      *  event, or with `reload` if the call is refused. */
-    patch: (change: (p: Project) => void) => setProject(produce(change)),
+    patchProject: (change: (p: Project) => void) => setProject(produce(change)),
+    /** Who hears each new copy (one listener: the selection). */
+    onLoaded: (listener: (project: Project) => void) => {
+      loaded = listener;
+    },
   };
 }
