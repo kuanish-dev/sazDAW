@@ -39,6 +39,7 @@ pub const PARAMS: [ParamInfo; 5] = [
             L10n { en: "In scale", ru: "В ладу" },
             L10n { en: "In scale 7", ru: "В ладу 7" },
         ],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "inversion",
@@ -48,6 +49,7 @@ pub const PARAMS: [ParamInfo; 5] = [
         default: 0.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "spread",
@@ -57,6 +59,7 @@ pub const PARAMS: [ParamInfo; 5] = [
         default: 0.0,
         kind: ParamKind::Switch,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "scale",
@@ -77,6 +80,7 @@ pub const PARAMS: [ParamInfo; 5] = [
             L10n { en: "Minor pentatonic", ru: "Пентатоника минор" },
             L10n { en: "Chromatic", ru: "Хроматический" },
         ],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "root",
@@ -99,6 +103,7 @@ pub const PARAMS: [ParamInfo; 5] = [
             L10n::same("A#"),
             L10n::same("B"),
         ],
+        about: L10n::EMPTY,
     },
 ];
 

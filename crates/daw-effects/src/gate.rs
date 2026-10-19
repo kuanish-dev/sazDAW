@@ -21,6 +21,7 @@ const PARAMS: [ParamInfo; 6] = [
         default: -40.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "attack",
@@ -30,6 +31,7 @@ const PARAMS: [ParamInfo; 6] = [
         default: 1.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "hold",
@@ -39,6 +41,7 @@ const PARAMS: [ParamInfo; 6] = [
         default: 50.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "release",
@@ -48,6 +51,7 @@ const PARAMS: [ParamInfo; 6] = [
         default: 150.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "range",
@@ -57,6 +61,7 @@ const PARAMS: [ParamInfo; 6] = [
         default: -80.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "sidechain",
@@ -66,6 +71,7 @@ const PARAMS: [ParamInfo; 6] = [
         default: 0.0,
         kind: ParamKind::Switch,
         choices: &[],
+        about: L10n::EMPTY,
     },
 ];
 

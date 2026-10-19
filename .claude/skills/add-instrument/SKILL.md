@@ -13,7 +13,10 @@ Before you start: the doc of the closest existing instrument — `crates/daw-syn
      a line in `members` of the root `Cargo.toml`;
    - `src/lib.rs` with a `//!` header naming its role; the sound in its own module (`engine.rs` in `daw-synth`);
    - `impl InstrumentFactory` (`crates/daw-contracts/src/instrument.rs`): `kind`, `label` (`L10n { en, ru }`),
-     `describe` (the `ParamInfo` table), `create`, and `rebuild_on` for params that need a new instance;
+     `describe` (the `ParamInfo` table), `about`, `create`, and `rebuild_on` for params that need a new instance;
+   - **texts for the AI**, which cannot hear the result: `about` of the kind (what it sounds like, what velocity and
+     note length change, which controllers it hears) and `about` of every param (its scale, what parts of the range
+     sound like), both `L10n { en, ru }`. `crates/daw-bootstrap/tests/all/plugins.rs` fails on a missing one;
    - `impl Instrument`: it **adds** sound into the buffer; no allocations, locks or I/O in the audio callback.
    - Tests in `src/tests.rs` (like `crates/daw-synth/src/tests.rs`).
 2. **Register** in `crates/daw-bootstrap/src/wiring/catalogs.rs` (`instruments.register(daw_<name>::factory())` or

@@ -19,6 +19,7 @@ const PARAMS: [ParamInfo; 4] = [
         default: 0.8,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "depth",
@@ -28,6 +29,7 @@ const PARAMS: [ParamInfo; 4] = [
         default: 3.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "delay",
@@ -37,6 +39,7 @@ const PARAMS: [ParamInfo; 4] = [
         default: 12.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "mix",
@@ -46,6 +49,7 @@ const PARAMS: [ParamInfo; 4] = [
         default: 0.4,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
 ];
 

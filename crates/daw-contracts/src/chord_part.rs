@@ -103,6 +103,20 @@ impl ChordQuality {
 /// Root names for symbols, by pitch class: sharps or flats as they are usually written.
 const ROOT_NAMES: [&str; 12] = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
+/// The pitch class of a note letter `C`…`B` (0 = C), as chord symbols and step lines (`step_line`) write it.
+pub(crate) fn letter_pitch_class(letter: char) -> Option<u8> {
+    match letter {
+        'C' => Some(0),
+        'D' => Some(2),
+        'E' => Some(4),
+        'F' => Some(5),
+        'G' => Some(7),
+        'A' => Some(9),
+        'B' => Some(11),
+        _ => None,
+    }
+}
+
 /// A chord: the root's pitch class (0 = C … 11 = B) and the quality.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct Chord {
@@ -115,16 +129,7 @@ impl Chord {
     pub fn parse(symbol: &str) -> Result<Self, ContractError> {
         let bad = || patterns::BAD_CHORD.with("chord", symbol);
         let mut chars = symbol.trim().chars();
-        let natural = match chars.next() {
-            Some('C') => 0,
-            Some('D') => 2,
-            Some('E') => 4,
-            Some('F') => 5,
-            Some('G') => 7,
-            Some('A') => 9,
-            Some('B') => 11,
-            _ => return Err(bad()),
-        };
+        let natural = chars.next().and_then(letter_pitch_class).ok_or_else(bad)?;
         let rest = chars.as_str();
         let (root, suffix) = match rest.chars().next() {
             Some('#') => (natural + 1, &rest[1..]),

@@ -1,7 +1,7 @@
 //! The project service. The core (`ProjectService`) is the only owner of the project model and of its edit history
 //! (undo/redo). Each job on the project is its own entity on top of the core: `ProjectTracks`, `ProjectClips`,
-//! `ProjectNotes`, `ProjectTakes` (takes of an audio clip), `ProjectTempo` (the tempo map), `ProjectMarkers` (the song
-//! layout), `ProjectFolders` (track folders), `ProjectGraph`, `ProjectAutomation`, `ProjectSampleCatalog`,
+//! `ProjectNotes`, `ProjectTakes` (takes of an audio clip), `ProjectTempo` (the tempo map), `ProjectKey` (the song's
+//! key), `ProjectMarkers` (the song layout), `ProjectFolders` (track folders), `ProjectGraph`, `ProjectAutomation`, `ProjectSampleCatalog`,
 //! `ProjectSampleEditor`, `ProjectFiles`, `ProjectPluginStates`, `ProjectBounce` (rendering a track to sound),
 //! `ProjectCleaner` (clearing the project content), `ProjectMidiMappings` (MIDI controller knobs on parameters, MIDI
 //! learn), `ProjectNoteEffects` (a track's MIDI effects before the instrument), `ProjectClipProcessing` (normalize and
@@ -35,6 +35,7 @@ mod ops;
 mod plugin_states;
 mod sample_editor;
 mod service;
+mod song_key;
 mod stage;
 mod take_rules;
 mod takes;
@@ -64,6 +65,7 @@ pub use notes::ProjectNotes;
 pub use plugin_states::ProjectPluginStates;
 pub use sample_editor::ProjectSampleEditor;
 pub use service::{Dependencies, ProjectService};
+pub use song_key::ProjectKey;
 pub use stage::ProjectStage;
 pub use takes::ProjectTakes;
 pub use tempo::ProjectTempo;

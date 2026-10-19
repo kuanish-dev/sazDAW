@@ -38,6 +38,7 @@ pub const PARAMS: [ParamInfo; 3] = [
             L10n::same("1/32T"),
             L10n::same("1/64"),
         ],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "gate",
@@ -47,6 +48,7 @@ pub const PARAMS: [ParamInfo; 3] = [
         default: 50.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "ramp",
@@ -56,6 +58,7 @@ pub const PARAMS: [ParamInfo; 3] = [
         default: 0.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
 ];
 

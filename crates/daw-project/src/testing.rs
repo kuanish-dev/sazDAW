@@ -13,9 +13,9 @@ use daw_contracts::{
 };
 
 use crate::{
-    Dependencies, ProjectAutomation, ProjectClipProcessing, ProjectClips, ProjectFiles, ProjectFolders, ProjectGraph, ProjectMarkers,
-    ProjectNoteEffects, ProjectNotes, ProjectPluginStates, ProjectSampleCatalog, ProjectSampleEditor, ProjectService, ProjectStage,
-    ProjectTakes, ProjectTempo, ProjectTracks,
+    Dependencies, ProjectAutomation, ProjectClipProcessing, ProjectClips, ProjectFiles, ProjectFolders, ProjectGraph, ProjectKey,
+    ProjectMarkers, ProjectNoteEffects, ProjectNotes, ProjectPluginStates, ProjectSampleCatalog, ProjectSampleEditor, ProjectService,
+    ProjectStage, ProjectTakes, ProjectTempo, ProjectTracks,
 };
 
 pub struct NullInstrument;
@@ -40,7 +40,7 @@ impl Effect for NullEffect {
 }
 
 fn info(name: &'static str, min: f32, max: f32, default: f32) -> ParamInfo {
-    ParamInfo { name, label: L10n::same(name), min, max, default, kind: ParamKind::Number, choices: &[] }
+    ParamInfo { name, label: L10n::same(name), min, max, default, kind: ParamKind::Number, choices: &[], about: L10n::EMPTY }
 }
 
 fn defaults(kinds: Vec<KindInfo>, kind: &str, unknown: ErrorCode) -> Result<Params, ContractError> {
@@ -68,13 +68,14 @@ pub struct FakeInstruments;
 impl InstrumentCatalog for FakeInstruments {
     fn kinds(&self) -> Vec<KindInfo> {
         vec![
-            KindInfo { kind: "synth", label: L10n::same("Synth"), params: vec![info("gain", 0.0, 1.0, 0.5)] },
+            KindInfo { kind: "synth", label: L10n::same("Synth"), params: vec![info("gain", 0.0, 1.0, 0.5)], about: L10n::EMPTY },
             KindInfo {
                 kind: "sampler",
                 label: L10n::same("Sampler"),
                 params: vec![ParamInfo { kind: ParamKind::Sample, ..info("sample", 0.0, 1e6, 0.0) }, info("gain", 0.0, 1.0, 0.8)],
+                about: L10n::EMPTY,
             },
-            KindInfo { kind: "broken", label: L10n::same("Broken"), params: Vec::new() },
+            KindInfo { kind: "broken", label: L10n::same("Broken"), params: Vec::new(), about: L10n::EMPTY },
         ]
     }
 
@@ -118,8 +119,9 @@ impl daw_contracts::NoteEffectCatalog for FakeNoteEffects {
                     ParamInfo { kind: ParamKind::Choice, choices: &RATES, ..info("rate", 0.0, 3.0, 2.0) },
                     info("gate", 10.0, 100.0, 50.0),
                 ],
+                about: L10n::EMPTY,
             },
-            KindInfo { kind: "broken", label: L10n::same("Broken"), params: Vec::new() },
+            KindInfo { kind: "broken", label: L10n::same("Broken"), params: Vec::new(), about: L10n::EMPTY },
         ]
     }
 
@@ -141,11 +143,12 @@ pub struct FakeEffects;
 impl EffectCatalog for FakeEffects {
     fn kinds(&self) -> Vec<KindInfo> {
         vec![
-            KindInfo { kind: "eq", label: L10n::same("EQ"), params: vec![info("gain", -12.0, 12.0, 0.0)] },
+            KindInfo { kind: "eq", label: L10n::same("EQ"), params: vec![info("gain", -12.0, 12.0, 0.0)], about: L10n::EMPTY },
             KindInfo {
                 kind: "compressor",
                 label: L10n::same("Compressor"),
                 params: vec![ParamInfo { kind: ParamKind::Switch, ..info("sidechain", 0.0, 1.0, 0.0) }],
+                about: L10n::EMPTY,
             },
         ]
     }
@@ -365,6 +368,7 @@ pub struct Rig {
     pub markers: ProjectMarkers,
     pub folders: ProjectFolders,
     pub tempo: ProjectTempo,
+    pub key: ProjectKey,
     pub graph: ProjectGraph,
     pub stage: ProjectStage,
     pub automation: ProjectAutomation,
@@ -423,6 +427,7 @@ impl Rig {
         let markers = ProjectMarkers::new(service.clone());
         let folders = ProjectFolders::new(service.clone());
         let tempo = ProjectTempo::new(service.clone());
+        let key = ProjectKey::new(service.clone());
         let graph = ProjectGraph::new(service.clone(), Arc::new(FakeEffects));
         let stage = ProjectStage::new(service.clone());
         let automation = ProjectAutomation::new(service.clone());
@@ -448,6 +453,7 @@ impl Rig {
             markers,
             folders,
             tempo,
+            key,
             graph,
             stage,
             automation,

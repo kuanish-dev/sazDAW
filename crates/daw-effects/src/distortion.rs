@@ -25,6 +25,7 @@ const PARAMS: [ParamInfo; 5] = [
         default: 12.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "tone",
@@ -34,6 +35,7 @@ const PARAMS: [ParamInfo; 5] = [
         default: 8_000.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "mix",
@@ -43,6 +45,7 @@ const PARAMS: [ParamInfo; 5] = [
         default: 1.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "output",
@@ -52,6 +55,7 @@ const PARAMS: [ParamInfo; 5] = [
         default: -6.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "shape",
@@ -61,6 +65,7 @@ const PARAMS: [ParamInfo; 5] = [
         default: 0.0,
         kind: ParamKind::Choice,
         choices: &SHAPES,
+        about: L10n::EMPTY,
     },
 ];
 

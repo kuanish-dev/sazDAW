@@ -44,6 +44,7 @@ fn the_handshake_names_the_server_and_explains_the_ground_rules() {
     assert!(text.contains("CODE: message"), "the AI knows how errors look: {text}");
     assert!(text.contains("analysis_check") && text.contains("clips_addNoteMany"), "the AI knows how to check its work: {text}");
     assert!(text.contains("analysis_balance"), "the AI knows how to balance the volumes: {text}");
+    assert!(text.contains("`about`"), "the AI knows the catalog explains instruments and params: {text}");
     assert!(text.contains("history_checkpoint") && text.contains("history_squash"), "a request is one undo step: {text}");
     assert!(text.contains("automation_addDrawnClip") && text.contains("`params`"), "the AI knows the one-call shortcuts: {text}");
     // The server replaces an unknown protocol version with its own instead of refusing.

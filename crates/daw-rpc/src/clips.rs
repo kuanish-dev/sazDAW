@@ -1,7 +1,7 @@
 //! `clips.*` methods: thin adapters over `ClipControl`, `TakeControl` and `ClipProcessing`. Full clips come inside
 //! `project.get`.
 
-use daw_contracts::{ClipEdit, ClipId, CompSegment, DEFAULT_NORMALIZE_PEAK_DB, NewNoteClip, SampleId, TrackId};
+use daw_contracts::{ClipEdit, ClipId, CompSegment, DEFAULT_NORMALIZE_PEAK_DB, NewNoteClip, NewStepClip, SampleId, TrackId};
 use schemars::JsonSchema;
 use serde::Deserialize;
 
@@ -109,6 +109,19 @@ pub(crate) fn register(table: &mut RpcTable) {
          (the place is taken, including by another clip from the list, or an invalid note) creates none. Returns the clip ids \
          in order.",
         |c, p: AddNoteMany| Ok(c.clips.add_note_clips(p.clips)?.into_iter().map(|clip| clip.id).collect::<Vec<_>>()),
+    );
+    table.add(
+        "clips.addSteps",
+        "Creates a note clip from a melodic step line in one undo step, the way a step sequencer holds a melody (an acid riff, a bass \
+         line, an arpeggio). One token per step, separated by spaces (| marks a bar and is ignored): a note name (F2, Eb3, C#4; C4 = \
+         60) or a scale degree of the song key (key.set: 1 is the tonic in octave `octave`, 8 the tonic an octave up, + or - after it \
+         moves it an octave up or down: 5- 1 3 5 8 1+), then ! for an accent and ~ to slide: the note lasts into the next one (into \
+         the same pitch it is a tie, into another the two overlap, so a mono synth with glide slides); - is a rest, _ holds the note \
+         before it. A note without ~ sounds `gate` of its step (0.5 by default). stepTicks is one step (240, a sixteenth, by \
+         default; 480 an eighth). The clip's content is the line (loopTicks = steps × stepTicks, which must be a multiple of 240); \
+         lengthTicks longer than the line repeats it, without it the clip is one pass. An F minor acid riff on 16 sixteenths: \
+         \"F2 F3! - F2 Eb3~ F3 - C3 | F2 _ Ab2! - C3~ Eb3 F2 -\". Returns the clip.",
+        |c, p: NewStepClip| c.clips.add_step_clip(p),
     );
     table.add(
         "clips.addAudio",

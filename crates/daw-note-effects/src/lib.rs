@@ -71,7 +71,7 @@ impl NoteEffects {
 
 impl NoteEffectCatalog for NoteEffects {
     fn kinds(&self) -> Vec<KindInfo> {
-        KINDS.iter().map(|k| KindInfo { kind: k.kind, label: k.label, params: k.params.to_vec() }).collect()
+        KINDS.iter().map(|k| KindInfo { kind: k.kind, label: k.label, about: L10n::EMPTY, params: k.params.to_vec() }).collect()
     }
 
     fn defaults(&self, kind: &str) -> Result<Params, ContractError> {

@@ -54,6 +54,9 @@ fn every_documented_method_group_is_registered() {
         "tempo.setSignature",
         "tempo.setChanges",
         "tempo.setSignatureChanges",
+        "key.get",
+        "key.set",
+        "key.clear",
         "midi.importTempo",
         "project.get",
         "project.summary",
@@ -83,6 +86,7 @@ fn every_documented_method_group_is_registered() {
         "folders.remove",
         "folders.setTracks",
         "clips.addNote",
+        "clips.addSteps",
         "clips.addAudio",
         "clips.edit",
         "clips.split",
@@ -261,6 +265,10 @@ fn wire_shapes_of_contract_types_stay_as_the_frontend_expects() {
     assert_eq!(waveform["choices"], serde_json::json!(["Sine", "Triangle", "Saw", "Square"]), "{waveform}");
     assert!(synth["params"].as_array().unwrap().iter().any(|p| p["label"] == "High cut, Hz" && p["max"].as_f64() > Some(17_000.0)));
     assert!(param.get("choices").is_none(), "a non-choice has no options in JSON: {param}");
+    assert!(synth["about"].as_str().is_some_and(|text| text.contains("Velocity")), "the AI reads what the synth does: {synth}");
+    assert!(waveform["about"].as_str().is_some_and(|text| !text.is_empty()), "and what each param does: {waveform}");
+    let effect_param = &catalog["effects"][0]["params"][0];
+    assert!(effect_param.get("about").is_none(), "a param without a text has no \"about\" in JSON: {effect_param}");
 
     let status = call(&table, c, "project.status", Value::Null);
     for key in ["name", "dirty", "canUndo", "canRedo", "undoLabel", "revision", "path", "folder"] {

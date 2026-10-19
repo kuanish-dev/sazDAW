@@ -73,7 +73,7 @@ pub struct ClearOptions {
 /// Clearing the project. Job: remove all project contents while keeping the project itself (file, name, master).
 ///
 /// Contract: removes tracks (with instruments and plugin states), clips, buses, effects (on the master too),
-/// connections, automation, markers, folders and the loop; the master and its volume stay; tempo depends on
+/// connections, automation, markers, folders and the loop; the master and its volume and the song key stay; tempo depends on
 /// `keep_tempo`, samples on `remove_samples`. The project file and its binding do not change (the project becomes
 /// modified). Everything is **one undo step**: `undo` brings the whole project back. An empty project creates no undo
 /// step. There are no rule errors.

@@ -15,9 +15,9 @@ use daw_contracts::{
     AppLog, AssetStore, AudioCapture, AudioDeviceInfo, AudioDevices, AudioRecordControl, AudioSettings, AudioStatus, Bpm, Clip,
     ClipContent, ClipControl, ClipEdit, ClipId, CompSegment, ContractError, EngineLatency, EngineLosses, EngineStats, HistoryControl,
     HistoryMark, HistorySteps, InputChannels, InputLevel, InputMonitor, InstrumentSpec, LiveInput, LogEntry, LogLevel, MonitorMode,
-    MonitorStatus, NewNoteClip, ProjectIo, SampleCatalog, SampleData, SampleId, SampleInfo, SampleWriter, SignatureChange, StreamConfig,
-    TakeControl, TempoChange, TempoControl, TempoMap, TimeSignature, Track, TrackControl, TrackId, TrackInput, TransportControl,
-    TransportState,
+    MonitorStatus, NewNoteClip, NewStepClip, ProjectIo, SampleCatalog, SampleData, SampleId, SampleInfo, SampleWriter, SignatureChange,
+    StreamConfig, TakeControl, TempoChange, TempoControl, TempoMap, TimeSignature, Track, TrackControl, TrackId, TrackInput,
+    TransportControl, TransportState,
 };
 
 use crate::{AudioRecorder, Deps};
@@ -301,6 +301,9 @@ impl ClipControl for FakeClips {
         Err(unused())
     }
     fn add_note_clips(&self, _: Vec<NewNoteClip>) -> Result<Vec<Clip>, ContractError> {
+        Err(unused())
+    }
+    fn add_step_clip(&self, _: NewStepClip) -> Result<Clip, ContractError> {
         Err(unused())
     }
     /// Like the real one: a clip for the whole sound (always 1920 ticks here) and a refusal if the place is taken.

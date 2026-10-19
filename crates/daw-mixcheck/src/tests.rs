@@ -30,7 +30,7 @@ fn clip(id: ClipId, track: TrackId, start: u32, length: u32) -> Clip {
 }
 
 fn info(name: &'static str, label: &'static str, min: f32, max: f32) -> ParamInfo {
-    ParamInfo { name, label: L10n::same(label), min, max, default: max, kind: ParamKind::Number, choices: &[] }
+    ParamInfo { name, label: L10n::same(label), min, max, default: max, kind: ParamKind::Number, choices: &[], about: L10n::EMPTY }
 }
 
 /// "Bass" (track 1, node 10) and "Lead" (track 2, node 11) on the synth → master; clips: bass in bars 1–2, lead in bar 3.
@@ -276,7 +276,7 @@ struct Catalog;
 
 impl InstrumentCatalog for Catalog {
     fn kinds(&self) -> Vec<KindInfo> {
-        vec![KindInfo { kind: "synth", label: L10n::same("Synth"), params: vec![info("gain", "Gain", 0.0, 1.0)] }]
+        vec![KindInfo { kind: "synth", label: L10n::same("Synth"), params: vec![info("gain", "Gain", 0.0, 1.0)], about: L10n::EMPTY }]
     }
     fn defaults(&self, kind: &str) -> Result<Params, ContractError> {
         if kind == "synth" { Ok(Params::new()) } else { Err(tracks::UNKNOWN_INSTRUMENT.with("kind", kind)) }

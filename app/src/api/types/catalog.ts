@@ -13,11 +13,16 @@ export interface ParamInfo {
   kind: ParamKind;
   /** Option names of a `choice` parameter, in order; absent for other kinds. */
   choices?: string[];
+  /** What the parameter does to the sound, for the AI (`catalog.get`); absent where the kind says nothing. The
+   *  interface does not show it. */
+  about?: string;
 }
 
 export interface KindInfo {
   kind: string;
   label: string;
+  /** What a built-in instrument sounds like and how it plays notes, for the AI; absent for effects and plugins. */
+  about?: string;
   params: ParamInfo[];
 }
 

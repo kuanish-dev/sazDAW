@@ -53,17 +53,17 @@ pub(crate) trait EffectKind: Effect + Sized + 'static {
 
 /// A number param of a table (`PARAMS`): the newer effects write their tables with these three helpers.
 pub(crate) const fn number(name: &'static str, label: L10n, min: f32, max: f32, default: f32) -> ParamInfo {
-    ParamInfo { name, label, min, max, default, kind: ParamKind::Number, choices: &[] }
+    ParamInfo { name, label, min, max, default, kind: ParamKind::Number, choices: &[], about: L10n::EMPTY }
 }
 
 /// An on/off param, off by default.
 pub(crate) const fn switch(name: &'static str, label: L10n) -> ParamInfo {
-    ParamInfo { name, label, min: 0.0, max: 1.0, default: 0.0, kind: ParamKind::Switch, choices: &[] }
+    ParamInfo { name, label, min: 0.0, max: 1.0, default: 0.0, kind: ParamKind::Switch, choices: &[], about: L10n::EMPTY }
 }
 
 /// A choice param: the value is the index of one of `choices`.
 pub(crate) const fn choice(name: &'static str, label: L10n, choices: &'static [L10n], default: f32) -> ParamInfo {
-    ParamInfo { name, label, min: 0.0, max: (choices.len() - 1) as f32, default, kind: ParamKind::Choice, choices }
+    ParamInfo { name, label, min: 0.0, max: (choices.len() - 1) as f32, default, kind: ParamKind::Choice, choices, about: L10n::EMPTY }
 }
 
 /// The effect with the defaults from its table, `params` on top. Then a reset: smoothed parameters jump straight to

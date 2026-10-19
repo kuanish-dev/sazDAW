@@ -41,6 +41,7 @@ impl InstrumentFactory for SilentFactory {
             default: 0.5,
             kind: daw_contracts::ParamKind::Number,
             choices: &[],
+            about: L10n::EMPTY,
         }]
     }
     fn create(&self, _: &Params, _: Option<&PluginState>) -> Result<Box<dyn Instrument>, ContractError> {

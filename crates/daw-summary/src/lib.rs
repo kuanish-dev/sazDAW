@@ -27,6 +27,7 @@ impl ProjectSummary for Summarizer {
             bpm: map.base_tempo(),
             signature: map.base_signature(),
             tempo_changes: map.has_changes(),
+            key: project.key,
             end_tick,
             bars: if end_tick == 0 { 0 } else { bar(project, end_tick - 1) },
             loop_region: project.loop_region,

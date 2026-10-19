@@ -25,8 +25,8 @@ export function wholeChanges(w: MockWorld): ProjectChanges {
   return {
     name: p.name, tempoMap: p.tempoMap, tracks: list(p.tracks), clips: list(p.clips), loopRegion: p.loopRegion,
     nodes: list(p.graph.nodes), edges: p.graph.edges, room: p.room, automation: list(p.automation),
-    samples: list(p.samples), markers: list(p.markers), folders: list(p.folders), midiMappings: p.midiMappings ?? [],
-    nextId: p.nextId,
+    samples: list(p.samples), markers: list(p.markers), folders: list(p.folders), key: p.key,
+    midiMappings: p.midiMappings ?? [], nextId: p.nextId,
   };
 }
 

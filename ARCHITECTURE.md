@@ -90,6 +90,7 @@ Cross-layer features (`docs/features/`):
 | Warping audio clips to tempo, pitch, crossfades | [warping.md](docs/features/warping.md) |
 | Audio clip editing: fades, gain, trim, normalize, reverse | [audio-clip-editing.md](docs/features/audio-clip-editing.md) |
 | Musical note edits, the controller lane | [note-edits.md](docs/features/note-edits.md) |
+| Melodic step lines (a melody as steps) and the song key | [step-lines.md](docs/features/step-lines.md) |
 | MIDI controllers: pitch bend, CC, aftertouch, MIDI learn | [midi-controllers.md](docs/features/midi-controllers.md) |
 | Automation: editing and live writing | [automation.md](docs/features/automation.md) |
 | Sends: pre/post-fader, connection level | [sends.md](docs/features/sends.md) |

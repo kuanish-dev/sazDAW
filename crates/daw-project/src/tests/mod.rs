@@ -1,5 +1,5 @@
 //! Contract tests of the project entities, one file per job: tracks, clips, notes, markers, folders, graph, the channel
-//! utility, the stage, automation, history, sends, samples, files, DSP sync and batch operations. Shared helpers live
+//! utility, the stage, the song key, automation, history, sends, samples, files, DSP sync and batch operations. Shared helpers live
 //! here.
 
 mod automation;
@@ -26,6 +26,7 @@ mod plugin_states;
 mod samples;
 mod sends;
 mod sidechain;
+mod song_key;
 mod stage;
 mod takes;
 mod tempo;

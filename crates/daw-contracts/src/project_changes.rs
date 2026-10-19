@@ -8,7 +8,7 @@ use serde::Serialize;
 
 use crate::graph::{Edge, Graph, Node};
 use crate::model::{AutomationLane, Clip, Folder, Marker, MidiMapping, Project, SampleRef, Track};
-use crate::{Room, TempoMap};
+use crate::{Room, ScaleKey, TempoMap};
 
 /// A list of entities with ids, as it changed: the ids of the whole list in its order, and the entities that changed
 /// or appeared, whole. An id that is no longer there was removed; an entity not in `changed` is as the reader has it.
@@ -50,6 +50,9 @@ pub struct ProjectChanges {
     pub markers: Option<ListChanges<Marker>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub folders: Option<ListChanges<Folder>>,
+    /// The new song key (`Some(None)`, `null` in JSON: the key was removed).
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub key: Option<Option<ScaleKey>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub midi_mappings: Option<Vec<MidiMapping>>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -99,6 +102,7 @@ impl ProjectChanges {
             samples,
             markers,
             folders,
+            key,
             midi_mappings,
             next_id,
         } = project;
@@ -115,6 +119,7 @@ impl ProjectChanges {
             samples: Some(whole_list(samples, |s| s.id)),
             markers: Some(whole_list(markers, |m| m.id)),
             folders: Some(whole_list(folders, |f| f.id)),
+            key: Some(*key),
             midi_mappings: Some(midi_mappings.clone()),
             next_id: Some(*next_id),
         }
@@ -134,6 +139,7 @@ impl ProjectChanges {
             samples,
             markers,
             folders,
+            key,
             midi_mappings,
             next_id,
         } = new;
@@ -150,6 +156,7 @@ impl ProjectChanges {
             samples: list_changes(&old.samples, samples, |s| s.id),
             markers: list_changes(&old.markers, markers, |m| m.id),
             folders: list_changes(&old.folders, folders, |f| f.id),
+            key: changed(&old.key, key),
             midi_mappings: changed(&old.midi_mappings, midi_mappings),
             next_id: changed(&old.next_id, next_id),
         }
@@ -170,6 +177,7 @@ impl ProjectChanges {
             samples,
             markers,
             folders,
+            key,
             midi_mappings,
             next_id,
         } = self;
@@ -195,6 +203,7 @@ impl ProjectChanges {
         list(&mut project.samples, samples, |s| s.id);
         list(&mut project.markers, markers, |m| m.id);
         list(&mut project.folders, folders, |f| f.id);
+        set(&mut project.key, key);
         set(&mut project.midi_mappings, midi_mappings);
         set(&mut project.next_id, next_id);
     }
@@ -204,6 +213,7 @@ impl ProjectChanges {
 mod tests {
     use super::{ListChanges, ProjectChanges};
     use crate::model::{Marker, Project};
+    use crate::{Scale, ScaleKey};
 
     fn marker(id: u32, tick: u32) -> Marker {
         Marker { id, tick, name: format!("M{id}") }
@@ -263,9 +273,11 @@ mod tests {
     #[test]
     fn whole_parts_come_when_they_differ() {
         let old = Project { loop_region: Some((0, 3840)), ..Project::empty() };
-        let new = Project { name: "Other".into(), loop_region: None, ..Project::empty() };
+        let new =
+            Project { name: "Other".into(), loop_region: None, key: Some(ScaleKey { root: 5, scale: Scale::Minor }), ..Project::empty() };
         let changes = ProjectChanges::between(&old, &new);
         assert_eq!(changes.name.as_deref(), Some("Other"));
+        assert_eq!(changes.key, Some(new.key), "a key that was set comes whole");
         assert_eq!(changes.loop_region, Some(None), "a removed loop region comes as null");
         assert_eq!(changes.edges, None, "the connections did not change");
         assert_makes(&old, &new);
