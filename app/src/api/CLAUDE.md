@@ -1,6 +1,6 @@
 # `src/api/` — the communication contract and the model
 
-`src/api/`: `rpc.ts` (`RpcClient`), `dialogs.ts` (`SystemDialogs`), `shell.ts` (`AppShell`: window zoom and app version), `types/` (a mirror of the Rust JSON, split by area; imported via `api/types`), `api.ts` — typed wrappers; the groups match the RPC namespaces (`samples.*`, `history.*`, `metronome.*`, `patterns.*`…). A new method: the [add-operation](../../../.claude/skills/add-operation/SKILL.md) recipe
+`src/api/`: `rpc.ts` (`RpcClient`), `wire.ts` (decoding the binary replies of `callBinary`), `dialogs.ts` (`SystemDialogs`), `shell.ts` (`AppShell`: window zoom and app version), `types/` (a mirror of the Rust JSON, split by area; imported via `api/types`), `api.ts` — typed wrappers; the groups match the RPC namespaces (`samples.*`, `history.*`, `metronome.*`, `patterns.*`…). A new method: the [add-operation](../../../.claude/skills/add-operation/SKILL.md) recipe
 
 Knows about: —.
 

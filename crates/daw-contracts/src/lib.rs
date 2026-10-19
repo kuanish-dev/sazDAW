@@ -78,9 +78,9 @@ pub use effect::{
     ScanFailure, ScanReport,
 };
 pub use engine::{
-    BandGains, DspCommand, DspSink, EngineFactory, EngineInstance, EngineLatency, EngineLosses, EngineSnapshot, EngineStats, GainReduction,
-    InputMonitor, LiveMessage, LiveNoteSink, MASTER_WINDOW_FRAMES, MAX_WATCHED_NODES, MasterWindow, Meter, MonitorStatus,
-    NODE_WINDOW_FRAMES, NodeCursor, NodeScope, NodeWindow, RecordSource, RecordedEvent, SnapshotSink, TrackInput,
+    BandGains, CAPTURE_LEASE_SECONDS, DspCommand, DspSink, EngineFactory, EngineInstance, EngineLatency, EngineLosses, EngineSnapshot,
+    EngineStats, GainReduction, InputMonitor, LiveMessage, LiveNoteSink, MASTER_WINDOW_FRAMES, MAX_WATCHED_NODES, MasterWindow, Meter,
+    MonitorStatus, NODE_WINDOW_FRAMES, NodeCursor, NodeScope, NodeWindow, RecordSource, RecordedEvent, SnapshotSink, TrackInput,
 };
 pub use error::{ContractError, ErrorCode, ErrorKind};
 pub use export::{BitDepth, ExportFormat, ExportRange, ExportReport, ExportRequest, Exporter, MAX_TAIL_SECONDS, Normalize, check_tail};

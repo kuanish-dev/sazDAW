@@ -1,8 +1,9 @@
 // Mock live master meter (`audio.masterMeter`): plausible readings made from the mock master level (`meters.ts`) with
-// the backend's rules (`LiveMeter`): off until watched, a fresh measurement on every watch, the integration and the held
+// the backend's rules (`LiveMeter`): measuring from a reading for as long as readings come (`CAPTURE_LEASE_SECONDS`), a
+// fresh measurement after a lease without readings, the integration and the held
 // true peak since the reset or playback from the song start, the clip at `CLIP_DBTP`, and a vectorscope of the mock
 // music (`liveSound.ts`) with a little width. The mock does not run the BS.1770 math; it only has to look alive.
-import { CLIP_DBTP, type MasterReading, VECTOR_FRAMES } from "../api/types";
+import { CAPTURE_LEASE_SECONDS, CLIP_DBTP, type MasterReading, VECTOR_FRAMES } from "../api/types";
 import { mockLiveSamples } from "./liveSound";
 import type { MockWorld } from "./world";
 
@@ -22,11 +23,13 @@ const WIDTH = 0.35;
 /** The side signal is the music a few frames earlier: decorrelated enough to open up the picture. */
 const SIDE_DELAY = 9;
 
-/** What the mock meter has gathered since the reset; `null` in the world while not watched. */
+/** What the mock meter has gathered since the reset; `null` in the world before the first reading. */
 export interface MeterState {
   /** When the integration began (ms), so `seconds` runs with the clock. */
   since: number;
   lastRead: number;
+  /** When the measuring stops unless read again (ms). */
+  until: number;
   shortTerm: number | null;
   /** Every momentary and short-term reading above the gate since the reset, for the integrated loudness and the range. */
   momentaries: number[];
@@ -34,22 +37,20 @@ export interface MeterState {
   maxPeak: number | null;
 }
 
-const fresh = (now: number): MeterState => ({ since: now, lastRead: now, shortTerm: null, momentaries: [], shortTerms: [], maxPeak: null });
-
-export function watchMasterMeter(w: MockWorld, on: boolean) {
-  if (on && w.meter) return;
-  w.meter = on ? fresh(performance.now()) : null;
-}
+const fresh = (now: number): MeterState => ({
+  since: now, lastRead: now, until: now, shortTerm: null, momentaries: [], shortTerms: [], maxPeak: null,
+});
 
 /** The reset button, and playback from the song start. */
 export function resetMasterMeter(w: MockWorld) {
-  if (w.meter) w.meter = { ...fresh(performance.now()), shortTerm: w.meter.shortTerm };
+  if (w.meter) w.meter = { ...fresh(performance.now()), shortTerm: w.meter.shortTerm, until: w.meter.until };
 }
 
-export function masterMeterReading(w: MockWorld, sampleRate: number): MasterReading | null {
-  const meter = w.meter;
-  if (!meter) return null;
+export function masterMeterReading(w: MockWorld, sampleRate: number): MasterReading {
   const now = performance.now();
+  if (!w.meter || now >= w.meter.until) w.meter = fresh(now);
+  const meter = w.meter;
+  meter.until = now + CAPTURE_LEASE_SECONDS * 1000;
   const dt = (now - meter.lastRead) / 1000;
   meter.lastRead = now;
 

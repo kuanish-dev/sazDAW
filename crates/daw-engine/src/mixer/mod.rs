@@ -9,7 +9,7 @@
 //! preallocated `pre_fader` (mute/solo apply to it). A connection level can be overridden by automation for a segment;
 //! its change is smoothed over the segment. The result is the master buffer. The peaks of tracks, buses and the master
 //! go to `Meters`, and so do the gain reduction and the band gains of effects that report them. Every node's input (before the effect
-//! or the fader) and output are offered to the `NodeTap`, which copies only the watched nodes (the live pictures of the
+//! or the fader) and output are offered to the `NodeTap`, which copies only the captured nodes (the live pictures of the
 //! effects). A connection bypassing a longer path goes through a delay line (plugin delay compensation, `latency.rs`).
 //! A channel standing on the virtual stage (`crate::stage`) plays its volume at its fader but not its pan: its voice
 //! places it in the room where its sound leaves its insert path (after its effects, so they shape the instrument's own

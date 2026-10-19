@@ -53,7 +53,7 @@ function fft(re: Float32Array, im: Float32Array) {
 
 /** Amplitude of each frequency bin (the first half of the FFT) of `samples`, whose length is a power of two. Hann-windowed,
  *  so a sound between bins does not smear over the whole spectrum; a full-scale sine reads about 1. */
-export function magnitudes(samples: readonly number[]): Float32Array {
+export function magnitudes(samples: Float32Array): Float32Array {
   const n = samples.length;
   const re = new Float32Array(n);
   const im = new Float32Array(n);
@@ -89,7 +89,7 @@ export function spectrumBands(bins: Float32Array, sampleRate: number, count: num
 
 /** Where to start an oscilloscope trace of `span` samples: at the first rising zero crossing that leaves room for it, so
  *  a steady tone draws in the same place every frame; the newest samples when there is no crossing (silence, noise). */
-export function traceStart(samples: readonly number[], span: number): number {
+export function traceStart(samples: Float32Array, span: number): number {
   const latest = Math.max(0, samples.length - span);
   for (let i = 1; i <= latest; i++) {
     if (samples[i - 1]! < 0 && samples[i]! >= 0) return i;
@@ -99,7 +99,7 @@ export function traceStart(samples: readonly number[], span: number): number {
 
 /** Like `traceStart`, but the latest rising zero crossing that still leaves room for `span` samples, so the trace shows
  *  the newest sound (the effect pictures); the newest samples when there is no crossing. */
-export function latestTraceStart(samples: readonly number[], span: number): number {
+export function latestTraceStart(samples: Float32Array, span: number): number {
   const latest = Math.max(0, samples.length - span);
   for (let i = latest; i >= 1; i--) {
     if (samples[i - 1]! < 0 && samples[i]! >= 0) return i;

@@ -80,7 +80,7 @@ export function modelPaths(points: readonly ShapedPoint[], view: PlotView): { in
 export const SEGMENT_SECONDS = 0.005;
 
 /** The peak of each `SEGMENT_SECONDS` of the newest `frames` frames of `samples`, oldest first (dBFS). */
-export function envelopeSegments(samples: readonly number[], sampleRate: number, frames: number): number[] {
+export function envelopeSegments(samples: Float32Array, sampleRate: number, frames: number): number[] {
   const size = Math.max(1, Math.round(sampleRate * SEGMENT_SECONDS));
   const count = Math.floor(Math.min(frames, samples.length) / size);
   const from = samples.length - count * size;

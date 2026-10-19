@@ -120,7 +120,6 @@ impl EngineStats for FakeStats {
     fn latency(&self) -> EngineLatency {
         EngineLatency { frames: self.latency.load(Ordering::Relaxed) as u32, sample_rate: 48_000 }
     }
-    fn watch_master(&self, _: bool) {}
     fn master_window(&self) -> daw_contracts::MasterWindow {
         daw_contracts::MasterWindow { samples: Vec::new(), sample_rate: 48_000 }
     }

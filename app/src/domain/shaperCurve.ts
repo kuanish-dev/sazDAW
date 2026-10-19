@@ -95,7 +95,7 @@ export const TRACE_FRAMES = 1024;
 
 /** The live sound on the curve: each frame's input sample against its output sample (an X-Y scope) over the newest
  *  `TRACE_FRAMES`; a pure waveshaper draws its curve, a filter in the effect opens it into a loop. */
-export function tracePath(input: readonly number[], output: readonly number[], view: PlotView): string {
+export function tracePath(input: Float32Array, output: Float32Array, view: PlotView): string {
   const count = Math.min(input.length, output.length, TRACE_FRAMES);
   const from = Math.min(input.length, output.length) - count;
   const line: Point[] = [];
@@ -104,7 +104,7 @@ export function tracePath(input: readonly number[], output: readonly number[], v
 }
 
 /** One wave over `span` samples from `start`, across the whole view width (−1 at the bottom, 1 at the top). */
-export function wavePath(samples: readonly number[], start: number, span: number, view: PlotView): string {
+export function wavePath(samples: Float32Array, start: number, span: number, view: PlotView): string {
   const line: Point[] = [];
   const end = Math.min(samples.length, start + span);
   for (let i = start; i < end; i++) line.push([((i - start) / Math.max(1, span - 1)) * view.width, sampleY(view, samples[i]!)]);

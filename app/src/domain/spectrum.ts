@@ -45,7 +45,7 @@ function amplitudeAt(bins: Float32Array, binHz: number, low: number, high: numbe
 
 /** Levels 0..1 (the bottom..top of the graph) at `SPECTRUM_POINTS` frequencies spread evenly over the axis; all 0
  *  for no samples. The sample count must be a power of two (`NODE_WINDOW_FRAMES`). */
-export function spectrumLevels(samples: readonly number[], sampleRate: number): number[] {
+export function spectrumLevels(samples: Float32Array, sampleRate: number): number[] {
   if (samples.length === 0 || sampleRate <= 0) return Array.from({ length: SPECTRUM_POINTS }, () => 0);
   const bins = magnitudes(samples);
   const binHz = sampleRate / samples.length;

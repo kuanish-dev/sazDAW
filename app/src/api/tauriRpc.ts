@@ -1,4 +1,5 @@
-// `RpcClient` implementation for the app: calls go through the Tauri `rpc` command; subscriptions use the `tick` and `project` events.
+// `RpcClient` implementation for the app: calls go through the Tauri `rpc` command (bytes: `rpc_binary`); subscriptions use the `tick`
+// and `project` events.
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { RpcClient } from "./rpc";
@@ -24,6 +25,10 @@ function subscribe<T>(event: string, listener: (payload: T) => void): () => void
 export class TauriRpc implements RpcClient {
   call<T = void>(method: string, params?: unknown): Promise<T> {
     return invoke<T>("rpc", { method, params: params ?? null });
+  }
+
+  callBinary(method: string, params?: unknown): Promise<ArrayBuffer> {
+    return invoke<ArrayBuffer>("rpc_binary", { method, params: params ?? null });
   }
 
   onTick(listener: (tick: Tick) => void) {

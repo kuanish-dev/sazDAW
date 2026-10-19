@@ -1,5 +1,6 @@
 // Periodic backend polling: one request at a time, stops when the caller asks. Shared by the audio recording state and,
-// as a watched poll (a backend capture open only while polled), by the input level check and the master visualizer.
+// as a watched poll (a backend capture polled while it is shown), by the input level check, the master visualizer and
+// the master meter.
 import { onCleanup } from "solid-js";
 
 export interface Poller {
@@ -39,8 +40,9 @@ export function createPoller(poll: () => Promise<void>, intervalMs: number): Pol
 
 /** How to open a backend capture, read it and show what was read. */
 export interface WatchedCapture<T> {
-  /** Opens (`true`) or closes the capture. */
-  watch(on: boolean): Promise<void>;
+  /** Opens (`true`) or closes the capture (the input level). None for a capture the backend keeps going while it is read
+   *  (`CAPTURE_LEASE_SECONDS`: the master window, the master meter): stopping the polling is enough. */
+  watch?(on: boolean): Promise<void>;
   /** One reading; `undefined` — it failed (the action has shown why). */
   read(): Promise<T | undefined>;
   show(value: T): void;
@@ -49,9 +51,10 @@ export interface WatchedCapture<T> {
 }
 
 /**
- * A backend capture that is open only while it is polled (the input level check, the master visualizer): `start` opens
- * it and polls, `stop` closes it. A failed reading stops it, so errors don't pile up; a reading that lands after `stop`
- * is dropped. Leaving the owner (component cleanup) stops it — a capture must not stay open behind a closed view.
+ * A backend capture that is open only while it is polled (the input level check, the master visualizer, the master
+ * meter): `start` opens it and polls, `stop` closes it. A failed reading stops it, so errors don't pile up; a reading
+ * that lands after `stop` is dropped. Leaving the owner (component cleanup) stops it — a capture must not stay open
+ * behind a closed view.
  */
 export function createWatchedPoll<T>(capture: WatchedCapture<T>, intervalMs: number): Poller {
   const poller = createPoller(async () => {
@@ -65,7 +68,7 @@ export function createWatchedPoll<T>(capture: WatchedCapture<T>, intervalMs: num
     if (!poller.running()) return;
     poller.stop();
     capture.onStop?.();
-    void capture.watch(false);
+    void capture.watch?.(false);
   };
   onCleanup(stop);
 
@@ -74,7 +77,7 @@ export function createWatchedPoll<T>(capture: WatchedCapture<T>, intervalMs: num
       if (poller.running()) return;
       // Polling starts before the capture is asked to open: leaving at that moment still closes it.
       poller.start();
-      void capture.watch(true);
+      void capture.watch?.(true);
     },
     stop,
     running: poller.running,

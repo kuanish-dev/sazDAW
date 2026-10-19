@@ -229,22 +229,15 @@ impl EngineStats for EngineLink {
         self.telemetry.latency()
     }
 
-    fn watch_master(&self, on: bool) {
-        self.telemetry.scope.watch(on);
-    }
-
     fn master_window(&self) -> MasterWindow {
-        MasterWindow { samples: self.telemetry.scope.read(), sample_rate: self.telemetry.stream_config().sample_rate }
+        let sample_rate = self.telemetry.stream_config().sample_rate;
+        MasterWindow { samples: self.telemetry.scope.read(sample_rate), sample_rate }
     }
 }
 
 impl NodeScope for EngineLink {
-    fn watch_nodes(&self, nodes: &[NodeId]) {
-        self.telemetry.node_tap.watch(nodes);
-    }
-
-    fn node_windows(&self, seen: &[NodeCursor]) -> Vec<NodeWindow> {
-        self.telemetry.node_tap.windows(seen, self.telemetry.stream_config().sample_rate)
+    fn node_windows(&self, nodes: &[NodeId], seen: &[NodeCursor]) -> Vec<NodeWindow> {
+        self.telemetry.node_tap.windows(nodes, seen, self.telemetry.stream_config().sample_rate)
     }
 }
 

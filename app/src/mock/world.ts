@@ -43,7 +43,7 @@ export class MockWorld {
   songLoop = true;
   recordingAudio = false;
   metronome = false;
-  /** The mono check, a monitoring mode like the song loop; the live master meter while watched (`masterMeter.ts`). */
+  /** The mono check, a monitoring mode like the song loop; the live master meter while it is read (`masterMeter.ts`). */
   mono = false;
   meter: MeterState | null = null;
   /** Live automation write mode and whether this play pass has already written (one undo step per pass). */

@@ -7,6 +7,7 @@ crate::codes! {
     NO_TOOL_NAME = "RP-102", "The request has no tool name (name)";
     BAD_JSON = "RP-103", "Could not parse JSON: {details}";
     UNSUPPORTED_PROTOCOL_METHOD = "RP-501", "Protocol method \"{method}\" is not supported";
+    NO_BINARY_REPLY = "RP-502", "Method \"{method}\" has no binary reply";
     BAD_RESULT = "RP-901", "Could not encode the result of \"{method}\": {details}";
     TASK_FAILED = "RP-902", "The call \"{method}\" stopped unexpectedly: {details}";
 }

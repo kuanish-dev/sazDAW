@@ -42,7 +42,7 @@ export const reverbDecay = (s: ReverbSettings) => ({ low: decaySeconds(s, 0), hi
 
 /** The reverb's own sound in the newest stretch of a window (`READING_SECONDS`), RMS: the output minus its dry part,
  *  `input × (1 − mix)`, is exactly the mixed-in reverb (the dry sound and the reverb add up in `Reverb::process`). */
-export function wetLevel(input: readonly number[], output: readonly number[], mix: number, sampleRate: number): number {
+export function wetLevel(input: Float32Array, output: Float32Array, mix: number, sampleRate: number): number {
   const count = Math.min(input.length, output.length, Math.max(1, Math.round(sampleRate * READING_SECONDS)));
   let power = 0;
   for (let i = 1; i <= count; i++) {

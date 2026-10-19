@@ -8,20 +8,20 @@ import type { Point } from "./plot";
 export const READING_SECONDS = 0.035;
 
 /** The newest `seconds` of `samples` (all of them when shorter). */
-function newest(samples: readonly number[], sampleRate: number, seconds: number): readonly number[] {
+function newest(samples: Float32Array, sampleRate: number, seconds: number): Float32Array {
   const count = Math.max(1, Math.round(sampleRate * seconds));
-  return samples.length > count ? samples.slice(samples.length - count) : samples;
+  return samples.length > count ? samples.subarray(samples.length - count) : samples;
 }
 
 /** Peak amplitude (0..1+) of the newest `seconds` of `samples`; 0 for none. */
-export function recentPeak(samples: readonly number[], sampleRate: number, seconds = READING_SECONDS): number {
+export function recentPeak(samples: Float32Array, sampleRate: number, seconds = READING_SECONDS): number {
   let peak = 0;
   for (const sample of newest(samples, sampleRate, seconds)) peak = Math.max(peak, Math.abs(sample));
   return peak;
 }
 
 /** RMS amplitude of the newest `seconds` of `samples` (the energy, for a reverb tail); 0 for none. */
-export function recentRms(samples: readonly number[], sampleRate: number, seconds = READING_SECONDS): number {
+export function recentRms(samples: Float32Array, sampleRate: number, seconds = READING_SECONDS): number {
   const part = newest(samples, sampleRate, seconds);
   if (part.length === 0) return 0;
   let power = 0;

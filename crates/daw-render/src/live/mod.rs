@@ -1,7 +1,9 @@
-//! `LiveMeter` (`MasterMeter`): "measure the master as it plays". While watched it keeps the engine's `MasterTap` open
-//! and a thread (`daw-master-meter`) moves the new frames into the measurement (`measure.rs`) about 20 times a second, so
-//! every frame is measured however rarely the interface reads; a reading takes the newest frames first. Playback that
-//! starts from the song start (the tap's restart mark) starts the integration over at that very frame.
+//! `LiveMeter` (`MasterMeter`): "measure the master as it plays". A reading starts the measuring and keeps it going for
+//! `CAPTURE_LEASE_SECONDS`: meanwhile the engine's `MasterTap` stays open and a thread (`daw-master-meter`) moves the new
+//! frames into the measurement (`measure.rs`) about 20 times a second, so every frame is measured however rarely the
+//! interface reads; a reading takes the newest frames first. Once nobody has read for a whole lease, the thread closes
+//! the tap and ends. Playback that starts from the song start (the tap's restart mark) starts the integration over at
+//! that very frame.
 
 mod measure;
 #[cfg(test)]
@@ -9,10 +11,10 @@ mod tests;
 
 use std::sync::{Arc, Mutex, Weak};
 use std::thread;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use daw_contracts::sync::lock;
-use daw_contracts::{AppLog, LogEntry, MasterFrames, MasterMeter, MasterReading, MasterTap};
+use daw_contracts::{AppLog, CAPTURE_LEASE_SECONDS, LogEntry, MasterFrames, MasterMeter, MasterReading, MasterTap};
 
 use measure::{Measurement, nothing_yet};
 
@@ -26,15 +28,19 @@ pub struct LiveMeter {
 struct Inner {
     tap: Arc<dyn MasterTap>,
     log: Arc<dyn AppLog>,
+    /// How long a reading keeps the measuring going (`CAPTURE_LEASE_SECONDS`; shorter in tests).
+    lease: Duration,
     state: Mutex<State>,
 }
 
 #[derive(Default)]
 struct State {
-    /// The current watch, `None` while off. A thread of an older watch ends when it sees another one.
+    /// The current measurement, `None` while stopped. A thread of an older one ends when it sees another one.
     watch: Option<u64>,
     next_watch: u64,
-    /// The end of the frames read from the tap in this watch.
+    /// When the measuring stops unless read again: a lease after the last reading.
+    until: Option<Instant>,
+    /// The end of the frames read from the tap in this measurement.
     end: u64,
     /// The tap's restart mark already applied.
     restart: Option<u64>,
@@ -44,7 +50,11 @@ struct State {
 
 impl LiveMeter {
     pub fn new(tap: Arc<dyn MasterTap>, log: Arc<dyn AppLog>) -> Self {
-        Self { inner: Arc::new(Inner { tap, log, state: Mutex::new(State::default()) }) }
+        Self::with_lease(tap, log, Duration::from_secs_f32(CAPTURE_LEASE_SECONDS))
+    }
+
+    fn with_lease(tap: Arc<dyn MasterTap>, log: Arc<dyn AppLog>, lease: Duration) -> Self {
+        Self { inner: Arc::new(Inner { tap, log, lease, state: Mutex::new(State::default()) }) }
     }
 
     fn spawn_feeder(&self, watch: u64) {
@@ -54,6 +64,10 @@ impl LiveMeter {
             while let Some(inner) = weak.upgrade() {
                 let mut state = lock(&inner.state);
                 if state.watch != Some(watch) {
+                    break;
+                }
+                if state.until.is_some_and(|until| Instant::now() >= until) {
+                    state.stop(&*inner.tap);
                     break;
                 }
                 state.feed(&*inner.tap, &*inner.log);
@@ -70,21 +84,6 @@ impl LiveMeter {
 }
 
 impl MasterMeter for LiveMeter {
-    fn watch(&self, on: bool) {
-        let mut state = lock(&self.inner.state);
-        if on == state.watch.is_some() {
-            return;
-        }
-        let watch = state.next_watch;
-        *state = State { watch: on.then_some(watch), next_watch: watch + 1, ..State::default() };
-        // Under the state lock: a reading never sees the new watch before the tap is open (or after it is closed).
-        self.inner.tap.open_tap(on);
-        drop(state);
-        if on {
-            self.spawn_feeder(watch);
-        }
-    }
-
     fn reset(&self) {
         let mut state = lock(&self.inner.state);
         if state.watch.is_none() {
@@ -97,15 +96,36 @@ impl MasterMeter for LiveMeter {
         }
     }
 
-    fn reading(&self) -> Option<MasterReading> {
+    fn reading(&self) -> MasterReading {
         let mut state = lock(&self.inner.state);
-        state.watch?;
+        let started = state.watch.is_none().then(|| state.start(&*self.inner.tap));
+        state.until = Some(Instant::now() + self.inner.lease);
         state.feed(&*self.inner.tap, &*self.inner.log);
-        Some(state.measurement.as_ref().map_or_else(|| nothing_yet(0), Measurement::reading))
+        let reading = state.measurement.as_ref().map_or_else(|| nothing_yet(0), Measurement::reading);
+        drop(state);
+        if let Some(watch) = started {
+            self.spawn_feeder(watch);
+        }
+        reading
     }
 }
 
 impl State {
+    /// A fresh measurement with the tap open; returns its number for its thread.
+    fn start(&mut self, tap: &dyn MasterTap) -> u64 {
+        let watch = self.next_watch;
+        *self = State { watch: Some(watch), next_watch: watch + 1, ..State::default() };
+        // Under the state lock: a reading never sees the measurement before the tap is open (or after it is closed).
+        tap.open_tap(true);
+        watch
+    }
+
+    /// Nobody read for a whole lease: the measurement is dropped and the engine stops copying.
+    fn stop(&mut self, tap: &dyn MasterTap) {
+        *self = State { next_watch: self.next_watch, ..State::default() };
+        tap.open_tap(false);
+    }
+
     /// Measures what the tap captured since the previous call.
     fn feed(&mut self, tap: &dyn MasterTap, log: &dyn AppLog) {
         let frames = tap.frames_after(self.end);
@@ -146,7 +166,7 @@ impl State {
 }
 
 impl Drop for Inner {
-    /// A meter going away while watched closes the tap, so the engine stops copying for nobody.
+    /// A meter going away while measuring closes the tap, so the engine stops copying for nobody.
     fn drop(&mut self) {
         if lock(&self.state).watch.is_some() {
             self.tap.open_tap(false);

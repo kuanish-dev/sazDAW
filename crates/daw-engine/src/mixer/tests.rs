@@ -35,7 +35,7 @@ fn rebuilding_tables_stays_within_preallocated_capacity() {
     assert_eq!(mixer.nodes.len(), MAX_NODES);
     assert_eq!(mixer.edges.len(), MAX_EDGES);
     mixer.clear(256);
-    mixer.process(256, &board, &NodeTap::new());
+    mixer.process(256, &board, &NodeTap::new(std::sync::Arc::new(crate::scope::FrameClock::new())));
     assert_eq!(board.take().len(), MAX_NODES, "the meters took all slots: the master and 255 buses");
 }
 

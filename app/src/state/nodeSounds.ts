@@ -1,9 +1,10 @@
 // The live sound of graph nodes for the effect pictures: an editor's graph, or every effect along a signal path at
-// once. One registry for the app: pictures ask to hear a node, the registry tells the engine the union of the nodes they
-// show (`audio.watchNodes`, at most `MAX_WATCHED_NODES`) and reads all of them in one batched call about 30 times a
-// second (`audio.nodeWindows`). It keeps a cursor per node, so each read carries only the frames that are new, keeps
-// each node's latest `NODE_WINDOW_FRAMES` and hands every picture its node's whole window. While nothing is heard it
-// neither polls nor watches anything, so the audio thread copies nothing.
+// once. One registry for the app: pictures ask to hear a node, the registry reads every node they show (at most
+// `MAX_WATCHED_NODES`) in one batched call about 30 times a second (`audio.nodeWindows`). Reading is what keeps the
+// engine capturing a node (`CAPTURE_LEASE_SECONDS`), so a node nobody shows any more is simply no longer read. It keeps a
+// cursor per node, so each read carries only the frames that are new, keeps each node's latest `NODE_WINDOW_FRAMES` and
+// hands every picture its node's whole window. While nothing is heard it does not poll, and the engine stops copying a
+// few seconds later.
 import { type Id, MAX_WATCHED_NODES, NODE_WINDOW_FRAMES, type NodeCursor, type NodeWindow } from "../api/types";
 import { createPoller } from "./poller";
 
@@ -14,9 +15,9 @@ const MAX_STEP_SECONDS = 0.2;
 /** One reading of a node's sound. */
 export interface NodeSound {
   /** What came into the node and what it sent on, mono, oldest first, paired frame by frame: its latest
-   *  `NODE_WINDOW_FRAMES` (empty: silence, the node is not watched). */
-  input: readonly number[];
-  output: readonly number[];
+   *  `NODE_WINDOW_FRAMES` (empty: silence, the node is not captured). */
+  input: Float32Array;
+  output: Float32Array;
   sampleRate: number;
   /** Seconds since the previous reading (at most `MAX_STEP_SECONDS`). */
   dt: number;
@@ -32,26 +33,34 @@ export interface NodeSounds {
 
 /** The audio actions the registry uses (`AudioActions`): failures are shown there. */
 export interface NodeSoundSource {
-  watchNodes(nodes: Id[]): Promise<void>;
   /** `undefined` — the read failed (the action has shown why). */
-  nodeWindows(seen: NodeCursor[]): Promise<NodeWindow[] | undefined>;
+  nodeWindows(nodes: Id[], seen: NodeCursor[]): Promise<NodeWindow[] | undefined>;
 }
 
-/** What the registry holds of one watched node. */
+/** What the registry holds of one captured node. */
 interface Kept {
   cursor: NodeCursor;
-  input: number[];
-  output: number[];
+  input: Float32Array;
+  output: Float32Array;
   sampleRate: number;
 }
 
-const latest = (samples: number[]) => (samples.length > NODE_WINDOW_FRAMES ? samples.slice(samples.length - NODE_WINDOW_FRAMES) : samples);
+const SILENCE = new Float32Array(0);
+
+/** `before` continued by `next`: their latest `NODE_WINDOW_FRAMES`. */
+function append(before: Float32Array, next: Float32Array): Float32Array {
+  if (next.length === 0) return before;
+  const length = Math.min(NODE_WINDOW_FRAMES, before.length + next.length);
+  if (next.length >= length) return next.subarray(next.length - length);
+  const joined = new Float32Array(length);
+  joined.set(before.subarray(before.length - (length - next.length)));
+  joined.set(next, length - next.length);
+  return joined;
+}
 
 export function createNodeSounds(source: NodeSoundSource): NodeSounds {
   const listeners = new Map<Id, Set<(sound: NodeSound) => void>>();
   const kept = new Map<Id, Kept>();
-  /** The set the engine was last told, as a key; `null` — tell it again at the next reading. */
-  let told: string | null = null;
   let last = performance.now();
 
   /** The nodes to capture: the first ones asked for, as many as the engine watches. */
@@ -63,27 +72,20 @@ export function createNodeSounds(source: NodeSoundSource): NodeSounds {
     const continues = before?.cursor.watch === window.watch;
     kept.set(window.node, {
       cursor: { node: window.node, watch: window.watch, end: window.end },
-      input: latest(continues ? before.input.concat(window.input) : window.input),
-      output: latest(continues ? before.output.concat(window.output) : window.output),
+      input: append(continues ? before.input : SILENCE, window.input),
+      output: append(continues ? before.output : SILENCE, window.output),
       sampleRate: window.sampleRate,
     });
   };
 
   const read = async () => {
     const nodes = wanted();
-    const key = nodes.join(",");
-    if (key !== told) {
-      told = key;
-      await source.watchNodes(nodes);
-    }
-    const windows = await source.nodeWindows(nodes.flatMap((node) => kept.get(node)?.cursor ?? []));
+    const windows = await source.nodeWindows(nodes, nodes.flatMap((node) => kept.get(node)?.cursor ?? []));
     if (!poller.running()) return;
     if (windows === undefined) {
       stop();
       return;
     }
-    // A node missing from the reply is no longer watched (another client replaced the set): tell the engine again.
-    if (nodes.some((node) => !windows.some((w) => w.node === node))) told = null;
     for (const window of windows) keep(window);
     for (const node of kept.keys()) if (!nodes.includes(node)) kept.delete(node);
 
@@ -92,19 +94,18 @@ export function createNodeSounds(source: NodeSoundSource): NodeSounds {
     last = now;
     for (const [node, hears] of listeners) {
       const k = kept.get(node);
-      const sound: NodeSound = { input: k?.input ?? [], output: k?.output ?? [], sampleRate: k?.sampleRate ?? 0, dt, now: now / 1000 };
+      const sound: NodeSound = { input: k?.input ?? SILENCE, output: k?.output ?? SILENCE, sampleRate: k?.sampleRate ?? 0, dt, now: now / 1000 };
       for (const hear of hears) hear(sound);
     }
   };
 
   const poller = createPoller(read, POLL_MS);
 
-  /** Stops polling and capturing: nothing is heard, or a read failed (a toast said why; the next picture starts again). */
+  /** Stops polling: nothing is heard, or a read failed (a toast said why; the next picture starts again). The engine stops
+   *  capturing by itself once the leases run out. */
   const stop = () => {
     poller.stop();
     kept.clear();
-    told = null;
-    void source.watchNodes([]);
   };
 
   return {

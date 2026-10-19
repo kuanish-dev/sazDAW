@@ -1,5 +1,6 @@
 // Audio actions: devices, buffer size, recording latency, input level check, the master window for the visualizer, the
-// watched nodes' windows for their pictures (the live effect visuals), the live master meter and the mono check.
+// nodes' windows for their pictures (the live effect visuals), the live master meter and the mono check. The windows and
+// the meter have no on/off: reading them keeps the backend capturing (`CAPTURE_LEASE_SECONDS`).
 import type { AudioDevices, AudioSettings, AudioStatus, Id, InputLevel, MasterReading, MasterWindow, NodeCursor, NodeWindow } from "../api/types";
 import { MAX_RECORD_LATENCY_MS, parseBufferFrames, parseRecordLatency } from "../domain/audioSettings";
 import { t } from "../i18n";
@@ -26,24 +27,19 @@ export interface AudioActions {
   watchInput(on: boolean): Promise<void>;
   /** Current input level; on failure — a toast and undefined (the section then stops polling to avoid a flood of errors). */
   inputLevel(): Promise<InputLevel | undefined>;
-  /** The master is captured only while a visualizer is shown. */
-  watchMaster(on: boolean): Promise<void>;
-  /** The latest master window; on failure — a toast and undefined (the caller stops polling then, to avoid a flood of errors). */
+  /** The latest master window (the first read starts the capture); on failure — a toast and undefined (the caller stops
+   *  polling then, to avoid a flood of errors). */
   masterWindow(): Promise<MasterWindow | undefined>;
-  /** The live master meter measures only while its panel is shown. */
-  watchMasterMeter(on: boolean): Promise<void>;
-  /** The meter's readings (`null` until the watch takes effect); on failure — a toast and undefined (the caller stops
-   *  polling then). */
-  masterMeter(): Promise<MasterReading | null | undefined>;
+  /** The meter's readings (the first one starts a fresh measurement); on failure — a toast and undefined (the caller
+   *  stops polling then). */
+  masterMeter(): Promise<MasterReading | undefined>;
   /** Starts the integrated loudness, the loudness range and the held true peak over. */
   resetMasterMeter(): Promise<void>;
   /** The mono check: the speakers get the master summed to mono. Not saved, not exported; the tick shows its state. */
   setMono(on: boolean): Promise<void>;
-  /** The nodes whose sound is captured for the live pictures: the whole set for the app (`state/nodeSounds.ts` sends the
-   *  union of what is shown). */
-  watchNodes(nodes: Id[]): Promise<void>;
-  /** The watched nodes' new frames since `seen`; on failure — a toast and undefined (the caller stops polling then). */
-  nodeWindows(seen: NodeCursor[]): Promise<NodeWindow[] | undefined>;
+  /** The new frames of `nodes` since `seen` (`state/nodeSounds.ts` reads every node shown in one call); on failure — a
+   *  toast and undefined (the caller stops polling then). */
+  nodeWindows(nodes: Id[], seen: NodeCursor[]): Promise<NodeWindow[] | undefined>;
 }
 
 export function createAudioActions(ctx: Backend & Calls): AudioActions {
@@ -71,13 +67,10 @@ export function createAudioActions(ctx: Backend & Calls): AudioActions {
     },
     watchInput: (on) => ctx.exec(api.audio.watchInput(on)),
     inputLevel: () => ctx.run(api.audio.inputLevel()),
-    watchMaster: (on) => ctx.exec(api.audio.watchMaster(on)),
     masterWindow: () => ctx.run(api.audio.masterWindow()),
-    watchMasterMeter: (on) => ctx.exec(api.audio.watchMasterMeter(on)),
     masterMeter: () => ctx.run(api.audio.masterMeter()),
     resetMasterMeter: () => ctx.exec(api.audio.resetMasterMeter()),
     setMono: (on) => ctx.exec(api.audio.setMono(on)),
-    watchNodes: (nodes) => ctx.exec(api.audio.watchNodes(nodes)),
-    nodeWindows: (seen) => ctx.run(api.audio.nodeWindows(seen)),
+    nodeWindows: (nodes, seen) => ctx.run(api.audio.nodeWindows(nodes, seen)),
   };
 }

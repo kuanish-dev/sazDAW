@@ -1,7 +1,7 @@
 // Live picture of the master output on the master strip: spectrum bars (30 Hz – 16 kHz, log-spaced) under an
-// oscilloscope line. While it is shown it asks the engine to capture the master (`audio.watchMaster`) and polls the latest
-// window about 30 times a second; leaving the mixer stops both, so nothing is copied while nobody looks. The math is
-// `domain/visualizer.ts`.
+// oscilloscope line. While it is shown it polls the latest window about 30 times a second (`audio.masterWindow`): reading
+// keeps the engine capturing the master, so leaving the mixer stops the polling and, a few seconds later, the copying. The
+// math is `domain/visualizer.ts`.
 import { createMemo, onMount } from "solid-js";
 import type { MasterWindow } from "../../api/types";
 import { decayPeak } from "../../domain/mixer";
@@ -74,9 +74,9 @@ export function MasterVisualizer() {
   };
 
   // Captured only while the mixer shows it; a polling failure (already shown as a toast) stops it.
-  const capture = createWatchedPoll({ watch: audio.watchMaster, read: audio.masterWindow, show: draw }, POLL_MS);
+  const capture = createWatchedPoll({ read: audio.masterWindow, show: draw }, POLL_MS);
   onMount(() => {
-    draw({ samples: [], sampleRate: 0 });
+    draw({ samples: new Float32Array(0), sampleRate: 0 });
     capture.start();
   });
 

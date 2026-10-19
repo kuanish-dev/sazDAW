@@ -1,8 +1,9 @@
 // The live master meter beside the master strip, the meters a mixing or mastering engineer keeps open: the integrated
 // loudness with its range and how long it has gathered, momentary and short-term bars, the true peak with its held
 // maximum and clip light, the phase correlation, a vectorscope, the Reset button and the mono check. While it is shown it
-// asks the backend to measure (`audio.watchMasterMeter`) and polls the readings 20 times a second; leaving the mixer
-// stops both. The scales and the picture's math are `domain/masterMeter.ts`; the numbers are the backend's BS.1770 ones.
+// polls the readings 20 times a second (`audio.masterMeter`): reading keeps the backend measuring, so leaving the mixer
+// stops the polling and, a few seconds later, the measuring. The scales and the picture's math are `domain/masterMeter.ts`;
+// the numbers are the backend's BS.1770 ones.
 import { For, Show, createMemo, createSignal, onMount } from "solid-js";
 import type { MasterReading } from "../../api/types";
 import {
@@ -71,15 +72,12 @@ export function MasterMeters() {
     }
   };
 
-  const show = (next: MasterReading | null) => {
+  const show = (next: MasterReading) => {
     setReading(next);
-    drawScope(next?.vector ?? [], false);
+    drawScope(next.vector, false);
   };
   // Measured only while the mixer shows the panel; a polling failure (already shown as a toast) stops it.
-  const meter = createWatchedPoll(
-    { watch: audio.watchMasterMeter, read: audio.masterMeter, show, onStop: () => setReading(null) },
-    POLL_MS,
-  );
+  const meter = createWatchedPoll({ read: audio.masterMeter, show, onStop: () => setReading(null) }, POLL_MS);
   onMount(() => {
     drawScope([], true);
     meter.start();

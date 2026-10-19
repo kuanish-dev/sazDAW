@@ -17,6 +17,7 @@ Map of the whole code: [ARCHITECTURE.md](../../ARCHITECTURE.md). Cross-layer fea
 - DSP objects arrive already prepared: `EngineLink::send` calls `prepare` on the control side; the mixer never prepares a received object on the audio thread.
 - On a new snapshot, objects receive only the parameters that changed (`params.rs`); preview commands do not touch parameters.
 - The frame of an event within a segment is one formula, `BlockTiming::frame_at`, for notes, audio clips and the metronome.
+- **Captures are leased by reads.** The master window (`MasterScope`) and the node windows (`NodeTap`) have no on/off: each read renews a lease (`CAPTURE_LEASE_SECONDS`, `scope.rs: lease_end`), and the audio thread copies while `FrameClock` (the engine's frame count, moved once per segment in `process_segment`) is before it. Why: readers share a capture without switching it off under each other (the interface, an AI client, two pictures of one node), and one that goes away without a word (a closed panel, a reloaded window) stops the copying by itself. Why frames, not wall time: the audio thread checks a lease with atomic loads and no clock call. The meter tap (`MeterTap`) keeps its switch: its one reader, the live meter, holds the lease itself (`daw-render/src/live/`).
 
 ## Releasing memory on the audio thread
 

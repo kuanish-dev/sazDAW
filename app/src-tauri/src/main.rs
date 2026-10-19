@@ -1,5 +1,6 @@
 //! The desktop root of the app: picks the audio output and autosave, and starts the window.
-//! The implementations are assembled by `daw-bootstrap`; the interface only gets `daw-rpc` JSON commands.
+//! The implementations are assembled by `daw-bootstrap`; the interface only gets `daw-rpc` commands: JSON, and bytes for
+//! the live sound windows.
 
 mod ai_server;
 mod plugin_window;
@@ -14,6 +15,7 @@ use daw_contracts::{ContractError, Controls, LogEntry};
 use daw_rpc::{RpcTable, Telemetry};
 use plugin_window::{OPEN_METHOD, PluginWindows};
 use serde_json::Value;
+use tauri::ipc::Response;
 use tauri::{AppHandle, Emitter, Manager, State};
 
 const TICK_INTERVAL: Duration = Duration::from_millis(33);
@@ -31,7 +33,7 @@ struct AppState {
     ai_server: Arc<Mutex<Option<daw_mcp::HttpEndpoint>>>,
 }
 
-/// The only interface command: calls a `daw-rpc` method by name.
+/// The interface's command: calls a `daw-rpc` method by name.
 /// Heavy operations (export) run on a separate thread and do not block the window.
 /// The only exception is `pluginEditor.open`: it needs Tauri windows, and `daw-rpc` knows nothing about Tauri. Before a
 /// method that saves or renders the project, the table itself asks the plugin windows for their state (`PluginStateFlush`).
@@ -40,9 +42,7 @@ async fn rpc(app: AppHandle, state: State<'_, Arc<AppState>>, method: String, pa
     let state = Arc::clone(&state);
     let name = method.clone();
     tauri::async_runtime::spawn_blocking(move || {
-        let (lock, signal) = &*state.startup;
-        let guard = lock.lock().unwrap_or_else(PoisonError::into_inner);
-        drop(signal.wait_while(guard, |open| !*open).unwrap_or_else(PoisonError::into_inner));
+        state.wait_for_startup();
         if method == OPEN_METHOD {
             return state.plugin_windows.handle_open(&app, params);
         }
@@ -50,6 +50,29 @@ async fn rpc(app: AppHandle, state: State<'_, Arc<AppState>>, method: String, pa
     })
     .await
     .map_err(|e| rpc::TASK_FAILED.with("method", name).with("details", e))?
+}
+
+/// The same for the methods whose reply the interface reads many times a second (`RpcTable::call_binary`): the reply
+/// comes as raw bytes, an `ArrayBuffer` on the other side, with no JSON in between.
+#[tauri::command]
+async fn rpc_binary(state: State<'_, Arc<AppState>>, method: String, params: Value) -> Result<Response, ContractError> {
+    let state = Arc::clone(&state);
+    let name = method.clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        state.wait_for_startup();
+        state.table.call_binary(&state.controls, &method, params).map(Response::new)
+    })
+    .await
+    .map_err(|e| rpc::TASK_FAILED.with("method", name).with("details", e))?
+}
+
+impl AppState {
+    /// Interface calls wait until the start project is open.
+    fn wait_for_startup(&self) {
+        let (lock, signal) = &*self.startup;
+        let guard = lock.lock().unwrap_or_else(PoisonError::into_inner);
+        drop(signal.wait_while(guard, |open| !*open).unwrap_or_else(PoisonError::into_inner));
+    }
 }
 
 /// Lets the waiting interface calls through when dropped: after the start project opened, and also when opening
@@ -127,7 +150,7 @@ fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_dialog::init())
         .manage(Arc::clone(&state))
-        .invoke_handler(tauri::generate_handler![rpc])
+        .invoke_handler(tauri::generate_handler![rpc, rpc_binary])
         .setup(move |app| {
             plugin_windows.bind(app.handle().clone());
             spawn_telemetry(app.handle().clone(), controls.clone());

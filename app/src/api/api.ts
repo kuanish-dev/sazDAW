@@ -2,15 +2,17 @@
 // so the group name tells you which method goes over the wire.
 import type { BackendError } from "../i18n/errors";
 import type { RpcClient } from "./rpc";
+import { decodeMasterWindow, decodeNodeWindows } from "./wire";
 import type {
   AudioDevices, AudioRecordStatus, AudioSettings, AudioStatus, AutoPoint, AutomationClip, AutomationClipEdit, AutomationWriteMode, Catalog, ChordPartReport, ChordPartRequest, Clip, ClipEdit, CompSegment, ControllerKind, ControllerPoint, DrumPartReport,
   DrumPartRequest, DrumPattern, EditorTarget, ExportOptions, ExportResult, FolderEdit, GrooveTemplate, HistorySteps, Id, InputChannels, InputLevel, LibraryEntry, LogEntry, LogRecord,
-  MasterReading, MasterWindow, MidiMappings, MonitorMode, NewNote, NewNoteClip, NewTrack, NodeCursor, NodeWindow, Note, ParamTarget, Params, PluginCrash, PluginList, Polarity, Preferences, Project, RecentProject, Room, SampleInfo, ScanReport,
+  MasterReading, MidiMappings, MonitorMode, NewNote, NewNoteClip, NewTrack, NodeCursor, Note, ParamTarget, Params, PluginCrash, PluginList, Polarity, Preferences, Project, RecentProject, Room, SampleInfo, ScanReport,
   Scale, ShapeRequest, SignatureChange, StagePlace, Status, StrumPattern, TempoChange, TrackColor, Variation, Waveform,
 } from "./types";
 
 export function createApi(rpc: RpcClient) {
   const call = rpc.call.bind(rpc);
+  const callBinary = rpc.callBinary.bind(rpc);
   return {
     transport: {
       play: () => call("transport.play"),
@@ -326,24 +328,20 @@ export function createApi(rpc: RpcClient) {
       apply: (settings: AudioSettings) => call<AudioStatus>("audio.apply", { ...settings }),
       watchInput: (on: boolean) => call<null>("audio.watchInput", { on }),
       inputLevel: () => call<InputLevel>("audio.inputLevel"),
-      /** Turns capturing of the master output on or off: the audio thread copies nothing while no visualizer is shown. */
-      watchMaster: (on: boolean) => call<null>("audio.watchMaster", { on }),
-      /** The latest 2048 frames of the master (mono, before the clamp and the metronome); empty samples while not watched. */
-      masterWindow: () => call<MasterWindow>("audio.masterWindow"),
-      /** Starts or stops the live master meter; starting begins a fresh measurement. */
-      watchMasterMeter: (on: boolean) => call<null>("audio.watchMasterMeter", { on }),
-      /** The live master meter's readings; `null` while it is not watched. */
-      masterMeter: () => call<MasterReading | null>("audio.masterMeter"),
+      /** The latest 2048 frames of the master (mono, before the clamp and the metronome), as bytes. Reading keeps the
+       *  capture going for `CAPTURE_LEASE_SECONDS`; the first read starts it and has no samples. */
+      masterWindow: () => callBinary("audio.masterWindow").then(decodeMasterWindow),
+      /** The live master meter's readings. Reading keeps it measuring for `CAPTURE_LEASE_SECONDS`; the first reading
+       *  starts a fresh measurement. */
+      masterMeter: () => call<MasterReading>("audio.masterMeter"),
       /** Starts the integrated loudness, the loudness range and the held true peak over. */
       resetMasterMeter: () => call<null>("audio.resetMasterMeter"),
       /** The mono check: sums the master to mono for the speakers (not saved, not exported). */
       setMono: (on: boolean) => call<null>("audio.setMono", { on }),
-      /** Replaces the graph nodes whose sound is captured (at most `MAX_WATCHED_NODES`): a node that stays keeps its
-       *  window, a new one starts from silence, an empty list stops capturing. */
-      watchNodes: (nodes: Id[]) => call<null>("audio.watchNodes", { nodes }),
-      /** Each watched node's newest input and output: only the frames after a cursor in `seen` from the same watch,
-       *  otherwise the latest `NODE_WINDOW_FRAMES`. */
-      nodeWindows: (seen: NodeCursor[]) => call<NodeWindow[]>("audio.nodeWindows", { seen }),
+      /** The newest input and output of each node of `nodes` that is captured (at most `MAX_WATCHED_NODES`), as bytes: only
+       *  the frames after a cursor in `seen` from the same watch, otherwise the latest `NODE_WINDOW_FRAMES`. Reading a node
+       *  keeps it captured for `CAPTURE_LEASE_SECONDS`; one read for the first time starts from silence. */
+      nodeWindows: (nodes: Id[], seen: NodeCursor[]) => callBinary("audio.nodeWindows", { nodes, seen }).then(decodeNodeWindows),
     },
     /** Third-party plugins (VST3): scanned only on demand, never loaded at app startup. */
     plugins: {

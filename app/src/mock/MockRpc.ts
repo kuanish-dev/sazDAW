@@ -81,6 +81,13 @@ export class MockRpc implements RpcClient {
     return handler(params ?? {}) as T;
   }
 
+  /** Like `RpcTable::call_binary`: only the methods whose handlers answer bytes (the live sound windows, `wire.ts`). */
+  async callBinary(method: string, params?: unknown): Promise<ArrayBuffer> {
+    const reply = await this.call<unknown>(method, params);
+    if (!(reply instanceof ArrayBuffer)) throw fail("RP-502", { method });
+    return reply;
+  }
+
   onTick(listener: (t: Tick) => void) {
     this.tickListeners.add(listener);
     this.ensureTimer();
