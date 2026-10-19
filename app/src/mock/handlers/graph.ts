@@ -1,8 +1,8 @@
-// The audio graph: effects, buses, connections, volume. Connection rules come from domain/graph (as in the backend).
+// The audio graph: effects, buses, connections, volume. Connection rules come from graph/graphRules (as in the backend).
 import { MAX_CHANNEL_DELAY_MS, MAX_WIDTH, MASTER_NODE, type GraphEdge, type Id, type KindInfo, type Params, type Project } from "../../api/types";
-import { neutralUtility } from "../../domain/channelUtility";
-import { acceptsInput, canPreFader, hasStrip, hasVolume, MAX_LEVEL } from "../../domain/graph";
-import { clamp } from "../../domain/math";
+import { neutralUtility } from "../../mixer/channelUtility";
+import { acceptsInput, canPreFader, hasStrip, hasVolume, MAX_LEVEL } from "../../graph/graphRules";
+import { clamp } from "../../common/math";
 import { t } from "../../i18n";
 import { fitParam, paramsFor } from "../catalog";
 import { type ErrorCode, fail } from "../errors";

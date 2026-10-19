@@ -5,7 +5,7 @@
 //! frequency. Each band reports what it takes off (`Effect::band_gains_db`, 0 dB or less) and the deepest of them is
 //! the effect's gain reduction. No lookahead, so no latency.
 //! The graph in the interface draws the split by the same filters and each band's reduction
-//! (`app/src/domain/multibandCurve.ts`): a change here must be mirrored there.
+//! (`app/src/effects/multibandCurve.ts`): a change here must be mirrored there.
 
 use daw_contracts::{Effect, L10n, ParamInfo, StreamConfig};
 

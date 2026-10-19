@@ -1,4 +1,4 @@
-//! Computer keys as a piano — the same layout as in the app (`app/src/domain/keyboard.ts`), but by macOS key codes
+//! Computer keys as a piano — the same layout as in the app (`app/src/keyboard/keyboard.ts`), but by macOS key codes
 //! (they are tied to the key position, so the keyboard language does not matter). A plugin window without a web page does not see
 //! the main window's hotkeys, so `KeyPlayer` plays them itself.
 //!

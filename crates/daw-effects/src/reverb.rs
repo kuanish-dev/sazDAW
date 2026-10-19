@@ -2,7 +2,7 @@
 //! `predelay` ms — the gap between a hit and its room that keeps the hit clear — and passes a low cut, so a bass or a
 //! kick does not muddy the tail (at 20 Hz it is off).
 //! The graph in the interface works out the tail's decay from the same tuning, feedback and damping
-//! (`app/src/domain/reverbTail.ts`): a change here must be mirrored there. The pre-delay and the low cut do not change
+//! (`app/src/effects/reverbTail.ts`): a change here must be mirrored there. The pre-delay and the low cut do not change
 //! how fast the tail dies, so the graph leaves them out.
 
 use daw_contracts::{Effect, L10n, ParamInfo, ParamKind, StreamConfig};

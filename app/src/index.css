@@ -225,7 +225,7 @@
 @keyframes beat-ring-b { from { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 55%, transparent); } }
 
 /* The system's "reduce motion" setting: nothing slides or pulses; everything still shows, just without movement.
-   Canvas animations check the same setting in code (`ui/common/motion.ts`). */
+   Canvas animations check the same setting in code (`common/motion.ts`). */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;

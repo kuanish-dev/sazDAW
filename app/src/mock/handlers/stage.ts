@@ -1,8 +1,8 @@
 // The virtual stage: where a channel stands (its strip's pan and `stage`) and the shared room, with the backend's checks
 // and codes (`daw-project/src/stage.rs`). The mock plays no sound, so placing changes only the project.
 import { type Id, MAX_ON_STAGE, type Project, type Room } from "../../api/types";
-import { hasStrip } from "../../domain/graph";
-import { clamp } from "../../domain/math";
+import { hasStrip } from "../../graph/graphRules";
+import { clamp } from "../../common/math";
 import { t } from "../../i18n";
 import { fail } from "../errors";
 import { nodeOf } from "../graphOps";

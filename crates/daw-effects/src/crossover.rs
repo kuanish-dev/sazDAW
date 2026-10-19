@@ -3,7 +3,7 @@
 //! −6 dB at the split and in phase. Their sum is not the input but the split's all-pass (`Coefficients::all_pass` at
 //! Butterworth Q), so a band that leaves the chain before a later split goes through that split's all-pass too: then
 //! every band carries the same phase and the bands sum to the input with only a phase shift (phase-coherent).
-//! The interface draws the band shapes by the same formulas (`app/src/domain/multibandCurve.ts`). Pure DSP without
+//! The interface draws the band shapes by the same formulas (`app/src/effects/multibandCurve.ts`). Pure DSP without
 //! allocations, so it can move to the shared DSP crate (`docs/refactor-audit.md`, batch 6) as it is.
 
 use crate::biquad::{BUTTERWORTH_Q, Biquad, Coefficients};

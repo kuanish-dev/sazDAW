@@ -3,7 +3,7 @@
 use super::*;
 
 /// A one-bar pattern: eight eighth/quarter notes of four pitches at different velocities (as in the mock,
-/// `app/src/domain/variation.ts`).
+/// `app/src/pianoroll/variation.ts`).
 fn pattern() -> Vec<NewNote> {
     (0..8_u32)
         .map(|i| NewNote {
@@ -147,7 +147,7 @@ fn vary_to_new_clip_puts_a_varied_copy_right_after_in_one_undo_step() {
 
 #[test]
 fn variation_numbers_match_the_frontend_mock() {
-    // `app/src/domain/variation.ts: varyGroup` (mulberry32, the same order) gives the same numbers: the mock matches the
+    // `app/src/pianoroll/variation.ts: varyGroup` (mulberry32, the same order) gives the same numbers: the mock matches the
     // backend.
     let (rig, clip) = clip_with(pattern());
     let changed = rig.notes.transform_notes(clip, None, NoteTransform::Vary(vary(42, 0.5, 0.6, 0.6, 0.5))).unwrap();

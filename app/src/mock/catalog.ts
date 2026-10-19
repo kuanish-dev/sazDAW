@@ -1,7 +1,7 @@
 // Kinds catalog of the mock backend (a copy of the backend's built-in instruments and effects) and the params of a new instance.
 // Labels come in the interface language at request time, like the real backend's answers.
 import type { Catalog, KindInfo, ParamInfo, Params } from "../api/types";
-import { clamp } from "../domain/math";
+import { clamp } from "../common/math";
 import { type ErrorCode, fail } from "./errors";
 import { t } from "../i18n";
 

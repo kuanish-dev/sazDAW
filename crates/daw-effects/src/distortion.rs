@@ -2,7 +2,7 @@
 //! Drive, mix and output are smoothed (no zipper noise on knob moves and automation); a broken input sample
 //! (NaN/inf) becomes silence instead of poisoning the filters.
 //! The graph in the interface draws its curve by the same shapes and drive/mix/output path
-//! (`app/src/domain/shaperCurve.ts`): a change here must be mirrored there.
+//! (`app/src/effects/shaperCurve.ts`): a change here must be mirrored there.
 
 use daw_contracts::{Effect, L10n, ParamInfo, ParamKind, StreamConfig};
 

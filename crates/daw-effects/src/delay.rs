@@ -5,7 +5,7 @@
 //! once, the second twice, and every repeat comes back thinner and darker (a tape or analog delay); at their ends they
 //! are off and the echo is untouched.
 //! The graph in the interface draws the echoes from the same rules (`SYNC_QUARTERS`, feedback, ping-pong, the mix) in
-//! `app/src/domain/delayTaps.ts`: a change here must be mirrored there. The loop filters change the echoes' tone, not
+//! `app/src/effects/delayTaps.ts`: a change here must be mirrored there. The loop filters change the echoes' tone, not
 //! their level in the passband, so the graph leaves them out.
 
 use daw_contracts::{BlockTiming, Bpm, Effect, L10n, ParamInfo, ParamKind, StreamConfig};

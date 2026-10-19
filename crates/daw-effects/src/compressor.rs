@@ -1,5 +1,5 @@
 //! Compressor with a soft knee and an external key signal (sidechain). The curve and the attack/release are the shared
-//! dynamics blocks (`dynamics.rs`); the graph in the interface draws the same curve (`app/src/domain/compressorCurve.ts`).
+//! dynamics blocks (`dynamics.rs`); the graph in the interface draws the same curve (`app/src/effects/compressorCurve.ts`).
 
 use daw_contracts::{Effect, L10n, ParamInfo, ParamKind, StreamConfig};
 

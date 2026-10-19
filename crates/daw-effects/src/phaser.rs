@@ -10,7 +10,7 @@
 //! stages it brings in. No latency.
 //!
 //! The graph in the interface draws the chain's response with the LFO turning at the same rate
-//! (`app/src/domain/phaserCurve.ts`): a change here must be mirrored there.
+//! (`app/src/effects/phaserCurve.ts`): a change here must be mirrored there.
 
 use std::f32::consts::{PI, TAU};
 

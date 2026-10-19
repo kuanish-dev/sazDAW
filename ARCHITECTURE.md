@@ -56,21 +56,24 @@ Implementation crates do not depend on each other. Replacing cpal, a file format
 
 ## Frontend areas
 
+The frontend is split by role, like the backend's entities: each role folder in `app/src/` holds its data, its work, its components and its math (how a role is built, and the table of all roles: [app/CLAUDE.md](app/CLAUDE.md)).
+
 | Folder | Role |
 |---|---|
-| [`app/`](app/CLAUDE.md) | The frontend as a whole: layers and what each knows, lint rules, the Tauri root `src-tauri/`, running |
+| [`app/`](app/CLAUDE.md) | The frontend as a whole: the roles and how one is built, lint rules, the Tauri root `src-tauri/`, running |
 | [`src/api/`](app/src/api/CLAUDE.md) | The contract with the backend (`RpcClient`), dialogs, shell; the TS mirror of the Rust JSON; typed wrappers |
-| [`src/domain/`](app/src/domain/CLAUDE.md) | Pure functions: time, tempo map, clips, notes, graph, effect curves |
-| [`src/actions/`](app/src/actions/CLAUDE.md) | One interface per job: calls `api`, decides how to show an error and what to re-read |
-| [`src/state/`](app/src/state/CLAUDE.md) | The `Session`: what the UI may read and ask for; window keys; the playhead |
-| [`src/ui/`](app/src/ui/CLAUDE.md) | Components by page; the look, motion, how large components are split |
-| [`src/ui/effects/`](app/src/ui/effects/CLAUDE.md) | Effect editors and their live graphs |
-| [`src/ui/graph/`](app/src/ui/graph/CLAUDE.md) | The Graph page and the signal path view |
-| [`src/ui/tracks/`](app/src/ui/tracks/CLAUDE.md) | The timeline: clip selection, waveforms, row heights |
-| [`src/ui/mixer/`](app/src/ui/mixer/CLAUDE.md) | The Mixer page |
-| [`src/ui/settings/`](app/src/ui/settings/CLAUDE.md) | The Settings page |
+| [`src/core/`](app/src/core/CLAUDE.md) | What every role shares: the backend, the project copy, how a call runs and tells the user, the playback tick |
+| [`src/common/`](app/src/common/CLAUDE.md) | What several roles share: the UI kit, the look and motion, shared pure helpers |
+| [`src/shell/`](app/src/shell/CLAUDE.md) | The window frame, the open tab, window keys |
+| [`src/tracks/`](app/src/tracks/CLAUDE.md) | The timeline: tracks, clips, folders, markers, waveforms, row heights |
+| [`src/effects/`](app/src/effects/CLAUDE.md) | Effect editors, their live graphs and the nodes' live sound |
+| [`src/graph/`](app/src/graph/CLAUDE.md) | The Graph page and the signal path view |
+| [`src/mixer/`](app/src/mixer/CLAUDE.md) | The Mixer page, meters, the master |
+| [`src/settings/`](app/src/settings/CLAUDE.md) | The Settings page and the preferences |
+| `src/pianoroll/`, `automation/`, `instruments/`, `keyboard/`, `recording/`, `midi/`, `transport/`, `history/`, `project/`, `selection/`, `stage/`, `samples/`, `sounds/`, `drums/`, `chords/`, `plugins/`, `presets/` | One role each (see [app/CLAUDE.md](app/CLAUDE.md)) |
 | [`src/i18n/`](app/src/i18n/CLAUDE.md) | Interface languages (English default, Russian) |
 | [`src/mock/`](app/src/mock/CLAUDE.md) | The browser stand-in for the backend |
+| `src/session.tsx` | Creates the core and every role once and gives the UI the `Session` |
 | `src/composition.ts` | Composition root: the only place that picks the implementations |
 
 ## Features
@@ -107,7 +110,7 @@ Cross-layer features (`docs/features/`):
 
 Topics that live in one crate or area are in its doc: built-in effects, synth, strings, drum patterns and chord parts, VST3
 (plugin windows, crash protection), the project core, the AI interface (RPC self-description, MCP), the project summary, MIDI
-effects, backend label languages (`daw-contracts`), interface languages (`src/i18n/`), effect visuals (`src/ui/effects/`).
+effects, backend label languages (`daw-contracts`), interface languages (`src/i18n/`), effect visuals (`src/effects/`).
 Licenses: [docs/licenses.md](docs/licenses.md).
 
 ## Recipes
@@ -143,7 +146,7 @@ UI/CLI ──(contracts *Control)──▶ ProjectService ──snapshot Arc<Eng
 4. The audio callback has no allocations, locks or I/O. Engine tables are preallocated; project limits
    (64 tracks, 64 channels, 12 effects per track) match the capacities.
 5. `AudioProcessor` and `Instrument` **add** sound into the buffer.
-6. Time is in ticks everywhere (`PPQ = 960`); conversion to seconds, frames and bars is a single piece of math in the `TempoMap` tempo map (`daw-contracts/src/tempo_map.rs`, frontend — `domain/tempoMap.ts`), see [tempo-map.md](docs/features/tempo-map.md).
+6. Time is in ticks everywhere (`PPQ = 960`); conversion to seconds, frames and bars is a single piece of math in the `TempoMap` tempo map (`daw-contracts/src/tempo_map.rs`, frontend — `common/tempoMap.ts`), see [tempo-map.md](docs/features/tempo-map.md).
 7. The processing graph has no cycles; which connections are allowed is written in one place, `Graph::check_edge` (`daw-contracts/src/graph.rs`), see [processing-graph.md](docs/features/processing-graph.md).
 
 ## Running

@@ -23,7 +23,7 @@ Decisions:
 * **Glide** works only in mono mode and only between held keys (legato): an 808 pattern of separate notes does not slide, overlapping notes do.
 * **A synced LFO** is put back on the grid at every segment start while playing (`Engine::set_timing`), so it stays on the beat after a seek or a loop; stopped, it runs at the last tempo.
 
-* **Envelope graph.** The parameter names `attack`/`hold`/`decay`/`sustain`/`release` are the convention `ui/tracks/EnvelopeGraph.tsx` (`domain/envelope.ts`) draws for any instrument; a new instrument gets the graph by naming its envelope the same way.
-* **Picture.** For kind `synth` the instrument window also shows `ui/tracks/SynthGraph.tsx`: one cycle of the waveform and the filter response with its resonance peak; `domain/synth.ts` mirrors the math of `osc.rs` and `filter.rs`, so a change to the sound there needs the same change in that file.
+* **Envelope graph.** The parameter names `attack`/`hold`/`decay`/`sustain`/`release` are the convention `instruments/EnvelopeGraph.tsx` (`instruments/envelope.ts`) draws for any instrument; a new instrument gets the graph by naming its envelope the same way.
+* **Picture.** For kind `synth` the instrument window also shows `instruments/SynthGraph.tsx`: one cycle of the waveform and the filter response with its resonance peak; `instruments/synth.ts` mirrors the math of `osc.rs` and `filter.rs`, so a change to the sound there needs the same change in that file.
 * **Adding a parameter:** a line in `PARAMS`, an arm in `Synth::set_param` that writes `Settings`, the use in `engine.rs`; then the same line in the browser mock (`app/src/mock/catalog.ts`, label in `i18n` `catalog.params`) and the count in `daw-bootstrap/tests/all/plugins.rs`.
 * **A similar instrument:** the [add-instrument](../../.claude/skills/add-instrument/SKILL.md) recipe.

@@ -17,7 +17,7 @@ A pattern is a drawing on a 16th-note grid, one row per drum, 1 or 2 bars long; 
 **Preview** (`DrumPartPreviewer`, `render.rs`): plays a part without changing the project. It uses the same `LaneKit` as the build, so what you hear is what will be built; the part is rendered offline into a temporary buffer (instruments created through `InstrumentCatalog`) and looped on the engine's existing preview voice (`DspCommand::PreviewPlay`), with cymbal tails folded onto the loop start. A new `play` replaces the previous one; length is capped by `MAX_PREVIEW_BARS`.
 
 - **RPC:** `patterns.list`, `patterns.get`, `drums.build`, `drums.preview` (the same request as `build`), `drums.stopPreview` (`daw-rpc/src/patterns.rs`).
-- **UI:** the "Drum part" button above the timeline, `ui/drums/DrumPartDialog.tsx`; actions `session.actions.drums.*`.
+- **UI:** the "Drum part" button above the timeline, `drums/DrumPartDialog.tsx`; the role `session.drums.*` (`drums/`).
 - **Mock** (`mock/handlers/drums.ts`): knows only 8 patterns and builds a part with separate edits rather than one undo step.
 
 Example of a song form for AI: `drums.build { "slots": [{"pattern":"intro_crash_start"},{"pattern":"rock_basic","repeat":6},{"pattern":"fill_tom_cascade"},{"pattern":"rock_drive","repeat":7},{"pattern":"fill_snare_roll"},{"pattern":"ending_crash_stop"}] }` (a request with `lanes` is in the tests of `daw_contracts::patterns`).
@@ -30,7 +30,7 @@ A chord progression strummed on one instrument track. **Contract** (`daw-contrac
 - **Strumming** (`strum.rs`, the stroke rules are at its top). The clip's content is one pass (`loop_ticks`), so repeats loop inside it.
 - **Build** (`ChordPartBuilder`): `chord_part::plan` checks the whole request first and works out the notes; then one undo group (the new track, the removed clips, one note clip); a failure rolls the group back. **Preview** (`ChordPartPreviewer`): the same plan played by the target's instrument (a new kind with its defaults) and looped by `render.rs`, shared with the drum preview.
 - **RPC:** `chords.strums`, `chords.build`, `chords.preview`, `chords.stopPreview` (`daw-rpc/src/chords.rs`); the MCP instructions mention the workflow.
-- **UI:** "Chord part" above the timeline, `ui/chords/ChordPartDialog.tsx` (`ProgressionBars`, `ChordPalette`, `StrumPicker`); "▶ Listen" replays the part after every edit. Pure logic — `domain/chordPart.ts`; actions — `session.actions.chords.*`.
+- **UI:** "Chord part" above the timeline, `chords/ChordPartDialog.tsx` (`ProgressionBars`, `ChordPalette`, `StrumPicker`); "▶ Listen" replays the part after every edit. Pure logic — `chords/chordPart.ts`; the role — `session.chords.*` (`chords/`).
 - **Mock** (`mock/handlers/chords.ts`): writes block chords from C3 on every stroke, with separate edits.
 - **Tests:** symbols and strums — `daw-contracts/src/chord_part.rs`; voicings — `voicing.rs`; strokes — `strum.rs`; one undo step, real session, occupied space, refusals, preview — `daw-bootstrap/tests/all/chord_part.rs`; wire — `daw-rpc/tests/all/chords.rs`.
 - **A new strum:** a row in `STRUMS` (and the mock's `STRUM_GRIDS`). **A new string instrument:** its kind in `daw-strings` and a row in `voicing.rs: style`.

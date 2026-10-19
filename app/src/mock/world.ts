@@ -1,7 +1,7 @@
 // The backend's in-memory state: the project with undo history (the tempo map lives in it), transport, kinds catalog,
 // a file "system", recording. Method handlers (`handlers/`) read and change only it; it knows nothing about RPC.
 import type { AutomationWriteMode, Catalog, Id, Preferences, Project, SampleInfo, TransportState } from "../api/types";
-import { DEFAULT_PREFERENCES } from "../domain/preferences";
+import { DEFAULT_PREFERENCES } from "../settings/preferenceRules";
 import { t } from "../i18n";
 import type { BackendError } from "../i18n/errors";
 import { MOCK_FRAME_COUNT, MOCK_SAMPLE_RATE } from "./audio";

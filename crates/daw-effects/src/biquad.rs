@@ -1,5 +1,5 @@
 //! Biquad filter (RBJ Audio EQ Cookbook formulas). The effect graphs in the interface draw their responses from the
-//! same formulas (`app/src/domain/biquad.ts`): a change here must be mirrored there.
+//! same formulas (`app/src/effects/biquad.ts`): a change here must be mirrored there.
 
 use std::f32::consts::TAU;
 

@@ -3,7 +3,7 @@
 // assembly, the call and the `tick` stream.
 import type { RpcClient } from "../api/rpc";
 import type { Tick } from "../api/types";
-import { secondsAt, signatureAt, tempoAt, tickAtSeconds } from "../domain/tempoMap";
+import { secondsAt, signatureAt, tempoAt, tickAtSeconds } from "../common/tempoMap";
 import { fillDemo } from "./demo";
 import { fail } from "./errors";
 import { audioHandlers } from "./handlers/audio";

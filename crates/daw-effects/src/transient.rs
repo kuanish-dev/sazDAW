@@ -8,7 +8,7 @@
 //! Both are in dB, ≥ 0, and on a steady sound both stay near 0 dB. The gain is `attack · transient + sustain · tail` dB
 //! (each ±100 % of the measured amount), capped at ±`MAX_SHAPE_DB` and smoothed over `GAIN_MS`, then the output trim.
 //! No lookahead: the first fraction of a millisecond of a hit is shaped as the peak follower catches it, so the
-//! latency is 0. The graph in the interface runs the same followers on a model hit (`app/src/domain/transientShape.ts`):
+//! latency is 0. The graph in the interface runs the same followers on a model hit (`app/src/effects/transientShape.ts`):
 //! a change here must be mirrored there.
 
 use daw_contracts::{Effect, L10n, ParamInfo, StreamConfig};

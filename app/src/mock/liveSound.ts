@@ -3,7 +3,7 @@
 // a bass with harmonics, a chord, a little air and noise, and a kick on every beat. The mock does not run the node's
 // effect: its input and output are the same music, so an EQ shows it whatever its bands and a distortion's trace lies on
 // the 1:1 line.
-import { secondsAt, tempoAt } from "../domain/tempoMap";
+import { secondsAt, tempoAt } from "../common/tempoMap";
 import type { MockWorld } from "./world";
 
 /** Frames in the master window, as `MASTER_WINDOW_FRAMES` in Rust. */

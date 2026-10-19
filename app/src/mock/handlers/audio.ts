@@ -3,7 +3,7 @@
 // bytes, `../wire.ts`), the live master meter (`../masterMeter.ts`) and the mono check. The windows keep the backend's
 // leases (`CAPTURE_LEASE_SECONDS`), counted in wall time.
 import { type AudioDevice, type AudioSettings, type AudioStatus, CAPTURE_LEASE_SECONDS, type Id, MAX_WATCHED_NODES, NODE_WINDOW_FRAMES, type NodeCursor } from "../../api/types";
-import { MAX_RECORD_LATENCY_MS, isRecordLatencyValid } from "../../domain/audioSettings";
+import { MAX_RECORD_LATENCY_MS, isRecordLatencyValid } from "../../settings/audioSettings";
 import { t } from "../../i18n";
 import { fail } from "../errors";
 import { MASTER_WINDOW_FRAMES, mockLiveSamples } from "../liveSound";

@@ -2,7 +2,7 @@
 //! The nonlinearity runs at twice the sample rate (`oversample.rs`: linear interpolation up, a 4th-order filter and
 //! decimation down), which noticeably reduces aliasing from harmonics above Nyquist.
 //! The graph in the interface draws its curve by the same `shapes` and drive/mix/output path
-//! (`app/src/domain/shaperCurve.ts`): a change here must be mirrored there.
+//! (`app/src/effects/shaperCurve.ts`): a change here must be mirrored there.
 
 use daw_contracts::{Effect, L10n, ParamInfo, ParamKind, StreamConfig};
 

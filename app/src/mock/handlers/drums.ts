@@ -3,9 +3,9 @@
 // Pattern names and descriptions are backend-made labels, so they are taken in the current language on each request.
 import type { DrumPartRequest, DrumPattern, Id, LaneAssignment, LaneTarget, NewNote, PatternRole, PatternSlot } from "../../api/types";
 import { BAR_TICKS, STEP_TICKS } from "../../api/types";
-import { laneLabel } from "../../domain/drumPart";
-import { GM_DRUM_PITCHES, MIDDLE_C } from "../../domain/pitch";
-import { barIndex, barTick } from "../../domain/tempoMap";
+import { laneLabel } from "../../drums/drumPart";
+import { GM_DRUM_PITCHES, MIDDLE_C } from "../../common/pitch";
+import { barIndex, barTick } from "../../common/tempoMap";
 import { t } from "../../i18n";
 import { fail } from "../errors";
 import type { MockWorld } from "../world";

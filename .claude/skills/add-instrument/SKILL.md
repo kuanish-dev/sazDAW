@@ -23,7 +23,8 @@ Before you start: the doc of the closest existing instrument — `crates/daw-syn
 3. **Browser mock catalog** — the kind and its params in `instruments` in `app/src/mock/catalog.ts`, labels in
    `catalog.kinds.*` / `catalog.params.*` of `app/src/i18n/en.ts` + `ru.ts`.
 4. **Frontend extras, only if needed** — the generic knobs work by themselves; kind-specific behaviour lives in
-   `app/src/domain/` (see `synth.ts`, `strings.ts`, `samplerTracks.ts`).
+   the role that needs it: `app/src/instruments/` for the instrument window (see `synth.ts`, `strings.ts`),
+   `app/src/tracks/` for new tracks (see `samplerTracks.ts`).
 5. **Docs** — `crates/daw-<name>/CLAUDE.md` (role, depends on, how it works), a row in the crates table of the map
    `ARCHITECTURE.md`.
 

@@ -6,22 +6,22 @@ import type { SystemDialogs } from "./api/dialogs";
 import type { RpcClient } from "./api/rpc";
 import type { AppShell } from "./api/shell";
 import { t } from "./i18n";
-import { installGlobalKeys } from "./state/globalKeys";
-import { createSession, SessionProvider, type Tab } from "./state/session";
-import { installTouchRelease } from "./state/touchRelease";
-import { Toasts } from "./ui/common/Toasts";
-import { GraphView } from "./ui/graph/GraphView";
-import { LoadingOverlay } from "./ui/LoadingOverlay";
-import { MixerView } from "./ui/mixer/MixerView";
-import { SampleEditorView } from "./ui/samples/SampleEditorView";
-import { SettingsView } from "./ui/settings/SettingsView";
-import { StageView } from "./ui/stage/StageView";
-import { ActivityBar } from "./ui/shell/ActivityBar";
-import { StatusBar } from "./ui/shell/StatusBar";
-import { InstrumentWindow } from "./ui/tracks/InstrumentWindow";
-import { TracksView } from "./ui/tracks/TracksView";
-import { TransportBar } from "./ui/transport/TransportBar";
-import { WelcomeScreen } from "./ui/WelcomeScreen";
+import { installGlobalKeys } from "./shell/globalKeys";
+import { createSession, SessionProvider, type Tab } from "./session";
+import { installTouchRelease } from "./automation/touchRelease";
+import { Toasts } from "./common/Toasts";
+import { GraphView } from "./graph/GraphView";
+import { LoadingOverlay } from "./shell/LoadingOverlay";
+import { MixerView } from "./mixer/MixerView";
+import { SampleEditorView } from "./samples/SampleEditorView";
+import { SettingsView } from "./settings/SettingsView";
+import { StageView } from "./stage/StageView";
+import { ActivityBar } from "./shell/ActivityBar";
+import { StatusBar } from "./shell/StatusBar";
+import { InstrumentWindow } from "./instruments/InstrumentWindow";
+import { TracksView } from "./tracks/TracksView";
+import { TransportBar } from "./transport/TransportBar";
+import { WelcomeScreen } from "./shell/WelcomeScreen";
 
 /** The main view of each activity bar tab. */
 const VIEWS: Record<Tab, () => JSX.Element> = {

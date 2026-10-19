@@ -9,7 +9,7 @@
 //!   −32 dB and gives up as much of itself, so a sound in the middle keeps its level and only the width narrows a hair.
 //!
 //! The mode crossfades: both voices run and the output glides from one to the other. No lookahead, no latency.
-//! The graph in the interface draws the curve (`app/src/domain/shaperCurve.ts: tapeTransfer`); the head bump, the
+//! The graph in the interface draws the curve (`app/src/effects/shaperCurve.ts: tapeTransfer`); the head bump, the
 //! roll-off and the crosstalk shape the sound over time and show in the live trace: a change here must be mirrored
 //! there.
 

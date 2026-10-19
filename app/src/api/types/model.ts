@@ -11,7 +11,7 @@ export const PPQ = 960;
 export const STEP_TICKS = PPQ / 4;
 /**
  * A 4/4 bar as a fixed measure (limits, drum patterns in the mock), not a song bar: song bars come from the tempo
- * map (`domain/tempoMap.ts: barTick`, `barLengthAt`, `snapToBar`).
+ * map (`common/tempoMap.ts: barTick`, `barLengthAt`, `snapToBar`).
  */
 export const BAR_TICKS = PPQ * 4;
 /** Maximum length of a clip's looped content: 64 bars. */
@@ -48,7 +48,7 @@ export interface NoteEffectSpec {
   bypass: boolean;
 }
 
-/** Track and folder colors as names, like `TRACK_COLORS` in Rust; the theme-specific shade is in `ui/common/trackColors.ts`. */
+/** Track and folder colors as names, like `TRACK_COLORS` in Rust; the theme-specific shade is in `common/trackColors.ts`. */
 export const TRACK_COLORS = [
   "red", "orange", "amber", "yellow", "lime", "green", "teal", "cyan", "blue", "indigo", "violet", "pink",
 ] as const;
@@ -185,7 +185,7 @@ export interface Clip {
   gain: number;
   fadeInTicks: number;
   fadeOutTicks: number;
-  /** Curves of the audio clip's fades (`domain/fades.ts`, the same formulas as the engine). */
+  /** Curves of the audio clip's fades (`tracks/fades.ts`, the same formulas as the engine). */
   fadeInShape: FadeShape;
   fadeOutShape: FadeShape;
   offsetTicks: number;
@@ -245,7 +245,7 @@ export interface MidiMappings {
 export interface AutoPoint {
   tick: number;
   value: number;
-  /** Shape of the segment to the next point, -1..1 (0 or absent — straight); formula: `domain/automation.ts` `curveShape`. */
+  /** Shape of the segment to the next point, -1..1 (0 or absent — straight); formula: `automation/automationRules.ts` `curveShape`. */
   curve?: number;
 }
 
@@ -272,7 +272,7 @@ export interface AutomationLane {
 }
 
 /** A piece of a lane, like a looped note clip: a pattern of points `0…loopTicks` (from the clip start) repeated every
- * `loopTicks` over `lengthTicks`. Value at a tick: `domain/automationCurve.ts` `clipValueAt`. */
+ * `loopTicks` over `lengthTicks`. Value at a tick: `automation/automationCurve.ts` `clipValueAt`. */
 export interface AutomationClip {
   id: Id;
   startTick: number;
@@ -315,7 +315,7 @@ export interface SignatureChange {
   signature: TimeSignature;
 }
 
-/** The song's tempo map (`daw-contracts::TempoMap`): the first points are at tick 0. Math over it is in `domain/tempoMap.ts`. */
+/** The song's tempo map (`daw-contracts::TempoMap`): the first points are at tick 0. Math over it is in `common/tempoMap.ts`. */
 export interface TempoMap {
   tempos: TempoChange[];
   signatures: SignatureChange[];
@@ -350,7 +350,7 @@ export interface ListChanges<T> {
 }
 
 /** What changed in the project after a revision (`project.changes`, `ProjectChanges` in Rust): each part that
- *  changed, whole; absent when it did not. The graph comes as `nodes` and `edges`. `domain/projectChanges.ts` takes it
+ *  changed, whole; absent when it did not. The graph comes as `nodes` and `edges`. `core/projectChanges.ts` takes it
  *  into the interface's copy. */
 export interface ProjectChanges {
   /** The revision the changes bring the copy to: the `since` of the next call. */

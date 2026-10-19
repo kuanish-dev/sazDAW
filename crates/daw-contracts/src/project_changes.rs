@@ -107,7 +107,7 @@ impl ProjectChanges {
         }
     }
 
-    /// Takes the changes into a reader's copy of the project (the interface does the same in `domain/projectChanges.ts`).
+    /// Takes the changes into a reader's copy of the project (the interface does the same in `core/projectChanges.ts`).
     pub fn apply(self, project: &mut Project) {
         let Self {
             revision: _,

@@ -1,6 +1,6 @@
 // Track folders: create, edit, remove, membership, mute/solo of all tracks, with the backend's checks and error codes.
 import { TRACK_COLORS, type FolderEdit, type Id, type Project } from "../../api/types";
-import { sourceOfTrack } from "../../domain/graph";
+import { sourceOfTrack } from "../../graph/graphRules";
 import { t } from "../../i18n";
 import { fail } from "../errors";
 import { checkFolderTracks, placeInFolder, topmostTrack } from "../folderRules";

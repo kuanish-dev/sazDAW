@@ -7,7 +7,7 @@
 //! biquad — is recomputed for its current gain while it moves. The bands report their current gains
 //! (`Effect::band_gains_db`). No lookahead, no latency.
 //! The graph in the interface draws the response with the bands at full gain and as they are now
-//! (`app/src/domain/dynamicEqCurve.ts`): a change here must be mirrored there.
+//! (`app/src/effects/dynamicEqCurve.ts`): a change here must be mirrored there.
 
 use daw_contracts::{Effect, L10n, MAX_EFFECT_BANDS, ParamInfo, StreamConfig};
 

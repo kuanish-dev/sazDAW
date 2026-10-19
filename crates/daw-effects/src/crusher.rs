@@ -5,7 +5,7 @@
 //! the same moments, so the stereo image stays put. `mix` blends the crushed sound with the clean one and `output` trims
 //! the result; both glide (`smooth.rs`). No latency.
 //!
-//! The graph in the interface draws the staircase curve (`app/src/domain/shaperCurve.ts: crusherTransfer`); the
+//! The graph in the interface draws the staircase curve (`app/src/effects/shaperCurve.ts: crusherTransfer`); the
 //! downsampling acts over time and shows only in the live trace: a change here must be mirrored there.
 
 use daw_contracts::{Effect, L10n, ParamInfo, StreamConfig};

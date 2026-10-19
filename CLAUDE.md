@@ -7,7 +7,7 @@ These rules matter more than convenience and speed. The map of the code is `ARCH
 1. **The contract comes first.** An interface (a trait in `daw-contracts`, a TS interface on the frontend) describes what an entity does. We design and fix the contract first, then write the implementation. Changing a contract is a deliberate decision, not a side effect of editing an implementation.
 2. **Implementations come second.** A concrete implementation is a detail: it must follow the interface and honour the contract (including errors and edge cases); everything else is its own internal business and can be rewritten without consequences for anyone else.
 3. **Everything goes through interfaces.** An upper layer sees only the interfaces of the layer below and knows nothing about its implementation. Concrete types are created and wired together in one place: `daw-bootstrap` (Rust) and `src/composition.ts` (frontend).
-4. **The upper level delegates to the lower one.** A UI component does not call the backend and does not decide how to show errors: it calls an action (`session.actions.*`), and the action delegates to the API.
+4. **The upper level delegates to the lower one.** A UI component does not call the backend and does not decide how to show errors: it asks its role (`session.<role>.*`), and the role delegates to the API.
 5. **Code must be simple.** A simple solution beats a "flexible" one. We don't add abstractions "for the future"; the most obvious code is enough: short functions, single responsibility, clear names, comments only about "why".
 
 6. **Think first, then write.** Before every feature, before the first line of code, answer these questions (briefly, in a message or in the commit description):
@@ -26,7 +26,7 @@ These rules matter more than convenience and speed. The map of the code is `ARCH
 
 9. **Ask it to do the work, don't do it for it.** An entity holds a reference to another (a service, the core, an action) and asks it to do the work: that's normal, the way departments of a company talk to each other. What's bad is walking "into someone else's office" and changing its state behind its back: touching its fields, locks, internal structures, writing to its storage directly. Only the owner changes its state.
    - An entity's internals (fields, locks, internal state) are hidden by a module/scope so the compiler keeps others out of the office (example: the core in `daw-project/src/service/`).
-   - The interface (UI) does not change shared session state itself: instant display of a slider value is done by the actions layer (`ctx.patchProject`), not by the component.
+   - The interface (UI) does not change shared session state itself: instant display of a slider value is done by the role (`core.patchProject`), not by the component.
 
 10. **No backward compatibility while active development is ongoing.** Project formats, APIs and contracts change without migrations or "transitional" layers; old project files may stop opening. We don't spend code or time on backward compatibility until the owner says development has stabilised.
 
@@ -43,7 +43,7 @@ These rules matter more than convenience and speed. The map of the code is `ARCH
 ## How it is checked
 
 - Rust: `crates/daw-bootstrap/tests/all/architecture.rs` — crates depend only on `daw-contracts`, application roots only on `daw-bootstrap`, `daw-rpc`, `daw-mcp` and the contracts; only `daw-vst3` does not inherit the workspace lint rules (`unsafe` is allowed there).
-- Frontend: the Biome linter (`npm run lint` in `app/`, config `app/biome.json`): layers as import rules (`ui` doesn't see `api`/`rpc`/dialogs/mocks, `actions` sees only `api` and `domain`, `domain` is pure functions, `api` and `mock` don't know the upper layers), inheritance ban (classes via the plugin `app/lint/no-extends.grit`, interfaces via a `grep` check in the same script), empty blocks (we don't swallow errors), unused code. Implementations are chosen only in `composition.ts` — this is checked by eye.
+- Frontend: the Biome linter (`npm run lint` in `app/`, config `app/biome.json`): role boundaries as import rules (a component doesn't import the `api` clients, `core`, the mock or `composition`; `core` and `api` import no role; `i18n` imports nothing of the app; the mock imports neither the session nor the core), inheritance ban (classes via the plugin `app/lint/no-extends.grit`, interfaces via a `grep` check in the same script), empty blocks (we don't swallow errors), unused code. Implementations are chosen only in `composition.ts` — this is checked by eye.
 - Rust is strict: the workspace `Cargo.toml` has `unsafe_code = "forbid"` (except `daw-vst3`), `clippy::pedantic` (without DSP noise: numeric casts etc. are turned off), and bans `unwrap`/`expect`/`panic`/`todo`/`dbg!`/`println!` in production code (allowed in tests via `clippy.toml`). An exception is written as `#[allow(..., reason = "...")]` with a reason, not silently.
 - Every implementation has tests for honouring its contract; a new crate/layer without tests is not accepted. Tests are organised by area: `src/tests/<area>.rs` or `tests/<area>.rs` with shared helpers in `tests/common/`.
 - Common small things are not duplicated: lock — `daw_contracts::sync::lock`, log entry — `LogEntry::warn`/`error`/`new`, ticks to frames — `Bpm::ticks_per_frame` and `BlockTiming::frame_at`, contract failure — a code from `daw_contracts::codes` (`codes::NAME.with(...)`). A compound edit is `begin_group` … `end_group`; rollback is `cancel_group`, not `undo`.
@@ -53,7 +53,7 @@ These rules matter more than convenience and speed. The map of the code is `ARCH
 ## Feature workflow
 
 0. Think it through (rule 6): where, how, is the place getting overgrown. Start from the map below; if the task is one of the usual kinds, follow its recipe (`.claude/skills/`, listed in the map) instead of exploring.
-1. Contract (interface + types), 2. contract tests, 3. implementation, 4. wiring in `daw-bootstrap` / `composition.ts`, 5. UI via actions, 6. update the doc of the area or feature (the map only for a new crate, area, feature doc or recipe), 7. check the place again.
+1. Contract (interface + types), 2. contract tests, 3. implementation, 4. wiring in `daw-bootstrap` / `composition.ts`, 5. UI via its role, 6. update the doc of the area or feature (the map only for a new crate, area, feature doc or recipe), 7. check the place again.
 
 ## Map
 

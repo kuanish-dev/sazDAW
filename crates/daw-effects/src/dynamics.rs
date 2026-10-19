@@ -1,7 +1,7 @@
 //! Shared dynamics blocks of the compressor, the multiband compressor, the de-esser, the dynamic EQ and the transient
 //! shaper: the level of a stereo frame, the soft-knee gain computer (how many dB to take off a level) and an
 //! attack/release follower. The interface draws the gain computer's curve by the same formula
-//! (`app/src/domain/compressorCurve.ts: targetReduction`): a change here must be mirrored there. Pure math without
+//! (`app/src/effects/compressorCurve.ts: targetReduction`): a change here must be mirrored there. Pure math without
 //! allocations, so it can move to the shared DSP crate (`docs/refactor-audit.md`, batch 6) as it is.
 
 use crate::time_coefficient;

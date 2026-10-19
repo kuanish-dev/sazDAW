@@ -5,7 +5,7 @@
 //! but ducks it. "Listen" plays the detected band alone, to find the frequency by ear. The detector is the compressor's
 //! curve (`dynamics.rs`) with a fixed fast attack and short release, because sibilants are short. Mode, listen and the
 //! frequency glide, so switching does not click. Reports its gain reduction. No lookahead, no latency.
-//! The graph in the interface draws the band and the response it makes now (`app/src/domain/deEsserCurve.ts`): a
+//! The graph in the interface draws the band and the response it makes now (`app/src/effects/deEsserCurve.ts`): a
 //! change here must be mirrored there.
 
 use daw_contracts::{Effect, L10n, ParamInfo, StreamConfig};

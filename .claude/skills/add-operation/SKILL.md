@@ -11,7 +11,7 @@ belongs to a cross-layer feature, its `docs/features/<feature>.md`. Nothing else
 **Model to copy:** `tracks.setColor` — every layer is a few lines:
 `crates/daw-contracts/src/tracks.rs` (`TrackControl::set_color`) → `crates/daw-project/src/tracks.rs` →
 `crates/daw-rpc/src/tracks.rs` (`SetColor`, `table.add("tracks.setColor", …)`) → `app/src/api/api.ts` →
-`app/src/mock/handlers/tracks.ts` → `app/src/actions/tracks.ts` → `app/src/ui/tracks/TrackMenu.tsx`.
+`app/src/mock/handlers/tracks.ts` → `app/src/tracks/tracks.ts` → `app/src/tracks/TrackMenu.tsx`.
 
 Every step is checked by the compiler and tests, so no step can be skipped (the mock is the exception: nothing compares
 it with the backend, so check it by eye against the Rust implementation).
@@ -36,11 +36,12 @@ it with the backend, so check it by eye against the Rust implementation).
 7. **Browser mock** — `h["area.methodName"] = (params) => …` in `app/src/mock/handlers/<area>.ts`, with the same checks
    as the real backend and the same error codes (`app/src/mock/errors.ts`); edits go through `w.edit(label, (p) => …)`,
    the mock's undo labels are `t().mock.undo.*` in `app/src/i18n/en.ts` + `ru.ts`.
-8. **Action** — a method in the area's interface and its implementation in `app/src/actions/<area>.ts`: this is where
-   we decide how to show an error and what to re-read. An instant display goes through `ctx.patchProject`, the call
-   through `ctx.exec`/`ctx.run`. Look-alike pass-throughs here are the deliberate price of the layer boundary: every
-   line is obvious, and a forgotten step is caught by `tsc`.
-9. **Interface** — the component calls `session.actions.<area>.<method>()`; it sees neither `api` nor `rpc`. New text
+8. **The role's work** — a method in the job's interface and its factory in the role's folder (for tracks
+   `app/src/tracks/tracks.ts`: `TracksActions`, `createTracksActions(core, …)`): this is where we decide how to show an
+   error and what to re-read. An instant display goes through `core.patchProject`, the call through
+   `core.exec`/`core.run`; something it creates is selected with `views.showCreated`. A new job gets a field in
+   `Session` and a line in `createSession` (`app/src/session.tsx`).
+9. **Interface** — the role's component calls `session.<job>.<method>()`; it sees neither `api` nor `core`. New text
    goes into `app/src/i18n/en.ts` and `ru.ts` (`ru.ts` is typed `Messages`: a missing key fails `tsc`).
 10. **Docs** — the `CLAUDE.md` of the area or the feature's `docs/features/<feature>.md`: where it lives, which contract
     it relies on, how to add a similar one. The map `ARCHITECTURE.md` changes only for a new crate, area, feature doc or recipe.

@@ -1,9 +1,0 @@
-# `src/actions/` — actions
-
-`src/actions/`: one interface per job plus a factory implementation, one file each (`TransportActions` in `transport.ts`, `SampleEditorActions` in `sampleEditor.ts`…); all of them, with a line on each job, are the fields of `Actions` in `actions/index.ts`, which assembles them. They decide how to show errors and what to re-read. Shared pieces: `ParamTouch` (`paramTouch.ts`: live automation writing hears every parameter move), `saveUnderName` (`namedSave.ts`: presets and templates), `addTracks` (`newTracks.ts`). What an action gets is split by role in `actions/context.ts` — `Backend`, `Calls`, `ProjectCopy`, `PlaybackPosition`, `PreferencesCopy`, `View`, `RecordingFollow` — and each factory names only the roles it uses (`ctx: Backend & Calls & ProjectCopy`); `ActionContext` is all of them together. An action that creates something selects it with `View.showCreated` (re-read first, then select; why: its doc comment)
-
-Knows about: `api`, `domain`, the roles in `actions/context.ts`.
-
-Map of the whole code: [ARCHITECTURE.md](../../../ARCHITECTURE.md). Cross-layer features it takes part in: [audio-export](../../../docs/features/audio-export.md), [automation](../../../docs/features/automation.md), [bounce](../../../docs/features/bounce.md), [markers-colors-folders](../../../docs/features/markers-colors-folders.md), [midi-controllers](../../../docs/features/midi-controllers.md), [note-edits](../../../docs/features/note-edits.md), [preferences](../../../docs/features/preferences.md), [recording](../../../docs/features/recording.md), [sends](../../../docs/features/sends.md), [sounds](../../../docs/features/sounds.md), [templates-and-presets](../../../docs/features/templates-and-presets.md), [tempo-map](../../../docs/features/tempo-map.md), [virtual-stage](../../../docs/features/virtual-stage.md).
-
-A new action: the [add-operation](../../../.claude/skills/add-operation/SKILL.md) recipe.

@@ -2,12 +2,12 @@
 // (a touch while playing puts a point into the clip under the play position, or into a new clip from the bar start;
 // one undo step per play pass).
 import type { AutoPoint, AutomationClip, AutomationLane, Id, ParamTarget, Project, ShapeRequest } from "../../api/types";
-import { autoClipAt, overlapsAutoClips, paramValue, sameTarget } from "../../domain/automation";
+import { autoClipAt, overlapsAutoClips, paramValue, sameTarget } from "../../automation/automationRules";
 import {
   MAX_AUTOMATION_CLIPS, MAX_CLIP_LOOP_TICKS, MAX_POINTS, MIN_SHAPE_PERIOD, replaceRange, shapePointCount, shapePoints,
-} from "../../domain/automationCurve";
-import { hasStrip, hasVolume } from "../../domain/graph";
-import { barStart } from "../../domain/tempoMap";
+} from "../../automation/automationCurve";
+import { hasStrip, hasVolume } from "../../graph/graphRules";
+import { barStart } from "../../common/tempoMap";
 import { t } from "../../i18n";
 import type { BackendError } from "../../i18n/errors";
 import { MAX_TICK } from "../clipRules";

@@ -1,6 +1,6 @@
 // Keyboard recording: live notes go into the track's clip under the cursor, lap by lap.
 import { BAR_TICKS } from "../../api/types";
-import { sourceOfTrack, upstream } from "../../domain/graph";
+import { sourceOfTrack, upstream } from "../../graph/graphRules";
 import { fail } from "../errors";
 import { capturing, closeTake, enterPass, recordNote, startTake } from "../take";
 import type { MockWorld } from "../world";

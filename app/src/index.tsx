@@ -7,8 +7,8 @@ import { App } from "./App";
 import { createDialogs, createRpc, createShell } from "./composition";
 import "./index.css";
 import { createErrorReporter } from "./log/errorReporter";
-import { applyCachedLook } from "./state/appearance";
-import { CrashScreen } from "./ui/common/CrashScreen";
+import { applyCachedLook } from "./settings/appearance";
+import { CrashScreen } from "./common/CrashScreen";
 
 const rpc = createRpc();
 // In development the connection is reachable from the browser console: `await __rpc.call("project.get")`.

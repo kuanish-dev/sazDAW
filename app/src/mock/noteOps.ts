@@ -1,7 +1,7 @@
 // Note rules inside a note clip (as `daw-project::note_rules`): auto length, bounds checks, note replacement, manual length,
 // controller lanes. Shared by clip notes (`handlers/notes.ts`) and a new clip with notes (`handlers/clips.ts`).
 import type { Clip, ControllerKind, ControllerLane, ControllerPoint, NewNote, Note, NoteContent } from "../api/types";
-import { controllerRange, sameKind } from "../domain/controllers";
+import { controllerRange, sameKind } from "../pianoroll/controllers";
 import { BAR_TICKS, MAX_CLIP_LOOP_TICKS, STEP_TICKS } from "../api/types";
 import { type ErrorCode, fail } from "./errors";
 

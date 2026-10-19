@@ -2,9 +2,9 @@
 // Shared by the single and group methods.
 import type { Clip, ClipContent, ClipEdit, Id, Project, TempoMap } from "../api/types";
 import { PPQ } from "../api/types";
-import { clipEnd, trimmedClip } from "../domain/clips";
-import { tempoAt } from "../domain/tempoMap";
-import { MAX_BPM, MAX_PITCH_SEMITONES, MIN_BPM, guessBpm, sourceFramesToTicks, ticksToSourceFrames } from "../domain/warp";
+import { clipEnd, trimmedClip } from "../tracks/clipRules";
+import { tempoAt } from "../common/tempoMap";
+import { MAX_BPM, MAX_PITCH_SEMITONES, MIN_BPM, guessBpm, sourceFramesToTicks, ticksToSourceFrames } from "../tracks/warp";
 import { fail } from "./errors";
 import { fitComp, shiftComp } from "./takeRules";
 import type { MockWorld } from "./world";

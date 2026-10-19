@@ -11,7 +11,7 @@
 //! plugin delay compensation lines the rest of the mix up with. A setting change is heard once the designer has
 //! designed it (a poll of up to 20 ms plus a few ms) and the next block begins; an offline render running faster than
 //! real time may hear an automated move a block or two late. The graph in the interface is the EQ's
-//! (`app/src/domain/eqCurve.ts`), with the latency noted.
+//! (`app/src/effects/eqCurve.ts`), with the latency noted.
 
 mod convolver;
 mod design;

@@ -46,7 +46,7 @@ export const en = {
     autosaveInterval: "Autosave interval",
   },
 
-  /** Settings → Appearance and preference validation (`domain/preferences.ts`). */
+  /** Settings → Appearance and preference validation (`settings/preferenceRules.ts`). */
   appearance: {
     title: "Appearance",
     hint: "Changes apply immediately.",
@@ -516,7 +516,7 @@ export const en = {
     anyChord: "Any chord",
     rootLabel: "Root",
     typeLabel: "Type",
-    /** Chord types in the order of `domain/chordPart.ts` `QUALITIES`. */
+    /** Chord types in the order of `chords/chordPart.ts` `QUALITIES`. */
     qualities: ["major", "minor", "7", "maj7", "m7", "sus2", "sus4", "dim", "aug"],
     use: "Put in bar",
     progression: "Progression",
@@ -576,7 +576,7 @@ export const en = {
   },
 
   tracks: {
-    /** Snap grid labels (`domain/time.ts`), shared by the timeline, piano roll and note recording. */
+    /** Snap grid labels (`common/time.ts`), shared by the timeline, piano roll and note recording. */
     grid: { bar: "Bar", beat: "Beat", off: "Off" },
     trackName: (n: number) => `Track ${n}`,
     folderName: (n: number) => `Folder ${n}`,
@@ -587,7 +587,7 @@ export const en = {
     playsSound: (name: string) => `The track now plays "${name}"`,
     recordingAdded: (n: number) => (n === 1 ? "Recording added to the track" : `Recording added to ${n} tracks`),
     recordingDropped: "Some audio was lost: recording couldn't keep up with the input. Try a larger buffer size in the audio settings.",
-    /** Backend-like clip placement errors (`domain/clips.ts`). */
+    /** Backend-like clip placement errors (`tracks/clipRules.ts`). */
     placement: {
       notesOverlap: "clips on the track overlap",
       audioInside: "an audio clip can't lie inside another: they may overlap only at the edges (crossfade)",
@@ -725,7 +725,7 @@ export const en = {
     busName: (n: number) => `Bus ${n}`,
     audioTrack: "Audio track",
     deleteKeyHelp: "Delete the selected node or connection",
-    /** Backend-like connection errors (`domain/graph.ts: checkEdge`, same wording as the backend). */
+    /** Backend-like connection errors (`graph/graphRules.ts: checkEdge`, same wording as the backend). */
     problems: {
       nodeNotFound: (id: number) => `node ${id} not found`,
       selfLoop: "a node can't be connected to itself",
@@ -893,7 +893,7 @@ export const en = {
       correlationHint: "Correlation of left and right: +1 mono, 0 wide, below 0 the channels fight and cancel in mono",
       vectorscopeHint: "Vectorscope: mono stands upright, a wide mix spreads sideways, a flat line means the channels are out of phase",
     },
-    /** The channel utility controls (`ui/common/ChannelUtility.tsx`). */
+    /** The channel utility controls (`common/ChannelUtility.tsx`). */
     utility: {
       label: "Utility",
       hint: "Polarity, width, mono and fine time alignment act before the volume and pan, like a console's input section",

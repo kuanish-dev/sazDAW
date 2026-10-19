@@ -121,7 +121,7 @@ fn groove_from_clip_refuses_missing_audio_and_empty_sources() {
 
 #[test]
 fn groove_numbers_match_the_frontend_mock() {
-    // `app/src/domain/groove.ts` (`applyGroove`, `templateTable`, `extractGroove`) gives the same numbers: the mock
+    // `app/src/pianoroll/groove.ts` (`applyGroove`, `templateTable`, `extractGroove`) gives the same numbers: the mock
     // matches the backend.
     let (rig, track, _) = rig_with_clip();
     let notes = || {

@@ -1,6 +1,6 @@
 //! Equalizer: low cut (high-pass), low shelf, peaking, high shelf, high cut (low-pass). The cuts are 12 dB/oct
 //! Butterworth biquads; a cut at its extreme frequency (`low_cut` at its minimum, `high_cut` at its maximum) is off, so a
-//! new EQ changes nothing. The interface draws its response curve by the same formulas (`app/src/domain/eqCurve.ts`).
+//! new EQ changes nothing. The interface draws its response curve by the same formulas (`app/src/effects/eqCurve.ts`).
 //! The linear-phase EQ (`linear_eq`) has the same table and bands: it takes their magnitude from `filters`.
 
 use daw_contracts::{Effect, L10n, ParamInfo, ParamKind, StreamConfig};

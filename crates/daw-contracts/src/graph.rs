@@ -361,7 +361,7 @@ impl Graph {
         chain
     }
 
-    /// The node's signal path as the mixer sees it (`app/src/domain/mixerStrips.ts`): from the node along the FIRST
+    /// The node's signal path as the mixer sees it (`app/src/mixer/mixerStrips.ts`): from the node along the FIRST
     /// regular post-fader connection (other connections are sends); an effect with no other regular inputs is an insert
     /// and the path continues; the first non-insert (bus, master, shared effect) is the output. Unlike `chain`, a send
     /// does not break the path. With no such connection, `output: None`.

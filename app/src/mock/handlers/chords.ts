@@ -3,8 +3,8 @@
 // play roots and builds the part as one undo step).
 import type { ChordPartRequest, Id, NewNote, StrumPattern } from "../../api/types";
 import { BAR_TICKS } from "../../api/types";
-import { QUALITIES } from "../../domain/chordPart";
-import { barIndex, barTick } from "../../domain/tempoMap";
+import { QUALITIES } from "../../chords/chordPart";
+import { barIndex, barTick } from "../../common/tempoMap";
 import { t } from "../../i18n";
 import { fail } from "../errors";
 import type { MockWorld } from "../world";

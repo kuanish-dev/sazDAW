@@ -12,5 +12,5 @@ Kinds `guitar`, `electric_guitar`, `ukulele`, `bass_guitar` — constants `GUITA
 
 * **Limitation:** a string's period is set when it is plucked, so `ring` and `tone` apply from the next pluck and controllers (pitch bend included) are ignored.
 * **Realtime:** every voice's delay line is allocated when the instrument is created; notes and rendering never allocate.
-* **Frontend:** the kinds and defaults are copied into `app/src/mock/catalog.ts` (`plucked`); a new track's step-input pitch is in `domain/strings.ts`.
+* **Frontend:** the kinds and defaults are copied into `app/src/mock/catalog.ts` (`plucked`); a new track's step-input pitch is in `instruments/strings.ts`.
 * **A new string kind:** a row in `KINDS` (`drive: Some(…)` if it has an amp), its constant in `daw_contracts::instrument` if the chord part should know it (and a row in `voicing.rs: style`), the mock catalog row, the labels in `i18n` (`catalog.kinds`). General steps: the [add-instrument](../../.claude/skills/add-instrument/SKILL.md) recipe.

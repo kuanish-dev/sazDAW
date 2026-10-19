@@ -2,9 +2,9 @@
 // a sample of the right length and an audio track below the original with one clip, all as one undo step like the backend.
 // Simplification: the copy always goes to the master (the real backend routes it where the track's chain went).
 import type { Id, Project } from "../../api/types";
-import { neutralUtility } from "../../domain/channelUtility";
-import { hasStrip, sourceOfTrack } from "../../domain/graph";
-import { secondsAt, tickAtSeconds } from "../../domain/tempoMap";
+import { neutralUtility } from "../../mixer/channelUtility";
+import { hasStrip, sourceOfTrack } from "../../graph/graphRules";
+import { secondsAt, tickAtSeconds } from "../../common/tempoMap";
 import { t } from "../../i18n";
 import { MOCK_SAMPLE_RATE } from "../audio";
 import { newClip } from "../clipRules";
