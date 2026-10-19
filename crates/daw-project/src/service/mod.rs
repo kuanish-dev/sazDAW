@@ -1,7 +1,7 @@
 //! The project core: owner of the model and of its edit history. Its insides (lock, state, DSP) are hidden in this
 //! module; the other entities ask the core through `edit`, `read`, `save_with` and `install` and never reach in.
-//! The core itself handles undo and redo (`HistoryControl`, `history.rs`) and reading the whole project
-//! (`ProjectView`).
+//! The core itself handles undo and redo (`HistoryControl`, `history.rs`) and reading the whole project and what
+//! changed in it (`ProjectView`, `changes.rs`).
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, MutexGuard};
@@ -9,13 +9,15 @@ use std::time::Instant;
 
 use daw_contracts::codes::project;
 use daw_contracts::{
-    AppLog, ContractError, DspSink, EffectCatalog, InstrumentCatalog, NoteEffectCatalog, ProcessedAudio, Project, ProjectView,
-    SampleDecoder, SampleStore, SnapshotSink, TransportControl, sync::lock,
+    AppLog, ContractError, DspSink, EffectCatalog, InstrumentCatalog, NoteEffectCatalog, ProcessedAudio, Project, ProjectChanges,
+    ProjectView, SampleDecoder, SampleStore, SnapshotSink, TransportControl, sync::lock,
 };
 
+mod changes;
 mod history;
 mod sync;
 
+use changes::Stamps;
 use history::{Group, History};
 use sync::DspState;
 
@@ -47,6 +49,8 @@ struct Inner {
     /// Key and time of the last edit, to merge consecutive edits of one parameter.
     last_edit: Option<(String, Instant)>,
     group: Option<Group>,
+    /// The parts of the model as last handed out by `changes_since`, with the revisions they changed at.
+    stamps: Stamps,
 }
 
 pub struct ProjectService {
@@ -59,10 +63,12 @@ const COALESCE_WINDOW_MS: u128 = 800;
 impl ProjectService {
     /// Creates the service with an empty project and publishes it to the engine at once.
     pub fn new(deps: Dependencies) -> Self {
+        let project = Project::empty();
+        let stamps = Stamps::new(&project);
         let service = Self {
             deps,
             inner: Mutex::new(Inner {
-                project: Project::empty(),
+                project,
                 history: History::default(),
                 dsp: DspState::default(),
                 version: 0,
@@ -71,6 +77,7 @@ impl ProjectService {
                 warnings: Vec::new(),
                 last_edit: None,
                 group: None,
+                stamps,
             }),
         };
         service.sync(&mut service.lock());
@@ -217,5 +224,11 @@ impl ProjectView for ProjectService {
 
     fn revision(&self) -> u64 {
         self.lock().version
+    }
+
+    fn changes_since(&self, since: Option<u64>) -> ProjectChanges {
+        let mut inner = self.lock();
+        let Inner { project, version, stamps, .. } = &mut *inner;
+        stamps.changes(project, *version, since)
     }
 }

@@ -97,7 +97,7 @@ export function createSession(rpc: RpcClient, dialogs: SystemDialogs, shell: App
     backend: { api, dialogs, shell },
     project: {
       project: sync.project, status: sync.status, catalog: sync.catalog,
-      refresh: sync.refresh, refreshCatalog: sync.refreshCatalog, patchProject: sync.patch,
+      refresh: sync.refresh, reload: sync.reload, refreshCatalog: sync.refreshCatalog, patchProject: sync.patch,
     },
     playback: { tick: playback.tick },
     preferences,

@@ -38,12 +38,16 @@ export interface ProjectCopy {
   readonly project: Project;
   status(): Status;
   catalog(): Catalog | null;
+  /** Takes in what changed since the copy's revision. */
   refresh(): Promise<void>;
+  /** Re-reads the whole project (after a refused call: its value may already be shown by `patchProject`). */
+  reload(): Promise<void>;
   /** Re-reads the kinds catalog (a plugin scan adds new effects to it). */
   refreshCatalog(): Promise<void>;
   /**
    * Shows a value in the UI immediately, before the backend replies (sliders, knobs, a finished drag).
-   * The real project arrives with the change event and reconciles everything. Only the actions layer changes state.
+   * The backend's value of the part arrives with the change event; a refused call re-reads the whole project
+   * (`reload`), so a refused value does not stay on screen. Only the actions layer changes state.
    */
   patchProject(change: (project: Project) => void): void;
 }

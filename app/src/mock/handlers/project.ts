@@ -1,5 +1,5 @@
 // Project: file, folder, recent projects, autosave, export, undo and redo.
-import type { HistorySteps, Project, Status } from "../../api/types";
+import type { HistorySteps, Project, ProjectChanges, Status } from "../../api/types";
 import { pathForFormat } from "../../domain/exportAudio";
 import { t } from "../../i18n";
 import { emptyProject } from "../demo";
@@ -12,6 +12,18 @@ const stem = (path: string) => (path.split("/").pop() ?? "").replace(/\.[^.]+$/,
 export function projectHandlers(w: MockWorld): HandlerSet {
   const h: HandlerSet = {};
   h["project.get"] = () => w.clone(w.project);
+  // Simplified: always the whole project as changes, which the contract allows (a part may come although it did not
+  // change); the backend sends only what changed (`ProjectView::changes_since`).
+  h["project.changes"] = (): ProjectChanges => {
+    const p = w.clone(w.project);
+    const list = <T extends { id: number }>(items: T[]) => ({ ids: items.map((item) => item.id), changed: items });
+    return {
+      revision: w.revision, name: p.name, tempoMap: p.tempoMap, tracks: list(p.tracks), clips: list(p.clips),
+      loopRegion: p.loopRegion, nodes: list(p.graph.nodes), edges: p.graph.edges, room: p.room,
+      automation: list(p.automation), samples: list(p.samples), markers: list(p.markers), folders: list(p.folders),
+      midiMappings: p.midiMappings ?? [], nextId: p.nextId,
+    };
+  };
   h["project.status"] = (): Status => ({
     name: w.project.name, dirty: w.dirty, canUndo: w.undoStack.length > 0, canRedo: w.redoStack.length > 0,
     undoLabel: w.undoStack.at(-1)?.label ?? null, revision: w.revision, path: w.path,

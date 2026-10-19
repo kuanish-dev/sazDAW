@@ -1,8 +1,9 @@
-//! `project.*`, `history.*` and `library.home` methods: the whole project, files, recent projects, autosave, export, undo.
+//! `project.*`, `history.*` and `library.home` methods: the whole project and what changed in it, files, recent
+//! projects, autosave, export, undo.
 
 use std::path::PathBuf;
 
-use daw_contracts::{ClearOptions, ExportRequest, HistoryMark, NodeKind, Project};
+use daw_contracts::{ClearOptions, ExportRequest, HistoryMark, ListChanges, Node, NodeKind, Project, ProjectChanges, Track};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
@@ -29,6 +30,13 @@ struct Recent {
 }
 
 #[derive(Deserialize, JsonSchema)]
+struct Changes {
+    /// The `revision` of the previous reply; absent or null for the whole project.
+    #[serde(default)]
+    since: Option<u64>,
+}
+
+#[derive(Deserialize, JsonSchema)]
 struct Squash {
     /// The mark `history.checkpoint` returned before the change.
     since: HistoryMark,
@@ -39,15 +47,28 @@ struct Squash {
 /// The project for the interface and AI without saved plugin states. Those are opaque bytes (~70 KB of base64 for Surge XT)
 /// needed only by the plugins themselves, while `project.get` is called after every edit and read by AI in full.
 fn without_plugin_states(mut project: Project) -> Project {
-    for spec in project.tracks.iter_mut().filter_map(|track| track.instrument.as_mut()) {
+    project.tracks.iter_mut().for_each(strip_track);
+    project.graph.nodes.iter_mut().for_each(strip_node);
+    project
+}
+
+/// The same for the changes (`project.changes`): the tracks and nodes that come travel without their plugin states.
+fn changes_without_plugin_states(mut changes: ProjectChanges) -> ProjectChanges {
+    changes.tracks.iter_mut().flat_map(|list: &mut ListChanges<Track>| &mut list.changed).for_each(strip_track);
+    changes.nodes.iter_mut().flat_map(|list: &mut ListChanges<Node>| &mut list.changed).for_each(strip_node);
+    changes
+}
+
+fn strip_track(track: &mut Track) {
+    if let Some(spec) = track.instrument.as_mut() {
         spec.state = None;
     }
-    for node in &mut project.graph.nodes {
-        if let NodeKind::Effect { state, .. } = &mut node.kind {
-            *state = None;
-        }
+}
+
+fn strip_node(node: &mut Node) {
+    if let NodeKind::Effect { state, .. } = &mut node.kind {
+        *state = None;
     }
-    project
 }
 
 pub(crate) fn register(table: &mut RpcTable) {
@@ -56,6 +77,11 @@ pub(crate) fn register(table: &mut RpcTable) {
         "Returns the whole project: tracks, clips with notes, the sound graph, automation, samples (without saved plugin states — \
          those are bytes for the plugins themselves). The main way to see the state.",
         |c, ()| Ok(without_plugin_states(c.view.snapshot())),
+    );
+    table.add(
+        "project.changes",
+        "Returns what changed in the project after revision `since` (the `revision` of the previous reply), without saved plugin states: each part that changed, whole (absent when it did not); a list (tracks, clips, nodes, automation, samples, markers, folders) as `ids` in order plus the `changed` entities, an id that is gone was removed; without `since`, the whole project in this form. The way to follow a project as it changes without re-reading all of it.",
+        |c, p: Changes| Ok(changes_without_plugin_states(c.view.changes_since(p.since))),
     );
     table.add("project.status", "Returns a short status: file path, unsaved edits, revision, whether undo is possible.", |c, ()| {
         Ok(Status {

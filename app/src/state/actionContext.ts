@@ -1,5 +1,5 @@
 // Builds the `ActionContext` for the actions layer from its roles: the backend, how a call runs (failure → notification
-// and re-read) with the long-operation indicator, and the narrow state handles actions are allowed to touch.
+// and a whole re-read) with the long-operation indicator, and the narrow state handles actions are allowed to touch.
 import { type Accessor, createSignal } from "solid-js";
 import type {
   ActionContext, Backend, Calls, PlaybackPosition, PreferencesCopy, ProjectCopy, RecordingFollow, View,
@@ -22,7 +22,8 @@ export interface ContextParts {
 function createCalls(parts: ContextParts, setBusy: (text: string | null) => void): Calls {
   const fail = async (error: unknown) => {
     parts.notices.showFailure(error);
-    await parts.project.refresh();
+    // Whole: the refused call's value may already be on screen (`patchProject`), and nothing changed to bring it back.
+    await parts.project.reload();
   };
 
   const run = async <T>(action: Promise<T>): Promise<T | undefined> => {

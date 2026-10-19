@@ -188,3 +188,25 @@ fn export_takes_format_normalize_and_range_over_the_wire() {
     }
     std::fs::remove_dir_all(dir).ok();
 }
+
+#[test]
+fn project_changes_bring_the_whole_project_first_and_then_only_what_changed() {
+    let session = build_session(true);
+    let (table, c) = (RpcTable::new(), &session.controls);
+    let whole = call(&table, c, "project.changes", json!({}));
+    let project = project(&table, c);
+    assert_eq!(whole["tracks"]["ids"].as_array().unwrap().len(), project["tracks"].as_array().unwrap().len());
+    assert_eq!(whole["nodes"]["changed"], project["graph"]["nodes"], "the whole graph, without plugin states like project.get");
+    assert_eq!(whole["loopRegion"], project["loopRegion"]);
+
+    call(&table, c, "graph.setVolume", json!({ "id": 0, "volume": 0.5 }));
+    let changes = call(&table, c, "project.changes", json!({ "since": whole["revision"] }));
+    let mut keys: Vec<&String> = changes.as_object().unwrap().keys().collect();
+    keys.sort();
+    assert_eq!(keys, ["nodes", "revision"], "only the graph nodes changed: {changes}");
+    assert_eq!(changes["nodes"]["changed"].as_array().unwrap().len(), 1, "only the master: {changes}");
+    assert_eq!(changes["nodes"]["changed"][0]["id"], 0);
+
+    let nothing = call(&table, c, "project.changes", json!({ "since": changes["revision"] }));
+    assert_eq!(nothing, json!({ "revision": changes["revision"] }));
+}

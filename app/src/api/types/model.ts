@@ -1,5 +1,5 @@
 // Project model: mirror of the Rust JSON (`daw-contracts::model`, camelCase): tracks, clips, notes, automation, samples.
-import type { Graph } from "./graph";
+import type { Graph, GraphEdge, GraphNode } from "./graph";
 import type { Room } from "./stage";
 
 export type Id = number;
@@ -340,4 +340,34 @@ export interface Project {
   /** MIDI controller knobs mapped to parameters (MIDI learn); absent means no mappings. */
   midiMappings?: MidiMapping[];
   nextId: number;
+}
+
+/** A list of entities with ids as it changed (`ListChanges` in Rust): the ids of the whole list in its order and the
+ *  entities that changed or appeared. An id no longer there was removed; one not in `changed` is as the copy has it. */
+export interface ListChanges<T> {
+  ids: Id[];
+  changed: T[];
+}
+
+/** What changed in the project after a revision (`project.changes`, `ProjectChanges` in Rust): each part that
+ *  changed, whole; absent when it did not. The graph comes as `nodes` and `edges`. `domain/projectChanges.ts` takes it
+ *  into the interface's copy. */
+export interface ProjectChanges {
+  /** The revision the changes bring the copy to: the `since` of the next call. */
+  revision: number;
+  name?: string;
+  tempoMap?: TempoMap;
+  tracks?: ListChanges<Track>;
+  clips?: ListChanges<Clip>;
+  /** `null`: the loop region was removed. */
+  loopRegion?: [number, number] | null;
+  nodes?: ListChanges<GraphNode>;
+  edges?: GraphEdge[];
+  room?: Room;
+  automation?: ListChanges<AutomationLane>;
+  samples?: ListChanges<SampleRef>;
+  markers?: ListChanges<Marker>;
+  folders?: ListChanges<Folder>;
+  midiMappings?: MidiMapping[];
+  nextId?: number;
 }

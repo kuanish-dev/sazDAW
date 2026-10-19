@@ -37,6 +37,7 @@ pub mod plugin_editor;
 pub mod plugin_state;
 pub mod preferences;
 pub mod presets;
+pub mod project_changes;
 pub mod project_io;
 pub mod record;
 pub mod sample;
@@ -119,6 +120,7 @@ pub use preferences::{
     Preferences, PreferencesStore, Profile, Theme, TrackHeight,
 };
 pub use presets::{MAX_PRESET_NAME_CHARS, Presets, ProjectTemplates, check_preset_name};
+pub use project_changes::{ListChanges, ProjectChanges};
 pub use project_io::{ClearOptions, DemoProject, ProjectClear, ProjectIo, ProjectStorage, ProjectView};
 pub use record::{AudioRecordControl, AudioRecordStatus, InputChannels, RecordControl, RecordStatus, TrackRecordState};
 pub use sample::{

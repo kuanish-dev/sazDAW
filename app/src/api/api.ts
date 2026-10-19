@@ -6,7 +6,7 @@ import { decodeMasterWindow, decodeNodeWindows } from "./wire";
 import type {
   AudioDevices, AudioRecordStatus, AudioSettings, AudioStatus, AutoPoint, AutomationClip, AutomationClipEdit, AutomationWriteMode, Catalog, ChordPartReport, ChordPartRequest, Clip, ClipEdit, CompSegment, ControllerKind, ControllerPoint, DrumPartReport,
   DrumPartRequest, DrumPattern, EditorTarget, ExportOptions, ExportResult, FolderEdit, GrooveTemplate, HistorySteps, Id, InputChannels, InputLevel, LibraryEntry, LogEntry, LogRecord,
-  MasterReading, MidiMappings, MonitorMode, NewNote, NewNoteClip, NewTrack, NodeCursor, Note, ParamTarget, Params, PluginCrash, PluginList, Polarity, Preferences, Project, RecentProject, Room, SampleInfo, ScanReport,
+  MasterReading, MidiMappings, MonitorMode, NewNote, NewNoteClip, NewTrack, NodeCursor, Note, ParamTarget, Params, ProjectChanges, PluginCrash, PluginList, Polarity, Preferences, Project, RecentProject, Room, SampleInfo, ScanReport,
   Scale, ShapeRequest, SignatureChange, StagePlace, Status, StrumPattern, TempoChange, TrackColor, Variation, Waveform,
 } from "./types";
 
@@ -32,6 +32,8 @@ export function createApi(rpc: RpcClient) {
     },
     project: {
       get: () => call<Project>("project.get"),
+      /** What changed after revision `since` (the `revision` of the previous reply); `null` — the whole project. */
+      changes: (since: number | null) => call<ProjectChanges>("project.changes", { since }),
       status: () => call<Status>("project.status"),
       fillDemo: () => call("project.fillDemo"),
       save: (path: string) => call("project.save", { path }),

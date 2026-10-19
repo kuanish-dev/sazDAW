@@ -1,4 +1,4 @@
-//! The whole project: file lifecycle (`ProjectIo`), reading the whole project (`ProjectView`), the file format
+//! The whole project: file lifecycle (`ProjectIo`), reading the whole project and what changed in it (`ProjectView`), the file format
 //! (`ProjectStorage`), the starter beat (`DemoProject`) and clearing the contents (`ProjectClear`).
 
 use std::path::{Path, PathBuf};
@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use schemars::JsonSchema;
 use serde::Deserialize;
 
-use crate::{ContractError, Project};
+use crate::{ContractError, Project, ProjectChanges};
 
 /// File lifecycle of the project. Job: which file is open; create, open, save, restore.
 pub trait ProjectIo: Send + Sync {
@@ -41,6 +41,12 @@ pub trait ProjectView: Send + Sync {
     fn snapshot(&self) -> Project;
     /// Project version counter: grows with every published change.
     fn revision(&self) -> u64;
+    /// What changed after `since`, a `ProjectChanges::revision` the reader got from an earlier call: every part whose
+    /// value differs from the one the reader has, whoever changed it (the interface, undo, an AI client, recording,
+    /// opening another project), consistent with `revision`. `None` (a reader that has nothing yet): the whole project
+    /// (`ProjectChanges::whole`). Taking every reply in turn into a copy (`ProjectChanges::apply`) keeps the copy equal
+    /// to the project.
+    fn changes_since(&self, since: Option<u64>) -> ProjectChanges;
 }
 
 /// Project storage on disk (the file format).

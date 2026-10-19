@@ -56,6 +56,7 @@ fn every_documented_method_group_is_registered() {
         "tempo.setSignatureChanges",
         "midi.importTempo",
         "project.get",
+        "project.changes",
         "project.summary",
         "project.export",
         "history.undo",

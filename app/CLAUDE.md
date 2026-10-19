@@ -1,7 +1,7 @@
 # Frontend (`app/`: Solid.js + TypeScript + Tailwind v4, Tauri 2 shell)
 
 The interface talks to the backend through a single contract, `RpcClient` (`src/api/rpc.ts`): `call(method, params)`, `callBinary(method, params)` for the live sound windows (raw bytes, decoded in `src/api/wire.ts`; see "Bytes" in [daw-rpc](../crates/daw-rpc/CLAUDE.md)) plus two subscriptions —
-`tick` (position, meters, load, ~30 times per second) and `project` (the project changed → re-read it in full).
+`tick` (position, meters, load, ~30 times per second) and `project` (the project changed → take in what changed since the copy's revision, `project.changes`; see `state/projectSync.ts`).
 
 Map of the whole code: [ARCHITECTURE.md](../ARCHITECTURE.md) (features that cross layers: `docs/features/`, indexed there). Each layer below has its own doc, and so do [`src/ui/effects/`](src/ui/effects/CLAUDE.md), [`src/ui/graph/`](src/ui/graph/CLAUDE.md), [`src/ui/tracks/`](src/ui/tracks/CLAUDE.md), [`src/ui/mixer/`](src/ui/mixer/CLAUDE.md), [`src/ui/settings/`](src/ui/settings/CLAUDE.md), [`src/i18n/`](src/i18n/CLAUDE.md) and [`src/mock/`](src/mock/CLAUDE.md).
 
