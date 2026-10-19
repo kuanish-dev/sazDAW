@@ -19,7 +19,7 @@ const BAND_PARAMS = ["threshold", "ratio", "gain", "solo", "bypass"] as const;
 /** The level axis of the graph: room for a band's gain above 0 dB and for deep reduction below. */
 const TOP_DB = 12;
 const FLOOR_DB = -30;
-export const MULTIBAND_GRID_DB = [6, 0, -12, -24];
+export const MULTIBAND_GRID_DB = [6, 0, -12, -24] as const;
 export const multibandY = (view: PlotView, db: number) => dbY(view, db, FLOOR_DB, TOP_DB);
 
 export interface MultibandBand {

@@ -4,13 +4,13 @@
 // clips always agree.
 import type { Clip, Id, Track, TrackColor } from "../api/types";
 
-export const TRACK_COLOR_HEX: Record<TrackColor, string> = {
+export const TRACK_COLOR_HEX: Readonly<Record<TrackColor, string>> = {
   red: "#e5534b", orange: "#e8833a", amber: "#e0b43d", yellow: "#d8d24a", lime: "#9ccc4a", green: "#5cb85c",
   teal: "#46c2b5", cyan: "#4ac0df", blue: "#4a8fdf", indigo: "#6f78e0", violet: "#a070e0", pink: "#e6607e",
-};
+} as const;
 
 /** Colors by track number for tracks without their own color. */
-const NUMBER_COLORS = ["#e8833a", "#4aa3df", "#7bc47f", "#c970d6", "#e0b43d", "#e6607e", "#46c2b5", "#8f86e8"];
+const NUMBER_COLORS = ["#e8833a", "#4aa3df", "#7bc47f", "#c970d6", "#e0b43d", "#e6607e", "#46c2b5", "#8f86e8"] as const;
 
 /** Audio clips of a track without its own color. */
 const AUDIO_CLIP_COLOR = "#4a6fa5";

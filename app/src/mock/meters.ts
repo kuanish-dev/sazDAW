@@ -41,10 +41,10 @@ export function mockReductions(w: MockWorld, now: number): GainReductionReading[
 }
 
 /** Band-split effects as in the backend (`Effect::band_gains_db`): each band's gain at full swing (`engaged` = 1). */
-const BANDED: Record<string, (params: Record<string, number>, engaged: (band: number) => number) => number[]> = {
+const BANDED: Readonly<Record<string, (params: Record<string, number>, engaged: (band: number) => number) => number[]>> = {
   multiband: (params, engaged) => Array.from({ length: (params.bands ?? 1) >= 1 ? 4 : 3 }, (_, band) => -SWING_REDUCTION_DB * engaged(band)),
   dynamic_eq: (params, engaged) => Array.from({ length: 4 }, (_, band) => (params[`band${band + 1}_gain`] ?? 0) * engaged(band)),
-};
+} as const;
 
 /** Plausible band gains of non-bypassed band-split effects: each band wobbles on its own while playing. */
 export function mockBandGains(w: MockWorld, now: number): BandGainsReading[] {

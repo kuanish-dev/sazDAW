@@ -18,7 +18,7 @@ import { t } from "../i18n";
 import { capture, localPoint } from "../common/pointer";
 import { LiveSpectrum } from "./LiveSpectrum";
 
-const VIEW = { width: 300, height: 140 };
+const VIEW = { width: 300, height: 140 } as const;
 
 export function FilterGraph(props: { node: Id; infos: ParamInfo[]; values: Params; onChange: (name: string, value: number) => void }) {
   let svg!: SVGSVGElement;

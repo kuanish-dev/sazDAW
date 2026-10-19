@@ -11,14 +11,14 @@ import { reverbDecay, reverbSettings, wetLevel } from "./reverbTail";
 import { t } from "../i18n";
 import { listenToNode } from "./nodeSound";
 
-const VIEW = { width: 300, height: 110 };
+const VIEW = { width: 300, height: 110 } as const;
 const FLOOR_DB = -60;
 const PAST_SECONDS = 2;
 const FUTURE_SECONDS = 4;
 /** One scale for the past and the future: "now" sits where the past ends. */
 const PX_PER_SECOND = VIEW.width / (PAST_SECONDS + FUTURE_SECONDS);
 const NOW_X = PAST_SECONDS * PX_PER_SECOND;
-const GRID_DB = [-12, -24, -36, -48];
+const GRID_DB = [-12, -24, -36, -48] as const;
 const FAN_POINTS = 40;
 /** The live fan starts from the reverb's level now: up at once, down calmly (time constants, s). */
 const WET_RISE_SECONDS = 0.02;

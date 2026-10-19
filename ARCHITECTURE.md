@@ -70,7 +70,7 @@ The frontend is split by role, like the backend's entities: each role folder in 
 | [`src/graph/`](app/src/graph/CLAUDE.md) | The Graph page and the signal path view |
 | [`src/mixer/`](app/src/mixer/CLAUDE.md) | The Mixer page, meters, the master |
 | [`src/settings/`](app/src/settings/CLAUDE.md) | The Settings page and the preferences |
-| `src/pianoroll/`, `automation/`, `instruments/`, `keyboard/`, `recording/`, `midi/`, `transport/`, `history/`, `project/`, `selection/`, `stage/`, `samples/`, `sounds/`, `drums/`, `chords/`, `plugins/`, `presets/` | One role each (see [app/CLAUDE.md](app/CLAUDE.md)) |
+| `src/pianoroll/`, `automation/`, `instruments/`, `keyboard/`, `recording/`, `midi/`, `transport/`, `history/`, `files/`, `selection/`, `stage/`, `samples/`, `sounds/`, `drums/`, `chords/`, `plugins/`, `presets/` | One role each (see [app/CLAUDE.md](app/CLAUDE.md)) |
 | [`src/i18n/`](app/src/i18n/CLAUDE.md) | Interface languages (English default, Russian) |
 | [`src/mock/`](app/src/mock/CLAUDE.md) | The browser stand-in for the backend |
 | `src/session.tsx` | Creates the core and every role once and gives the UI the `Session` |

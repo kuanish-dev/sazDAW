@@ -14,11 +14,11 @@ export function LogSection() {
   const [entries, setEntries] = createSignal<LogEntry[]>([]);
   const [file, setFile] = createSignal<string | null>(null);
   const [version, setVersion] = createSignal("…");
-  const reload = async () => setEntries(await session.log.recent(LIMIT));
+  const reload = async () => setEntries(await session.settings.log.recent(LIMIT));
 
   onMount(async () => {
-    void session.about.version().then(setVersion);
-    setFile(await session.log.file());
+    void session.settings.about.version().then(setVersion);
+    setFile(await session.settings.log.file());
     await reload();
   });
 

@@ -5,7 +5,7 @@ import type { RecentProject } from "../api/types";
 import { t } from "../i18n";
 import { useSession } from "../session";
 import { IconAdd, IconFolder, IconNote, IconTracks } from "../common/icons";
-import { TemplatesDialog } from "../project/TemplatesDialog";
+import { TemplatesDialog } from "../files/TemplatesDialog";
 import { WelcomeBackdrop } from "./WelcomeBackdrop";
 
 /**

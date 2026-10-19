@@ -64,8 +64,8 @@ export interface MeterLevel {
   r: MeterChannel;
 }
 
-export const SILENT_CHANNEL: MeterChannel = { level: 0, hold: 0, holdAge: 0, clip: 0 };
-export const SILENT_LEVEL: MeterLevel = { l: SILENT_CHANNEL, r: SILENT_CHANNEL };
+export const SILENT_CHANNEL: Readonly<MeterChannel> = { level: 0, hold: 0, holdAge: 0, clip: 0 } as const;
+export const SILENT_LEVEL: Readonly<MeterLevel> = { l: SILENT_CHANNEL, r: SILENT_CHANNEL } as const;
 
 /** The peak-hold tick stays put this long (seconds) before it falls. */
 const HOLD_SECONDS = 1.2;

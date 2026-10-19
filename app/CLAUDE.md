@@ -18,7 +18,7 @@ Map of the whole code: [ARCHITECTURE.md](../ARCHITECTURE.md) (features that cros
 | `selection/` | What is selected: the track, clips, a sample, automation |
 | `transport/` | The top strip: playback, position, tempo and meter, the waves |
 | `history/` | Undo, redo and the history panel |
-| `project/` | Project files, templates, audio export, startup, the project menu |
+| `files/` | Project files, templates, audio export, startup, the project menu |
 | [`tracks/`](src/tracks/CLAUDE.md) | The timeline: tracks, folders, clips, markers, takes, bounce |
 | `pianoroll/` | The note clip editor: notes, steps, controller lanes, the clip panel |
 | `automation/` | Automation lanes, the pattern editor, live writing |
@@ -43,10 +43,11 @@ Root files: `index.tsx` (start), `composition.ts` (the only place that picks the
 **How a role is built.**
 - **Its work** is a factory that takes the shared core and the roles it asks (`createNotesActions(core)`, `createClipsActions(core, views)`) and returns the interface of its job (`NotesActions`). It calls the backend (`core.api`), runs each call through `core.run`/`core.exec` (a failure is a toast and a whole re-read), shows a value at once with `core.patchProject` and selects what it made with `views.showCreated`. Its own state (a clipboard, a scan in progress) lives inside it.
 - **Its data** that others read is a factory too (`createLevels`, `createSelection`). A part the UI reads in pieces declares them itself (`ProjectReads`, `PlaybackReads`, `RecordingReads`, `ToastReads`).
-- **Its components** take the session with `useSession()` and ask their role: `session.notes.add(…)`, `session.levels`. A component never calls the backend or the core.
+- **Its components** take the session with `useSession()` and ask their role: `session.pianoroll.add(…)`, `session.mixer.levels`. A component never calls the backend or the core.
 - **Its pure math** sits next to it. A module that mirrors a backend rule names its Rust twin (`pianoroll/noteTransforms.ts` ↔ `daw-project/src/note_transforms.rs`), and the mock uses the same module.
+- **Its role object** (`role.ts`, when the role has several jobs) is the one thing the session holds of it: the main job's methods at the top, the other jobs inside (`TracksRole`: `session.tracks.remove(…)`, `session.tracks.clips.split(…)`, `session.tracks.markers…`). A role with one job is that job's object (`session.pianoroll`, `session.graph`).
 - **Another role** is used through what it offers: its factory's interface, its components, its exported functions. Nobody changes another role's state.
-- **The session** (`session.tsx`) creates the core and every role once, in order; it is the only place that wires them. A new role is a folder, a factory, a field in `Session` and a line in `createSession`; a new operation: the [add-operation](../.claude/skills/add-operation/SKILL.md) recipe.
+- **The session** (`session.tsx`) creates the core and every role once, in order; it is the only place that wires them. Each role is one field of `Session`, named as its folder. A new job of a role goes into its `role.ts`; a new role is a folder, its factory or `role.ts`, a field in `Session` and a line in `createSession`; a new operation: the [add-operation](../.claude/skills/add-operation/SKILL.md) recipe.
 
 **Rules** (checked by Biome: `npm run lint`, `app/biome.json`; choosing implementations only in `composition.ts` is checked in review): no inheritance (classes via `app/lint/no-extends.grit`, interfaces via a grep in the same script); a component (`*.tsx`) imports no `api` client (types are fine), no `core`, no mock and no `composition`; `core` and `api` import no role; `i18n` imports nothing of the app; the mock imports neither the session nor the core; no empty blocks, no unused code.
 

@@ -26,7 +26,7 @@ export interface Room {
 export const MAX_ON_STAGE = 64;
 
 /** Where a channel first stands (`StagePlace::DEFAULT`): a few steps in front of the listener, at ear height. */
-export const DEFAULT_STAGE_PLACE: StagePlace = { depth: 0.5, height: 0 };
+export const DEFAULT_STAGE_PLACE: Readonly<StagePlace> = { depth: 0.5, height: 0 } as const;
 
 /** A new project's room (`Room::default`). */
-export const DEFAULT_ROOM: Room = { size: 0.4, reverb: 0.4, listening: "speakers" };
+export const DEFAULT_ROOM: Readonly<Room> = { size: 0.4, reverb: 0.4, listening: "speakers" } as const;

@@ -22,17 +22,17 @@ import { StepGrid } from "./StepGrid";
 
 type ClipView = "roll" | "steps";
 
-const VIEWS: readonly ClipView[] = ["roll", "steps"];
+const VIEWS: readonly ClipView[] = ["roll", "steps"] as const;
 
 /** "Content length" in bars: how many bars of notes repeat inside the clip. Changing it by hand turns off auto length. */
 function ContentLength(props: { clip: NoteClip }) {
   const session = useSession();
-  const { notes } = session;
+  const { pianoroll } = session;
   return (
     <BarsStepper
       label={t().pianoRoll.contentLength} hint={t().pianoRoll.contentLengthHint} ticks={props.clip.content.loopTicks}
       bar={clipBarTicks(session.project.tempoMap, props.clip)} max={MAX_CLIP_LOOP_TICKS}
-      onSet={(ticks) => void notes.setLoopTicks(props.clip.id, ticks)}
+      onSet={(ticks) => void pianoroll.setLoopTicks(props.clip.id, ticks)}
     />
   );
 }

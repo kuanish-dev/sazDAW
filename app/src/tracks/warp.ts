@@ -8,7 +8,7 @@ export const MIN_BPM = 20;
 export const MAX_BPM = 999;
 
 /** Bar counts tried when guessing a loop's tempo from its length, and the plausible loop tempo. */
-const LOOP_BARS = [1, 2, 4, 8, 16];
+const LOOP_BARS = [1, 2, 4, 8, 16] as const;
 const GUESS_MIN = 70;
 const GUESS_MAX = 180;
 const TYPICAL_BPM = 120;

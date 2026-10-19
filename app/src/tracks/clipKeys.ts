@@ -17,17 +17,17 @@ interface ClipKey {
   run(session: Session, ids: Id[]): void;
 }
 
-const CLIP_KEYS: ClipKey[] = [
+const CLIP_KEYS: readonly ClipKey[] = [
   { keys: "⌘A", label: "selectAll", codes: ["KeyA"], meta: true, withoutSelection: true,
     run: (s) => s.selection.selectClips(s.project.clips.map((c) => c.id)) },
   { keys: "⌘V", label: "paste", codes: ["KeyV"], meta: true, withoutSelection: true,
-    run: (s) => void s.clips.paste() },
+    run: (s) => void s.tracks.clips.paste() },
   { keys: "Esc", label: "deselect", codes: ["Escape"], meta: false, run: (s) => s.selection.clear() },
   { keys: "Delete · ⌫", label: "delete", codes: ["Delete", "Backspace"], meta: false,
-    run: (s, ids) => void s.clips.removeMany(ids) },
-  { keys: "⌘C", label: "copy", codes: ["KeyC"], meta: true, run: (s, ids) => s.clips.remember(ids) },
-  { keys: "⌘D", label: "duplicate", codes: ["KeyD"], meta: true, run: (s, ids) => void s.clips.duplicateMany(ids) },
-];
+    run: (s, ids) => void s.tracks.clips.removeMany(ids) },
+  { keys: "⌘C", label: "copy", codes: ["KeyC"], meta: true, run: (s, ids) => s.tracks.clips.remember(ids) },
+  { keys: "⌘D", label: "duplicate", codes: ["KeyD"], meta: true, run: (s, ids) => void s.tracks.clips.duplicateMany(ids) },
+] as const;
 
 /** Clip key help — from the same table. */
 export function clipKeysHelp(): readonly ShortcutHelp[] {

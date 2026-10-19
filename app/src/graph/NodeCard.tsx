@@ -13,13 +13,13 @@ export type PortState = "ok" | "bad" | null;
 
 /** Header dot color by node kind (effects get their own amber: with the blue accent "accent" equals "blue"); the signal
  *  path view marks its cards the same way. */
-export const NODE_ACCENT: Record<GraphNode["kind"]["type"], string> = {
+export const NODE_ACCENT: Readonly<Record<GraphNode["kind"]["type"], string>> = {
   instrument: "var(--color-blue)",
   audio: "var(--color-blue)",
   effect: "#d7a53a",
   bus: "var(--color-ok)",
   master: "var(--color-text)",
-};
+} as const;
 
 export function NodeCard(props: {
   node: GraphNode;

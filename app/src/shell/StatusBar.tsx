@@ -41,15 +41,15 @@ export function StatusBar() {
   // `undefined` — not read yet (the item is hidden), "off" — the device is not running.
   const [audio, setAudio] = createSignal<AudioFormat | "off">();
   const refreshAudio = async () => {
-    const [current, settings] = await Promise.all([session.audio.status(), session.audio.settings()]);
+    const [current, settings] = await Promise.all([session.settings.audio.status(), session.settings.audio.settings()]);
     setAudio(current?.running ? { rate: current.sampleRate, frames: settings?.bufferFrames ?? null } : "off");
   };
-  createEffect(on(session.ui.tab, (_tab, previous) => {
+  createEffect(on(session.shell.tab, (_tab, previous) => {
     if (previous === undefined || previous === "settings") void refreshAudio();
   }));
   const audioText = (format: AudioFormat | "off") => (format === "off" ? msg().audioOff : msg().audio(formatKhz(format.rate), format.frames));
 
-  const recording = () => tick().record.capturing || session.recordingStatus() !== null;
+  const recording = () => tick().record.capturing || session.recording.recordingStatus() !== null;
 
   return (
     <footer
@@ -57,7 +57,7 @@ export function StatusBar() {
       classList={{ "border-line bg-panel text-muted": !recording(), "border-danger bg-danger text-white": recording() }}
       aria-label={msg().label}
     >
-      <Show when={session.recordingStatus()}>
+      <Show when={session.recording.recordingStatus()}>
         {(take) => (
           <Item title={transportMsg().audioRecording}>
             <IconRecord size={12} class="animate-pulse" />
@@ -65,7 +65,7 @@ export function StatusBar() {
           </Item>
         )}
       </Show>
-      <Show when={tick().record.capturing && session.recordingStatus() === null}>
+      <Show when={tick().record.capturing && session.recording.recordingStatus() === null}>
         <Item><IconRecord size={12} class="animate-pulse" />{transportMsg().recordingNotes(tick().record.takeNotes)}</Item>
       </Show>
       <Item title={status().path ?? undefined}>
@@ -74,18 +74,18 @@ export function StatusBar() {
           <span class="h-2 w-2 rounded-full" classList={{ "bg-accent": !recording(), "bg-white": recording() }} title={transportMsg().unsaved} />
         </Show>
       </Item>
-      <Show when={session.appearance.showHints()} fallback={<span class="flex-1" />}>
+      <Show when={session.settings.appearance.showHints()} fallback={<span class="flex-1" />}>
         <HintText />
       </Show>
       <Item title={msg().tempoHint}>{msg().tempo(formatTempo(tick().tempo), tick().signature.numerator, tick().signature.denominator)}</Item>
       <Show when={audio()}>
-        {(format) => <Item title={msg().audioHint} onClick={() => session.ui.showSettings("audio")}>{audioText(format())}</Item>}
+        {(format) => <Item title={msg().audioHint} onClick={() => session.shell.showSettings("audio")}>{audioText(format())}</Item>}
       </Show>
       <Show when={tick().latencyMs > 0}>
         <Item title={transportMsg().pdcHint}>{transportMsg().pdc(Math.round(tick().latencyMs))}</Item>
       </Show>
       <Item title={transportMsg().cpuHint}><span class="w-14 font-mono">CPU {Math.round(tick().cpu * 100)}%</span></Item>
-      <Item title={msg().errorLog} onClick={() => session.ui.showSettings("log")}>
+      <Item title={msg().errorLog} onClick={() => session.shell.showSettings("log")}>
         <IconError size={14} />
       </Item>
     </footer>

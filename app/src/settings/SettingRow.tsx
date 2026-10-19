@@ -3,7 +3,6 @@
 import { Show, createSignal, type JSX } from "solid-js";
 import { t } from "../i18n";
 
-
 export function SectionTitle(props: { title: string; hint?: string }) {
   return (
     <header class="mb-2 border-b border-line pb-3">

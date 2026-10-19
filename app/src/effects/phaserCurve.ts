@@ -11,12 +11,12 @@ import { clamp } from "../common/math";
 import { type PlotView, type Point, dbY, linePath, toDb } from "../common/plot";
 
 /** Stage counts in the order of the `stages` choice. */
-const STAGES = [4, 6, 8, 12];
+const STAGES = [4, 6, 8, 12] as const;
 /** The rate the picture computes the digital filters at (the response barely differs at other rates in the audible band). */
 const SAMPLE_RATE = 48_000;
 export const PHASER_TOP_DB = 12;
 export const PHASER_FLOOR_DB = -36;
-export const PHASER_GRID_DB = [6, 0, -12, -24];
+export const PHASER_GRID_DB = [6, 0, -12, -24] as const;
 
 export interface PhaserSettings {
   rate: number;

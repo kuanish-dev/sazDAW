@@ -11,7 +11,7 @@ import { sticky } from "../common/sticky";
 const WIDTH = 300;
 const HEIGHT = 124;
 
-const LABELS: Record<Handle, string> = { attack: "A", hold: "H", decay: "D", sustain: "S", release: "R" };
+const LABELS: Readonly<Record<Handle, string>> = { attack: "A", hold: "H", decay: "D", sustain: "S", release: "R" } as const;
 
 export function EnvelopeGraph(props: {
   infos: ParamInfo[];

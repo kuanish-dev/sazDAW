@@ -29,10 +29,10 @@ export interface ConfirmButtons {
 
 // Filters with a translated name are functions: the name follows the current language.
 export const projectFilter = (): FileFilter => ({ name: t().project.fileTypes.project, extensions: ["dawproj"] });
-export const WAV_FILTER: FileFilter = { name: "WAV", extensions: ["wav"] };
-export const FLAC_FILTER: FileFilter = { name: "FLAC", extensions: ["flac"] };
-export const MP3_FILTER: FileFilter = { name: "MP3", extensions: ["mp3"] };
-export const MIDI_FILTER: FileFilter = { name: "MIDI", extensions: ["mid", "midi"] };
+export const WAV_FILTER: Readonly<FileFilter> = { name: "WAV", extensions: ["wav"] } as const;
+export const FLAC_FILTER: Readonly<FileFilter> = { name: "FLAC", extensions: ["flac"] } as const;
+export const MP3_FILTER: Readonly<FileFilter> = { name: "MP3", extensions: ["mp3"] } as const;
+export const MIDI_FILTER: Readonly<FileFilter> = { name: "MIDI", extensions: ["mid", "midi"] } as const;
 export const audioFilter = (): FileFilter => ({
   name: t().project.fileTypes.audio,
   extensions: ["wav", "mp3", "flac", "ogg", "aif", "aiff", "m4a"],

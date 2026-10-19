@@ -19,7 +19,7 @@ const dbToGain = (db: number) => 10 ** (db / 20);
 const around = (curve: Transfer, drive: number, mix: number, output: number): Transfer => (x) => (x + (curve(x * drive) - x) * mix) * output;
 
 /** The distortion's shapes in the order of its `shape` choice: soft (tanh), hard clip, triangle foldback. */
-const DISTORTION_SHAPES: Transfer[] = [
+const DISTORTION_SHAPES: readonly Transfer[] = [
   Math.tanh,
   (x) => clamp(x, -1, 1),
   (x) => {
@@ -27,7 +27,7 @@ const DISTORTION_SHAPES: Transfer[] = [
     const t = (((x + 1) % 4) + 4) % 4;
     return t < 2 ? t - 1 : 3 - t;
   },
-];
+] as const;
 
 export function distortionTransfer(infos: ParamInfo[], values: Params): Transfer | null {
   const s = namedParams(infos, values, ["drive", "shape", "mix", "output"]);
@@ -39,7 +39,7 @@ export function distortionTransfer(infos: ParamInfo[], values: Params): Transfer
 /** Offset of the saturator's tube type (`TUBE_BIAS`): the positive half clips earlier than the negative one. */
 const TUBE_BIAS = 0.3;
 /** The saturator's types in the order of its `type` choice: soft (tanh), tube (asymmetric), hard clip. */
-const SATURATOR_TYPES: Transfer[] = [Math.tanh, (x) => Math.tanh(x + TUBE_BIAS) - Math.tanh(TUBE_BIAS), (x) => clamp(x, -1, 1)];
+const SATURATOR_TYPES: readonly Transfer[] = [Math.tanh, (x) => Math.tanh(x + TUBE_BIAS) - Math.tanh(TUBE_BIAS), (x) => clamp(x, -1, 1)] as const;
 
 export function saturatorTransfer(infos: ParamInfo[], values: Params): Transfer | null {
   const s = namedParams(infos, values, ["drive", "type", "mix", "output"]);
@@ -55,7 +55,7 @@ function softKnee(x: number, knee: number): number {
 }
 
 /** The modes' knee and offset in the order of the `mode` choice: tape, console (`TAPE`, `CONSOLE`). */
-const TAPE_MODES = [{ knee: 0.4, bias: 0.08 }, { knee: 0.75, bias: 0.02 }];
+const TAPE_MODES = [{ knee: 0.4, bias: 0.08 }, { knee: 0.75, bias: 0.02 }] as const;
 
 export function tapeTransfer(infos: ParamInfo[], values: Params): Transfer | null {
   const s = namedParams(infos, values, ["mode", "drive", "output"]);

@@ -2,7 +2,7 @@
 import type { NoteEffectSpec } from "../api/types";
 
 /** Labels of built-in kinds; an unknown kind uses its first three letters. */
-const BADGES: Record<string, string> = { arp: "ARP", chord: "CH", repeat: "RPT" };
+const BADGES: Readonly<Record<string, string>> = { arp: "ARP", chord: "CH", repeat: "RPT" } as const;
 
 export const noteEffectBadge = (kind: string): string => BADGES[kind] ?? kind.slice(0, 3).toUpperCase();
 

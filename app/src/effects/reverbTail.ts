@@ -7,7 +7,7 @@ import type { ParamInfo, Params } from "../api/types";
 import { namedParams } from "../common/catalog";
 import { READING_SECONDS } from "./liveLevels";
 
-const COMB_TUNING = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617];
+const COMB_TUNING = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617] as const;
 const REFERENCE_RATE = 44_100;
 const ROOM_OFFSET = 0.7;
 const ROOM_SCALE = 0.28;

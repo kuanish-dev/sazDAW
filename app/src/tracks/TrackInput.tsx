@@ -16,7 +16,8 @@ import { Meter } from "../common/Meter";
  * above everything at the button, so the track header doesn't grow.
  */
 function InputMenu(props: { track: Id; current: InputChannels; at: MenuPoint; onClose: () => void }) {
-  const { audio, audioRecord } = useSession();
+  const { audio } = useSession().settings;
+const { audioRecord } = useSession().recording;
   const [channels] = createResource(async () => {
     const [devices, settings] = await Promise.all([audio.devices(), audio.settings()]);
     return devices && settings ? selectedInputChannels(devices, settings) : 0;
@@ -45,9 +46,9 @@ function InputMenu(props: { track: Id; current: InputChannels; at: MenuPoint; on
 
 export function RecordButton(props: { track: Id }) {
   const session = useSession();
-  const { audioRecord } = session;
-  const input = () => session.trackInput(props.track);
-  const take = () => session.recordingStatus();
+  const { audioRecord } = session.recording;
+  const input = () => session.recording.trackInput(props.track);
+  const take = () => session.recording.recordingStatus();
   const recordingHere = () => take() !== null && input().armed;
   /** Where to open the input menu (below the button), or null — closed. */
   const [menuAt, setMenuAt] = createSignal<{ x: number; y: number } | null>(null);
@@ -97,9 +98,9 @@ export function RecordButton(props: { track: Id }) {
  */
 export function MonitorButton(props: { track: Id; mode: MonitorMode }) {
   const session = useSession();
-  const armed = () => session.trackInput(props.track).armed;
+  const armed = () => session.recording.trackInput(props.track).armed;
   /** The track should hear its input but it's silent (sample rates differ, the input didn't open). */
-  const problem = () => (hearsInput(props.mode, armed()) ? session.monitorProblem() : null);
+  const problem = () => (hearsInput(props.mode, armed()) ? session.recording.monitorProblem() : null);
   const title = () =>
     [
       t().tracks.input.monitor(t().tracks.monitorModes[props.mode]),

@@ -8,7 +8,7 @@ import { t } from "../i18n";
 import type { Core } from "../core/core";
 import type { Views } from "../shell/views";
 import { addTracks } from "../tracks/newTracks";
-import { homeDir } from "../project/paths";
+import { homeDir } from "../files/paths";
 
 const WAV_EXT = ".wav";
 

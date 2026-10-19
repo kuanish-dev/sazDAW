@@ -14,7 +14,7 @@ const BAND_Q = 1;
 /** The level axis: the band's top at 0 dB and room below for the deepest range (24 dB). */
 const TOP_DB = 6;
 const FLOOR_DB = -30;
-export const DE_ESSER_GRID_DB = [0, -6, -12, -18, -24];
+export const DE_ESSER_GRID_DB = [0, -6, -12, -18, -24] as const;
 export const deEsserY = (view: PlotView, db: number) => dbY(view, db, FLOOR_DB, TOP_DB);
 
 export interface DeEsserSettings {

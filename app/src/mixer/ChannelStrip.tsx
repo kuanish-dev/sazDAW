@@ -127,7 +127,7 @@ function StripMix(props: { node: GraphNode }) {
   const session = useSession();
   const volume = () => (hasVolume(props.node.kind) ? props.node.kind.volume : 0);
   const strip = () => (hasStrip(props.node.kind) ? props.node.kind : null);
-  const level = () => session.levels[props.node.id] ?? SILENT_LEVEL;
+  const level = () => session.mixer.levels[props.node.id] ?? SILENT_LEVEL;
   return (
     <div class="mt-auto flex flex-col items-center gap-2">
       <Show when={strip()} fallback={<div style={{ height: `${PAN_KNOB_SIZE + 24}px` }} />}>

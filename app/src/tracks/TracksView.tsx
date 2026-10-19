@@ -28,12 +28,12 @@ export function TracksView() {
   const [zoom, setZoom] = createSignal(1);
   /** Header rows are the same as the timeline's: folders, visible tracks and their automation lanes. */
   const rows = createMemo(() => trackRows(session.project.tracks, session.project.folders, ownedLanes(session.project)));
-  const layout = createMemo(() => rowLayout(rows(), session.appearance.rowHeight()));
+  const layout = createMemo(() => rowLayout(rows(), session.settings.appearance.rowHeight()));
   const reorder = createTrackReorder({
     layout,
     drop: (id, slot) => {
       const plan = planTrackDrop(rows(), session.project.tracks, id, slot);
-      if (plan) void session.folders.place(id, plan.folder, plan.index, plan.members);
+      if (plan) void session.tracks.folders.place(id, plan.folder, plan.index, plan.members);
     },
   });
   const state: ToolbarState = { tool, setTool, snap, setSnap, zoom, setZoom };

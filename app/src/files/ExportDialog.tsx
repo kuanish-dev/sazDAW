@@ -1,6 +1,6 @@
 // "Export audio" dialog: destination, format (WAV/FLAC/MP3) and its quality, sample rate, loudness matching, song range,
 // tail, dither and stems. Which settings apply to which format and the request built from the form are
-// `project/exportAudio.ts`; rendering and the result message (with loudness and peak) are the `audioExport.render` action.
+// `files/exportAudio.ts`; rendering and the result message (with loudness and peak) are the `audioExport.render` action.
 import { For, Show, createSignal } from "solid-js";
 import type { BitDepth, ExportFormat, Mp3Bitrate } from "../api/types";
 import {
@@ -14,7 +14,7 @@ import { Modal } from "../common/Modal";
 
 export function ExportDialog(props: { onClose: () => void }) {
   const session = useSession();
-  const { audioExport } = session;
+  const { audioExport } = session.files;
   const [path, setPath] = createSignal("");
   const [format, setFormat] = createSignal<ExportFormat>("wav");
   const [sampleRate, setSampleRate] = createSignal(DEFAULT_SAMPLE_RATE);

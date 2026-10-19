@@ -55,7 +55,7 @@ function MixPanel(props: { node: GraphNode }) {
   const sampleRate = createStreamRate();
   const volume = () => (hasVolume(props.node.kind) ? props.node.kind.volume : 0);
   const strip = () => (hasStrip(props.node.kind) ? props.node.kind : null);
-  const level = () => session.levels[props.node.id] ?? SILENT_LEVEL;
+  const level = () => session.mixer.levels[props.node.id] ?? SILENT_LEVEL;
   return (
     <div class="flex flex-col items-center gap-3 p-3">
       <Show when={strip()}>{(s) => <PanKnob node={props.node.id} pan={s().pan} size={PAN_KNOB_SIZE} />}</Show>

@@ -17,7 +17,7 @@ import type { HandlerSet } from "./types";
 
 /** Anything shorter is not a recording (stop right after start). */
 const MIN_SECONDS = 0.2;
-const INPUTS: InputChannels[] = ["stereo", "left", "right"];
+const INPUTS: readonly InputChannels[] = ["stereo", "left", "right"] as const;
 
 export function audioRecordHandlers(w: MockWorld): HandlerSet {
   /** Per-track arming and input are session state, as in the backend. */

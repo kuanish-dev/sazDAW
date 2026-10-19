@@ -5,7 +5,7 @@ import { createSignal } from "solid-js";
 import type { Preferences } from "../api/types";
 import type { Core } from "../core/core";
 import { t } from "../i18n";
-import { homeDir } from "../project/paths";
+import { homeDir } from "../files/paths";
 import { DEFAULT_PREFERENCES } from "./preferenceRules";
 
 export interface AppPreferences {

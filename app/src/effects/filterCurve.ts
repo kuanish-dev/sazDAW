@@ -15,7 +15,7 @@ const DRAW_RATE = 48_000;
 /** The gain axis: room for the resonance peak (Q 12 is +21.6 dB) above, and the slope of the cut below. */
 const FILTER_TOP_DB = 24;
 const FILTER_FLOOR_DB = -36;
-export const FILTER_GRID_DB = [12, 0, -12, -24];
+export const FILTER_GRID_DB = [12, 0, -12, -24] as const;
 /** The `type` choices: low-pass, high-pass, band-pass. */
 const BAND_PASS = 2;
 

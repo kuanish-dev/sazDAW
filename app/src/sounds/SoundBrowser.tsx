@@ -15,7 +15,9 @@ import { SoundRow, type SoundRowActions } from "./SoundRow";
 
 export function SoundBrowser() {
   const session = useSession();
-  const { preview, samples, soundPlacement } = session;
+  const { samples } = session;
+const { preview } = session.samples;
+const { placement } = session.sounds;
   const places = createSoundPlaces();
   // Which project folder files are already samples (for the row's "✕"): re-read on any change of the sample list.
   const [projectSamples, setProjectSamples] = createSignal<SampleInfo[]>([]);
@@ -45,10 +47,10 @@ export function SoundBrowser() {
   };
 
   const actions: SoundRowActions = {
-    addTrack: (entry) => void soundPlacement.addSoundToTrack(entry.path),
+    addTrack: (entry) => void placement.addSoundToTrack(entry.path),
     toProject: (entry) => void samples.importSample(entry.path).then(() => places.reload()),
-    toTimeline: (entry) => void soundPlacement.addSoundToTimeline(entry.path),
-    toEditor: (entry) => void soundPlacement.editSound(entry.path),
+    toTimeline: (entry) => void placement.addSoundToTimeline(entry.path),
+    toEditor: (entry) => void placement.editSound(entry.path),
     remove: (sample) => void samples.removeSample(sample),
   };
 

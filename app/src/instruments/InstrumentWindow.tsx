@@ -56,7 +56,7 @@ export function InstrumentWindow() {
         <select class="field !h-6 min-w-0 flex-1 text-xs" aria-label={t().tracks.instrument.track} value={selection.track() ?? ""} onChange={(e) => selection.selectTrack(Number(e.currentTarget.value))}>
           <For each={project.tracks.filter((tr) => tr.instrument)}>{(tr) => <option value={tr.id}>{tr.name}</option>}</For>
         </select>
-        <button class="btn btn-icon !h-6 !w-6 !min-w-6" aria-label={t().common.close} title={t().common.close} onClick={() => session.ui.closeInstrument()}><IconClose size={14} /></button>
+        <button class="btn btn-icon !h-6 !w-6 !min-w-6" aria-label={t().common.close} title={t().common.close} onClick={() => session.shell.closeInstrument()}><IconClose size={14} /></button>
       </div>
       <Show when={track()} fallback={<p class="p-4 text-sm text-muted">{t().tracks.instrument.pickTrack}</p>}>
         {(tr) => (
@@ -65,7 +65,7 @@ export function InstrumentWindow() {
             <div class="flex items-center justify-between gap-2 border-t border-line pt-3">
               <span class="min-w-0 truncate text-xs text-muted">{kind()?.label ?? tr().instrument.kind}</span>
               <Show when={isPluginKind(tr().instrument.kind)}>
-                <button class="btn shrink-0 text-xs" title={t().common.pluginWindowHint} onClick={() => void session.pluginEditor.open({ type: "instrument", track: tr().id })}>
+                <button class="btn shrink-0 text-xs" title={t().common.pluginWindowHint} onClick={() => void session.plugins.editor.open({ type: "instrument", track: tr().id })}>
                   {t().common.pluginWindow}
                 </button>
               </Show>

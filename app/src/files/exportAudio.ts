@@ -4,11 +4,11 @@
 import type { BitDepth, Clip, ExportFormat, ExportOptions, ExportRange, ExportResult, Id, Mp3Bitrate, Normalize } from "../api/types";
 import { t } from "../i18n";
 
-export const EXPORT_FORMATS: readonly ExportFormat[] = ["wav", "flac", "mp3"];
-export const SAMPLE_RATES: readonly number[] = [44_100, 48_000, 96_000];
+export const EXPORT_FORMATS: readonly ExportFormat[] = ["wav", "flac", "mp3"] as const;
+export const SAMPLE_RATES: readonly number[] = [44_100, 48_000, 96_000] as const;
 export const DEFAULT_SAMPLE_RATE = 44_100;
-export const BIT_DEPTHS: readonly BitDepth[] = ["int16", "int24", "float32"];
-export const MP3_BITRATES: readonly Mp3Bitrate[] = [128, 192, 256, 320];
+export const BIT_DEPTHS: readonly BitDepth[] = ["int16", "int24", "float32"] as const;
+export const MP3_BITRATES: readonly Mp3Bitrate[] = [128, 192, 256, 320] as const;
 export const DEFAULT_CEILING_DB = -1;
 /** Tail after the end, s: lets reverb and delay die out. */
 export const DEFAULT_TAIL_SECONDS = 2;
@@ -22,7 +22,7 @@ export const LOUDNESS_CHOICES: readonly { value: LoudnessChoice; lufs?: number }
   { value: "-16", lufs: -16 },
   { value: "-9", lufs: -9 },
   { value: "custom" },
-];
+] as const;
 
 export type RangeChoice = "song" | "loop" | "selection";
 

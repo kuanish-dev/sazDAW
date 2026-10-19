@@ -18,7 +18,8 @@ const SIDECHAIN_PARAM = "sidechain";
 
 export function EffectPanel(props: { node: GraphNode }) {
   const session = useSession();
-  const { graph, pluginEditor } = session;
+  const { graph } = session;
+const { editor } = session.plugins;
   const kind = () => props.node.kind as Extract<GraphNode["kind"], { type: "effect" }>;
   const info = () => effectInfo(session.catalog(), kind().effect);
   const params = () => info()?.params ?? [];
@@ -38,7 +39,7 @@ export function EffectPanel(props: { node: GraphNode }) {
       </div>
       <PresetBar target={{ type: "effect", node: props.node.id }} kind={kind().effect} />
       <Show when={isPluginKind(kind().effect)}>
-        <button class="btn text-xs" title={t().common.pluginWindowHint} onClick={() => void pluginEditor.open({ type: "effect", node: props.node.id })}>
+        <button class="btn text-xs" title={t().common.pluginWindowHint} onClick={() => void editor.open({ type: "effect", node: props.node.id })}>
           {t().common.pluginWindow}
         </button>
       </Show>

@@ -9,9 +9,9 @@ import type { MockWorld } from "./world";
 /** Frames in the master window, as `MASTER_WINDOW_FRAMES` in Rust. */
 export const MASTER_WINDOW_FRAMES = 2048;
 /** Tones as [Hz, amplitude]: an A bass with its harmonics, an A major chord above it, a little high content. */
-const TONES: [number, number][] = [
+const TONES: readonly [number, number][] = [
   [55, 0.22], [110, 0.12], [165, 0.05], [277.2, 0.06], [329.6, 0.05], [440, 0.04], [1760, 0.012], [3520, 0.006],
-];
+] as const;
 const NOISE = 0.015;
 /** The kick: its pitch falls from KICK_TOP_HZ + KICK_LOW_HZ to KICK_LOW_HZ, both decays in seconds. */
 const KICK_LEVEL = 0.5;

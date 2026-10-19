@@ -14,18 +14,18 @@ import { ToolButton } from "../common/Toolbar";
 import type { AutomationTool } from "./patternPointer";
 import { PatternEditor } from "./PatternEditor";
 
-const TOOLS: AutomationTool[] = ["select", "pencil"];
-const TOOL_ICONS: Record<AutomationTool, () => JSX.Element> = { select: () => <IconPointer />, pencil: () => <IconPencil /> };
-const SHAPES: AutomationShape[] = ["sine", "triangle", "saw", "square", "rampUp", "rampDown"];
+const TOOLS: readonly AutomationTool[] = ["select", "pencil"] as const;
+const TOOL_ICONS: Readonly<Record<AutomationTool, () => JSX.Element>> = { select: () => <IconPointer />, pencil: () => <IconPencil /> } as const;
+const SHAPES: readonly AutomationShape[] = ["sine", "triangle", "saw", "square", "rampUp", "rampDown"] as const;
 /** Shape periods: 1/16 to two bars of 4/4 (labels are note fractions). */
-const PERIODS: { ticks: number; label: string }[] = [
+const PERIODS: readonly { ticks: number; label: string }[] = [
   { ticks: BAR_TICKS / 16, label: "1/16" },
   { ticks: BAR_TICKS / 8, label: "1/8" },
   { ticks: BAR_TICKS / 4, label: "1/4" },
   { ticks: BAR_TICKS / 2, label: "1/2" },
   { ticks: BAR_TICKS, label: "1/1" },
   { ticks: BAR_TICKS * 2, label: "2/1" },
-];
+] as const;
 
 /** `snap` is the timeline grid: pattern points snap to it. */
 export function AutomationClipPanel(props: { lane: AutomationLane; clip: AutomationClip; snap: number }) {

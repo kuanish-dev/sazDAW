@@ -14,7 +14,7 @@ export const fractionToFreq = (fraction: number) => FREQ_MIN_HZ * (FREQ_MAX_HZ /
 export const freqX = (view: PlotView, freq: number) => freqToFraction(freq) * view.width;
 
 /** Frequencies of the vertical grid lines. */
-export const FREQ_GRID_HZ = [50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000];
+export const FREQ_GRID_HZ = [50, 100, 200, 500, 1_000, 2_000, 5_000, 10_000] as const;
 
 /** "1k", "200" — short frequency labels for the axis. */
 export const formatHz = (freq: number) => (freq >= 1_000 ? `${Number((freq / 1_000).toFixed(1))}k` : `${Math.round(freq)}`);

@@ -14,16 +14,16 @@ import { t } from "../i18n";
 import { listenToNode } from "./nodeSound";
 
 /** The model square and, beside it after a gap, the live envelopes over the strip of the shaper's gain. */
-const MODEL = { width: 140, height: 140 };
+const MODEL = { width: 140, height: 140 } as const;
 const GAP = 8;
-const LIVE = { width: 160, height: 104 };
-const STRIP = { top: LIVE.height + 6, height: MODEL.height - LIVE.height - 6 };
+const LIVE = { width: 160, height: 104 } as const;
+const STRIP = { top: LIVE.height + 6, height: MODEL.height - LIVE.height - 6 } as const;
 const HISTORY_SECONDS = 2;
 const LIVE_FLOOR_DB = -60;
 /** The gain strip spans this many dB up and down. */
 const STRIP_DB = 12;
-const MODEL_GRID_DB = [12, 0, -12, -24, -36];
-const LIVE_GRID_DB = [-12, -24, -36, -48];
+const MODEL_GRID_DB = [12, 0, -12, -24, -36] as const;
+const LIVE_GRID_DB = [-12, -24, -36, -48] as const;
 
 /** One 5-ms step of the live envelopes (`liveLevels.ts: Reading`). */
 interface EnvelopeReading {

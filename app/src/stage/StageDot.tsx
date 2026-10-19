@@ -29,7 +29,7 @@ export function StageDot(props: {
   const session = useSession();
   /** 0…1 on the meter's scale. */
   const loudness = () => {
-    const level = session.levels[props.node];
+    const level = session.mixer.levels[props.node];
     return level ? peakToMeter(Math.max(level.l.level, level.r.level)) : 0;
   };
   return (

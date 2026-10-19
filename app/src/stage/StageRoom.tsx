@@ -16,7 +16,7 @@ import { carriesChannel, dragDot, droppedChannel, svgPoint } from "./stagePointe
 /** How far a dot rises on screen per metre of height (a gentle bird's-eye perspective). */
 const LIFT = 0.4;
 /** Rings of equal distance from the listener, m: the first is where the direct sound starts to fall. */
-const RINGS = [2, 4, 8, 16];
+const RINGS = [2, 4, 8, 16] as const;
 
 export function StageRoom(props: { scene: StageScene }) {
   let svg: SVGSVGElement | undefined;

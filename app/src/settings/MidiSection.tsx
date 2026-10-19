@@ -11,7 +11,7 @@ import { IconRefresh } from "../common/icons";
 
 export function MidiSection() {
   const session = useSession();
-  const { midiInput: midi, midiLearn } = session;
+  
   const msg = () => t().settings.midi;
   const [devices, setDevices] = createSignal<string[]>([]);
   const [device, setDevice] = createSignal("");
@@ -26,9 +26,9 @@ export function MidiSection() {
   const trackName = (id: Id) => session.project.tracks.find((t) => t.id === id)?.name ?? msg().trackFallback(id);
 
   const refresh = async () => {
-    const found = await midi.devices();
+    const found = await session.midi.input.devices();
     setDevices(found);
-    if (!found.includes(device())) setDevice(midi.connection()?.device ?? found[0] ?? "");
+    if (!found.includes(device())) setDevice(session.midi.input.connection()?.device ?? found[0] ?? "");
   };
   onMount(refresh);
   const label = (target: Parameters<typeof targetLabel>[0]) => targetLabel(target, session.project, session.catalog());
@@ -36,20 +36,20 @@ export function MidiSection() {
   const chooseTrack = (id: Id) => {
     setTrack(id);
     // An already connected keyboard plays the chosen track right away.
-    if (midi.connection()) void midi.setTarget(id);
+    if (session.midi.input.connection()) void session.midi.input.setTarget(id);
   };
 
   return (
     <>
       <SectionTitle title={t().settings.sections.midi} hint={msg().hint} />
       <SettingGroup title={msg().state}>
-        <SettingRow label={midi.connection() ? msg().connected : msg().notConnected}>
-          <Show when={midi.connection()} fallback={<span class="text-sm text-muted">{msg().chooseBelow}</span>}>
+        <SettingRow label={session.midi.input.connection() ? msg().connected : msg().notConnected}>
+          <Show when={session.midi.input.connection()} fallback={<span class="text-sm text-muted">{msg().chooseBelow}</span>}>
             {(c) => (
               <>
                 <span class="h-2 w-2 rounded-full bg-ok" aria-hidden="true" />
                 <span class="text-sm">{msg().connection(c().device, trackName(c().track))}</span>
-                <button class="btn" onClick={() => void midi.disconnect()}>{msg().disconnect}</button>
+                <button class="btn" onClick={() => void session.midi.input.disconnect()}>{msg().disconnect}</button>
               </>
             )}
           </Show>
@@ -71,21 +71,21 @@ export function MidiSection() {
           </select>
         </SettingRow>
         <SettingRow label="">
-          <button class="btn btn-on" disabled={!device() || target() === null} onClick={() => void midi.connect(device(), target()!)}>
-            {midi.connection() ? msg().reconnect : msg().connect}
+          <button class="btn btn-on" disabled={!device() || target() === null} onClick={() => void session.midi.input.connect(device(), target()!)}>
+            {session.midi.input.connection() ? msg().reconnect : msg().connect}
           </button>
         </SettingRow>
       </SettingGroup>
       <SettingGroup title={msg().learn}>
-        <Show when={midiLearn.learning()}>
+        <Show when={session.midi.learn.learning()}>
           {(waiting) => (
             <SettingRow label={msg().waiting(label(waiting()))} hint={msg().waitingHint}>
-              <button class="btn" onClick={() => void midiLearn.cancelLearn()}>{msg().stopWaiting}</button>
+              <button class="btn" onClick={() => void session.midi.learn.cancelLearn()}>{msg().stopWaiting}</button>
             </SettingRow>
           )}
         </Show>
         <For
-          each={midiLearn.mappings()}
+          each={session.midi.learn.mappings()}
           fallback={
             <SettingRow label={msg().noMappings} hint={msg().noMappingsHint}>
               <span />
@@ -94,7 +94,7 @@ export function MidiSection() {
         >
           {(m) => (
             <SettingRow label={label(m.target)} hint={msg().mapping(m.cc, m.channel === undefined ? undefined : m.channel + 1)}>
-              <button class="btn" onClick={() => void midiLearn.removeMapping(m.target)}>{t().common.remove}</button>
+              <button class="btn" onClick={() => void session.midi.learn.removeMapping(m.target)}>{t().common.remove}</button>
             </SettingRow>
           )}
         </For>

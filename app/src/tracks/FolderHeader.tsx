@@ -13,7 +13,7 @@ import { TRACK_COLOR_HEX } from "../common/trackColors";
 
 export function FolderHeader(props: { folder: Folder; tracks: Track[] }) {
   const session = useSession();
-  const { folders } = session;
+  const { folders } = session.tracks;
   const [renaming, setRenaming] = createSignal(false);
   const [menuAt, setMenuAt] = createSignal<MenuPoint | null>(null);
   /** A button is lit when the flag is set on every track of the folder; a click sets or clears it on all. */
@@ -25,7 +25,7 @@ export function FolderHeader(props: { folder: Folder; tracks: Track[] }) {
   return (
     <div
       class="relative flex items-center gap-1 border-t border-line bg-hover px-2 pl-2.5 text-sm"
-      style={{ height: `${session.appearance.rowHeight()}px` }}
+      style={{ height: `${session.settings.appearance.rowHeight()}px` }}
       onContextMenu={(e) => { e.preventDefault(); setMenuAt(menuPoint(e)); }}
     >
       <div class="pointer-events-none absolute inset-y-0 left-0 w-1"

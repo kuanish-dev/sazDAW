@@ -71,13 +71,13 @@ export function eqCurvePath(spec: EqSpec, values: Params, view: PlotView, points
 export type EqHandle = "low_cut" | "low" | "mid" | "high" | "high_cut";
 
 /** Which params a handle moves: frequency always, gain for the tone bands (Q of the mid band goes by wheel, `wheelQ`). */
-export const HANDLE_PARAMS: Record<EqHandle, { freq: EqParam; gain?: EqParam }> = {
+export const HANDLE_PARAMS: Readonly<Record<EqHandle, { freq: EqParam; gain?: EqParam }>> = {
   low_cut: { freq: "low_cut" },
   low: { freq: "low_freq", gain: "low_gain" },
   mid: { freq: "mid_freq", gain: "mid_gain" },
   high: { freq: "high_freq", gain: "high_gain" },
   high_cut: { freq: "high_cut" },
-};
+} as const;
 
 export interface EqHandlePoint {
   id: EqHandle;
@@ -118,5 +118,5 @@ export function wheelQ(spec: EqSpec, values: Params, deltaY: number): ParamUpdat
 }
 
 /** Grid lines of the gain axis (the frequency grid is the axis's own, `FREQ_GRID_HZ`) and their positions. */
-export const EQ_GRID_DB = [-12, -6, 0, 6, 12];
+export const EQ_GRID_DB = [-12, -6, 0, 6, 12] as const;
 export const gridY = (view: PlotView, db: number) => y(view, db);

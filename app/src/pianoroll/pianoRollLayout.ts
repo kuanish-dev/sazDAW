@@ -13,7 +13,7 @@ export const ROWS = HIGH_PITCH - LOW_PITCH + 1;
 export const GRID_HEIGHT = ROWS * ROW_HEIGHT;
 /** Pixels per tick at 100% zoom. */
 export const BASE_PX_PER_TICK = 0.2;
-export const ZOOMS = [0.25, 0.5, 1, 2, 4];
+export const ZOOMS: readonly number[] = [0.25, 0.5, 1, 2, 4] as const;
 
 export const rowY = (pitch: number) => (HIGH_PITCH - pitch) * ROW_HEIGHT;
 export const pitchAtY = (y: number) => clampPitch(HIGH_PITCH - Math.floor(y / ROW_HEIGHT));

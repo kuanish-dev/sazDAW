@@ -5,17 +5,17 @@ import { useSession } from "../session";
 import { SectionTitle, SettingGroup } from "./SettingRow";
 
 export function SoundsSection() {
-  const { soundBrowser } = useSession();
+  const { browser } = useSession().sounds;
   const [sources, setSources] = createSignal<string[]>([]);
 
-  const reload = async () => setSources(await soundBrowser.soundSources());
+  const reload = async () => setSources(await browser.soundSources());
   onMount(reload);
 
   const add = async () => {
-    if (await soundBrowser.addSoundSource()) await reload();
+    if (await browser.addSoundSource()) await reload();
   };
   const remove = async (path: string) => {
-    await soundBrowser.removeSoundSource(path);
+    await browser.removeSoundSource(path);
     await reload();
   };
 

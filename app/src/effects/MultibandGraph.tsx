@@ -24,10 +24,10 @@ import { capture, localPoint } from "../common/pointer";
 import { createBandGains } from "./bandGains";
 import { LiveSpectrum } from "./LiveSpectrum";
 
-const VIEW = { width: 300, height: 150 };
+const VIEW = { width: 300, height: 150 } as const;
 /** How deep the reduction bars reach at full scale (`REDUCTION_SCALE_DB`): the upper part of the graph. */
 const BAR_HEIGHT = VIEW.height * 0.45;
-const CHIP = { width: 11, height: 10, y: VIEW.height - 13 };
+const CHIP = { width: 11, height: 10, y: VIEW.height - 13 } as const;
 
 export function MultibandGraph(props: { node: Id; infos: ParamInfo[]; values: Params; onChange: (name: string, value: number) => void }) {
   let svg!: SVGSVGElement;

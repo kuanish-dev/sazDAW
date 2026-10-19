@@ -1,7 +1,7 @@
 // Take lanes of an audio clip (comping): a thin waveform row per take, with the currently playing parts highlighted.
 // Dragging along a take's row makes that part of the clip play that take (ends snap to the timeline grid, Alt — no snap);
 // clicking the name selects the whole take (the comp is cleared); the close button removes the take from the clip, the sample stays in Samples.
-// All edits go through `session.clips`.
+// All edits go through `session.tracks.clips`.
 import { For, Show, createSignal } from "solid-js";
 import type { Clip, Id } from "../api/types";
 import { compOf, draggedRange, takeRanges, takesOf } from "../tracks/takes";
@@ -26,7 +26,7 @@ interface Drag {
 
 export function TakeLanes(props: { clip: Clip; snap: number }) {
   const session = useSession();
-  const { clips } = session;
+  const { clips } = session.tracks;
   const waves = useClipWaves();
   const [drag, setDrag] = createSignal<Drag | null>(null);
   const takes = () => takesOf(props.clip.content);

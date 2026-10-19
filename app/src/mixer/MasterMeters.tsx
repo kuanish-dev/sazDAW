@@ -26,7 +26,7 @@ const SCOPE_RADIUS = SCOPE_SIZE / 2 - 12;
 
 export function MasterMeters() {
   const session = useSession();
-  const { master } = session;
+  const { master } = session.mixer;
   const [reading, setReading] = createSignal<MasterReading | null>(null);
   const msg = () => t().mixer.meters;
   const mono = () => session.tick().mono;

@@ -23,7 +23,7 @@ export const GROOVE_PRESETS: readonly { label: () => string; template: GrooveTem
   ...[10, 20, 40].map((ticks) => ({ label: () => t().noteTools.grooves.laidBack(ticks), template: { type: "laidBack", ticks } as const })),
   ...[10, 20, 40].map((ticks) => ({ label: () => t().noteTools.grooves.pushed(ticks), template: { type: "pushed", ticks } as const })),
   ...[115, 130].map((percent) => ({ label: () => t().noteTools.grooves.accent(percent), template: { type: "accent", percent } as const })),
-];
+] as const;
 
 /** How much later the second note of a `pair`-tick pair is at swing `percent`, to the tick. */
 const swingShift = (pair: number, percent: number) => Math.floor((pair * (percent - 50) + 50) / 100);

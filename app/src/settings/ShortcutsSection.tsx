@@ -11,14 +11,14 @@ import { GRAPH_KEYS_HELP } from "../graph/GraphCanvas";
 import { PIANO_ROLL_KEYS_HELP } from "../pianoroll/editing";
 import { SectionTitle, SettingGroup } from "./SettingRow";
 
-const GROUPS: { id: keyof Messages["shortcuts"]["groups"]; keys: () => readonly ShortcutHelp[] }[] = [
+const GROUPS: readonly { id: keyof Messages["shortcuts"]["groups"]; keys: () => readonly ShortcutHelp[] }[] = [
   { id: "global", keys: globalKeysHelp },
   { id: "clips", keys: clipKeysHelp },
   { id: "pianoRoll", keys: () => PIANO_ROLL_KEYS_HELP },
   { id: "keyboardPiano", keys: keyboardPianoHelp },
   { id: "graph", keys: () => GRAPH_KEYS_HELP },
   { id: "pattern", keys: () => PATTERN_KEYS_HELP },
-];
+] as const;
 
 export function ShortcutsSection() {
   return (

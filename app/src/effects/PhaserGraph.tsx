@@ -12,11 +12,11 @@ import { t } from "../i18n";
 import { LiveSpectrum } from "./LiveSpectrum";
 import { listenToNode } from "./nodeSound";
 
-const VIEW = { width: 300, height: 140 };
-const CHANNELS: { channel: Channel; color: string; opacity: number }[] = [
+const VIEW = { width: 300, height: 140 } as const;
+const CHANNELS: readonly { channel: Channel; color: string; opacity: number }[] = [
   { channel: 0, color: "var(--color-accent)", opacity: 1 },
   { channel: 1, color: "var(--color-blue)", opacity: 0.7 },
-];
+] as const;
 /** The dots' level scale, dB: quieter is dark. */
 const GLOW_FLOOR_DB = -48;
 const GLOW_RISE_SECONDS = 0.03;

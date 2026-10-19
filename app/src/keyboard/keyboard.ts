@@ -10,14 +10,14 @@
 import { t } from "../i18n";
 import { codeLabel, type ShortcutHelp } from "../common/shortcuts";
 
-const WHITE_OFFSETS = [0, 2, 4, 5, 7, 9, 11];
+const WHITE_OFFSETS = [0, 2, 4, 5, 7, 9, 11] as const;
 
-const LOWER_WHITE = ["KeyZ", "KeyX", "KeyC", "KeyV", "KeyB", "KeyN", "KeyM", "Comma", "Period", "Slash"];
-const UPPER_WHITE = ["KeyQ", "KeyW", "KeyE", "KeyR", "KeyT", "KeyY", "KeyU", "KeyI", "KeyO", "KeyP"];
+const LOWER_WHITE: readonly string[] = ["KeyZ", "KeyX", "KeyC", "KeyV", "KeyB", "KeyN", "KeyM", "Comma", "Period", "Slash"] as const;
+const UPPER_WHITE: readonly string[] = ["KeyQ", "KeyW", "KeyE", "KeyR", "KeyT", "KeyY", "KeyU", "KeyI", "KeyO", "KeyP"] as const;
 
 /** Black key semitones from the start of the row: C#, D#, F#, G#, A#, C#', D#'. */
-const LOWER_BLACK: Record<string, number> = { KeyS: 1, KeyD: 3, KeyG: 6, KeyH: 8, KeyJ: 10, KeyL: 13, Semicolon: 15 };
-const UPPER_BLACK: Record<string, number> = { Digit2: 1, Digit3: 3, Digit5: 6, Digit6: 8, Digit7: 10, Digit9: 13, Digit0: 15 };
+const LOWER_BLACK: Readonly<Record<string, number>> = { KeyS: 1, KeyD: 3, KeyG: 6, KeyH: 8, KeyJ: 10, KeyL: 13, Semicolon: 15 } as const;
+const UPPER_BLACK: Readonly<Record<string, number>> = { Digit2: 1, Digit3: 3, Digit5: 6, Digit6: 8, Digit7: 10, Digit9: 13, Digit0: 15 } as const;
 
 function whiteSemitone(index: number): number {
   return WHITE_OFFSETS[index % 7]! + 12 * Math.floor(index / 7);

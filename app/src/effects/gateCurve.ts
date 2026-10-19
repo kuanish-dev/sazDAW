@@ -1,4 +1,4 @@
-// The gate's static transfer curve for its graph (`dynamicsGraph.ts`) and whether it is open now. MIRRORS `Gate` in
+// The gate's static transfer curve for its graph (`dynamicsCurves.ts`) and whether it is open now. MIRRORS `Gate` in
 // `crates/daw-effects/src/gate.rs` (opens at the threshold, closes `HYSTERESIS_DB` below it, a closed gate lowers the
 // sound by the depth `range`): a change there must be repeated here.
 import type { ParamInfo, Params } from "../api/types";

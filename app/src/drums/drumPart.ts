@@ -3,7 +3,7 @@ import type { DrumPartRequest, DrumPattern, LaneAssignment, LaneTarget, PatternR
 import { t } from "../i18n";
 
 /** Pattern roles in display order; their names are `t().drums.roles`. */
-export const ROLES: PatternRole[] = ["groove", "fill", "break", "intro", "ending"];
+export const ROLES: readonly PatternRole[] = ["groove", "fill", "break", "intro", "ending"] as const;
 
 /** Drum name for grid labels and new track names; `lane` is an instrument kind id. */
 export const laneLabel = (lane: string): string => t().drums.lanes[lane] ?? lane;

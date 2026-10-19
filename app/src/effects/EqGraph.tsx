@@ -10,9 +10,9 @@ import { t } from "../i18n";
 import { capture, localPoint } from "../common/pointer";
 import { LiveSpectrum } from "./LiveSpectrum";
 
-const VIEW = { width: 300, height: 140 };
+const VIEW = { width: 300, height: 140 } as const;
 
-const LABELS: Record<EqHandle, string> = { low_cut: "LC", low: "L", mid: "M", high: "H", high_cut: "HC" };
+const LABELS: Readonly<Record<EqHandle, string>> = { low_cut: "LC", low: "L", mid: "M", high: "H", high_cut: "HC" } as const;
 
 export function EqGraph(props: { node: Id; infos: ParamInfo[]; values: Params; caption?: string; onChange: (name: string, value: number) => void }) {
   let svg!: SVGSVGElement;

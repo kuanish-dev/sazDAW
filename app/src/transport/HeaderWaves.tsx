@@ -1,6 +1,6 @@
 // Sound-reactive waves in the transport bar, in the free space between the metronome and undo: the welcome screen's
 // waveforms (`common/waves.ts`) drift calmly in silence and swell with the master's level — taller, brighter, more
-// rippled, trembling and faster as the sound gets louder. The level is the master meter's peak (`session.levels`, from
+// rippled, trembling and faster as the sound gets louder. The level is the master meter's peak (`session.mixer.levels`, from
 // the `tick` stream, so nothing new is polled), followed up fast and down slowly so the hits pulse. A frame is four short
 // lines on a small canvas; with the system's "reduce motion" setting it draws one still frame.
 import { createMemo, onCleanup, onMount } from "solid-js";
@@ -44,7 +44,7 @@ export function HeaderWaves() {
   let energy = 0;
 
   const peak = () => {
-    const master = session.levels[MASTER_NODE];
+    const master = session.mixer.levels[MASTER_NODE];
     return master ? Math.max(master.l.level, master.r.level) : 0;
   };
 

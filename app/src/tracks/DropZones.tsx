@@ -23,13 +23,13 @@ export function DropGhostView(props: { ghost: DropGhost | null }) {
   );
 }
 
-const ZONES: readonly NewTrackKind[] = ["instrument", "block"];
+const ZONES: readonly NewTrackKind[] = ["instrument", "block"] as const;
 
 /** The zones sit at the left edge of the visible area. */
 export function DropZones(props: { onDrop: (source: SampleSource, kind: NewTrackKind) => void }) {
   const session = useSession();
   return (
-    <div class="sticky left-0 flex w-[min(100%,44rem)] gap-2 p-2" style={{ height: `${session.appearance.rowHeight()}px` }}>
+    <div class="sticky left-0 flex w-[min(100%,44rem)] gap-2 p-2" style={{ height: `${session.settings.appearance.rowHeight()}px` }}>
       {ZONES.map((kind) => {
         const [over, setOver] = createSignal(false);
         return (

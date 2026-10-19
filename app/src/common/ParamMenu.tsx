@@ -10,12 +10,13 @@ import { ContextMenu, MenuItem, MenuLabel, type MenuPoint, menuPoint } from "./C
 
 export function ParamMenu(props: { target: ParamTarget; children: JSX.Element }) {
   const session = useSession();
-  const { midiLearn: midi, automation } = session;
+  const { automation } = session;
+
   const [menu, setMenu] = createSignal<MenuPoint | null>(null);
-  const mapping = () => midi.mappings().find((m) => sameTarget(m.target, props.target));
+  const mapping = () => session.midi.learn.mappings().find((m) => sameTarget(m.target, props.target));
   const lane = () => session.project.automation.find((l) => sameTarget(l.target, props.target));
   const waiting = () => {
-    const target = midi.learning();
+    const target = session.midi.learn.learning();
     return target !== null && sameTarget(target, props.target);
   };
   const label = () => targetLabel(props.target, session.project, session.catalog());
@@ -45,14 +46,14 @@ export function ParamMenu(props: { target: ParamTarget; children: JSX.Element })
             <MenuLabel>{msg().midi.title}</MenuLabel>
             <Show
               when={!waiting()}
-              fallback={<MenuItem onClose={close} onPick={() => void midi.cancelLearn()}>{msg().midi.stopWaiting}</MenuItem>}
+              fallback={<MenuItem onClose={close} onPick={() => void session.midi.learn.cancelLearn()}>{msg().midi.stopWaiting}</MenuItem>}
             >
-              <MenuItem onClose={close} onPick={() => void midi.learn(props.target, label())}>
+              <MenuItem onClose={close} onPick={() => void session.midi.learn.learn(props.target, label())}>
                 {mapping() ? msg().midi.assignOther : msg().midi.assign}
               </MenuItem>
             </Show>
             <Show when={mapping()}>
-              {(m) => <MenuItem onClose={close} onPick={() => void midi.removeMapping(props.target)}>{msg().midi.remove(m().cc)}</MenuItem>}
+              {(m) => <MenuItem onClose={close} onPick={() => void session.midi.learn.removeMapping(props.target)}>{msg().midi.remove(m().cc)}</MenuItem>}
             </Show>
           </ContextMenu>
         )}

@@ -1,7 +1,7 @@
 // Panel of the selected audio clip: "Warp to tempo" (the sound's source tempo), pitch in semitones without changing length,
 // and takes: recording over a clip keeps earlier recordings as takes (position, length, warp and fades are shared); which
 // take plays on each part of the clip (the comp) is chosen in the take lanes `TakeLanes`.
-// Clip volume and fades are on the panel above the timeline. All edits go through `session.clips`.
+// Clip volume and fades are on the panel above the timeline. All edits go through `session.tracks.clips`.
 import { Show } from "solid-js";
 import type { Clip, Track } from "../api/types";
 import { clipLabel } from "../tracks/clipRules";
@@ -15,7 +15,7 @@ import { TakeLanes } from "./TakeLanes";
 /** `snap` is the timeline snap grid (ticks): take parts are chosen on it. */
 export function AudioClipPanel(props: { clip: Clip; track: Track | undefined; snap: number }) {
   const session = useSession();
-  const { clips } = session;
+  const { clips } = session.tracks;
   const warp = () => props.clip.warp;
   /** Tempo at the clip start: if the tempo changes inside the clip, the sound stretches along the clip (as in the backend). */
   const projectTempo = () => tempoAt(session.project.tempoMap, props.clip.startTick);

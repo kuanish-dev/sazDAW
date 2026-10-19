@@ -16,18 +16,18 @@ import { ToolbarDivider } from "../common/Toolbar";
 import { BeatLights, createBeat } from "./BeatLights";
 import { HeaderWaves } from "./HeaderWaves";
 import { HistoryButton } from "../history/HistoryPanel";
-import { ProjectMenu } from "../project/ProjectMenu";
+import { ProjectMenu } from "../files/ProjectMenu";
 
 /** Red "recording audio" badge with a Stop button: visible on every view. */
 function AudioRecordBadge() {
   const session = useSession();
   return (
-    <Show when={session.recordingStatus()}>
+    <Show when={session.recording.recordingStatus()}>
       {(s) => (
         <div class="flex h-7 shrink-0 items-center gap-2 rounded bg-danger pl-2 pr-0.5 text-xs font-medium text-white" role="status">
           <IconRecord size={12} class="animate-pulse" />
           <span>{t().project.transport.audioRecording} <span class="font-mono">{formatDuration(s().seconds)}</span></span>
-          <button class="btn !h-6 !bg-black/25 !px-2 text-xs !text-white hover:!bg-black/40" onClick={() => void session.audioRecord.stop()}>
+          <button class="btn !h-6 !bg-black/25 !px-2 text-xs !text-white hover:!bg-black/40" onClick={() => void session.recording.audioRecord.stop()}>
             {t().project.transport.stop}
           </button>
         </div>
@@ -42,7 +42,7 @@ function MonoBadge() {
   const session = useSession();
   return (
     <Show when={session.tick().mono}>
-      <button class="btn btn-on !h-7 shrink-0 text-xs font-semibold" title={t().mixer.meters.monoOnHint} onClick={() => void session.master.setMono(false)}>
+      <button class="btn btn-on !h-7 shrink-0 text-xs font-semibold" title={t().mixer.meters.monoOnHint} onClick={() => void session.mixer.master.setMono(false)}>
         {t().mixer.meters.mono}
       </button>
     </Show>
@@ -51,7 +51,9 @@ function MonoBadge() {
 
 export function TransportBar() {
   const session = useSession();
-  const { transport, tempo, history, noteRecord } = session;
+  const { transport, history } = session;
+const { tempo } = session.transport;
+const { noteRecord } = session.recording;
   const tick = session.tick;
   const status = session.status;
 
@@ -63,7 +65,7 @@ export function TransportBar() {
   const beat = createBeat();
   const [menuOpen, setMenuOpen] = createSignal(false);
   const record = () => tick().record;
-  const audioTake = () => session.recordingStatus();
+  const audioTake = () => session.recording.recordingStatus();
   const recordLit = () => record().armed || audioTake() !== null;
 
   const msg = () => t().project.transport;
@@ -97,7 +99,7 @@ export function TransportBar() {
           aria-pressed={record().armed}
           title={msg().recordHint}
           aria-label={msg().record}
-          onClick={() => void session.audioRecord.pressRecord(record().armed)}
+          onClick={() => void session.recording.audioRecord.pressRecord(record().armed)}
         >
           <IconRecord />
           <Show when={record().capturing}><span class="text-xs">{msg().recordingNotes(record().takeNotes)}</span></Show>

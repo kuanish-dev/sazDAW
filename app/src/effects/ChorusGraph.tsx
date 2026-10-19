@@ -10,12 +10,12 @@ import { dbFraction, toDb } from "../common/plot";
 import { t } from "../i18n";
 import { listenToNode } from "./nodeSound";
 
-const VIEW = { width: 300, height: 110 };
-const GRID_MS = [10, 20, 30, 40];
-const VOICES: { voice: Voice; color: string }[] = [
+const VIEW = { width: 300, height: 110 } as const;
+const GRID_MS = [10, 20, 30, 40] as const;
+const VOICES: readonly { voice: Voice; color: string }[] = [
   { voice: 0, color: "var(--color-accent)" },
   { voice: 1, color: "var(--color-blue)" },
-];
+] as const;
 /** The glow's level scale, dB: quieter is dark. */
 const GLOW_FLOOR_DB = -48;
 const GLOW_RISE_SECONDS = 0.03;

@@ -9,7 +9,7 @@ export const MAX_HUMANIZE_TICKS = PPQ;
 export const MAX_HUMANIZE_VELOCITY = 126;
 
 /** Scale degrees in semitones from the root (`Scale::intervals`). */
-const INTERVALS: Record<Scale, readonly number[]> = {
+const INTERVALS: Readonly<Record<Scale, readonly number[]>> = {
   major: [0, 2, 4, 5, 7, 9, 11],
   minor: [0, 2, 3, 5, 7, 8, 10],
   dorian: [0, 2, 3, 5, 7, 9, 10],
@@ -20,12 +20,12 @@ const INTERVALS: Record<Scale, readonly number[]> = {
   pentatonicMajor: [0, 2, 4, 7, 9],
   pentatonicMinor: [0, 3, 5, 7, 10],
   chromatic: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-};
+} as const;
 
 /** Scales in display order; labels are `t().noteTools.scales[scale]`. */
 export const SCALES: readonly Scale[] = [
   "major", "minor", "dorian", "phrygian", "lydian", "mixolydian", "harmonicMinor", "pentatonicMajor", "pentatonicMinor", "chromatic",
-];
+] as const;
 
 /** The chosen scale: root (0 = C) and scale; used by "Fit to scale" and piano roll row highlighting. */
 export interface ScaleChoice {

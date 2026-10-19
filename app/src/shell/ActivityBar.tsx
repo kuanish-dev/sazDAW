@@ -5,24 +5,24 @@ import { t } from "../i18n";
 import { type Tab, useSession } from "../session";
 import { IconGear, IconGraph, IconMixer, IconStage, IconTracks, IconWave, type IconProps } from "../common/icons";
 
-const VIEWS: { tab: Tab; icon: (p: IconProps) => JSX.Element }[] = [
+const VIEWS: readonly { tab: Tab; icon: (p: IconProps) => JSX.Element }[] = [
   { tab: "tracks", icon: IconTracks },
   { tab: "graph", icon: IconGraph },
   { tab: "mixer", icon: IconMixer },
   { tab: "stage", icon: IconStage },
   { tab: "samples", icon: IconWave },
-];
+] as const;
 
 function ActivityButton(props: { tab: Tab; icon: (p: IconProps) => JSX.Element }) {
   const session = useSession();
-  const active = () => session.ui.tab() === props.tab;
+  const active = () => session.shell.tab() === props.tab;
   const name = () => t().shell.tabs[props.tab];
   return (
     <button
       class="group relative flex h-12 w-12 cursor-pointer items-center justify-center"
       classList={{ "text-text": active(), "text-muted hover:text-text": !active() }}
       aria-label={name()} aria-current={active() ? "page" : undefined}
-      onClick={() => session.ui.showTab(props.tab)}
+      onClick={() => session.shell.showTab(props.tab)}
     >
       {/* The accent bar grows from the middle when the view becomes active. */}
       <span class="absolute inset-y-0 left-0 w-0.5 bg-accent transition-[scale] duration-200 ease-out" classList={{ "scale-y-100": active(), "scale-y-0": !active() }} />

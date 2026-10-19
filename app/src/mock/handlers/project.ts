@@ -1,6 +1,6 @@
 // Project: file, folder, recent projects, autosave, export, undo and redo.
 import type { HistorySteps, Project, ProjectChanges, Status } from "../../api/types";
-import { pathForFormat } from "../../project/exportAudio";
+import { pathForFormat } from "../../files/exportAudio";
 import { t } from "../../i18n";
 import { emptyProject } from "../demo";
 import { fail } from "../errors";

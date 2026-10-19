@@ -7,7 +7,7 @@ import { clamp } from "../common/math";
 export const LOUDNESS_FLOOR = -54;
 export const LOUDNESS_TOP = 0;
 /** Reference marks on the loudness bars: the usual streaming target and the EBU R128 broadcast target. */
-export const LOUDNESS_TARGETS = [-14, -23];
+export const LOUDNESS_TARGETS = [-14, -23] as const;
 /** Above this true peak the master leaves no headroom for a lossy codec: the usual ceiling for streaming, dBTP. */
 export const TRUE_PEAK_CEILING = -1;
 /** How much larger than full scale the vectorscope draws a quiet master at most: a whisper does not fill the picture. */

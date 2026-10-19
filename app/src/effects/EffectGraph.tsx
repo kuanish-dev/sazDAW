@@ -29,19 +29,19 @@ import { TransientGraph } from "./TransientGraph";
 type Curve<T> = (infos: ParamInfo[], values: Params) => T | null;
 
 /** The dynamics effects: their static curve and the graph's name and hint. */
-const DYNAMICS: Record<string, { curve: Curve<DynamicsCurve>; label: () => string; hint: () => string }> = {
+const DYNAMICS: Readonly<Record<string, { curve: Curve<DynamicsCurve>; label: () => string; hint: () => string }>> = {
   compressor: { curve: compressorCurve, label: () => t().graph.effect.compressorGraph, hint: () => t().graph.effect.compressorHint },
   limiter: { curve: limiterCurve, label: () => t().graph.effect.limiterGraph, hint: () => t().graph.effect.limiterHint },
   gate: { curve: gateCurve, label: () => t().graph.effect.gateGraph, hint: () => t().graph.effect.gateHint },
-};
+} as const;
 
 /** The waveshapers: their transfer curve. */
-const SHAPERS: Record<string, Curve<Transfer>> = {
+const SHAPERS: Readonly<Record<string, Curve<Transfer>>> = {
   distortion: distortionTransfer,
   saturator: saturatorTransfer,
   tape: tapeTransfer,
   crusher: crusherTransfer,
-};
+} as const;
 
 /** The kinds with a graph of their own (the rest). */
 const OWN_GRAPHS = new Set(["eq", "linear_eq", "filter", "delay", "chorus", "phaser", "reverb", "multiband", "dynamic_eq", "de_esser", "transient"]);
@@ -73,7 +73,7 @@ export function EffectGraph(props: { node: GraphNode }) {
         {(curve) => (
           <DynamicsGraph
             node={props.node.id} curve={curve()} label={dynamics()?.label() ?? ""} hint={dynamics()?.hint() ?? ""}
-            reduction={session.reductions[props.node.id] ?? 0}
+            reduction={session.mixer.reductions[props.node.id] ?? 0}
           />
         )}
       </Match>
@@ -100,7 +100,7 @@ export function EffectGraph(props: { node: GraphNode }) {
       </Match>
       <Match when={kind().effect === "de_esser"}>
         <DeEsserGraph
-          node={props.node.id} infos={params()} values={kind().params} reduction={session.reductions[props.node.id] ?? 0} onChange={setParam}
+          node={props.node.id} infos={params()} values={kind().params} reduction={session.mixer.reductions[props.node.id] ?? 0} onChange={setParam}
         />
       </Match>
       <Match when={kind().effect === "transient"}>

@@ -12,7 +12,7 @@ import { Inspector } from "./Inspector";
 import { createGraphPointer, type Wire } from "./pointer";
 import { SignalPath } from "./SignalPath";
 
-const HOME: View = { x: 0, y: 0, zoom: 1 };
+const HOME: Readonly<View> = { x: 0, y: 0, zoom: 1 } as const;
 /** A new node is placed slightly above the middle of the visible area. */
 const NEW_NODE_LIFT = 30;
 

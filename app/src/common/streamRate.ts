@@ -10,7 +10,7 @@ export function createStreamRate(): Accessor<number> {
   const session = useSession();
   const [rate, setRate] = createSignal(DEFAULT_SAMPLE_RATE);
   onMount(async () => {
-    const status = await session.audio.status();
+    const status = await session.settings.audio.status();
     if (status && status.sampleRate > 0) setRate(status.sampleRate);
   });
   return rate;

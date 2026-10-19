@@ -3,7 +3,7 @@
 import type { EditorTarget } from "../api/types";
 import { t } from "../i18n";
 import type { Core } from "../core/core";
-import { saveUnderName } from "../project/namedSave";
+import { saveUnderName } from "../files/namedSave";
 
 export interface PresetsActions {
   /** Preset names of a kind; on error, an empty list and a notification. */

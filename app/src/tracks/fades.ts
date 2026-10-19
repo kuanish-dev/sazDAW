@@ -4,7 +4,7 @@ import type { Clip, FadeShape } from "../api/types";
 import { clamp } from "../common/math";
 
 /** Shapes in menu order. */
-export const FADE_SHAPES: readonly FadeShape[] = ["linear", "equalPower", "sCurve", "exponential"];
+export const FADE_SHAPES: readonly FadeShape[] = ["linear", "equalPower", "sCurve", "exponential"] as const;
 
 /** Steepness of the exponential shape: `(e^(k·x) − 1) / (e^k − 1)`. */
 const EXPONENTIAL_STEEPNESS = 5;

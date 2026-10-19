@@ -7,7 +7,8 @@ import { Modal } from "../common/Modal";
 import { IconClose } from "../common/icons";
 
 export function TemplatesDialog(props: { onClose: () => void; canSave: boolean }) {
-  const { templates, files } = useSession();
+  const { files } = useSession();
+const { templates } = useSession().files;
   const [names, { refetch }] = createResource(() => templates.list());
   const [name, setName] = createSignal("");
 

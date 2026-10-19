@@ -8,13 +8,13 @@ import type { RpcClient } from "../api/rpc";
 import { type Catalog, DEFAULT_ROOM, type Project, type Status } from "../api/types";
 import { applyChanges } from "./projectChanges";
 
-const EMPTY_PROJECT: Project = {
+const EMPTY_PROJECT: Readonly<Project> = {
   name: "", tempoMap: { tempos: [{ tick: 0, bpm: 120, ramp: false }], signatures: [{ tick: 0, signature: { numerator: 4, denominator: 4 } }] },
   tracks: [], clips: [], loopRegion: null,
   graph: { nodes: [], edges: [] }, room: { ...DEFAULT_ROOM }, automation: [], samples: [], markers: [], folders: [], nextId: 1,
-};
+} as const;
 
-const EMPTY_STATUS: Status = { name: "", dirty: false, canUndo: false, canRedo: false, undoLabel: null, revision: 0, path: null, folder: null };
+const EMPTY_STATUS: Readonly<Status> = { name: "", dirty: false, canUndo: false, canRedo: false, undoLabel: null, revision: 0, path: null, folder: null } as const;
 
 export interface ProjectSyncDeps {
   api: DawApi;

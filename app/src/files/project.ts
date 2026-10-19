@@ -1,5 +1,5 @@
 // Project file actions: create, open, save, restore autosave, and the warnings opening a project leaves.
-// Rendering the song to audio is `project/audioExport.ts`.
+// Rendering the song to audio is `files/audioExport.ts`.
 import { projectFilter } from "../api/dialogs";
 import type { RecentProject } from "../api/types";
 import { joinPath, parentDir, projectFileFor, withExtension } from "../common/format";

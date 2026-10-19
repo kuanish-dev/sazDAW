@@ -20,7 +20,7 @@ const MAX_GAIN_PERCENT = MAX_CLIP_GAIN * 100;
 /** Clip fades: up to the clip length, in sixty-fourth steps (ticks); the handles on the clip set them too. */
 const FADE_STEP_TICKS = STEP_TICKS / 4;
 const AUDIO_TRACK = "__audio__";
-const WRITE_MODES: AutomationWriteMode[] = ["off", "touch", "latch"];
+const WRITE_MODES: readonly AutomationWriteMode[] = ["off", "touch", "latch"] as const;
 
 /** Toolbar state shared with the timeline and automation: tool, grid, zoom. */
 export interface ToolbarState {
@@ -34,7 +34,8 @@ export interface ToolbarState {
 
 export function TimelineToolbar(props: { state: ToolbarState }) {
   const session = useSession();
-  const { clips, transport } = session;
+  const { transport } = session;
+const { clips } = session.tracks;
   const s = props.state;
   const [drumsOpen, setDrumsOpen] = createSignal(false);
   const [chordsOpen, setChordsOpen] = createSignal(false);
@@ -68,7 +69,7 @@ export function TimelineToolbar(props: { state: ToolbarState }) {
       />
       <ToolButton icon={<IconDrum />} label={tb().drumPart} title={tb().drumPartHint} text onClick={() => setDrumsOpen(true)} />
       <ToolButton icon={<IconGuitar />} label={tb().chordPart} title={tb().chordPartHint} text onClick={() => setChordsOpen(true)} />
-      <ToolButton icon={<IconFlag />} label={tb().marker} title={tb().markerHint} text onClick={() => void session.markers.addAtPlayhead()} />
+      <ToolButton icon={<IconFlag />} label={tb().marker} title={tb().markerHint} text onClick={() => void session.tracks.markers.addAtPlayhead()} />
       <Show when={drumsOpen()}><DrumPartDialog onClose={() => setDrumsOpen(false)} /></Show>
       <Show when={chordsOpen()}><ChordPartDialog onClose={() => setChordsOpen(false)} /></Show>
       <ToolbarDivider />

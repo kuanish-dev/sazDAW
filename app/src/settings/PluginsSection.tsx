@@ -6,7 +6,7 @@ import { t } from "../i18n";
 import { useSession } from "../session";
 import { SectionTitle, SettingGroup, Toggle } from "./SettingRow";
 
-const TYPE_FILTERS: readonly (PluginType | "all")[] = ["all", "effect", "instrument"];
+const TYPE_FILTERS: readonly (PluginType | "all")[] = ["all", "effect", "instrument"] as const;
 
 function ScanReportView() {
   const { plugins } = useSession();

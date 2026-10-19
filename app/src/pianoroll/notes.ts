@@ -14,7 +14,7 @@ import { notesAtStep } from "./steps";
 import { clipById, trackById } from "../tracks/trackRules";
 import { t } from "../i18n";
 import type { Core } from "../core/core";
-import { homeDir } from "../project/paths";
+import { homeDir } from "../files/paths";
 
 export interface NotesActions {
   /** Step input: add or remove the step's notes in the clip at pitch `pitch` (defaults to the track's pitch). */

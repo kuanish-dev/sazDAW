@@ -34,7 +34,8 @@ const PULSE_PX = 72;
 /** `row` — the header's row from the top (with folders); reordering counts from it. */
 export function TrackHeader(props: { track: Track; row: number; reorder: ReturnType<typeof createTrackReorder> }) {
   const session = useSession();
-  const { tracks, soundPlacement } = session;
+  const { tracks } = session;
+const { placement } = session.sounds;
   const [renaming, setRenaming] = createSignal(false);
   /** Track index in the project: used by Alt+arrow moves and the default color. */
   const index = () => session.project.tracks.findIndex((track) => track.id === props.track.id);
@@ -45,7 +46,7 @@ export function TrackHeader(props: { track: Track; row: number; reorder: ReturnT
   const source = () => sourceOfTrack(session.project.graph, props.track.id);
   /** Last known node: when the track is deleted, children don't crash on a stale value. */
   const lastSource = sticky(source);
-  const height = () => trackHeight(props.track, session.appearance.rowHeight());
+  const height = () => trackHeight(props.track, session.settings.appearance.rowHeight());
   const compact = () => height() < STRIP_MIN_HEIGHT;
   /** The source node's channel, for mute/solo in the name line of a compact row. */
   const channel = () => {
@@ -57,14 +58,14 @@ export function TrackHeader(props: { track: Track; row: number; reorder: ReturnT
   /** A gradient of the track color from the left edge, as strong as the track is loud. A background, so it stays under the controls. */
   const pulse = () => {
     const node = source();
-    const level = node ? session.levels[node.id] : undefined;
+    const level = node ? session.mixer.levels[node.id] : undefined;
     const strength = level ? peakToMeter(Math.max(level.l.level, level.r.level)) : 0;
     const shade = color();
     if (strength === 0 || !shade) return undefined;
     const tint = `color-mix(in srgb, ${shade} ${Math.round(strength * PULSE_PERCENT)}%, transparent)`;
     return `linear-gradient(to right, ${tint}, transparent ${PULSE_PX}px)`;
   };
-  const resize = createTrackResize({ track: () => props.track, fallback: session.appearance.rowHeight, actions: tracks });
+  const resize = createTrackResize({ track: () => props.track, fallback: session.settings.appearance.rowHeight, actions: tracks });
   const monitorMode = () => {
     const kind = source()?.kind;
     return kind?.type === "audio" ? kind.monitor : null;
@@ -87,7 +88,7 @@ export function TrackHeader(props: { track: Track; row: number; reorder: ReturnT
       ref={(el) => registerSampleDrop(el, {
         over: () => setDropOver(props.track.instrument !== null),
         leave: () => setDropOver(false),
-        drop: (dropped) => { setDropOver(false); if (props.track.instrument) void soundPlacement.dropSample(dropped, props.track.id, 0); },
+        drop: (dropped) => { setDropOver(false); if (props.track.instrument) void placement.dropSample(dropped, props.track.id, 0); },
       })}
       style={{ height: `${height()}px`, "background-image": pulse() }}
       onPointerDown={() => session.selection.selectTrack(props.track.id)}
@@ -116,12 +117,12 @@ export function TrackHeader(props: { track: Track; row: number; reorder: ReturnT
         <Show when={props.track.instrument && chainBadge(props.track.noteEffects)}>
           {(badge) => (
             <button class="shrink-0 rounded-sm bg-accent/20 px-1 text-[10px] font-semibold leading-4 text-accent hover:bg-accent/30" title={t().tracks.header.noteEffectsHint}
-              aria-label={t().tracks.header.noteEffects(badge())} onClick={() => session.ui.openInstrument(props.track.id)}>{badge()}</button>
+              aria-label={t().tracks.header.noteEffects(badge())} onClick={() => session.shell.openInstrument(props.track.id)}>{badge()}</button>
           )}
         </Show>
         <Show when={props.track.instrument}>
           <button class="btn btn-icon !h-6 !w-6 !min-w-6" title={t().tracks.header.instrument} aria-label={t().tracks.header.instrument}
-            onClick={() => session.ui.openInstrument(props.track.id)}><IconSliders size={14} /></button>
+            onClick={() => session.shell.openInstrument(props.track.id)}><IconSliders size={14} /></button>
         </Show>
         <Show when={compact() && channel()} keyed>
           {(c) => <MuteSolo node={c.node} mute={c.mute} solo={c.solo} class="!h-6 !min-w-6 !px-0 text-[10px]" />}

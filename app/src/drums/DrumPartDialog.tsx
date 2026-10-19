@@ -28,7 +28,7 @@ export function DrumPartDialog(props: { onClose: () => void }) {
   const nameOf = (id: string) => patterns().find((p) => p.id === id)?.name ?? id;
   const lanes = createMemo(() => lanesOf(slots(), patterns()));
   const requestFor = (list: PatternSlot[]) =>
-    drumRequest({ startBar: startBar(), slots: list, replace: replace() }, session.drumKit.choices(), patterns(), session.project);
+    drumRequest({ startBar: startBar(), slots: list, replace: replace() }, session.drums.kit.choices(), patterns(), session.project);
   const preview = createLoopPreview(drums);
 
   const build = async () => {

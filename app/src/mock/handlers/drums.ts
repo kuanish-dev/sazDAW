@@ -34,12 +34,12 @@ const PATTERN_DATA = [
     { kick: "X... .... X... ....", snare: ".... X... .... X...", hat: "x.x. x.x. x.x. x.x.", crash: "X... .... .... ...." }),
   pattern("ending_crash_stop", "endings", "ending", 1,
     { kick: "X... .... .... ....", snare: "X... .... .... ....", crash: "X... .... .... ...." }),
-];
+] as const;
 
 const mockPatterns = (): DrumPattern[] => PATTERN_DATA.map((p) => ({ ...p, ...t().mockEdits.drums.patterns[p.id] }));
 
 /** Hit velocity by grid symbol: `X` accent, `x` normal, `o` ghost. */
-const VELOCITY: Record<string, number> = { X: 115, x: 92, o: 52 };
+const VELOCITY: Readonly<Record<string, number>> = { X: 115, x: 92, o: 52 } as const;
 
 const gmPitch = (lane: string) => GM_DRUM_PITCHES[lane] ?? MIDDLE_C;
 

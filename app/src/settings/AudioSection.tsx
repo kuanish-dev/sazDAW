@@ -29,7 +29,7 @@ function DeviceSelect(props: { label: string; devices: AudioDevice[]; value: str
 }
 
 export function AudioSection() {
-  const { audio } = useSession();
+  const { audio } = useSession().settings;
   const [devices, setDevices] = createSignal<AudioDevices>({ outputs: [], inputs: [] });
   const [status, setStatus] = createSignal<AudioStatus | null>(null);
   const [form, setForm] = createStore<AudioSettingsForm>({ output: "", input: "", buffer: "", recordLatency: "" });

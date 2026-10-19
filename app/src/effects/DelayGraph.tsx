@@ -12,7 +12,7 @@ import { t } from "../i18n";
 import { useSession } from "../session";
 import { listenToNode } from "./nodeSound";
 
-const VIEW = { width: 300, height: 110 };
+const VIEW = { width: 300, height: 110 } as const;
 /** Room under the bars for the time labels. */
 const BASE = VIEW.height - 12;
 const BAR_WIDTH = 7;

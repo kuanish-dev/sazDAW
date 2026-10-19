@@ -4,19 +4,19 @@ import type { ChordTarget, Id, Project } from "../api/types";
 import { BASS_GUITAR_KIND, ELECTRIC_GUITAR_KIND, GUITAR_KIND, UKULELE_KIND } from "../instruments/strings";
 
 /** Root names by pitch class, spelled as the backend spells them. */
-export const ROOTS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+export const ROOTS = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"] as const;
 /** Chord types as symbol suffixes: the backend's list (`ChordQuality::suffix`), major first. */
-export const QUALITIES = ["", "m", "7", "maj7", "m7", "sus2", "sus4", "dim", "aug"];
+export const QUALITIES: readonly string[] = ["", "m", "7", "maj7", "m7", "sus2", "sus4", "dim", "aug"] as const;
 
 export type KeyMode = "major" | "minor";
 
 export const chordSymbol = (root: number, quality: string): string => `${ROOTS[((root % 12) + 12) % 12]}${quality}`;
 
 /** A key's own triads in scale order: major I ii iii IV V vi vii°, natural minor i ii° III iv v VI VII. */
-const DEGREES: Record<KeyMode, [number, string][]> = {
+const DEGREES: Readonly<Record<KeyMode, [number, string][]>> = {
   major: [[0, ""], [2, "m"], [4, "m"], [5, ""], [7, ""], [9, "m"], [11, "dim"]],
   minor: [[0, "m"], [2, "dim"], [3, ""], [5, "m"], [7, "m"], [8, ""], [10, ""]],
-};
+} as const;
 
 export function keyChords(root: number, mode: KeyMode): string[] {
   return DEGREES[mode].map(([step, quality]) => chordSymbol(root + step, quality));
@@ -74,7 +74,7 @@ export function strumArrows(grid: string): string[] {
 }
 
 /** Kinds a new track for the part is offered with: the strings, which strum or play roots. */
-export const NEW_TRACK_KINDS = [GUITAR_KIND, ELECTRIC_GUITAR_KIND, UKULELE_KIND, BASS_GUITAR_KIND];
+export const NEW_TRACK_KINDS = [GUITAR_KIND, ELECTRIC_GUITAR_KIND, UKULELE_KIND, BASS_GUITAR_KIND] as const;
 
 /** A `<select>` value of a target: `track:<id>` or `new:<kind>`. */
 export const targetChoice = (target: ChordTarget): string => (target.type === "track" ? `track:${target.id}` : `new:${target.kind}`);

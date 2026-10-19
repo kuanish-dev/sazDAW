@@ -12,7 +12,7 @@ import type { ClipMenu as Menu } from "./timelinePointer";
 
 export function ClipMenu(props: { menu: Menu; onClose: () => void }) {
   const session = useSession();
-  const clips = session.clips;
+  const clips = session.tracks.clips;
   const msg = () => t().tracks.clipEdit;
   const close = props.onClose;
   const clip = () => clipById(session.project, props.menu.clip);

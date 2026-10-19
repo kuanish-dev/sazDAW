@@ -12,11 +12,11 @@ import type { TempoMenu as Menu } from "./tempoPointer";
 const SIGNATURES: readonly TimeSignature[] = [
   { numerator: 2, denominator: 4 }, { numerator: 3, denominator: 4 }, { numerator: 4, denominator: 4 }, { numerator: 5, denominator: 4 },
   { numerator: 6, denominator: 8 }, { numerator: 7, denominator: 8 }, { numerator: 9, denominator: 8 }, { numerator: 12, denominator: 8 },
-];
+] as const;
 
 export function TempoMenu(props: { menu: Menu; onClose: () => void }) {
   const session = useSession();
-  const tempo = session.tempo;
+  const tempo = session.transport.tempo;
   const map = () => session.project.tempoMap;
   const bar = (tick: number) => barIndex(map(), tick) + 1;
   const close = props.onClose;

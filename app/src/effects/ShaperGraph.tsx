@@ -12,10 +12,10 @@ import { t } from "../i18n";
 import { listenToNode } from "./nodeSound";
 
 /** The curve square and, beside it after a gap, the waves: one SVG, so both share the height exactly. */
-const SQUARE = { width: 140, height: 140 };
+const SQUARE = { width: 140, height: 140 } as const;
 const GAP = 8;
-const WAVES = { width: 160, height: 140 };
-const GRID = [0.25, 0.5, 0.75];
+const WAVES = { width: 160, height: 140 } as const;
+const GRID = [0.25, 0.5, 0.75] as const;
 /** Below this peak the input counts as silence: the trace keeps its last shape and fades. */
 const QUIET = 0.001;
 /** How fast the live parts appear and fade (time constants, s). */

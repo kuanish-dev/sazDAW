@@ -14,7 +14,7 @@ export type Language = "en" | "ru";
 export const LANGUAGE_CHOICES: readonly { value: Language; label: string }[] = [
   { value: "en", label: "English" },
   { value: "ru", label: "Русский" },
-];
+] as const;
 
 const DICTIONARIES = { en, ru } as const;
 

@@ -11,7 +11,7 @@ export const CONTROLLER_PRESETS: readonly ControllerKind[] = [
   { type: "cc", number: 64 },
   { type: "cc", number: 11 },
   { type: "aftertouch" },
-];
+] as const;
 
 /** Highest regular CC number (120–127 are channel mode messages). */
 export const MAX_CC_NUMBER = 119;

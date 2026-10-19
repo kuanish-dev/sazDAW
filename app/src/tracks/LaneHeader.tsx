@@ -22,7 +22,7 @@ export function LaneHeader(props: { lane: AutomationLane }) {
     <div ref={row}
       class="flex cursor-default items-center gap-1.5 border-t border-line pl-6 pr-2 text-xs"
       classList={{ "bg-hover": selected() }}
-      style={{ height: `${session.appearance.rowHeight()}px` }}
+      style={{ height: `${session.settings.appearance.rowHeight()}px` }}
       title={msg().laneHint}
       onClick={() => automation.select(props.lane.id)}
     >
@@ -39,6 +39,6 @@ export function BusLanesHeader() {
   const session = useSession();
   return (
     <div class="flex items-center border-t border-line bg-hover px-2.5 text-xs font-semibold text-muted"
-      style={{ height: `${session.appearance.rowHeight()}px` }}>{t().automation.busLanes}</div>
+      style={{ height: `${session.settings.appearance.rowHeight()}px` }}>{t().automation.busLanes}</div>
   );
 }

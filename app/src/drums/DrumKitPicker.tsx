@@ -7,9 +7,10 @@ import { useSession } from "../session";
 
 export function DrumKitPicker(props: { lanes: string[] }) {
   const session = useSession();
-  const { project, drumKit } = session;
+  const { project } = session;
+const { kit } = session.drums;
   const targets = () => instrumentTracks(project);
-  const choiceOf = (lane: string) => effectiveChoice(drumKit.choices(), lane, project);
+  const choiceOf = (lane: string) => effectiveChoice(kit.choices(), lane, project);
   const msg = () => t().drums.kit;
 
   return (
@@ -20,7 +21,7 @@ export function DrumKitPicker(props: { lanes: string[] }) {
           {(lane) => (
             <label class="flex items-center gap-2 text-xs">
               <span class="w-20 shrink-0">{laneLabel(lane)}</span>
-              <select class="field !h-6 min-w-0 flex-1 text-xs" aria-label={msg().sound(laneLabel(lane))} onChange={(e) => drumKit.pick(lane, e.currentTarget.value)}>
+              <select class="field !h-6 min-w-0 flex-1 text-xs" aria-label={msg().sound(laneLabel(lane))} onChange={(e) => kit.pick(lane, e.currentTarget.value)}>
                 <option value={AUTO_CHOICE} selected={choiceOf(lane) === AUTO_CHOICE}>{msg().builtIn}</option>
                 <option value={SKIP_CHOICE} selected={choiceOf(lane) === SKIP_CHOICE}>{msg().skip}</option>
                 <Show when={targets().length > 0}>

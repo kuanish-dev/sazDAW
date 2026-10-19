@@ -15,14 +15,14 @@ import { sticky } from "../common/sticky";
 const KNOB_SIZE = 34;
 const METER_HEIGHT = 22;
 /** The volume knob turns by fader position (same curve as the graph fader); default is 0 dB. */
-const VOLUME_RANGE = { min: 0, max: 1, default: volumeToFader(1) };
+const VOLUME_RANGE = { min: 0, max: 1, default: volumeToFader(1) } as const;
 
 export function TrackStrip(props: { source: GraphNode }) {
   const session = useSession();
   const { graph } = session;
   const strip = () => (isSource(props.source.kind) ? props.source.kind : undefined);
   const lastStrip = sticky(strip);
-  const level = () => session.levels[props.source.id] ?? SILENT_LEVEL;
+  const level = () => session.mixer.levels[props.source.id] ?? SILENT_LEVEL;
 
   return (
     <Show when={strip()}>

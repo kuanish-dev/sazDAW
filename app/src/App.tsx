@@ -24,14 +24,14 @@ import { TransportBar } from "./transport/TransportBar";
 import { WelcomeScreen } from "./shell/WelcomeScreen";
 
 /** The main view of each activity bar tab. */
-const VIEWS: Record<Tab, () => JSX.Element> = {
+const VIEWS: Readonly<Record<Tab, () => JSX.Element>> = {
   tracks: TracksView,
   graph: GraphView,
   mixer: MixerView,
   stage: StageView,
   samples: SampleEditorView,
   settings: SettingsView,
-};
+} as const;
 
 export function App(props: { rpc: RpcClient; dialogs: SystemDialogs; shell: AppShell }) {
   const session = createSession(props.rpc, props.dialogs, props.shell);
@@ -54,14 +54,14 @@ export function App(props: { rpc: RpcClient; dialogs: SystemDialogs; shell: AppS
           <main class="min-h-0 min-w-0 flex-1 overflow-auto bg-bg">
             <Show when={session.ready()} fallback={null}>
               {/* Keyed by the tab: the wrapper is created anew on a switch, so the new view eases in (`anim-view`). */}
-              <Show when={session.ui.tab()} keyed>
+              <Show when={session.shell.tab()} keyed>
                 {(tab) => <div class="anim-view h-full"><Dynamic component={VIEWS[tab]} /></div>}
               </Show>
             </Show>
           </main>
         </div>
         <StatusBar />
-        <Show when={session.ui.instrumentOpen()}><InstrumentWindow /></Show>
+        <Show when={session.shell.instrumentOpen()}><InstrumentWindow /></Show>
         <Toasts />
       </div>
     </SessionProvider>

@@ -13,7 +13,8 @@ const WAVE_DEBOUNCE_MS = 30;
 const FALLBACK_RATE = 48_000;
 
 export function createSampleWave(deps: { sample: () => Id | undefined; width: () => number }) {
-  const { samples, sampleEditor } = useSession();
+  const { samples } = useSession();
+const { editor } = useSession().samples;
   const [meta, setMeta] = createSignal<{ frameCount: number; sampleRate: number } | null>(null);
   const [view, setView] = createSignal<View>({ start: 0, span: 1 });
   const [wave, setWave] = createSignal<Waveform | null>(null);
@@ -30,7 +31,7 @@ export function createSampleWave(deps: { sample: () => Id | undefined; width: ()
     if (!info || deps.sample() !== id) return;
     setMeta({ frameCount: info.frameCount, sampleRate: info.sampleRate });
     setView(fitAll(info.frameCount));
-    const full = await sampleEditor.waveform(id, 0, info.frameCount, OVERVIEW_BUCKETS);
+    const full = await editor.waveform(id, 0, info.frameCount, OVERVIEW_BUCKETS);
     if (full && deps.sample() === id) setOverview(full);
   }));
 
@@ -44,7 +45,7 @@ export function createSampleWave(deps: { sample: () => Id | undefined; width: ()
     clearTimeout(timer);
     timer = setTimeout(async () => {
       const token = ++requestToken;
-      const result = await sampleEditor.waveform(id, Math.floor(v.start), Math.ceil(v.start + v.span), w);
+      const result = await editor.waveform(id, Math.floor(v.start), Math.ceil(v.start + v.span), w);
       if (result && token === requestToken) setWave(result);
     }, WAVE_DEBOUNCE_MS);
   });

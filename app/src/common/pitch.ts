@@ -15,11 +15,11 @@ export const MAX_VELOCITY = 127;
 export const LIVE_VELOCITY = 0.8;
 
 /** General MIDI drum pitches: used by step input and part building. */
-export const GM_DRUM_PITCHES: Record<string, number> = {
+export const GM_DRUM_PITCHES: Readonly<Record<string, number>> = {
   kick: 36, rim: 37, snare: 38, clap: 39, hat: 42, tom_lo: 45, openhat: 46, tom_mid: 47, crash: 49, tom_hi: 50, ride: 51,
-};
+} as const;
 
-const NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+const NAMES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"] as const;
 const BLACK = new Set([1, 3, 6, 8, 10]);
 
 /** Pitch class name without octave: 0 is "C", 1 is "C#" … 11 is "B". */

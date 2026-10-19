@@ -17,10 +17,9 @@ const START_WIDTH = 800;
 
 export function SampleEditorView() {
   const session = useSession();
-  const { preview, sampleEditor } = session;
-  const { selection: chosen } = session;
+  const { preview, editor } = session.samples;
 
-  const sample = createMemo(() => session.project.samples.find((s) => s.id === chosen.sample()));
+  const sample = createMemo(() => session.project.samples.find((s) => s.id === session.selection.sample()));
   const [width, setWidth] = createSignal(START_WIDTH);
   const wave = createSampleWave({ sample: () => sample()?.id, width });
   const [selection, setSelection] = createSignal<Selection | null>(null);
@@ -34,7 +33,7 @@ export function SampleEditorView() {
 
   // The first sample is selected automatically if nothing is selected.
   createEffect(() => {
-    if (chosen.sample() === null || !sample()) chosen.selectSample(session.project.samples[0]?.id ?? null);
+    if (session.selection.sample() === null || !sample()) session.selection.selectSample(session.project.samples[0]?.id ?? null);
   });
 
   // On sample change the selection, cursor and preview belong to the previous file, so reset them.
@@ -60,7 +59,7 @@ export function SampleEditorView() {
 
   const saveMarkers = (next: number[]) => {
     const id = sample()?.id;
-    if (id !== undefined) void sampleEditor.setMarkers(id, next);
+    if (id !== undefined) void editor.setMarkers(id, next);
   };
 
   /** Where to add a marker: the cursor (click on the waveform) or the selection start; `null` — no place chosen. */
@@ -102,15 +101,15 @@ export function SampleEditorView() {
             onExtractSelection={() => {
               const s = sample();
               const sel = selection();
-              if (s && sel) void sampleEditor.extractSelection(spec(s.id), sel, trackName());
+              if (s && sel) void editor.extractSelection(spec(s.id), sel, trackName());
             }}
             onExtractSlices={() => {
               const s = sample();
-              if (s && markers().length > 0) void sampleEditor.extractSlices(spec(s.id), markers(), trackName());
+              if (s && markers().length > 0) void editor.extractSlices(spec(s.id), markers(), trackName());
             }}
             onSaveRegion={() => {
               const s = sample();
-              if (s) void sampleEditor.saveRegion(s.id, selection() ?? { from: 0, to: wave.total() }, trackName());
+              if (s) void editor.saveRegion(s.id, selection() ?? { from: 0, to: wave.total() }, trackName());
             }}
           />
         </section>

@@ -18,7 +18,7 @@ interface NoteKey {
 }
 
 /** Piano roll panel keys: they work by this table, and the help is built from it too. */
-const NOTE_KEYS: NoteKey[] = [
+const NOTE_KEYS: readonly NoteKey[] = [
   { keys: "Esc", action: "deselect", matches: (e) => e.key === "Escape" },
   { keys: "Delete · ⌫", action: "remove", matches: (e) => e.key === "Delete" || e.key === "Backspace" },
   { keys: "⌘A", action: "selectAll", matches: (e, meta) => meta && e.code === "KeyA" },
@@ -29,7 +29,7 @@ const NOTE_KEYS: NoteKey[] = [
   // Not a bare Q: it plays a note on the piano keyboard (`keyboard/keyboard.ts`).
   { keys: "⌥Q", action: "quantize", matches: (e) => e.altKey && e.code === "KeyQ" },
   { keys: "← → ↑ ↓", action: "nudge", matches: (e) => e.key.startsWith("Arrow") },
-];
+] as const;
 
 /** `label` is a getter so the help follows the interface language. */
 export const PIANO_ROLL_KEYS_HELP: readonly ShortcutHelp[] = NOTE_KEYS.map(({ keys, action }) => ({

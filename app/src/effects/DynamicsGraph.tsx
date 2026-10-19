@@ -17,8 +17,8 @@ import { ReductionMeter } from "./ReductionMeter";
 /** The curve square and, beside it after a gap, the history: one SVG, so both share the height exactly. */
 const SIZE = 140;
 const GAP = 8;
-const HISTORY = { width: 160, height: SIZE };
-const GRID_DB = [-48, -36, -24, -12];
+const HISTORY = { width: 160, height: SIZE } as const;
+const GRID_DB = [-48, -36, -24, -12] as const;
 /** The dot rises with the sound at once and sinks calmly, so it does not flicker between peaks (time constants, s). */
 const DOT_RISE_SECONDS = 0.01;
 const DOT_FALL_SECONDS = 0.15;

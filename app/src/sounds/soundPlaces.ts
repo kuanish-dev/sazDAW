@@ -8,7 +8,7 @@ import { useSession } from "../session";
 
 export function createSoundPlaces() {
   const session = useSession();
-  const lib = session.soundBrowser;
+  const lib = session.sounds.browser;
   const [dir, setDir] = createSignal("/");
   const [entries, setEntries] = createSignal<LibraryEntry[]>([]);
   const [sources, setSources] = createSignal<string[]>([]);

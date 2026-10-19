@@ -7,7 +7,7 @@ import { t } from "../i18n";
 import type { Core } from "../core/core";
 import { homeDir } from "./paths";
 
-const EXPORT_FILTERS = { wav: WAV_FILTER, flac: FLAC_FILTER, mp3: MP3_FILTER };
+const EXPORT_FILTERS = { wav: WAV_FILTER, flac: FLAC_FILTER, mp3: MP3_FILTER } as const;
 
 export interface AudioExportActions {
   /** Renders to an audio file; on success, a "Done: …" toast with the mix loudness and peak. */

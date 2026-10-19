@@ -23,7 +23,8 @@ import { createVelocityPointer } from "./velocityPointer";
 
 export function PianoRoll(props: { clip: NoteClip; defaultPitch: number }) {
   const session = useSession();
-  const { notes: notesActions, live } = session;
+  const { pianoroll } = session;
+const { live } = session.keyboard;
 
   const [snap, setSnap] = createSignal(STEP_TICKS);
   const [zoom, setZoom] = createSignal(1);
@@ -82,7 +83,7 @@ export function PianoRoll(props: { clip: NoteClip; defaultPitch: number }) {
   let pasteTick = 0;
 
   const editing = createNoteEditing({
-    notes: notesActions, target, noteList, selectedNotes, selected, setSelected, quantizeStep,
+    notes: pianoroll, target, noteList, selectedNotes, selected, setSelected, quantizeStep,
     gridStep: () => minLength(),
     barTicks,
     pasteAt: () => pasteTick,
@@ -97,7 +98,7 @@ export function PianoRoll(props: { clip: NoteClip; defaultPitch: number }) {
   };
 
   const pointer = createPianoRollPointer({
-    notes: notesActions, audition, target, noteList, selected, selectedNotes, setSelected, setDrafts, marquee, setMarquee,
+    notes: pianoroll, audition, target, noteList, selected, selectedNotes, setSelected, setDrafts, marquee, setMarquee,
     gridCanvas: () => gridCanvas, pxPerTick, viewLength, stepFor, minLength, quantizeStep, commitDrafts,
     removeSelected: editing.removeSelected,
     setPasteTick: (tick) => { pasteTick = tick; },
@@ -163,12 +164,12 @@ export function PianoRoll(props: { clip: NoteClip; defaultPitch: number }) {
     >
       <PianoRollToolbar
         snap={snap()} zoom={zoom()} onSnap={setSnap} onZoom={setZoom}
-        onImportMidi={() => void notesActions.importInto(target())}
-        onExportMidi={() => void notesActions.exportClip(target())}
-        selectedCount={selected().size} hasNotes={noteList().length > 0} canPaste={notesActions.canPaste()}
+        onImportMidi={() => void pianoroll.importInto(target())}
+        onExportMidi={() => void pianoroll.exportClip(target())}
+        selectedCount={selected().size} hasNotes={noteList().length > 0} canPaste={pianoroll.canPaste()}
         onCopy={editing.copySelected} onPaste={() => void editing.paste()} onDuplicate={() => void editing.duplicate()}
         onRemove={() => void editing.removeSelected()}
-        onClear={() => void notesActions.clear(target())}
+        onClear={() => void pianoroll.clear(target())}
         tools={{
           clip: target(), ids: selected().size ? [...selected()] : undefined, hasNotes: noteList().length > 0,
           grid: quantizeStep(), gridLabel: GRID_CHOICES.find((c) => c.ticks === snap())?.label ?? "",

@@ -15,7 +15,7 @@ import { insertedEffectPosition } from "../graph/graphLayout";
 /** New send level: half, so the bus doesn't overload right away. */
 const NEW_SEND_LEVEL = 0.5;
 const SEND_KNOB_SIZE = 26;
-const SEND_LEVEL_RANGE = { min: 0, max: MAX_LEVEL, default: NEW_SEND_LEVEL };
+const SEND_LEVEL_RANGE = { min: 0, max: MAX_LEVEL, default: NEW_SEND_LEVEL } as const;
 const percent = (level: number) => `${Math.round(level * 100)}%`;
 
 export function InsertList(props: { model: StripModel; onOpenEffect: (node: Id, anchor: HTMLElement) => void }) {

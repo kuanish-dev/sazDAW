@@ -41,7 +41,7 @@ const SUMMARY_HEIGHT = 0.3;
 /** Space at the top of the clip for the name: the waveform is drawn below it. */
 const WAVE_TOP = 16;
 /** The cue line is dashed: it must not be mistaken for the playhead. */
-const CUE_DASH = [4, 3];
+const CUE_DASH = [4, 3] as const;
 
 export interface TimelineView {
   /** Rows top to bottom (tracks and folders), plus the same as track-or-`null` lanes for finding a clip's row. */

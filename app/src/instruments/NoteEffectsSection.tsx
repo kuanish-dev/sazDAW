@@ -1,5 +1,5 @@
 // The instrument window's "MIDI effects" section: the track's chain before the instrument (arpeggiator, chord) — add,
-// bypass, reorder, remove and each effect's parameters. Everything goes through `session.noteEffects`.
+// bypass, reorder, remove and each effect's parameters. Everything goes through `session.instruments.noteEffects`.
 import { For, Show } from "solid-js";
 import type { Id, NoteEffectSpec } from "../api/types";
 import { kindChoices, noteEffectInfo, paramValue } from "../common/catalog";
@@ -11,7 +11,7 @@ import { PickSelect } from "../common/PickSelect";
 
 export function NoteEffectsSection(props: { track: Id; effects: NoteEffectSpec[] }) {
   const session = useSession();
-  const actions = session.noteEffects;
+  const actions = session.instruments.noteEffects;
   const kinds = () => kindChoices(session.catalog()?.noteEffects ?? []);
 
   const Effect = (item: { spec: NoteEffectSpec; index: number }) => {

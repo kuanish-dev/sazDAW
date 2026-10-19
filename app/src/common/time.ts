@@ -23,7 +23,7 @@ export const GRID_CHOICES: readonly { readonly label: string; ticks: number }[] 
   { label: "1/8", ticks: PPQ / 2 },
   { label: "1/16", ticks: STEP_TICKS },
   { get label() { return t().tracks.grid.off; }, ticks: FREE_GRID },
-];
+] as const;
 
 /** Bar:beat:tick (one-based); computed by `common/tempoMap.ts: barPosition`. */
 export interface BarPosition {
@@ -61,14 +61,14 @@ export function snapNearest(tick: number, grid: number): number {
 export const MIN_TEMPO = 20;
 export const MAX_TEMPO = 999;
 export const MAX_NUMERATOR = 32;
-export const SIGNATURE_DENOMINATORS: readonly number[] = [2, 4, 8, 16];
+export const SIGNATURE_DENOMINATORS: readonly number[] = [2, 4, 8, 16] as const;
 
 /** Note recording quantize: the backend's "off" is 0; then grids from a beat down to a sixteenth. */
 export const NO_QUANTIZE = 0;
 export const RECORD_SNAPS: readonly { readonly label: string; ticks: number }[] = [
   { get label() { return t().tracks.grid.off; }, ticks: NO_QUANTIZE },
   ...GRID_CHOICES.filter((c) => c.ticks !== FREE_GRID && c.ticks <= PPQ),
-];
+] as const;
 
 export function barTicks(signature: TimeSignature): number {
   return ((PPQ * 4) / signature.denominator) * signature.numerator;

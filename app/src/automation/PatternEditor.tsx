@@ -25,13 +25,13 @@ interface PatternKey {
 }
 
 /** Pattern editor keys: they work by this table, and the help is built from it too. */
-const PATTERN_KEYS: PatternKey[] = [
+const PATTERN_KEYS: readonly PatternKey[] = [
   { keys: "Delete · ⌫", action: "remove", matches: (e) => e.key === "Delete" || e.key === "Backspace" },
   { keys: "⌘C", action: "copy", matches: (e, meta) => meta && e.code === "KeyC" },
   { keys: "⌘V", action: "paste", matches: (e, meta) => meta && e.code === "KeyV" },
   { keys: "⌘A", action: "selectAll", matches: (e, meta) => meta && e.code === "KeyA" },
   { keys: "Esc", action: "deselect", matches: (e) => e.key === "Escape" },
-];
+] as const;
 
 /** `label` is a getter so the help follows the interface language. */
 export const PATTERN_KEYS_HELP: readonly ShortcutHelp[] = PATTERN_KEYS.map(({ keys, action }) => ({

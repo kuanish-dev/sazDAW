@@ -13,7 +13,7 @@ import { capture, localPoint } from "../common/pointer";
 import { LiveSpectrum } from "./LiveSpectrum";
 import { ReductionMeter } from "./ReductionMeter";
 
-const VIEW = { width: 300, height: 130 };
+const VIEW = { width: 300, height: 130 } as const;
 
 export function DeEsserGraph(props: { node: Id; infos: ParamInfo[]; values: Params; reduction: number; onChange: (name: string, value: number) => void }) {
   let svg!: SVGSVGElement;

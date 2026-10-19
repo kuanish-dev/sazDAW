@@ -1,6 +1,6 @@
 // Musical note edits of the piano roll: Quantize / Humanize / Transpose / Fit to scale / Legato / Groove / Variation,
 // with small parameter panels. They work on the selected notes, or on all notes of the clip without a selection. The edit
-// logic itself is in the backend (`notes.quantize` etc.); here are only view parameters and `session.notes` calls.
+// logic itself is in the backend (`notes.quantize` etc.); here are only view parameters and `session.pianoroll` calls.
 import { For, type JSX, Show, createMemo, createSignal } from "solid-js";
 import type { Id, Variation } from "../api/types";
 import { GROOVE_PRESETS } from "./groove";
@@ -36,7 +36,7 @@ const newSeed = () => Math.floor(Math.random() * 2 ** 32);
 
 export function NoteTools(props: NoteToolsProps) {
   const session = useSession();
-  const notes = session.notes;
+  const notes = session.pianoroll;
   const [open, setOpen] = createSignal<Panel | null>(null);
   const [strength, setStrength] = createSignal(100);
   const [ends, setEnds] = createSignal(false);

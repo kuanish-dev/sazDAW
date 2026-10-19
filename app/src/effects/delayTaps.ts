@@ -9,7 +9,7 @@ import { clamp } from "../common/math";
 import { toDb } from "../common/plot";
 
 /** Lengths of the `sync` choices in quarter notes; the first is "Off" (the time comes from milliseconds). */
-const SYNC_QUARTERS = [0, 2, 1, 1.5, 2 / 3, 0.5, 0.75, 1 / 3, 0.25, 0.375, 1 / 6, 0.125];
+const SYNC_QUARTERS = [0, 2, 1, 1.5, 2 / 3, 0.5, 0.75, 1 / 3, 0.25, 0.375, 1 / 6, 0.125] as const;
 const MAX_SECONDS = 2;
 /** The bars' scale runs from here to 0 dB; quieter echoes are not drawn. */
 export const TAPS_FLOOR_DB = -48;

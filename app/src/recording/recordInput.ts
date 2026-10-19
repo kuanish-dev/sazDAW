@@ -3,7 +3,7 @@
 import type { AudioDevices, AudioSettings, InputChannels, MonitorMode } from "../api/types";
 
 /** Short label on the arm button. */
-export const INPUT_SHORT: Record<InputChannels, string> = { stereo: "1–2", left: "1", right: "2" };
+export const INPUT_SHORT: Readonly<Record<InputChannels, string>> = { stereo: "1–2", left: "1", right: "2" } as const;
 
 /** Channel count of the selected input device (otherwise the system one); 0 — unknown. */
 export function selectedInputChannels(devices: AudioDevices, settings: AudioSettings): number {

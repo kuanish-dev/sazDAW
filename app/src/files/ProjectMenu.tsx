@@ -51,9 +51,9 @@ export function ProjectMenu(props: { onClose: () => void }) {
         </div>
       </Show>
       <Separator />
-      <button class={item} onClick={choose(async () => session.ui.showSettings("audio"))}>{msg().audio}</button>
-      <button class={item} onClick={choose(async () => session.ui.showSettings("plugins"))}>{msg().plugins}</button>
-      <button class={item} onClick={choose(async () => session.ui.showSettings("log"))}>{msg().errorLog}</button>
+      <button class={item} onClick={choose(async () => session.shell.showSettings("audio"))}>{msg().audio}</button>
+      <button class={item} onClick={choose(async () => session.shell.showSettings("plugins"))}>{msg().plugins}</button>
+      <button class={item} onClick={choose(async () => session.shell.showSettings("log"))}>{msg().errorLog}</button>
       <Separator />
       <button class={item} onClick={() => setExporting(true)}>{msg().exportAudio}</button>
       <Show when={session.status().path}>

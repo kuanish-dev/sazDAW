@@ -17,8 +17,8 @@ import type { GraphPointer, Wire } from "./pointer";
 const GRID = 24;
 
 /** Keys deleting the selected node or connection (the canvas reacts to them, and the shortcut help is built from them). */
-const DELETE_KEYS = ["Delete", "Backspace"];
-export const GRAPH_KEYS_HELP: readonly ShortcutHelp[] = [{ keys: "Delete · ⌫", get label() { return t().graph.deleteKeyHelp; } }];
+const DELETE_KEYS: readonly string[] = ["Delete", "Backspace"] as const;
+export const GRAPH_KEYS_HELP: readonly ShortcutHelp[] = [{ keys: "Delete · ⌫", get label() { return t().graph.deleteKeyHelp; } }] as const;
 
 export function GraphCanvas(props: {
   nodes: GraphNode[];

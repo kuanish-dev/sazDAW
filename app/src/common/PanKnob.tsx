@@ -6,7 +6,7 @@ import { useSession } from "../session";
 import { Knob } from "./Knob";
 import { ParamMenu } from "./ParamMenu";
 
-const PAN_RANGE = { min: -1, max: 1, default: 0 };
+const PAN_RANGE = { min: -1, max: 1, default: 0 } as const;
 
 export function PanKnob(props: { node: Id; pan: number; size: number }) {
   const { graph } = useSession();

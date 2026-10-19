@@ -4,12 +4,12 @@ import type { RpcClient } from "../api/rpc";
 import type { Tick } from "../api/types";
 import { playheadAt, rebase, type PlayheadBase } from "./playhead";
 
-const EMPTY_TICK: Tick = {
+const EMPTY_TICK: Readonly<Tick> = {
   state: "stopped", positionTicks: 0, cue: null, tempo: 120, signature: { numerator: 4, denominator: 4 }, wrap: null,
   songLoop: true, metronome: false, mono: false, automationWrite: "off", cpu: 0, latencyMs: 0, meters: [], reductions: [], bands: [],
   record: { armed: false, capturing: false, takeNotes: 0, quantizeTicks: 0 },
   preview: null,
-};
+} as const;
 
 /**
  * Cursor position for drawing on every screen frame rather than once per backend tick (~30 Hz): between ticks it is

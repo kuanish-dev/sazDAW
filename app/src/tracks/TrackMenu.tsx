@@ -9,7 +9,8 @@ import { ContextMenu, MenuItem, MenuLabel, type MenuPoint } from "../common/Cont
 
 export function TrackMenu(props: { track: Track; at: MenuPoint; onClose: () => void }) {
   const session = useSession();
-  const { tracks, folders, bounce } = session;
+  const { tracks } = session;
+const { folders, bounce } = session.tracks;
   const id = () => props.track.id;
   const otherFolders = () => session.project.folders.filter((f) => f.id !== props.track.folder);
   return (

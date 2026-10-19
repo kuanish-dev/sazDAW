@@ -24,7 +24,7 @@ const TRACE_SAMPLES = 1024;
 const MAX_STEP_SECONDS = 0.2;
 
 export function MasterVisualizer() {
-  const { master } = useSession();
+  const { master } = useSession().mixer;
   let canvas!: HTMLCanvasElement;
   /** The theme colors, read once per theme change rather than on every frame. */
   const colors = createMemo(() => palette());

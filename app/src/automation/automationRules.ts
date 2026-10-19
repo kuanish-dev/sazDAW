@@ -18,7 +18,7 @@ export interface Range {
   whole?: boolean;
 }
 
-const UNIT_RANGE: Range = { min: 0, max: 1 };
+const UNIT_RANGE: Readonly<Range> = { min: 0, max: 1 } as const;
 
 export function sameTarget(a: ParamTarget, b: ParamTarget): boolean {
   return JSON.stringify(a) === JSON.stringify(b);

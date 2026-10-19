@@ -14,7 +14,7 @@ export interface Coefficients {
   a2: number;
 }
 
-export const PASS: Coefficients = { b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 };
+export const PASS: Readonly<Coefficients> = { b0: 1, b1: 0, b2: 0, a1: 0, a2: 0 } as const;
 
 function normalized(b0: number, b1: number, b2: number, a0: number, a1: number, a2: number): Coefficients {
   return { b0: b0 / a0, b1: b1 / a0, b2: b2 / a0, a1: a1 / a0, a2: a2 / a0 };

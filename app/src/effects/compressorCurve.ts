@@ -1,4 +1,4 @@
-// The compressor's static transfer curve (input level → output level) for its graph (`dynamicsGraph.ts`). The curve
+// The compressor's static transfer curve (input level → output level) for its graph (`dynamicsCurves.ts`). The curve
 // MIRRORS `Compressor::target_reduction` in `crates/daw-effects/src/compressor.rs` (threshold, ratio, soft knee; makeup
 // on top): a change there must be repeated here.
 import type { ParamInfo, Params } from "../api/types";

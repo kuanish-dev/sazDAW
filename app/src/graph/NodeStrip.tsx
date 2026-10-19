@@ -17,7 +17,7 @@ const STRIP_HEIGHT = 64;
 export function NodeStrip(props: { node: GraphNode }) {
   const session = useSession();
   const { graph } = session;
-  const level = () => session.levels[props.node.id] ?? SILENT_LEVEL;
+  const level = () => session.mixer.levels[props.node.id] ?? SILENT_LEVEL;
   const volume = () => (hasVolume(props.node.kind) ? props.node.kind.volume : 0);
   const source = () => (isSource(props.node.kind) ? props.node.kind : null);
   /** Caption under a source's name: the track instrument's name or "Audio track". */

@@ -8,7 +8,7 @@ import { fail } from "../errors";
 import type { MockWorld } from "../world";
 import type { HandlerSet } from "./types";
 
-const DENOMINATORS = [1, 2, 4, 8, 16, 32];
+const DENOMINATORS: readonly number[] = [1, 2, 4, 8, 16, 32] as const;
 
 function checkBpm(bpm: number) {
   if (!(bpm >= MIN_TEMPO && bpm <= MAX_TEMPO)) throw fail("TM-101", { bpm, min: MIN_TEMPO, max: MAX_TEMPO });

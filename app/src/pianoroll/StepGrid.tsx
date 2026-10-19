@@ -18,7 +18,7 @@ const ROW_LABEL_PX = 90;
 
 export function StepGrid(props: { clip: NoteClip; track: Track }) {
   const session = useSession();
-  const { notes: notesActions } = session;
+  const { pianoroll } = session;
 
   const notes = () => clipNotes(props.clip);
   const rows = createMemo(() => stepRows(notes(), props.track.defaultPitch));
@@ -39,7 +39,7 @@ export function StepGrid(props: { clip: NoteClip; track: Track }) {
     onCleanup(() => window.removeEventListener("pointerup", stop));
   });
 
-  const apply = (pitch: number, step: number, mode: "add" | "remove") => void notesActions.setStep(props.clip.id, step, mode, pitch);
+  const apply = (pitch: number, step: number, mode: "add" | "remove") => void pianoroll.setStep(props.clip.id, step, mode, pitch);
 
   const columns = () => `repeat(${totalSteps()}, minmax(${scrolling() ? MIN_CELL_PX_SCROLLING : MIN_CELL_PX}px, 1fr))`;
 

@@ -12,8 +12,8 @@ export function neutralUtility(): ChannelUtility {
 }
 
 /** Knob ranges: the width from mono to twice the side, the delay either way. */
-export const WIDTH_RANGE = { min: 0, max: MAX_WIDTH, default: 1 };
-export const DELAY_RANGE = { min: -MAX_CHANNEL_DELAY_MS, max: MAX_CHANNEL_DELAY_MS, default: 0 };
+export const WIDTH_RANGE = { min: 0, max: MAX_WIDTH, default: 1 } as const;
+export const DELAY_RANGE = { min: -MAX_CHANNEL_DELAY_MS, max: MAX_CHANNEL_DELAY_MS, default: 0 } as const;
 
 /** The Ø button: both sides on turns both off, anything else turns both on. */
 export function flipBoth(polarity: Polarity): Polarity {

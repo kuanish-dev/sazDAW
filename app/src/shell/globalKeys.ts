@@ -23,16 +23,16 @@ interface Shortcut {
   run(session: Session, event: KeyboardEvent): Promise<void>;
 }
 
-const SHORTCUTS: Shortcut[] = [
+const SHORTCUTS: readonly Shortcut[] = [
   { keys: () => codeLabel("Space"), label: "playPause", code: "Space", meta: false, run: (s) => s.transport.togglePlay() },
   { keys: "⌘Z · ⇧⌘Z", label: "undoRedo", code: "KeyZ", meta: true, run: (s, e) => (e.shiftKey ? s.history.redo() : s.history.undo()) },
   { keys: "⌘Y", label: "redo", code: "KeyY", meta: true, run: (s) => s.history.redo() },
   { keys: "⌘S · ⇧⌘S", label: "save", code: "KeyS", meta: true, run: (s, e) => (e.shiftKey ? s.files.saveProjectAs() : s.files.saveProject()) },
   { keys: "⌘O", label: "open", code: "KeyO", meta: true, withoutProject: true, run: (s) => s.files.openProject() },
   { keys: "⌘N", label: "newProject", code: "KeyN", meta: true, withoutProject: true, run: (s) => s.files.newProject() },
-  { keys: "⌥←", label: "previousMarker", code: "ArrowLeft", meta: false, alt: true, run: (s) => s.markers.jump(-1) },
-  { keys: "⌥→", label: "nextMarker", code: "ArrowRight", meta: false, alt: true, run: (s) => s.markers.jump(1) },
-];
+  { keys: "⌥←", label: "previousMarker", code: "ArrowLeft", meta: false, alt: true, run: (s) => s.tracks.markers.jump(-1) },
+  { keys: "⌥→", label: "nextMarker", code: "ArrowRight", meta: false, alt: true, run: (s) => s.tracks.markers.jump(1) },
+] as const;
 
 /** Window key help — from the same table the keys work by. */
 export function globalKeysHelp(): readonly ShortcutHelp[] {
@@ -55,7 +55,7 @@ export function installGlobalKeys(session: Session): () => void {
     if (shortcut) {
       event.preventDefault();
       void shortcut.run(session, event);
-    } else if (session.ui.tab() === "tracks" && !target.closest(OWN_PANEL_KEYS)) {
+    } else if (session.shell.tab() === "tracks" && !target.closest(OWN_PANEL_KEYS)) {
       handleClipKey(event, session);
     }
   };

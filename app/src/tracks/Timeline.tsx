@@ -42,7 +42,7 @@ import type { ToolbarState } from "./TimelineToolbar";
 export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement }) {
   const session = useSession();
   const { project, selection } = session;
-  const { soundPlacement } = session;
+  const { placement } = session.sounds;
   const [draft, setDraft] = createSignal<ClipDraft | null>(null);
   const [laneDraft, setLaneDraft] = createSignal<LaneDraft | null>(null);
   const [marquee, setMarquee] = createSignal<PixelRect | null>(null);
@@ -65,7 +65,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
   const rows = createMemo(() => trackRows(project.tracks, project.folders, ownedLanes(project)));
   const lanes = createMemo(() => lanesOf(rows()));
   /** Rows differ in height: a track's own or the appearance setting. */
-  const layout = createMemo(() => rowLayout(rows(), session.appearance.rowHeight()));
+  const layout = createMemo(() => rowLayout(rows(), session.settings.appearance.rowHeight()));
   const clipColor = (clip: Clip) => clipColorOf(project.tracks, clip);
 
   const tempo = createTempoPointer({ surface: () => rulerSurface, map: () => project.tempoMap, pxPerTick });
@@ -75,7 +75,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
     markers: () => project.markers,
     pxPerTick,
     tempoMap: () => project.tempoMap,
-    actions: session.markers,
+    actions: session.tracks.markers,
     seek: (tick) => void session.transport.seek(tick),
   });
   /** Markers with the drag draft applied. */
@@ -107,7 +107,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
     tempoMap: () => project.tempoMap,
     pxPerTick,
     layout,
-    actions: session.clips,
+    actions: session.tracks.clips,
     selected: selection.clips,
     select: (ids, track) => selection.selectClips(ids, track ?? undefined),
     draft,
@@ -161,7 +161,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
     tempoMap: () => project.tempoMap,
     pxPerTick,
     layout,
-    drop: (source, track, tick) => void soundPlacement.dropSample(source, track, tick),
+    drop: (source, track, tick) => void placement.dropSample(source, track, tick),
   });
 
   const scroller = () => surface.closest<HTMLElement>(".overflow-x-auto");
@@ -287,7 +287,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
             {(marker) => (
               <div class="absolute z-10" style={{ left: `${marker.tick * pxPerTick()}px`, top: `${MARKER_TOP - 2}px` }}>
                 <InlineRename name={marker.name} editing class="!h-4 w-36 !px-1 text-[10px]"
-                  onRename={(name) => void session.markers.rename(marker.id, name)} onClose={markers.stopRenaming}>{null}</InlineRename>
+                  onRename={(name) => void session.tracks.markers.rename(marker.id, name)} onClose={markers.stopRenaming}>{null}</InlineRename>
               </div>
             )}
           </Show>
@@ -318,7 +318,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
         </Show>
         <DropGhostView ghost={drop.ghost()} />
         {/* While a sample is dragged, two zones under the last track — "instrument" and "ready block" — create a new track. */}
-        <Show when={drop.active()}><DropZones onDrop={(source, kind) => void soundPlacement.dropAsNewTrack(source, kind)} /></Show>
+        <Show when={drop.active()}><DropZones onDrop={(source, kind) => void placement.dropAsNewTrack(source, kind)} /></Show>
       </div>
     </>
   );

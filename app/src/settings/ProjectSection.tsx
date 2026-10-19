@@ -11,7 +11,9 @@ import { CopyButton, SectionTitle, SettingGroup, SettingRow, Toggle } from "./Se
 
 export function ProjectSection() {
   const session = useSession();
-  const { transport, tempo, noteRecord } = session;
+  const { transport } = session;
+const { tempo } = session.transport;
+const { noteRecord } = session.recording;
   const tick = session.tick;
   const stats = createMemo(() => projectStats(session.project));
   const msg = () => t().settings.project;

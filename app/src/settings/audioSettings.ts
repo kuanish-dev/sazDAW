@@ -1,7 +1,7 @@
 // Audio settings: allowed buffer sizes, buffer latency and parsing the "Recording latency" field.
 
 /** Buffer sizes offered in audio settings: powers of two. */
-const POWERS = [64, 128, 256, 512, 1024, 2048, 4096];
+const POWERS = [64, 128, 256, 512, 1024, 2048, 4096] as const;
 
 /** Recording latency limit, ms (same as the backend). */
 export const MAX_RECORD_LATENCY_MS = 1000;

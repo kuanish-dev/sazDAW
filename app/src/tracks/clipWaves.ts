@@ -9,7 +9,7 @@ import { averageTempo } from "../common/tempoMap";
 import { takeRanges } from "./takes";
 import { clipTempo } from "./warp";
 
-export function createClipWaves(session: Pick<Session, "samples" | "sampleEditor">) {
+export function createClipWaves(session: Pick<Session, "samples">) {
   const [peaks, setPeaks] = createSignal<ReadonlyMap<Id, SamplePeaks>>(new Map());
   const requested = new Set<Id>();
   /** One entry per clip take: a changed clip (resize, tempo) replaces its own entry without evicting others. */
@@ -17,7 +17,7 @@ export function createClipWaves(session: Pick<Session, "samples" | "sampleEditor
 
   const load = async (sample: Id) => {
     const info = await session.samples.sampleInfo(sample);
-    const wave = info && (await session.sampleEditor.waveform(sample, 0, info.frameCount, bucketsFor(info.frameCount, info.sampleRate)));
+    const wave = info && (await session.samples.editor.waveform(sample, 0, info.frameCount, bucketsFor(info.frameCount, info.sampleRate)));
     // Failed: allow requesting it again on the next draw.
     if (!wave) return requested.delete(sample);
     columns.clear();

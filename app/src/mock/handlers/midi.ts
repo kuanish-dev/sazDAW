@@ -15,7 +15,7 @@ function liveMappings(p: Project): MidiMapping[] {
   return (p.midiMappings ?? []).filter((m) => targetProblem(p, m.target) === null);
 }
 
-const DEVICES = ["Mock Keys 49"];
+const DEVICES = ["Mock Keys 49"] as const;
 
 export function midiHandlers(w: MockWorld): HandlerSet {
   const h: HandlerSet = {};

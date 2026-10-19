@@ -10,7 +10,7 @@ export interface BackendError {
   message: string;
 }
 
-const DICTIONARIES: Record<string, Record<string, string>> = { ru: ruErrors };
+const DICTIONARIES: Readonly<Record<string, Record<string, string>>> = { ru: ruErrors } as const;
 
 export function isBackendError(error: unknown): error is BackendError {
   const e = error as BackendError | null;

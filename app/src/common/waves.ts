@@ -10,14 +10,14 @@ const WAVES = [
   { amp: 0.11, cycles: 2.1, speed: -0.5, alpha: 0.16, width: 1.5 },
   { amp: 0.07, cycles: 3.4, speed: 0.8, alpha: 0.12, width: 1 },
   { amp: 0.2, cycles: 0.8, speed: -0.22, alpha: 0.08, width: 1 },
-];
+] as const;
 /** A second, faster ripple on top of each wave, relative to it: makes the line look like sound rather than a sine. */
-const RIPPLE = { amp: 0.35, cycles: 2.7, speed: 1.6 };
+const RIPPLE = { amp: 0.35, cycles: 2.7, speed: 1.6 } as const;
 /** What full `energy` adds: the height grows by this share, the ripple, the opacity and the tremble by these amounts. */
-const LOUD = { amp: 1.6, ripple: 0.6, alpha: 0.35, tremble: 0.55 };
+const LOUD = { amp: 1.6, ripple: 0.6, alpha: 0.35, tremble: 0.55 } as const;
 /** The nervous part, only with sound: a dense tremble running fast (each wave its own way), and a grain that jumps
  *  `steps` times per second of the waves' clock, `grain` of the tremble's size. */
-const TREMBLE = { cycles: 11, speed: 9, grain: 0.45, steps: 30 };
+const TREMBLE = { cycles: 11, speed: 9, grain: 0.45, steps: 30 } as const;
 /** Pixels per curve segment: smooth enough and cheap. */
 const STEP_PX = 6;
 
