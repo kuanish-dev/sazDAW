@@ -1,6 +1,7 @@
 // Transport strip at the top of the window (compact, like VS Code's title bar): project menu, playback (the Play button pulses
 // on every beat), position with beat lights (`BeatLights.tsx`), tempo
-// and time signature, the song loop, metronome, recording, the audio-recording badge, the mono-check badge, and undo/redo with the history panel (`HistoryPanel.tsx`). The theme lives in Settings → Appearance. Engine load,
+// and time signature, the song loop, metronome, recording, the audio-recording badge, the mono-check badge, the
+// sound-reactive waves filling the free space (`HeaderWaves.tsx`), and undo/redo with the history panel (`HistoryPanel.tsx`). The theme lives in Settings → Appearance. Engine load,
 // latency and the audio format live in the status bar (`ui/shell/StatusBar.tsx`).
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { barPosition, secondsAt } from "../../domain/tempoMap";
@@ -13,6 +14,7 @@ import {
 import { NumberField } from "../common/NumberField";
 import { ToolbarDivider } from "../common/Toolbar";
 import { BeatLights, createBeat } from "./BeatLights";
+import { HeaderWaves } from "./HeaderWaves";
 import { HistoryButton } from "./HistoryPanel";
 import { ProjectMenu } from "./ProjectMenu";
 
@@ -139,6 +141,7 @@ export function TransportBar() {
 
       <AudioRecordBadge />
       <MonoBadge />
+      <HeaderWaves />
 
       <div class="ml-auto flex shrink-0 items-center gap-0.5">
         <button class="btn btn-icon" disabled={!status().canUndo} title={undoTitle()} aria-label={msg().undo} onClick={() => void history.undo()}><IconUndo /></button>
