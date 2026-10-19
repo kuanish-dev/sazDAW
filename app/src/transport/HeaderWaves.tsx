@@ -1,17 +1,17 @@
 // Sound-reactive waves in the transport bar, in the free space between the metronome and undo: the welcome screen's
 // waveforms (`common/waves.ts`) drift calmly in silence and swell with the master's level — taller, brighter, more
-// rippled, trembling and faster as the sound gets louder. The level is the master meter's peak (`session.mixer.levels`, from
+// rippled, trembling and faster as the sound gets louder. The level is the master meter's peak (`useMixer().levels`, from
 // the `tick` stream, so nothing new is polled), followed up fast and down slowly so the hits pulse. A frame is four short
 // lines on a small canvas; with the system's "reduce motion" setting it draws one still frame.
 import { createMemo, onCleanup, onMount } from "solid-js";
 import { MASTER_NODE } from "../api/types";
 import { follow } from "../effects/liveLevels";
 import { dbFraction, toDb } from "../common/plot";
-import { useSession } from "../session";
 import { fitCanvas } from "../common/canvas";
 import { prefersReducedMotion } from "../common/motion";
 import { palette } from "../common/theme";
 import { drawWaves } from "../common/waves";
+import { useMixer } from "../mixer/role";
 
 /** The level scale, dB: quieter counts as silence. */
 const FLOOR_DB = -42;
@@ -32,7 +32,7 @@ const SILENT_ENERGY = 0.002;
 const MAX_STEP_SECONDS = 0.1;
 
 export function HeaderWaves() {
-  const session = useSession();
+  const mixer = useMixer();
   let box!: HTMLDivElement;
   let canvas!: HTMLCanvasElement;
   /** Read once per theme or accent change, not on every frame (`palette()` reads computed styles). */
@@ -44,7 +44,7 @@ export function HeaderWaves() {
   let energy = 0;
 
   const peak = () => {
-    const master = session.mixer.levels[MASTER_NODE];
+    const master = mixer.levels[MASTER_NODE];
     return master ? Math.max(master.l.level, master.r.level) : 0;
   };
 

@@ -11,7 +11,6 @@ import { peakToMeter } from "../mixer/mixer";
 import { chainBadge } from "../instruments/noteEffectRules";
 import { trackHeight } from "./rowLayout";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { menuPoint } from "../common/ContextMenu";
 import { registerSampleDrop } from "../common/dragSample";
 import { IconClose, IconGripper, IconSliders, IconSnowflake } from "../common/icons";
@@ -24,6 +23,13 @@ import { TrackMenu } from "./TrackMenu";
 import { TrackStrip } from "./TrackStrip";
 import type { createTrackReorder } from "./trackReorder";
 import { createTrackResize } from "./trackResize";
+import { useProjectCopy } from "../core/roles";
+import { useMixer } from "../mixer/role";
+import { useSelection } from "../selection/role";
+import { useSettings } from "../settings/role";
+import { useShell } from "../shell/role";
+import { useSounds } from "../sounds/role";
+import { useTracks } from "./role";
 
 /** Below this height the mixer strip (knobs, meter) does not fit: the row shows only the name line. */
 const STRIP_MIN_HEIGHT = 84;
@@ -33,20 +39,25 @@ const PULSE_PX = 72;
 
 /** `row` — the header's row from the top (with folders); reordering counts from it. */
 export function TrackHeader(props: { track: Track; row: number; reorder: ReturnType<typeof createTrackReorder> }) {
-  const session = useSession();
-  const { tracks } = session;
-const { placement } = session.sounds;
+  const { project } = useProjectCopy();
+  const mixer = useMixer();
+  const selection = useSelection();
+  const settings = useSettings();
+  const shell = useShell();
+  const sounds = useSounds();
+  const tracks = useTracks();
+const { placement } = sounds;
   const [renaming, setRenaming] = createSignal(false);
   /** Track index in the project: used by Alt+arrow moves and the default color. */
-  const index = () => session.project.tracks.findIndex((track) => track.id === props.track.id);
+  const index = () => project.tracks.findIndex((track) => track.id === props.track.id);
   /** Where the track context menu is open (right-click on the header); `null` — closed. */
   const [menuAt, setMenuAt] = createSignal<{ x: number; y: number } | null>(null);
   /** A sound is dragged over an instrument track's header: dropping replaces its instrument. */
   const [dropOver, setDropOver] = createSignal(false);
-  const source = () => sourceOfTrack(session.project.graph, props.track.id);
+  const source = () => sourceOfTrack(project.graph, props.track.id);
   /** Last known node: when the track is deleted, children don't crash on a stale value. */
   const lastSource = sticky(source);
-  const height = () => trackHeight(props.track, session.settings.appearance.rowHeight());
+  const height = () => trackHeight(props.track, settings.appearance.rowHeight());
   const compact = () => height() < STRIP_MIN_HEIGHT;
   /** The source node's channel, for mute/solo in the name line of a compact row. */
   const channel = () => {
@@ -54,18 +65,18 @@ const { placement } = session.sounds;
     return node && isSource(node.kind) ? { node: node.id, mute: node.kind.mute, solo: node.kind.solo } : undefined;
   };
   /** `undefined` for the moment the track is gone from the project (a header being removed). */
-  const color = () => trackColorOf(session.project.tracks, props.track.id) ?? undefined;
+  const color = () => trackColorOf(project.tracks, props.track.id) ?? undefined;
   /** A gradient of the track color from the left edge, as strong as the track is loud. A background, so it stays under the controls. */
   const pulse = () => {
     const node = source();
-    const level = node ? session.mixer.levels[node.id] : undefined;
+    const level = node ? mixer.levels[node.id] : undefined;
     const strength = level ? peakToMeter(Math.max(level.l.level, level.r.level)) : 0;
     const shade = color();
     if (strength === 0 || !shade) return undefined;
     const tint = `color-mix(in srgb, ${shade} ${Math.round(strength * PULSE_PERCENT)}%, transparent)`;
     return `linear-gradient(to right, ${tint}, transparent ${PULSE_PX}px)`;
   };
-  const resize = createTrackResize({ track: () => props.track, fallback: session.settings.appearance.rowHeight, actions: tracks });
+  const resize = createTrackResize({ track: () => props.track, fallback: settings.appearance.rowHeight, actions: tracks });
   const monitorMode = () => {
     const kind = source()?.kind;
     return kind?.type === "audio" ? kind.monitor : null;
@@ -76,7 +87,7 @@ const { placement } = session.sounds;
     if (!e.altKey || e.target !== e.currentTarget || (e.key !== "ArrowUp" && e.key !== "ArrowDown")) return;
     e.preventDefault();
     const target = index() + (e.key === "ArrowUp" ? -1 : 1);
-    if (target >= 0 && target < session.project.tracks.length) void tracks.move(props.track.id, target);
+    if (target >= 0 && target < project.tracks.length) void tracks.move(props.track.id, target);
   };
 
   return (
@@ -84,14 +95,14 @@ const { placement } = session.sounds;
       data-track-row tabIndex={0} onKeyDown={onKey}
       aria-label={t().tracks.header.label(props.track.name)}
       class="relative flex flex-col justify-center gap-1 border-t border-line px-2"
-      classList={{ "bg-select": session.selection.track() === props.track.id, "ring-2 ring-inset ring-accent": dropOver() }}
+      classList={{ "bg-select": selection.track() === props.track.id, "ring-2 ring-inset ring-accent": dropOver() }}
       ref={(el) => registerSampleDrop(el, {
         over: () => setDropOver(props.track.instrument !== null),
         leave: () => setDropOver(false),
         drop: (dropped) => { setDropOver(false); if (props.track.instrument) void placement.dropSample(dropped, props.track.id, 0); },
       })}
       style={{ height: `${height()}px`, "background-image": pulse() }}
-      onPointerDown={() => session.selection.selectTrack(props.track.id)}
+      onPointerDown={() => selection.selectTrack(props.track.id)}
       onContextMenu={(e) => { e.preventDefault(); setMenuAt(menuPoint(e)); }}
     >
       <div class="pointer-events-none absolute inset-y-0 left-0 w-1" style={{ background: color() }} />
@@ -117,12 +128,12 @@ const { placement } = session.sounds;
         <Show when={props.track.instrument && chainBadge(props.track.noteEffects)}>
           {(badge) => (
             <button class="shrink-0 rounded-sm bg-accent/20 px-1 text-[10px] font-semibold leading-4 text-accent hover:bg-accent/30" title={t().tracks.header.noteEffectsHint}
-              aria-label={t().tracks.header.noteEffects(badge())} onClick={() => session.shell.openInstrument(props.track.id)}>{badge()}</button>
+              aria-label={t().tracks.header.noteEffects(badge())} onClick={() => shell.openInstrument(props.track.id)}>{badge()}</button>
           )}
         </Show>
         <Show when={props.track.instrument}>
           <button class="btn btn-icon !h-6 !w-6 !min-w-6" title={t().tracks.header.instrument} aria-label={t().tracks.header.instrument}
-            onClick={() => session.shell.openInstrument(props.track.id)}><IconSliders size={14} /></button>
+            onClick={() => shell.openInstrument(props.track.id)}><IconSliders size={14} /></button>
         </Show>
         <Show when={compact() && channel()} keyed>
           {(c) => <MuteSolo node={c.node} mute={c.mute} solo={c.solo} class="!h-6 !min-w-6 !px-0 text-[10px]" />}

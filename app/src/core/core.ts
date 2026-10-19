@@ -34,5 +34,7 @@ export function createCore(rpc: RpcClient, dialogs: SystemDialogs, shell: AppShe
   // Spread whole: the types let a role see only `Core` and the UI only `CoreReads`.
   const core: Core = { api, dialogs, shell, ...sync, ...calls, ...playback };
   const reads: CoreReads = { ...sync, ...playback, ...toasts, busy };
-  return { core, reads, sync, toasts };
+  /** The first read: the catalog and the project; the views show after it. */
+  const start = sync.start;
+  return { core, reads, start };
 }

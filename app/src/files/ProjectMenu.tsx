@@ -2,14 +2,17 @@
 import { createSignal, For, onMount, Show } from "solid-js";
 import type { RecentProject } from "../api/types";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { closeOnOutside } from "../common/pointer";
 import { ExportDialog } from "./ExportDialog";
 import { TemplatesDialog } from "./TemplatesDialog";
+import { useProjectCopy } from "../core/roles";
+import { useFiles } from "./role";
+import { useShell } from "../shell/role";
 
 export function ProjectMenu(props: { onClose: () => void }) {
-  const session = useSession();
-  const files = session.files;
+  const { status } = useProjectCopy();
+  const files = useFiles();
+  const shell = useShell();
   const [exporting, setExporting] = createSignal(false);
   const [templatesOpen, setTemplatesOpen] = createSignal(false);
   const [recent, setRecent] = createSignal<RecentProject[]>([]);
@@ -37,11 +40,11 @@ export function ProjectMenu(props: { onClose: () => void }) {
       <button class={item} onClick={choose(() => files.saveProject())}>{msg().save}<span class={hint}>⌘S</span></button>
       <button class={item} onClick={choose(() => files.saveProjectAs())}>{msg().saveAs}<span class={hint}>⇧⌘S</span></button>
       <button class={item} onClick={() => setTemplatesOpen(true)}>{msg().saveAsTemplate}</button>
-      <Show when={recent().filter((r) => r.path !== session.status().path).length > 0}>
+      <Show when={recent().filter((r) => r.path !== status().path).length > 0}>
         <div>
           <Separator />
           <div class="px-2.5 pb-0.5 pt-1 text-[11px] font-semibold uppercase tracking-wide text-muted">{msg().recent}</div>
-          <For each={recent().filter((r) => r.path !== session.status().path).slice(0, 6)}>
+          <For each={recent().filter((r) => r.path !== status().path).slice(0, 6)}>
             {(entry) => (
               <button class={item} title={entry.path} onClick={choose(() => files.openRecent(entry.path))}>
                 <span class="truncate">{entry.name}</span>
@@ -51,12 +54,12 @@ export function ProjectMenu(props: { onClose: () => void }) {
         </div>
       </Show>
       <Separator />
-      <button class={item} onClick={choose(async () => session.shell.showSettings("audio"))}>{msg().audio}</button>
-      <button class={item} onClick={choose(async () => session.shell.showSettings("plugins"))}>{msg().plugins}</button>
-      <button class={item} onClick={choose(async () => session.shell.showSettings("log"))}>{msg().errorLog}</button>
+      <button class={item} onClick={choose(async () => shell.showSettings("audio"))}>{msg().audio}</button>
+      <button class={item} onClick={choose(async () => shell.showSettings("plugins"))}>{msg().plugins}</button>
+      <button class={item} onClick={choose(async () => shell.showSettings("log"))}>{msg().errorLog}</button>
       <Separator />
       <button class={item} onClick={() => setExporting(true)}>{msg().exportAudio}</button>
-      <Show when={session.status().path}>
+      <Show when={status().path}>
         {(path) => <div class="mt-1 truncate border-t border-line px-2.5 pb-0.5 pt-1.5 text-[11px] text-muted" title={path()}>{path()}</div>}
       </Show>
       <Show when={templatesOpen()}>

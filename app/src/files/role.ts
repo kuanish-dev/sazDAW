@@ -1,8 +1,8 @@
-// The project files role as the session holds it: new, open, save and autosave recovery (`project.ts`), and what is made
-// from a project — templates, an audio export — and what opening one leaves to say (`startup.ts`).
-import type { Core } from "../core/core";
-import type { PluginsActions } from "../plugins/plugins";
-import type { AppPreferences } from "../settings/preferences";
+// The project files role: new, open, save and autosave recovery (`project.ts`), and what is made from a project —
+// templates, an audio export — and what opening one leaves to say (`startup.ts`).
+import { defineRole, useRole } from "../core/roles";
+import { pluginsRole } from "../plugins/role";
+import { settingsRole } from "../settings/role";
 import { type AudioExportActions, createAudioExportActions } from "./audioExport";
 import { createProjectActions, type ProjectActions } from "./project";
 import { createStartupActions, type StartupActions } from "./startup";
@@ -17,12 +17,14 @@ export type FilesRole = ProjectActions & {
   readonly startup: StartupActions;
 };
 
-export function createFilesRole(core: Core, preferences: AppPreferences, plugins: Pick<PluginsActions, "offerCrashReport">): FilesRole {
-  const files = createProjectActions(core, preferences);
+export const filesRole = defineRole("files", ({ core, use }): FilesRole => {
+  const files = createProjectActions(core, use(settingsRole).preferences);
   return {
     ...files,
     templates: createTemplatesActions(core),
     audioExport: createAudioExportActions(core),
-    startup: createStartupActions(files, plugins),
+    startup: createStartupActions(files, use(pluginsRole)),
   };
-}
+});
+
+export const useFiles = () => useRole(filesRole);

@@ -3,11 +3,11 @@
 import { For } from "solid-js";
 import { GRID_CHOICES } from "../common/time";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconCopy, IconDuplicate, IconExport, IconImport, IconKeyboard, IconPaste, IconTrash } from "../common/icons";
 import { ToolButton, Toolbar, ToolbarDivider } from "../common/Toolbar";
 import { NoteTools, type NoteToolsProps } from "./NoteTools";
 import { ZOOMS } from "./pianoRollLayout";
+import { useKeyboard } from "../keyboard/role";
 
 export interface ToolbarProps {
   hasNotes: boolean;
@@ -28,14 +28,14 @@ export interface ToolbarProps {
 }
 
 export function PianoRollToolbar(props: ToolbarProps) {
-  const session = useSession();
+  const keyboard = useKeyboard();
   const hasSelection = () => props.selectedCount > 0;
   const msg = () => t().pianoRoll;
   return (
     <>
       <Toolbar label={msg().toolbar}>
         <span class="flex h-6 items-center gap-1 rounded border border-field-line bg-bg px-2 text-xs text-muted" title={msg().keyboardHint}>
-          <IconKeyboard size={14} />{msg().keyboard} C{session.keyboard.octave()} <span class="font-mono text-text">[ ]</span>
+          <IconKeyboard size={14} />{msg().keyboard} C{keyboard.octave()} <span class="font-mono text-text">[ ]</span>
         </span>
         <ToolbarDivider />
         <label class="flex items-center gap-1.5"><span class="label">{msg().grid}</span>

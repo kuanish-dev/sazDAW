@@ -6,11 +6,12 @@ import { kindChoices } from "../common/catalog";
 import { MAX_LEVEL, findNode, nodeLabel } from "../graph/graphRules";
 import { type StripModel, canBePreFader, outputTargets, sendTargets } from "./mixerStrips";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconClose } from "../common/icons";
 import { Knob } from "../common/Knob";
 import { PickSelect } from "../common/PickSelect";
 import { insertedEffectPosition } from "../graph/graphLayout";
+import { useProjectCopy } from "../core/roles";
+import { useGraph } from "../graph/role";
 
 /** New send level: half, so the bus doesn't overload right away. */
 const NEW_SEND_LEVEL = 0.5;
@@ -19,12 +20,12 @@ const SEND_LEVEL_RANGE = { min: 0, max: MAX_LEVEL, default: NEW_SEND_LEVEL } as 
 const percent = (level: number) => `${Math.round(level * 100)}%`;
 
 export function InsertList(props: { model: StripModel; onOpenEffect: (node: Id, anchor: HTMLElement) => void }) {
-  const session = useSession();
-  const { graph } = session;
-  const effects = () => kindChoices(session.catalog()?.effects ?? []);
+  const { catalog, project } = useProjectCopy();
+  const graph = useGraph();
+  const effects = () => kindChoices(catalog()?.effects ?? []);
   /** A new effect goes at the last insert (`graph.insertEffectAt`: after it, or right before the master). */
   const add = (kind: string) => {
-    const tail = findNode(session.project.graph, props.model.tail);
+    const tail = findNode(project.graph, props.model.tail);
     if (!tail) return;
     const at = insertedEffectPosition(tail);
     void graph.insertEffectAt(tail.id, kind, at.x, at.y);
@@ -54,9 +55,9 @@ function InsertSlot(props: { node: GraphNode; onOpen: (node: Id, anchor: HTMLEle
 }
 
 export function SendList(props: { model: StripModel }) {
-  const session = useSession();
-  const { graph } = session;
-  const targets = () => sendTargets(session.project.graph, props.model).map((n) => ({ value: String(n.id), label: nodeLabel(n) }));
+  const { project } = useProjectCopy();
+  const graph = useGraph();
+  const targets = () => sendTargets(project.graph, props.model).map((n) => ({ value: String(n.id), label: nodeLabel(n) }));
   return (
     <div class="flex flex-col gap-0.5">
       <span class="label">{t().mixer.sends}</span>
@@ -73,10 +74,10 @@ export function SendList(props: { model: StripModel }) {
 }
 
 function SendRow(props: { edge: GraphEdge }) {
-  const session = useSession();
-  const { graph } = session;
-  const target = () => findNode(session.project.graph, props.edge.to);
-  const preAllowed = () => canBePreFader(session.project.graph, props.edge);
+  const { project } = useProjectCopy();
+  const graph = useGraph();
+  const target = () => findNode(project.graph, props.edge.to);
+  const preAllowed = () => canBePreFader(project.graph, props.edge);
   return (
     <div class="flex items-center gap-1">
       <div class="w-10 shrink-0">
@@ -104,14 +105,15 @@ function SendRow(props: { edge: GraphEdge }) {
 }
 
 export function OutputSelect(props: { model: StripModel }) {
-  const session = useSession();
-  const targets = () => outputTargets(session.project.graph, props.model);
+  const { project } = useProjectCopy();
+  const graph = useGraph();
+  const targets = () => outputTargets(project.graph, props.model);
   return (
     <select
       class="field !h-6 w-full !px-1 text-[11px]"
       aria-label={t().mixer.output}
       title={t().mixer.outputHint}
-      onChange={(e) => void session.graph.routeOutput(props.model.tail, Number(e.currentTarget.value))}
+      onChange={(e) => void graph.routeOutput(props.model.tail, Number(e.currentTarget.value))}
     >
       <Show when={!props.model.output}><option value="">{t().mixer.nowhere}</option></Show>
       {/* `selected` on the option rather than `value` on the select: a value set before the options exist is lost by the browser. */}

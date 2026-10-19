@@ -12,9 +12,10 @@ import {
 import { formatDuration } from "../common/time";
 import { t } from "../i18n";
 import { createWatchedPoll } from "../core/poller";
-import { useSession } from "../session";
 import { fitCanvas } from "../common/canvas";
 import { palette } from "../common/theme";
+import { usePlayback } from "../core/roles";
+import { useMixer } from "./role";
 
 const POLL_MS = 50;
 const SCOPE_SIZE = 176;
@@ -25,11 +26,12 @@ const DOT_SIZE = 1.5;
 const SCOPE_RADIUS = SCOPE_SIZE / 2 - 12;
 
 export function MasterMeters() {
-  const session = useSession();
-  const { master } = session.mixer;
+  const { tick } = usePlayback();
+  const mixer = useMixer();
+  const { master } = mixer;
   const [reading, setReading] = createSignal<MasterReading | null>(null);
   const msg = () => t().mixer.meters;
-  const mono = () => session.tick().mono;
+  const mono = () => tick().mono;
   let scope!: HTMLCanvasElement;
   /** The theme colors, read once per theme change rather than on every frame. */
   const colors = createMemo(() => palette());

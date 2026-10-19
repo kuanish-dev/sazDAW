@@ -5,21 +5,24 @@ import { type JSX, Show, createSignal } from "solid-js";
 import type { ParamTarget } from "../api/types";
 import { sameTarget, targetLabel } from "../automation/automationRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { ContextMenu, MenuItem, MenuLabel, type MenuPoint, menuPoint } from "./ContextMenu";
+import { useProjectCopy } from "../core/roles";
+import { useAutomation } from "../automation/role";
+import { useMidi } from "../midi/role";
 
 export function ParamMenu(props: { target: ParamTarget; children: JSX.Element }) {
-  const session = useSession();
-  const { automation } = session;
+  const { catalog, project } = useProjectCopy();
+  const automation = useAutomation();
+  const midi = useMidi();
 
   const [menu, setMenu] = createSignal<MenuPoint | null>(null);
-  const mapping = () => session.midi.learn.mappings().find((m) => sameTarget(m.target, props.target));
-  const lane = () => session.project.automation.find((l) => sameTarget(l.target, props.target));
+  const mapping = () => midi.learn.mappings().find((m) => sameTarget(m.target, props.target));
+  const lane = () => project.automation.find((l) => sameTarget(l.target, props.target));
   const waiting = () => {
-    const target = session.midi.learn.learning();
+    const target = midi.learn.learning();
     return target !== null && sameTarget(target, props.target);
   };
-  const label = () => targetLabel(props.target, session.project, session.catalog());
+  const label = () => targetLabel(props.target, project, catalog());
   const close = () => setMenu(null);
   const msg = () => t().controls;
 
@@ -46,14 +49,14 @@ export function ParamMenu(props: { target: ParamTarget; children: JSX.Element })
             <MenuLabel>{msg().midi.title}</MenuLabel>
             <Show
               when={!waiting()}
-              fallback={<MenuItem onClose={close} onPick={() => void session.midi.learn.cancelLearn()}>{msg().midi.stopWaiting}</MenuItem>}
+              fallback={<MenuItem onClose={close} onPick={() => void midi.learn.cancelLearn()}>{msg().midi.stopWaiting}</MenuItem>}
             >
-              <MenuItem onClose={close} onPick={() => void session.midi.learn.learn(props.target, label())}>
+              <MenuItem onClose={close} onPick={() => void midi.learn.learn(props.target, label())}>
                 {mapping() ? msg().midi.assignOther : msg().midi.assign}
               </MenuItem>
             </Show>
             <Show when={mapping()}>
-              {(m) => <MenuItem onClose={close} onPick={() => void session.midi.learn.removeMapping(props.target)}>{msg().midi.remove(m().cc)}</MenuItem>}
+              {(m) => <MenuItem onClose={close} onPick={() => void midi.learn.removeMapping(props.target)}>{msg().midi.remove(m().cc)}</MenuItem>}
             </Show>
           </ContextMenu>
         )}

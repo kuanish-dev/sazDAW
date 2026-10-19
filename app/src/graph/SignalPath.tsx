@@ -9,23 +9,23 @@ import { type GraphNode, type Id, MAX_WATCHED_NODES } from "../api/types";
 import { nodeLabel } from "./graphRules";
 import { signalPath } from "./signalPathRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconArrowRight } from "../common/icons";
 import { EffectGraph, hasEffectGraph } from "../effects/EffectGraph";
 import { NODE_ACCENT } from "./NodeCard";
+import { useProjectCopy } from "../core/roles";
 
 export function SignalPath(props: { selected: Id | null; onSelect: (id: Id) => void }) {
-  const session = useSession();
+  const { project } = useProjectCopy();
   /** The node the path is drawn through. */
   const anchor = createMemo<Id | null>((previous) => {
     const id = props.selected;
     if (id === null) return previous;
-    const onPath = previous !== null && signalPath(session.project.graph, previous).some((node) => node.id === id);
+    const onPath = previous !== null && signalPath(project.graph, previous).some((node) => node.id === id);
     return onPath ? previous : id;
   }, null);
   const path = createMemo(() => {
     const id = anchor();
-    return id === null ? [] : signalPath(session.project.graph, id);
+    return id === null ? [] : signalPath(project.graph, id);
   });
   const effects = () => path().filter((node) => node.kind.type === "effect").length;
 

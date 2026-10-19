@@ -4,8 +4,8 @@ import { For, createSignal } from "solid-js";
 import type { AppearancePreferences } from "../api/types";
 import { ACCENT_CHOICES, THEME_CHOICES, TRACK_HEIGHT_CHOICES, UI_SCALE_MAX, UI_SCALE_MIN, UI_SCALE_STEP } from "./preferenceRules";
 import { LANGUAGE_CHOICES, t } from "../i18n";
-import { useSession } from "../session";
 import { SectionTitle, SettingGroup, SettingRow, Toggle } from "./SettingRow";
+import { useSettings } from "./role";
 
 const percent = (scale: number) => `${Math.round(scale * 100)} %`;
 
@@ -27,11 +27,11 @@ function Segmented<T extends string>(props: { options: readonly { value: T; labe
 }
 
 export function AppearanceSection() {
-  const session = useSession();
-  const look = () => session.settings.preferences.current().appearance;
+  const settings = useSettings();
+  const look = () => settings.preferences.current().appearance;
   const msg = () => t().appearance;
   const set = (patch: Partial<AppearancePreferences>) =>
-    void session.settings.preferences.update((p) => ({ ...p, appearance: { ...p.appearance, ...patch } }));
+    void settings.preferences.update((p) => ({ ...p, appearance: { ...p.appearance, ...patch } }));
   // While the slider is dragged we show the number and change the scale on release: otherwise the page slides away from under the mouse.
   const [scaleDraft, setScaleDraft] = createSignal<number | null>(null);
   const themes = () => THEME_CHOICES.map((value) => ({ value, label: msg().themes[value] }));
@@ -43,13 +43,13 @@ export function AppearanceSection() {
       <SettingGroup title={msg().language}>
         <SettingRow label={msg().language} hint={msg().languageHint}>
           <Segmented
-            label={msg().language} options={LANGUAGE_CHOICES} value={session.settings.preferences.current().language}
-            onChange={(language) => void session.settings.preferences.update((p) => ({ ...p, language }))}
+            label={msg().language} options={LANGUAGE_CHOICES} value={settings.preferences.current().language}
+            onChange={(language) => void settings.preferences.update((p) => ({ ...p, language }))}
           />
         </SettingRow>
       </SettingGroup>
       <SettingGroup title={msg().colors}>
-        <SettingRow label={msg().theme} hint={look().theme === "system" ? msg().themeNow(session.settings.appearance.theme() === "dark") : undefined}>
+        <SettingRow label={msg().theme} hint={look().theme === "system" ? msg().themeNow(settings.appearance.theme() === "dark") : undefined}>
           <Segmented label={msg().theme} options={themes()} value={look().theme} onChange={(theme) => set({ theme })} />
         </SettingRow>
         <SettingRow label={msg().accent} hint={msg().accentHint}>

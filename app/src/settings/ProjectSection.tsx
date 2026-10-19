@@ -5,20 +5,23 @@ import { For, Show, createMemo } from "solid-js";
 import { projectStats } from "./projectStats";
 import { MAX_NUMERATOR, MAX_TEMPO, MIN_TEMPO, RECORD_SNAPS, SIGNATURE_DENOMINATORS, formatDuration } from "../common/time";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { NumberField } from "../common/NumberField";
 import { CopyButton, SectionTitle, SettingGroup, SettingRow, Toggle } from "./SettingRow";
+import { usePlayback, useProjectCopy } from "../core/roles";
+import { useRecording } from "../recording/role";
+import { useTransport } from "../transport/role";
 
 export function ProjectSection() {
-  const session = useSession();
-  const { transport } = session;
-const { tempo } = session.transport;
-const { noteRecord } = session.recording;
-  const tick = session.tick;
-  const stats = createMemo(() => projectStats(session.project));
+  const { tick } = usePlayback();
+  const { hasProject, project, status } = useProjectCopy();
+  const recording = useRecording();
+  const transport = useTransport();
+const { tempo } = transport;
+const { noteRecord } = recording;
+  const stats = createMemo(() => projectStats(project));
   const msg = () => t().settings.project;
-  const baseTempo = () => session.project.tempoMap.tempos[0]?.bpm ?? MIN_TEMPO;
-  const baseSignature = () => session.project.tempoMap.signatures[0]?.signature ?? { numerator: 4, denominator: 4 };
+  const baseTempo = () => project.tempoMap.tempos[0]?.bpm ?? MIN_TEMPO;
+  const baseSignature = () => project.tempoMap.signatures[0]?.signature ?? { numerator: 4, denominator: 4 };
 
   const facts = () => {
     const labels = msg().facts;
@@ -35,15 +38,15 @@ const { noteRecord } = session.recording;
   return (
     <>
       <SectionTitle title={t().settings.sections.project} hint={msg().hint} />
-      <Show when={session.hasProject()} fallback={<p class="panel p-4 text-sm text-muted">{msg().noProject}</p>}>
+      <Show when={hasProject()} fallback={<p class="panel p-4 text-sm text-muted">{msg().noProject}</p>}>
         <SettingGroup title={msg().file}>
           <SettingRow label={msg().name}>
-            <span class="text-sm">{session.status().name}</span>
-            <Show when={session.status().dirty}><span class="text-xs text-accent">{msg().unsaved}</span></Show>
+            <span class="text-sm">{status().name}</span>
+            <Show when={status().dirty}><span class="text-xs text-accent">{msg().unsaved}</span></Show>
           </SettingRow>
           <SettingRow label={msg().path}>
-            <span class="max-w-80 truncate font-mono text-xs text-muted" title={session.status().path ?? undefined}>{session.status().path}</span>
-            <CopyButton text={() => session.status().path ?? ""} />
+            <span class="max-w-80 truncate font-mono text-xs text-muted" title={status().path ?? undefined}>{status().path}</span>
+            <CopyButton text={() => status().path ?? ""} />
           </SettingRow>
         </SettingGroup>
         <SettingGroup title={msg().time}>

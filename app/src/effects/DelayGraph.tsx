@@ -9,8 +9,8 @@ import { TAPS_FLOOR_DB, beatTimes, delayTaps, heardTaps } from "./delayTaps";
 import { pushReading, readingAt, recentPeak } from "./liveLevels";
 import { dbFraction, toDb } from "../common/plot";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { listenToNode } from "./nodeSound";
+import { usePlayback } from "../core/roles";
 
 const VIEW = { width: 300, height: 110 } as const;
 /** Room under the bars for the time labels. */
@@ -27,9 +27,9 @@ interface InputReading {
 }
 
 export function DelayGraph(props: { node: Id; infos: ParamInfo[]; values: Params }) {
-  const session = useSession();
+  const { tick } = usePlayback();
   // A memo: the tick changes 30 times a second, the tempo rarely.
-  const tempo = createMemo(() => session.tick().tempo);
+  const tempo = createMemo(() => tick().tempo);
   const taps = createMemo(() => delayTaps(props.infos, props.values, tempo()));
   const [history, setHistory] = createSignal<InputReading[]>([]);
   const [now, setNow] = createSignal(0);

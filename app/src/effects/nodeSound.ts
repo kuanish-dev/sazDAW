@@ -5,14 +5,14 @@
 import { createEffect, createMemo, on, onCleanup } from "solid-js";
 import type { Id } from "../api/types";
 import type { NodeSound } from "./nodeSounds";
-import { useSession } from "../session";
+import { useEffects } from "./role";
 
 export type { NodeSound };
 
 /** Hears node `node` while the calling component lives: `hear` gets each reading, `onStop` runs when the picture stops
  *  hearing it (closed, or switched to another node) to clear what was shown. */
 export function listenToNode(node: () => Id, hear: (sound: NodeSound) => void, onStop?: () => void): void {
-  const { nodeSounds } = useSession().effects;
+  const { nodeSounds } = useEffects();
   // The memo passes on only a real change of the node (the panel's node object is rebuilt on every project update).
   const id = createMemo(node);
   createEffect(

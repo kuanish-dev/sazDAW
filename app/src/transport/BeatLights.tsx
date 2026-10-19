@@ -3,7 +3,7 @@
 // single dot that flashes on every beat. `createBeat` is the beat clock the lights and the Play button pulse with.
 import { For, createMemo, type Accessor } from "solid-js";
 import { barPosition, signatureAt } from "../common/tempoMap";
-import { useSession } from "../session";
+import { usePlayback, useProjectCopy } from "../core/roles";
 
 const MAX_DOTS = 8;
 
@@ -17,11 +17,12 @@ export interface Beat {
 
 /** Follows the playhead on every screen frame but changes only on a new beat; `null` while stopped. */
 export function createBeat(): Accessor<Beat | null> {
-  const session = useSession();
+  const { smoothPlayhead } = usePlayback();
+  const { project } = useProjectCopy();
   return createMemo<Beat | null>(() => {
-    const at = session.smoothPlayhead();
+    const at = smoothPlayhead();
     if (at === null) return null;
-    const map = session.project.tempoMap;
+    const map = project.tempoMap;
     const { bar, beat } = barPosition(map, at);
     const beats = signatureAt(map, at).signature.numerator;
     // Beats counted from the song start: consecutive beats always differ in parity, across bar lines too.
@@ -30,8 +31,8 @@ export function createBeat(): Accessor<Beat | null> {
 }
 
 export function BeatLights(props: { beat: Beat | null }) {
-  const session = useSession();
-  const beats = () => props.beat?.beats ?? session.tick().signature.numerator;
+  const { tick } = usePlayback();
+  const beats = () => props.beat?.beats ?? tick().signature.numerator;
   const dots = () => (beats() <= MAX_DOTS ? beats() : 1);
   return (
     <div class="flex items-center gap-[3px] self-center" aria-hidden="true">

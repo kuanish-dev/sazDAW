@@ -1,6 +1,6 @@
-// The instruments role as the session holds it: a track's MIDI effects before its instrument (`noteEffects.ts`); the
-// instrument window itself is a component of this folder.
-import type { Core } from "../core/core";
+// The instruments role: a track's MIDI effects before its instrument (`noteEffects.ts`); the instrument window itself is a
+// component of this folder.
+import { defineRole, useRole } from "../core/roles";
 import { createNoteEffectsActions, type NoteEffectsActions } from "./noteEffects";
 
 export interface InstrumentsRole {
@@ -8,6 +8,6 @@ export interface InstrumentsRole {
   readonly noteEffects: NoteEffectsActions;
 }
 
-export function createInstrumentsRole(core: Core): InstrumentsRole {
-  return { noteEffects: createNoteEffectsActions(core) };
-}
+export const instrumentsRole = defineRole("instruments", ({ core }): InstrumentsRole => ({ noteEffects: createNoteEffectsActions(core) }));
+
+export const useInstruments = () => useRole(instrumentsRole);

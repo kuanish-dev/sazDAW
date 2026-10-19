@@ -1,16 +1,16 @@
 // MIDI controller lane under velocity (collapsible so it does not take space from the note grid): lane choice (pitch bend,
 // mod wheel, sustain, expression, aftertouch, "Other CC…"; lanes with points are marked with a dot) and the lane canvas. Assembly only:
-// drawing — `controllerRender`, mouse — `controllerPointer`, editing — `session.pianoroll.setControllerLane` (one edit per gesture).
+// drawing — `controllerRender`, mouse — `controllerPointer`, editing — `usePianoroll().setControllerLane` (one edit per gesture).
 import { For, Show, createEffect, createSignal } from "solid-js";
 import type { ControllerKind, ControllerPoint } from "../api/types";
 import { MAX_CC_NUMBER, controllerFromKey, controllerKey, controllerLabel, laneChoices, lanePoints, lanesOf, sameKind } from "./controllers";
 import type { NoteClip } from "./noteClip";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconChevronDown, IconChevronRight } from "../common/icons";
 import { NumberField } from "../common/NumberField";
 import { createControllerPointer } from "./controllerPointer";
 import { drawController } from "./controllerRender";
+import { usePianoroll } from "./role";
 
 const OTHER_CC = "other";
 
@@ -30,7 +30,7 @@ export interface ControllerLaneProps {
 }
 
 export function ControllerLaneView(props: ControllerLaneProps) {
-  const notes = useSession().pianoroll;
+  const notes = usePianoroll();
   const [kind, setKind] = createSignal<ControllerKind>({ type: "pitchBend" });
   /** A custom CC number from "Other CC…" while it has no points (otherwise it is in the list anyway). */
   const [extra, setExtra] = createSignal<ControllerKind | null>(null);

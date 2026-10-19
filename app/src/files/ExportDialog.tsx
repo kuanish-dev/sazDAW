@@ -9,12 +9,16 @@ import {
   type LoudnessChoice, type RangeChoice,
 } from "./exportAudio";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { Modal } from "../common/Modal";
+import { useProjectCopy } from "../core/roles";
+import { useFiles } from "./role";
+import { useSelection } from "../selection/role";
 
 export function ExportDialog(props: { onClose: () => void }) {
-  const session = useSession();
-  const { audioExport } = session.files;
+  const { project } = useProjectCopy();
+  const files = useFiles();
+  const selection = useSelection();
+  const { audioExport } = files;
   const [path, setPath] = createSignal("");
   const [format, setFormat] = createSignal<ExportFormat>("wav");
   const [sampleRate, setSampleRate] = createSignal(DEFAULT_SAMPLE_RATE);
@@ -33,7 +37,7 @@ export function ExportDialog(props: { onClose: () => void }) {
 
   const integer = () => isIntegerPcm(format(), bitDepth());
   const ditherOn = () => dither() ?? defaultDither(bitDepth());
-  const selection = () => clipsRange(session.project.clips, session.selection.clips());
+  const selectedRange = () => clipsRange(project.clips, selection.clips());
 
   const chooseFormat = (next: ExportFormat) => {
     setFormat(next);
@@ -51,7 +55,7 @@ export function ExportDialog(props: { onClose: () => void }) {
     const result = await audioExport.render(exportOptions({
       path: path(), format: format(), sampleRate: sampleRate(), bitDepth: bitDepth(), bitrate: bitrate(), dither: dither(),
       loudness: loudness(), customLufs: customLufs(), ceilingDb: ceiling(), range: range(), stems: stems(), tailSeconds: tail(),
-    }, selection()));
+    }, selectedRange()));
     setBusy(false);
     if (result) props.onClose();
   };
@@ -109,8 +113,8 @@ export function ExportDialog(props: { onClose: () => void }) {
         <label class={row}><span class="label">{msg().range}</span>
           <select class="field" value={range()} onChange={(e) => setRange(e.currentTarget.value as RangeChoice)}>
             <option value="song">{msg().ranges.song}</option>
-            <option value="loop" disabled={!session.project.loopRegion}>{msg().ranges.loop}</option>
-            <option value="selection" disabled={!selection()}>{msg().ranges.selection}</option>
+            <option value="loop" disabled={!project.loopRegion}>{msg().ranges.loop}</option>
+            <option value="selection" disabled={!selectedRange()}>{msg().ranges.selection}</option>
           </select></label>
         <label class={row}><span class="label">{msg().tail}</span><input class="field" type="number" min="0" max={MAX_TAIL_SECONDS} step="0.5" value={tail()} onInput={(e) => setTail(Number(e.currentTarget.value))} /></label>
         <Show when={integer()}>

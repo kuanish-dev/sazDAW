@@ -7,7 +7,7 @@ These rules matter more than convenience and speed. The map of the code is `ARCH
 1. **The contract comes first.** An interface (a trait in `daw-contracts`, a TS interface on the frontend) describes what an entity does. We design and fix the contract first, then write the implementation. Changing a contract is a deliberate decision, not a side effect of editing an implementation.
 2. **Implementations come second.** A concrete implementation is a detail: it must follow the interface and honour the contract (including errors and edge cases); everything else is its own internal business and can be rewritten without consequences for anyone else.
 3. **Everything goes through interfaces.** An upper layer sees only the interfaces of the layer below and knows nothing about its implementation. Concrete types are created and wired together in one place: `daw-bootstrap` (Rust) and `src/composition.ts` (frontend).
-4. **The upper level delegates to the lower one.** A UI component does not call the backend and does not decide how to show errors: it asks its role (`session.<role>.*`), and the role delegates to the API.
+4. **The upper level delegates to the lower one.** A UI component does not call the backend and does not decide how to show errors: it asks its role (`use<Role>()`), and the role delegates to the API.
 5. **Code must be simple.** A simple solution beats a "flexible" one. We don't add abstractions "for the future"; the most obvious code is enough: short functions, single responsibility, clear names, comments only about "why".
 
 6. **Think first, then write.** Before every feature, before the first line of code, answer these questions (briefly, in a message or in the commit description):

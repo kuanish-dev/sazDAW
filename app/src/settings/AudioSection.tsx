@@ -9,9 +9,9 @@ import { plainLevel } from "../mixer/mixer";
 import { t } from "../i18n";
 import { errorText } from "../i18n/errors";
 import { createWatchedPoll } from "../core/poller";
-import { useSession } from "../session";
 import { Meter } from "../common/Meter";
 import { SectionTitle, SettingGroup, SettingRow } from "./SettingRow";
+import { useSettings } from "./role";
 
 /** Poll the input level ~15 times a second: the meter looks alive. */
 const LEVEL_POLL_MS = 66;
@@ -29,7 +29,7 @@ function DeviceSelect(props: { label: string; devices: AudioDevice[]; value: str
 }
 
 export function AudioSection() {
-  const { audio } = useSession().settings;
+  const { audio } = useSettings();
   const [devices, setDevices] = createSignal<AudioDevices>({ outputs: [], inputs: [] });
   const [status, setStatus] = createSignal<AudioStatus | null>(null);
   const [form, setForm] = createStore<AudioSettingsForm>({ output: "", input: "", buffer: "", recordLatency: "" });

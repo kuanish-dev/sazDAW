@@ -9,19 +9,22 @@ import {
 import { MAX_PART_REPEAT, parseRepeat, parseStartBar } from "../common/partFields";
 import { instrumentTracks } from "../tracks/trackRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { createLoopPreview } from "../common/loopPreview";
 import { Modal } from "../common/Modal";
 import { ChordPalette } from "./ChordPalette";
 import { ProgressionBars } from "./ProgressionBars";
 import { StrumPicker } from "./StrumPicker";
+import { useProjectCopy } from "../core/roles";
+import { useChords } from "./role";
+import { useSelection } from "../selection/role";
 
 /** The strum a new part starts with: "six" (D DU UDU) suits most songs. */
 const FIRST_STRUM = "six";
 
 export function ChordPartDialog(props: { onClose: () => void }) {
-  const session = useSession();
-  const { chords } = session;
+  const { catalog, project } = useProjectCopy();
+  const chords = useChords();
+  const selection = useSelection();
   const [strums, setStrums] = createSignal<StrumPattern[]>([]);
   const [strum, setStrum] = createSignal(FIRST_STRUM);
   const [keyRoot, setKeyRoot] = createSignal(0);
@@ -30,7 +33,7 @@ export function ChordPartDialog(props: { onClose: () => void }) {
   /** Until the progression is edited, it follows the key. */
   const [edited, setEdited] = createSignal(false);
   const [selected, setSelected] = createSignal<ChordCell>({ bar: 0, half: 0 });
-  const [target, setTarget] = createSignal(defaultTarget(session.project, session.selection.track()));
+  const [target, setTarget] = createSignal(defaultTarget(project, selection.track()));
   const [startBar, setStartBar] = createSignal(0);
   const [repeat, setRepeat] = createSignal(1);
   const [replace, setReplace] = createSignal(false);
@@ -68,7 +71,7 @@ export function ChordPartDialog(props: { onClose: () => void }) {
     if (await chords.build(request())) props.onClose();
   };
 
-  const kindLabel = (kind: string) => session.catalog()?.instruments.find((k) => k.kind === kind)?.label ?? kind;
+  const kindLabel = (kind: string) => catalog()?.instruments.find((k) => k.kind === kind)?.label ?? kind;
   const msg = () => t().chords;
 
   return (
@@ -99,9 +102,9 @@ export function ChordPartDialog(props: { onClose: () => void }) {
               <optgroup label={msg().newTracks}>
                 <For each={NEW_TRACK_KINDS}>{(kind) => <option value={targetChoice({ type: "new", kind })}>{kindLabel(kind)}</option>}</For>
               </optgroup>
-              <Show when={instrumentTracks(session.project).length > 0}>
+              <Show when={instrumentTracks(project).length > 0}>
                 <optgroup label={msg().yourTracks}>
-                  <For each={instrumentTracks(session.project)}>{(track) => <option value={targetChoice({ type: "track", id: track.id })}>{track.name}</option>}</For>
+                  <For each={instrumentTracks(project)}>{(track) => <option value={targetChoice({ type: "track", id: track.id })}>{track.name}</option>}</For>
                 </optgroup>
               </Show>
             </select>

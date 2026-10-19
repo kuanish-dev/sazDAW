@@ -1,9 +1,8 @@
-// Settings page (VS Code settings-editor feel): section list on the left, the chosen section on the right. Which section is open is session state
+// Settings page (VS Code settings-editor feel): section list on the left, the chosen section on the right. Which section is open is the shell's state
 // (`ui.settingsSection`), so menu items ("Audio…", "Error log…") open the right one directly.
 import { For, type JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { t } from "../i18n";
-import { type SettingsSection, useSession } from "../session";
 import {
   IconFolder, IconInfo, IconKeyboard, IconLibrary, IconPaint, IconPerson, IconPiano, IconPlug, IconSpeaker, type IconProps,
 } from "../common/icons";
@@ -16,6 +15,8 @@ import { ProfileSection } from "./ProfileSection";
 import { ProjectSection } from "./ProjectSection";
 import { ShortcutsSection } from "./ShortcutsSection";
 import { SoundsSection } from "./SoundsSection";
+import { useShell } from "../shell/role";
+import type { SettingsSection } from "../shell/views";
 
 const SECTIONS: readonly { id: SettingsSection; icon: (p: IconProps) => JSX.Element; view: () => JSX.Element }[] = [
   { id: "profile", icon: IconPerson, view: ProfileSection },
@@ -30,8 +31,8 @@ const SECTIONS: readonly { id: SettingsSection; icon: (p: IconProps) => JSX.Elem
 ] as const;
 
 export function SettingsView() {
-  const session = useSession();
-  const current = session.shell.settingsSection;
+  const shell = useShell();
+  const current = shell.settingsSection;
 
   return (
     <div class="flex h-full min-h-0">
@@ -43,7 +44,7 @@ export function SettingsView() {
               class="flex h-[26px] w-full shrink-0 cursor-pointer items-center gap-2 px-3 text-left text-sm"
               classList={{ "bg-select text-text": current() === section.id, "text-muted hover:bg-hover hover:text-text": current() !== section.id }}
               aria-current={current() === section.id ? "page" : undefined}
-              onClick={() => session.shell.showSettings(section.id)}
+              onClick={() => shell.showSettings(section.id)}
             >
               <section.icon />
               {t().settings.sections[section.id]}

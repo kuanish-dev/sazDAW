@@ -4,22 +4,24 @@ import { For } from "solid-js";
 import type { Id } from "../api/types";
 import { findNode, nodeLabel, sidechainCandidates, sidechainSource } from "../graph/graphRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
+import { useProjectCopy } from "../core/roles";
+import { useGraph } from "../graph/role";
 
 const NONE = "";
 
 export function SidechainPicker(props: { effect: Id }) {
-  const session = useSession();
-  const current = () => sidechainSource(session.project.graph, props.effect);
+  const { project } = useProjectCopy();
+  const graph = useGraph();
+  const current = () => sidechainSource(project.graph, props.effect);
   // The current key stays in the list even if it is not a track or bus (connected by a wire in the graph).
   const options = () => {
-    const graph = session.project.graph;
+    const graph = project.graph;
     const list = sidechainCandidates(graph, props.effect);
     const key = current();
     const keyNode = key === null ? undefined : findNode(graph, key);
     return keyNode && !list.includes(keyNode) ? [keyNode, ...list] : list;
   };
-  const pick = (value: string) => void session.graph.setSidechain(props.effect, value === NONE ? null : Number(value));
+  const pick = (value: string) => void graph.setSidechain(props.effect, value === NONE ? null : Number(value));
   return (
     <label class="flex items-center gap-2 text-xs" title={t().graph.effect.sidechainHint}>
       <span class="shrink-0 text-muted">{t().graph.effect.sidechain}</span>

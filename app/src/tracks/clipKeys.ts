@@ -1,10 +1,21 @@
 // Timeline clip shortcuts: delete, select, copy and paste — as a table that the help is built from too. With an
 // automation clip selected, Delete, ⌘D and Esc act on it instead.
-// Arrows (move by a grid step) are not handled here: the grid lives in the timeline panel, not in the session.
+// Arrows (move by a grid step) are not handled here: the grid lives in the timeline panel, not in a role.
 import type { Id } from "../api/types";
 import type { ShortcutHelp } from "../common/shortcuts";
 import { t, type Messages } from "../i18n";
-import type { Session } from "../session";
+import type { AutomationRole } from "../automation/role";
+import type { ProjectReads } from "../core/projectSync";
+import type { Selection } from "../selection/selection";
+import type { TracksRole } from "./role";
+
+/** The roles the clip keys ask. */
+export interface ClipKeyRoles {
+  readonly copy: ProjectReads;
+  readonly selection: Selection;
+  readonly tracks: TracksRole;
+  readonly automation: AutomationRole;
+}
 
 interface ClipKey {
   keys: string;
@@ -14,12 +25,12 @@ interface ClipKey {
   meta: boolean;
   /** Works without selected clips too. */
   withoutSelection?: boolean;
-  run(session: Session, ids: Id[]): void;
+  run(roles: ClipKeyRoles, ids: Id[]): void;
 }
 
 const CLIP_KEYS: readonly ClipKey[] = [
   { keys: "⌘A", label: "selectAll", codes: ["KeyA"], meta: true, withoutSelection: true,
-    run: (s) => s.selection.selectClips(s.project.clips.map((c) => c.id)) },
+    run: (s) => s.selection.selectClips(s.copy.project.clips.map((c) => c.id)) },
   { keys: "⌘V", label: "paste", codes: ["KeyV"], meta: true, withoutSelection: true,
     run: (s) => void s.tracks.clips.paste() },
   { keys: "Esc", label: "deselect", codes: ["Escape"], meta: false, run: (s) => s.selection.clear() },
@@ -35,12 +46,12 @@ export function clipKeysHelp(): readonly ShortcutHelp[] {
 }
 
 /** Keys on the selected automation clip: delete, duplicate, deselect. */
-function handleAutomationClipKey(event: KeyboardEvent, session: Session): boolean {
-  const chosen = session.selection.automation();
+function handleAutomationClipKey(event: KeyboardEvent, roles: ClipKeyRoles): boolean {
+  const chosen = roles.selection.automation();
   if (chosen?.clip == null) return false;
   const { lane, clip } = chosen;
   const meta = event.metaKey || event.ctrlKey;
-  const { automation } = session;
+  const { automation } = roles;
   if (event.code === "Delete" || event.code === "Backspace") void automation.removeClip(lane, clip);
   else if (meta && event.code === "KeyD") void automation.duplicateClip(lane, clip);
   else if (event.code === "Escape") automation.select(null);
@@ -50,13 +61,13 @@ function handleAutomationClipKey(event: KeyboardEvent, session: Session): boolea
 }
 
 /** Handles a key; `true` — the key was consumed (`preventDefault` already called). */
-export function handleClipKey(event: KeyboardEvent, session: Session): boolean {
-  if (handleAutomationClipKey(event, session)) return true;
-  const ids = session.selection.clips();
+export function handleClipKey(event: KeyboardEvent, roles: ClipKeyRoles): boolean {
+  if (handleAutomationClipKey(event, roles)) return true;
+  const ids = roles.selection.clips();
   const meta = event.metaKey || event.ctrlKey;
   const key = CLIP_KEYS.find((k) => k.codes.includes(event.code) && (!k.meta || meta) && (k.withoutSelection || ids.length > 0));
   if (!key) return false;
   event.preventDefault();
-  key.run(session, ids);
+  key.run(roles, ids);
   return true;
 }

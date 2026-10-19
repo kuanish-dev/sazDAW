@@ -5,51 +5,55 @@ import type { Id } from "../api/types";
 import { targetLabel } from "../automation/automationRules";
 import { instrumentTracks } from "../tracks/trackRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { SectionTitle, SettingGroup, SettingRow } from "./SettingRow";
 import { IconRefresh } from "../common/icons";
+import { useProjectCopy } from "../core/roles";
+import { useMidi } from "../midi/role";
+import { useSelection } from "../selection/role";
 
 export function MidiSection() {
-  const session = useSession();
+  const { catalog, project } = useProjectCopy();
+  const midi = useMidi();
+  const selection = useSelection();
   
   const msg = () => t().settings.midi;
   const [devices, setDevices] = createSignal<string[]>([]);
   const [device, setDevice] = createSignal("");
   /** Keyboard notes are played by an instrument: audio tracks are not offered. */
-  const tracks = () => instrumentTracks(session.project);
-  const [track, setTrack] = createSignal<Id | null>(session.selection.track());
+  const tracks = () => instrumentTracks(project);
+  const [track, setTrack] = createSignal<Id | null>(selection.track());
   /** The selected track if it has an instrument, otherwise the first instrument track. */
   const target = () => {
     const chosen = track();
     return chosen !== null && tracks().some((t) => t.id === chosen) ? chosen : (tracks()[0]?.id ?? null);
   };
-  const trackName = (id: Id) => session.project.tracks.find((t) => t.id === id)?.name ?? msg().trackFallback(id);
+  const trackName = (id: Id) => project.tracks.find((t) => t.id === id)?.name ?? msg().trackFallback(id);
 
   const refresh = async () => {
-    const found = await session.midi.input.devices();
+    const found = await midi.input.devices();
     setDevices(found);
-    if (!found.includes(device())) setDevice(session.midi.input.connection()?.device ?? found[0] ?? "");
+    if (!found.includes(device())) setDevice(midi.input.connection()?.device ?? found[0] ?? "");
   };
   onMount(refresh);
-  const label = (target: Parameters<typeof targetLabel>[0]) => targetLabel(target, session.project, session.catalog());
+  const label = (target: Parameters<typeof targetLabel>[0]) => targetLabel(target, project, catalog());
 
   const chooseTrack = (id: Id) => {
     setTrack(id);
     // An already connected keyboard plays the chosen track right away.
-    if (session.midi.input.connection()) void session.midi.input.setTarget(id);
+    if (midi.input.connection()) void midi.input.setTarget(id);
   };
 
   return (
     <>
       <SectionTitle title={t().settings.sections.midi} hint={msg().hint} />
       <SettingGroup title={msg().state}>
-        <SettingRow label={session.midi.input.connection() ? msg().connected : msg().notConnected}>
-          <Show when={session.midi.input.connection()} fallback={<span class="text-sm text-muted">{msg().chooseBelow}</span>}>
+        <SettingRow label={midi.input.connection() ? msg().connected : msg().notConnected}>
+          <Show when={midi.input.connection()} fallback={<span class="text-sm text-muted">{msg().chooseBelow}</span>}>
             {(c) => (
               <>
                 <span class="h-2 w-2 rounded-full bg-ok" aria-hidden="true" />
                 <span class="text-sm">{msg().connection(c().device, trackName(c().track))}</span>
-                <button class="btn" onClick={() => void session.midi.input.disconnect()}>{msg().disconnect}</button>
+                <button class="btn" onClick={() => void midi.input.disconnect()}>{msg().disconnect}</button>
               </>
             )}
           </Show>
@@ -71,21 +75,21 @@ export function MidiSection() {
           </select>
         </SettingRow>
         <SettingRow label="">
-          <button class="btn btn-on" disabled={!device() || target() === null} onClick={() => void session.midi.input.connect(device(), target()!)}>
-            {session.midi.input.connection() ? msg().reconnect : msg().connect}
+          <button class="btn btn-on" disabled={!device() || target() === null} onClick={() => void midi.input.connect(device(), target()!)}>
+            {midi.input.connection() ? msg().reconnect : msg().connect}
           </button>
         </SettingRow>
       </SettingGroup>
       <SettingGroup title={msg().learn}>
-        <Show when={session.midi.learn.learning()}>
+        <Show when={midi.learn.learning()}>
           {(waiting) => (
             <SettingRow label={msg().waiting(label(waiting()))} hint={msg().waitingHint}>
-              <button class="btn" onClick={() => void session.midi.learn.cancelLearn()}>{msg().stopWaiting}</button>
+              <button class="btn" onClick={() => void midi.learn.cancelLearn()}>{msg().stopWaiting}</button>
             </SettingRow>
           )}
         </Show>
         <For
-          each={session.midi.learn.mappings()}
+          each={midi.learn.mappings()}
           fallback={
             <SettingRow label={msg().noMappings} hint={msg().noMappingsHint}>
               <span />
@@ -94,7 +98,7 @@ export function MidiSection() {
         >
           {(m) => (
             <SettingRow label={label(m.target)} hint={msg().mapping(m.cc, m.channel === undefined ? undefined : m.channel + 1)}>
-              <button class="btn" onClick={() => void session.midi.learn.removeMapping(m.target)}>{t().common.remove}</button>
+              <button class="btn" onClick={() => void midi.learn.removeMapping(m.target)}>{t().common.remove}</button>
             </SettingRow>
           )}
         </For>

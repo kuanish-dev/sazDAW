@@ -7,12 +7,13 @@ import { targetLabel, targetRange } from "./automationRules";
 import { MAX_CLIP_LOOP_TICKS } from "./automationCurve";
 import { barLengthAt } from "../common/tempoMap";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { BarsStepper } from "../common/BarsStepper";
 import { IconPencil, IconPointer, IconTrash } from "../common/icons";
 import { ToolButton } from "../common/Toolbar";
 import type { AutomationTool } from "./patternPointer";
 import { PatternEditor } from "./PatternEditor";
+import { useProjectCopy } from "../core/roles";
+import { useAutomation } from "./role";
 
 const TOOLS: readonly AutomationTool[] = ["select", "pencil"] as const;
 const TOOL_ICONS: Readonly<Record<AutomationTool, () => JSX.Element>> = { select: () => <IconPointer />, pencil: () => <IconPencil /> } as const;
@@ -29,9 +30,8 @@ const PERIODS: readonly { ticks: number; label: string }[] = [
 
 /** `snap` is the timeline grid: pattern points snap to it. */
 export function AutomationClipPanel(props: { lane: AutomationLane; clip: AutomationClip; snap: number }) {
-  const session = useSession();
-  const { project } = session;
-  const { automation } = session;
+  const { catalog, project } = useProjectCopy();
+  const automation = useAutomation();
   const msg = () => t().automation;
   const [tool, setTool] = createSignal<AutomationTool>("select");
   const [shape, setShape] = createSignal<AutomationShape>("sine");
@@ -40,7 +40,7 @@ export function AutomationClipPanel(props: { lane: AutomationLane; clip: Automat
   const edit = (change: { lengthTicks?: number; loopTicks?: number }) => void automation.editClip(props.lane.id, props.clip.id, change);
 
   const applyShape = () => {
-    const range = targetRange(props.lane.target, project, session.catalog());
+    const range = targetRange(props.lane.target, project, catalog());
     void automation.drawShape(props.lane.id, props.clip.id, {
       fromTick: 0, toTick: props.clip.loopTicks, shape: shape(), periodTicks: period(), min: range.min, max: range.max,
     });
@@ -49,7 +49,7 @@ export function AutomationClipPanel(props: { lane: AutomationLane; clip: Automat
   return (
     <>
       <div class="flex min-h-9 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-line py-1 pl-3 pr-1.5">
-        <h2 class="label truncate">{targetLabel(props.lane.target, project, session.catalog())}</h2>
+        <h2 class="label truncate">{targetLabel(props.lane.target, project, catalog())}</h2>
         <BarsStepper label={msg().clipLength} hint={msg().clipLengthHint} ticks={props.clip.lengthTicks} bar={bar()}
           max={Number.MAX_SAFE_INTEGER} onSet={(lengthTicks) => edit({ lengthTicks })} />
         <BarsStepper label={msg().patternLength} hint={msg().patternLengthHint} ticks={props.clip.loopTicks} bar={bar()}

@@ -7,7 +7,6 @@ import { createMemo, createSignal, For, Show } from "solid-js";
 import { barPosition, secondsAt } from "../common/tempoMap";
 import { MAX_NUMERATOR, MAX_TEMPO, MIN_TEMPO, RECORD_SNAPS, SIGNATURE_DENOMINATORS, formatBarPosition, formatDuration, formatSeconds } from "../common/time";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import {
   IconChevronDown, IconLoop, IconMetronome, IconPause, IconPlay, IconRecord, IconRedo, IconStop, IconUndo,
 } from "../common/icons";
@@ -17,17 +16,22 @@ import { BeatLights, createBeat } from "./BeatLights";
 import { HeaderWaves } from "./HeaderWaves";
 import { HistoryButton } from "../history/HistoryPanel";
 import { ProjectMenu } from "../files/ProjectMenu";
+import { usePlayback, useProjectCopy } from "../core/roles";
+import { useHistory } from "../history/role";
+import { useMixer } from "../mixer/role";
+import { useRecording } from "../recording/role";
+import { useTransport } from "./role";
 
 /** Red "recording audio" badge with a Stop button: visible on every view. */
 function AudioRecordBadge() {
-  const session = useSession();
+  const recording = useRecording();
   return (
-    <Show when={session.recording.recordingStatus()}>
+    <Show when={recording.recordingStatus()}>
       {(s) => (
         <div class="flex h-7 shrink-0 items-center gap-2 rounded bg-danger pl-2 pr-0.5 text-xs font-medium text-white" role="status">
           <IconRecord size={12} class="animate-pulse" />
           <span>{t().project.transport.audioRecording} <span class="font-mono">{formatDuration(s().seconds)}</span></span>
-          <button class="btn !h-6 !bg-black/25 !px-2 text-xs !text-white hover:!bg-black/40" onClick={() => void session.recording.audioRecord.stop()}>
+          <button class="btn !h-6 !bg-black/25 !px-2 text-xs !text-white hover:!bg-black/40" onClick={() => void recording.audioRecord.stop()}>
             {t().project.transport.stop}
           </button>
         </div>
@@ -39,10 +43,11 @@ function AudioRecordBadge() {
 /** The mono check is on (switched in the mixer's meters): a badge on every view, so it is never left on unnoticed; a
  *  click turns it off. */
 function MonoBadge() {
-  const session = useSession();
+  const { tick } = usePlayback();
+  const mixer = useMixer();
   return (
-    <Show when={session.tick().mono}>
-      <button class="btn btn-on !h-7 shrink-0 text-xs font-semibold" title={t().mixer.meters.monoOnHint} onClick={() => void session.mixer.master.setMono(false)}>
+    <Show when={tick().mono}>
+      <button class="btn btn-on !h-7 shrink-0 text-xs font-semibold" title={t().mixer.meters.monoOnHint} onClick={() => void mixer.master.setMono(false)}>
         {t().mixer.meters.mono}
       </button>
     </Show>
@@ -50,22 +55,23 @@ function MonoBadge() {
 }
 
 export function TransportBar() {
-  const session = useSession();
-  const { transport, history } = session;
-const { tempo } = session.transport;
-const { noteRecord } = session.recording;
-  const tick = session.tick;
-  const status = session.status;
+  const { tick } = usePlayback();
+  const { project, status } = useProjectCopy();
+  const history = useHistory();
+  const recording = useRecording();
+  const transport = useTransport();
+const { tempo } = transport;
+const { noteRecord } = recording;
 
   // Bar and time follow the tempo map (tempo and signature changes); the tempo and signature fields show the playhead's.
-  const position = createMemo(() => formatBarPosition(barPosition(session.project.tempoMap, tick().positionTicks)));
-  const seconds = createMemo(() => formatSeconds(secondsAt(session.project.tempoMap, tick().positionTicks)));
+  const position = createMemo(() => formatBarPosition(barPosition(project.tempoMap, tick().positionTicks)));
+  const seconds = createMemo(() => formatSeconds(secondsAt(project.tempoMap, tick().positionTicks)));
   const here = () => tick().positionTicks;
   const playing = () => tick().state === "playing";
   const beat = createBeat();
   const [menuOpen, setMenuOpen] = createSignal(false);
   const record = () => tick().record;
-  const audioTake = () => session.recording.recordingStatus();
+  const audioTake = () => recording.recordingStatus();
   const recordLit = () => record().armed || audioTake() !== null;
 
   const msg = () => t().project.transport;
@@ -99,7 +105,7 @@ const { noteRecord } = session.recording;
           aria-pressed={record().armed}
           title={msg().recordHint}
           aria-label={msg().record}
-          onClick={() => void session.recording.audioRecord.pressRecord(record().armed)}
+          onClick={() => void recording.audioRecord.pressRecord(record().armed)}
         >
           <IconRecord />
           <Show when={record().capturing}><span class="text-xs">{msg().recordingNotes(record().takeNotes)}</span></Show>

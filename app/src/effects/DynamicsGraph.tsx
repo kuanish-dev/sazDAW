@@ -10,9 +10,9 @@ import { CURVE_FLOOR_DB, type DynamicsCurve, HISTORY_SECONDS, curvePath, levelFr
 import { follow, historyPoints, pushReading, recentPeak } from "./liveLevels";
 import { type Point, areaPath, linePath, toDb } from "../common/plot";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { listenToNode } from "./nodeSound";
 import { ReductionMeter } from "./ReductionMeter";
+import { usePlayback } from "../core/roles";
 
 /** The curve square and, beside it after a gap, the history: one SVG, so both share the height exactly. */
 const SIZE = 140;
@@ -34,12 +34,12 @@ interface LevelReading {
 }
 
 export function DynamicsGraph(props: { node: Id; curve: DynamicsCurve; label: string; hint: string; reduction: number }) {
-  const session = useSession();
+  const { tick } = usePlayback();
   const [history, setHistory] = createSignal<LevelReading[]>([]);
   const [now, setNow] = createSignal(0);
   const [dot, setDot] = createSignal({ input: CURVE_FLOOR_DB, output: CURVE_FLOOR_DB });
   /** The engine's latest gain reduction of this node, not held: the meter holds its peaks, the history shows the movement. */
-  const rawReduction = () => session.tick().reductions.find((r) => r.node === props.node)?.db ?? 0;
+  const rawReduction = () => tick().reductions.find((r) => r.node === props.node)?.db ?? 0;
 
   listenToNode(
     () => props.node,

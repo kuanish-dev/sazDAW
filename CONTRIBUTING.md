@@ -27,7 +27,7 @@ place: `crates/daw-bootstrap` (Rust) and `app/src/composition.ts` (frontend). Im
 `daw-contracts` and don't know about each other.
 
 On the frontend, a UI component doesn't call the backend and doesn't decide how to show errors: it asks its role
-(`session.<role>.*`), and the role calls the API. Even the instant display of a slider value is done by the role,
+(`use<Role>()`), and the role calls the API. Even the instant display of a slider value is done by the role,
 not by the component. The frontend is split by role like the backend: a role keeps its data, its work, its components
 and its math in one folder (see [app/CLAUDE.md](app/CLAUDE.md)).
 
@@ -96,7 +96,7 @@ and `BlockTiming::frame_at`, contract failure — a code from `daw_contracts::co
 2. **Contract tests.**
 3. **Implementation.**
 4. **Wiring** in `daw-bootstrap` / `composition.ts`.
-5. **UI** via its role (`session.<role>.*`).
+5. **UI** via its role (`use<Role>()`).
 6. **Update the docs:** the `CLAUDE.md` of the area (or `docs/features/<feature>.md` for a feature that crosses layers):
    where it lives, which contract it relies on, how to add a similar one. [ARCHITECTURE.md](ARCHITECTURE.md), the map, gets a
    line only for a new crate, area, feature doc or recipe.

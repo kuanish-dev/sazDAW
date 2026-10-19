@@ -1,29 +1,31 @@
 // Panel of the selected audio clip: "Warp to tempo" (the sound's source tempo), pitch in semitones without changing length,
 // and takes: recording over a clip keeps earlier recordings as takes (position, length, warp and fades are shared); which
 // take plays on each part of the clip (the comp) is chosen in the take lanes `TakeLanes`.
-// Clip volume and fades are on the panel above the timeline. All edits go through `session.tracks.clips`.
+// Clip volume and fades are on the panel above the timeline. All edits go through the tracks role's clips (`useTracks().clips`).
 import { Show } from "solid-js";
 import type { Clip, Track } from "../api/types";
 import { clipLabel } from "../tracks/clipRules";
 import { barsBetween, tempoAt } from "../common/tempoMap";
 import { MAX_BPM, MAX_PITCH_SEMITONES, MIN_BPM, formatBpm } from "../tracks/warp";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { NumberField } from "../common/NumberField";
 import { TakeLanes } from "./TakeLanes";
+import { useProjectCopy } from "../core/roles";
+import { useTracks } from "../tracks/role";
 
 /** `snap` is the timeline snap grid (ticks): take parts are chosen on it. */
 export function AudioClipPanel(props: { clip: Clip; track: Track | undefined; snap: number }) {
-  const session = useSession();
-  const { clips } = session.tracks;
+  const { project } = useProjectCopy();
+  const tracks = useTracks();
+  const { clips } = tracks;
   const warp = () => props.clip.warp;
   /** Tempo at the clip start: if the tempo changes inside the clip, the sound stretches along the clip (as in the backend). */
-  const projectTempo = () => tempoAt(session.project.tempoMap, props.clip.startTick);
+  const projectTempo = () => tempoAt(project.tempoMap, props.clip.startTick);
   return (
     <div class="flex min-h-0 flex-1 flex-col">
       <div class="flex min-h-9 shrink-0 flex-wrap items-center gap-3 border-b border-line px-3 py-1">
         <h2 class="label">{props.track?.name ?? t().pianoRoll.trackFallback}</h2>
-        <span class="text-xs text-muted">{clipLabel(props.clip, session.project)} · {t().pianoRoll.clipBars(Math.round(barsBetween(session.project.tempoMap, props.clip.startTick, props.clip.startTick + props.clip.lengthTicks) * 100) / 100)}</span>
+        <span class="text-xs text-muted">{clipLabel(props.clip, project)} · {t().pianoRoll.clipBars(Math.round(barsBetween(project.tempoMap, props.clip.startTick, props.clip.startTick + props.clip.lengthTicks) * 100) / 100)}</span>
       </div>
       <div class="flex flex-col gap-4 p-4 text-sm">
         <label class="flex items-center gap-2" title={t().pianoRoll.warpHint}>

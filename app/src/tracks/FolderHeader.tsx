@@ -4,20 +4,24 @@ import { Show, createSignal } from "solid-js";
 import type { Folder, Track } from "../api/types";
 import { folderFlags } from "./trackRows";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { ColorSwatches } from "../common/ColorSwatches";
 import { ContextMenu, MenuItem, MenuLabel, type MenuPoint, menuPoint } from "../common/ContextMenu";
 import { IconChevronDown, IconChevronRight, IconFolder } from "../common/icons";
 import { InlineRename } from "../common/InlineRename";
 import { TRACK_COLOR_HEX } from "../common/trackColors";
+import { useProjectCopy } from "../core/roles";
+import { useSettings } from "../settings/role";
+import { useTracks } from "./role";
 
 export function FolderHeader(props: { folder: Folder; tracks: Track[] }) {
-  const session = useSession();
-  const { folders } = session.tracks;
+  const { project } = useProjectCopy();
+  const settings = useSettings();
+  const tracks = useTracks();
+  const { folders } = tracks;
   const [renaming, setRenaming] = createSignal(false);
   const [menuAt, setMenuAt] = createSignal<MenuPoint | null>(null);
   /** A button is lit when the flag is set on every track of the folder; a click sets or clears it on all. */
-  const flags = () => folderFlags(session.project.graph, props.tracks);
+  const flags = () => folderFlags(project.graph, props.tracks);
   const allMuted = () => flags().muted;
   const allSoloed = () => flags().soloed;
   const edit = (change: Parameters<typeof folders.edit>[1]) => void folders.edit(props.folder.id, change);
@@ -25,7 +29,7 @@ export function FolderHeader(props: { folder: Folder; tracks: Track[] }) {
   return (
     <div
       class="relative flex items-center gap-1 border-t border-line bg-hover px-2 pl-2.5 text-sm"
-      style={{ height: `${session.settings.appearance.rowHeight()}px` }}
+      style={{ height: `${settings.appearance.rowHeight()}px` }}
       onContextMenu={(e) => { e.preventDefault(); setMenuAt(menuPoint(e)); }}
     >
       <div class="pointer-events-none absolute inset-y-0 left-0 w-1"

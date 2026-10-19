@@ -5,24 +5,28 @@ import { MIDDLE_C } from "../common/pitch";
 import { zoomAt, type Selection } from "./waveform";
 import { t } from "../i18n";
 import { claimSpace } from "../shell/globalKeys";
-import { useSession } from "../session";
 import { ExtractPanel } from "./ExtractPanel";
 import { Overview } from "./Overview";
 import { SampleList } from "./SampleList";
 import { SampleToolbar } from "./SampleToolbar";
 import { createSampleWave } from "./sampleWave";
 import { WaveformCanvas } from "./WaveformCanvas";
+import { usePlayback, useProjectCopy } from "../core/roles";
+import { useSamples } from "./role";
+import { useSelection } from "../selection/role";
 
 const START_WIDTH = 800;
 
 export function SampleEditorView() {
-  const session = useSession();
-  const { preview, editor } = session.samples;
+  const { previewPlayhead } = usePlayback();
+  const { project } = useProjectCopy();
+  const selection = useSelection();
+  const { preview, editor } = useSamples();
 
-  const sample = createMemo(() => session.project.samples.find((s) => s.id === session.selection.sample()));
+  const sample = createMemo(() => project.samples.find((s) => s.id === selection.sample()));
   const [width, setWidth] = createSignal(START_WIDTH);
   const wave = createSampleWave({ sample: () => sample()?.id, width });
-  const [selection, setSelection] = createSignal<Selection | null>(null);
+  const [region, setRegion] = createSignal<Selection | null>(null);
   const [cursor, setCursor] = createSignal<number | null>(null);
   const [loop, setLoop] = createSignal(false);
   const [name, setName] = createSignal("");
@@ -33,23 +37,23 @@ export function SampleEditorView() {
 
   // The first sample is selected automatically if nothing is selected.
   createEffect(() => {
-    if (session.selection.sample() === null || !sample()) session.selection.selectSample(session.project.samples[0]?.id ?? null);
+    if (selection.sample() === null || !sample()) selection.selectSample(project.samples[0]?.id ?? null);
   });
 
   // On sample change the selection, cursor and preview belong to the previous file, so reset them.
   createEffect(on(() => sample()?.id, () => {
-    setSelection(null);
+    setRegion(null);
     setCursor(null);
     preview.stopQuietly();
     setName(sample()?.name ?? "");
   }));
   onCleanup(() => preview.stopQuietly());
 
-  const playing = () => session.previewPlayhead() !== null;
+  const playing = () => previewPlayhead() !== null;
   const play = async () => {
     const id = sample()?.id;
     if (id === undefined) return;
-    const sel = selection();
+    const sel = region();
     await preview.play(id, sel?.from ?? cursor() ?? 0, sel?.to ?? wave.total(), loop());
   };
   const togglePlay = () => (playing() ? void preview.stop() : void play());
@@ -63,7 +67,7 @@ export function SampleEditorView() {
   };
 
   /** Where to add a marker: the cursor (click on the waveform) or the selection start; `null` — no place chosen. */
-  const markerPlace = () => cursor() ?? selection()?.from ?? null;
+  const markerPlace = () => cursor() ?? region()?.from ?? null;
   const spec = (id: number) => ({ sample: id, totalFrames: wave.total(), root: root() });
 
   return (
@@ -78,7 +82,7 @@ export function SampleEditorView() {
             playing={playing()} onTogglePlay={togglePlay} loop={loop()} onLoop={setLoop}
             onZoom={(factor) => wave.updateView(zoomAt(wave.view(), wave.view().start + wave.view().span / 2, factor, wave.total()))}
             onFitAll={wave.fitAll}
-            onFitSelection={selection() ? () => { const s = selection()!; wave.updateView({ start: s.from, span: s.to - s.from }); } : null}
+            onFitSelection={region() ? () => { const s = region()!; wave.updateView({ start: s.from, span: s.to - s.from }); } : null}
             onAddMarker={markerPlace() !== null ? () => saveMarkers([...markers(), markerPlace()!]) : null}
             markerCount={markers().length} onClearMarkers={() => saveMarkers([])}
             total={wave.total()} rate={wave.rate()}
@@ -86,21 +90,21 @@ export function SampleEditorView() {
 
           <div class="flush flex flex-col divide-y divide-line">
             <WaveformCanvas
-              wave={wave.wave()} total={wave.total()} sampleRate={wave.rate()} view={wave.view()} selection={selection()}
-              markers={markers()} playhead={session.previewPlayhead()}
-              onView={wave.updateView} onSelection={setSelection} onCursor={setCursor} onMarkers={saveMarkers} onWidth={setWidth}
+              wave={wave.wave()} total={wave.total()} sampleRate={wave.rate()} view={wave.view()} selection={region()}
+              markers={markers()} playhead={previewPlayhead()}
+              onView={wave.updateView} onSelection={setRegion} onCursor={setCursor} onMarkers={saveMarkers} onWidth={setWidth}
             />
-            <Overview wave={wave.overview()} total={wave.total()} view={wave.view()} selection={selection()} onPan={(start) => wave.updateView({ start, span: wave.view().span })} />
+            <Overview wave={wave.overview()} total={wave.total()} view={wave.view()} selection={region()} onPan={(start) => wave.updateView({ start, span: wave.view().span })} />
             <p class="text-[11px] leading-relaxed text-muted">
               {t().samples.help}
             </p>
           </div>
 
           <ExtractPanel
-            selection={selection()} rate={wave.rate()} name={name()} onName={setName} root={root()} onRoot={setRoot} markerCount={markers().length}
+            selection={region()} rate={wave.rate()} name={name()} onName={setName} root={root()} onRoot={setRoot} markerCount={markers().length}
             onExtractSelection={() => {
               const s = sample();
-              const sel = selection();
+              const sel = region();
               if (s && sel) void editor.extractSelection(spec(s.id), sel, trackName());
             }}
             onExtractSlices={() => {
@@ -109,7 +113,7 @@ export function SampleEditorView() {
             }}
             onSaveRegion={() => {
               const s = sample();
-              if (s) void editor.saveRegion(s.id, selection() ?? { from: 0, to: wave.total() }, trackName());
+              if (s) void editor.saveRegion(s.id, region() ?? { from: 0, to: wave.total() }, trackName());
             }}
           />
         </section>

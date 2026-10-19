@@ -1,17 +1,18 @@
 // List of the project's sounds on the left of the Samples tab: a click opens the sound in the editor.
 import { For } from "solid-js";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconWave } from "../common/icons";
+import { useProjectCopy } from "../core/roles";
+import { useSelection } from "../selection/role";
 
 export function SampleList() {
-  const session = useSession();
-  const { selection } = session;
+  const { project } = useProjectCopy();
+  const selection = useSelection();
   return (
     <section class="flex w-56 shrink-0 flex-col border-r border-line bg-panel">
       <h2 class="section-header !h-[30px]">{t().samples.projectSounds}</h2>
       <div class="min-h-0 flex-1 overflow-auto">
-        <For each={session.project.samples} fallback={<p class="px-3 py-2 text-xs text-muted">{t().samples.emptyList}</p>}>
+        <For each={project.samples} fallback={<p class="px-3 py-2 text-xs text-muted">{t().samples.emptyList}</p>}>
           {(s) => (
             <button
               class="flex w-full cursor-pointer items-center gap-2 px-3 py-1 text-left"

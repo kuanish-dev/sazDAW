@@ -1,10 +1,10 @@
 // M (mute) and S (solo) buttons of a node with a mixer strip: a track source or a bus.
 import type { Id } from "../api/types";
 import { t } from "../i18n";
-import { useSession } from "../session";
+import { useGraph } from "../graph/role";
 
 export function MuteSolo(props: { node: Id; mute: boolean; solo: boolean; /** Button classes for the placement. */ class: string }) {
-  const { graph } = useSession();
+  const graph = useGraph();
   return (
     <>
       <button

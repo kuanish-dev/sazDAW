@@ -1,6 +1,6 @@
-// The settings role as the session holds it: the app preferences and the look made from them, the audio devices, the
-// error log and what the app says about itself.
-import type { Core } from "../core/core";
+// The settings role: the app preferences and the look made from them, the audio devices, the error log and what the app
+// says about itself.
+import { defineRole, useRole } from "../core/roles";
 import { type AboutActions, createAboutActions } from "./about";
 import { type Appearance, createAppearance } from "./appearance";
 import { type AudioActions, createAudioActions } from "./audio";
@@ -15,7 +15,7 @@ export interface SettingsRole {
   readonly about: AboutActions;
 }
 
-export function createSettingsRole(core: Core): SettingsRole {
+export const settingsRole = defineRole("settings", ({ core }): SettingsRole => {
   const preferences = createPreferences(core);
   return {
     preferences,
@@ -24,4 +24,6 @@ export function createSettingsRole(core: Core): SettingsRole {
     log: createLogActions(core),
     about: createAboutActions(core),
   };
-}
+});
+
+export const useSettings = () => useRole(settingsRole);

@@ -3,16 +3,17 @@
 import { For, Show } from "solid-js";
 import type { Track } from "../api/types";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { ColorSwatches } from "../common/ColorSwatches";
 import { ContextMenu, MenuItem, MenuLabel, type MenuPoint } from "../common/ContextMenu";
+import { useProjectCopy } from "../core/roles";
+import { useTracks } from "./role";
 
 export function TrackMenu(props: { track: Track; at: MenuPoint; onClose: () => void }) {
-  const session = useSession();
-  const { tracks } = session;
-const { folders, bounce } = session.tracks;
+  const { project } = useProjectCopy();
+  const tracks = useTracks();
+const { folders, bounce } = tracks;
   const id = () => props.track.id;
-  const otherFolders = () => session.project.folders.filter((f) => f.id !== props.track.folder);
+  const otherFolders = () => project.folders.filter((f) => f.id !== props.track.folder);
   return (
     <ContextMenu at={props.at} label={t().tracks.menu.label(props.track.name)} onClose={props.onClose}>
       <MenuLabel>{t().tracks.menu.color}</MenuLabel>

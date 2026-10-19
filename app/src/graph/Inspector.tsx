@@ -7,7 +7,6 @@ import { kindChoices } from "../common/catalog";
 import { hasStrip, hasVolume, nodeLabel, outgoing } from "./graphRules";
 import { formatDb, SILENT_LEVEL } from "../mixer/mixer";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { ChannelUtility } from "../common/ChannelUtility";
 import { Fader } from "../common/Fader";
 import { IconArrowRight, IconClose } from "../common/icons";
@@ -18,6 +17,9 @@ import { PanKnob } from "../common/PanKnob";
 import { PickSelect } from "../common/PickSelect";
 import { createStreamRate } from "../common/streamRate";
 import { EffectPanel } from "../effects/EffectPanel";
+import { useProjectCopy } from "../core/roles";
+import { useGraph } from "./role";
+import { useMixer } from "../mixer/role";
 
 const PAN_KNOB_SIZE = 40;
 const UTILITY_KNOB_SIZE = 36;
@@ -50,12 +52,12 @@ export function Inspector(props: { node: GraphNode | null; onInsertEffect: (kind
 
 /** Source or bus: fader, pan, mute/solo and the channel utility; the master has only a fader. */
 function MixPanel(props: { node: GraphNode }) {
-  const session = useSession();
-  const { graph } = session;
+  const graph = useGraph();
+  const mixer = useMixer();
   const sampleRate = createStreamRate();
   const volume = () => (hasVolume(props.node.kind) ? props.node.kind.volume : 0);
   const strip = () => (hasStrip(props.node.kind) ? props.node.kind : null);
-  const level = () => session.mixer.levels[props.node.id] ?? SILENT_LEVEL;
+  const level = () => mixer.levels[props.node.id] ?? SILENT_LEVEL;
   return (
     <div class="flex flex-col items-center gap-3 p-3">
       <Show when={strip()}>{(s) => <PanKnob node={props.node.id} pan={s().pan} size={PAN_KNOB_SIZE} />}</Show>
@@ -83,8 +85,8 @@ function MixPanel(props: { node: GraphNode }) {
 }
 
 function InsertPanel(props: { label: string; title: string; onPick: (kind: string) => void }) {
-  const session = useSession();
-  const effects = () => kindChoices(session.catalog()?.effects ?? []);
+  const { catalog } = useProjectCopy();
+  const effects = () => kindChoices(catalog()?.effects ?? []);
   return (
     <div class="px-3">
       <PickSelect class="w-full text-xs" options={effects()} placeholder={props.label} title={props.title} onPick={props.onPick} />
@@ -94,11 +96,11 @@ function InsertPanel(props: { label: string; title: string; onPick: (kind: strin
 
 /** Node name and the list of outgoing connections with a remove button. */
 function LinksPanel(props: { node: GraphNode }) {
-  const session = useSession();
-  const { graph } = session;
-  const edges = () => outgoing(session.project.graph, props.node.id);
+  const { project } = useProjectCopy();
+  const graph = useGraph();
+  const edges = () => outgoing(project.graph, props.node.id);
   const nameOf = (id: number) => {
-    const target = session.project.graph.nodes.find((n) => n.id === id);
+    const target = project.graph.nodes.find((n) => n.id === id);
     return target ? nodeLabel(target) : `#${id}`;
   };
   return (

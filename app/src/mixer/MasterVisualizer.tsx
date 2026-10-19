@@ -6,10 +6,10 @@ import { createMemo, onMount } from "solid-js";
 import type { MasterWindow } from "../api/types";
 import { decayPeak } from "./mixer";
 import { magnitudes, spectrumBands, traceStart } from "./visualizer";
-import { useSession } from "../session";
 import { createWatchedPoll } from "../core/poller";
 import { fitCanvas } from "../common/canvas";
 import { palette } from "../common/theme";
+import { useMixer } from "./role";
 
 const WIDTH = 128;
 const HEIGHT = 64;
@@ -24,7 +24,7 @@ const TRACE_SAMPLES = 1024;
 const MAX_STEP_SECONDS = 0.2;
 
 export function MasterVisualizer() {
-  const { master } = useSession().mixer;
+  const { master } = useMixer();
   let canvas!: HTMLCanvasElement;
   /** The theme colors, read once per theme change rather than on every frame. */
   const colors = createMemo(() => palette());

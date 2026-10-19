@@ -2,13 +2,13 @@
 // delete a template. Opened from the project menu ("New from template…", "Save as template…") and the welcome screen.
 import { For, Show, createResource, createSignal } from "solid-js";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { Modal } from "../common/Modal";
 import { IconClose } from "../common/icons";
+import { useFiles } from "./role";
 
 export function TemplatesDialog(props: { onClose: () => void; canSave: boolean }) {
-  const { files } = useSession();
-const { templates } = useSession().files;
+  const files = useFiles();
+const { templates } = useFiles();
   const [names, { refetch }] = createResource(() => templates.list());
   const [name, setName] = createSignal("");
 

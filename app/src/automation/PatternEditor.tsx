@@ -12,9 +12,10 @@ import { playheadInLoop } from "../pianoroll/noteClip";
 import type { ShortcutHelp } from "../common/shortcuts";
 import { snapNearestInBars } from "../common/tempoMap";
 import { t, type Messages } from "../i18n";
-import { useSession } from "../session";
 import { createAutomationPointer, type AutomationTool, type PatternBox, type PatternTip } from "./patternPointer";
 import { AUTOMATION_HEIGHT, drawAutomation, yOfValue } from "./patternRender";
+import { usePlayback, useProjectCopy } from "../core/roles";
+import { useAutomation } from "./role";
 
 type PatternKeyAction = keyof Messages["automation"]["keys"];
 
@@ -42,9 +43,9 @@ export const PATTERN_KEYS_HELP: readonly ShortcutHelp[] = PATTERN_KEYS.map(({ ke
 }));
 
 export function PatternEditor(props: { lane: AutomationLane; clip: AutomationClip; snap: number; tool: AutomationTool }) {
-  const session = useSession();
-  const { project } = session;
-  const { automation } = session;
+  const { playhead } = usePlayback();
+  const { catalog, project } = useProjectCopy();
+  const automation = useAutomation();
   let canvas!: HTMLCanvasElement;
   let surface!: HTMLDivElement;
   const [width, setWidth] = createSignal(1);
@@ -62,7 +63,7 @@ export function PatternEditor(props: { lane: AutomationLane; clip: AutomationCli
   const [tip, setTip] = createSignal<PatternTip | null>(null);
   /** The point whose value is being typed. */
   const [editing, setEditing] = createSignal<number | null>(null);
-  const range = createMemo(() => targetRange(props.lane.target, project, session.catalog()));
+  const range = createMemo(() => targetRange(props.lane.target, project, catalog()));
   const lanePoints = () => props.clip.points;
   const points = () => draft() ?? lanePoints();
   /** Pattern tick at `x`: snapped to the song grid at the clip's place, inside the pattern. */
@@ -72,7 +73,7 @@ export function PatternEditor(props: { lane: AutomationLane; clip: AutomationCli
   };
   /** The playhead inside the pattern: where in the repeat the song is, while it is in the clip. */
   const localPlayhead = (): number | null => {
-    const at = session.playhead();
+    const at = playhead();
     return at === null ? null : playheadInLoop(props.clip.startTick, props.clip.lengthTicks, loop(), at);
   };
 

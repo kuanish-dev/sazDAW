@@ -4,13 +4,14 @@ import type { GraphNode } from "../api/types";
 import { isSource } from "../graph/graphRules";
 import { faderToVolume, formatDb, SILENT_LEVEL, volumeToFader } from "../mixer/mixer";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { Knob } from "../common/Knob";
 import { Meter } from "../common/Meter";
 import { ParamMenu } from "../common/ParamMenu";
 import { MuteSolo } from "../common/MuteSolo";
 import { PanKnob } from "../common/PanKnob";
 import { sticky } from "../common/sticky";
+import { useGraph } from "../graph/role";
+import { useMixer } from "../mixer/role";
 
 const KNOB_SIZE = 34;
 const METER_HEIGHT = 22;
@@ -18,11 +19,11 @@ const METER_HEIGHT = 22;
 const VOLUME_RANGE = { min: 0, max: 1, default: volumeToFader(1) } as const;
 
 export function TrackStrip(props: { source: GraphNode }) {
-  const session = useSession();
-  const { graph } = session;
+  const graph = useGraph();
+  const mixer = useMixer();
   const strip = () => (isSource(props.source.kind) ? props.source.kind : undefined);
   const lastStrip = sticky(strip);
-  const level = () => session.mixer.levels[props.source.id] ?? SILENT_LEVEL;
+  const level = () => mixer.levels[props.source.id] ?? SILENT_LEVEL;
 
   return (
     <Show when={strip()}>

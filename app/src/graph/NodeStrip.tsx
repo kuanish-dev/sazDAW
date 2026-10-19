@@ -6,26 +6,29 @@ import { instrumentInfo } from "../common/catalog";
 import { hasVolume, isSource, nodeLabel } from "./graphRules";
 import { formatDb, SILENT_LEVEL } from "../mixer/mixer";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { Fader } from "../common/Fader";
 import { ParamMenu } from "../common/ParamMenu";
 import { Meter } from "../common/Meter";
 import { MuteSolo } from "../common/MuteSolo";
+import { useProjectCopy } from "../core/roles";
+import { useGraph } from "./role";
+import { useMixer } from "../mixer/role";
 
 const STRIP_HEIGHT = 64;
 
 export function NodeStrip(props: { node: GraphNode }) {
-  const session = useSession();
-  const { graph } = session;
-  const level = () => session.mixer.levels[props.node.id] ?? SILENT_LEVEL;
+  const { catalog, project } = useProjectCopy();
+  const graph = useGraph();
+  const mixer = useMixer();
+  const level = () => mixer.levels[props.node.id] ?? SILENT_LEVEL;
   const volume = () => (hasVolume(props.node.kind) ? props.node.kind.volume : 0);
   const source = () => (isSource(props.node.kind) ? props.node.kind : null);
   /** Caption under a source's name: the track instrument's name or "Audio track". */
   const caption = () => {
     const s = source();
-    const instrument = s && session.project.tracks.find((track) => track.id === s.track)?.instrument;
+    const instrument = s && project.tracks.find((track) => track.id === s.track)?.instrument;
     if (!instrument) return t().graph.audioTrack;
-    return instrumentInfo(session.catalog(), instrument.kind)?.label ?? instrument.kind;
+    return instrumentInfo(catalog(), instrument.kind)?.label ?? instrument.kind;
   };
 
   return (

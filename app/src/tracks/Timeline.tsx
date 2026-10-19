@@ -13,7 +13,6 @@ import { clipLabel } from "./clipRules";
 import { mutedTracks } from "../graph/graphRules";
 import { rowLayout, timelineHeight } from "./rowLayout";
 import { lanesOf, trackRows } from "./trackRows";
-import { useSession } from "../session";
 import { isZoomWheel, localPoint } from "../common/pointer";
 import { createScrollWindow } from "../common/scrollWindow";
 import { InlineRename } from "../common/InlineRename";
@@ -38,11 +37,24 @@ import { createTimelinePointer, type ClipMenu as Menu, type DragTip } from "./ti
 import { ClipMenu } from "./ClipMenu";
 import { drawTimeline, timelineWidth } from "./timelineRender";
 import type { ToolbarState } from "./TimelineToolbar";
+import { usePlayback, useProjectCopy } from "../core/roles";
+import { useAutomation } from "../automation/role";
+import { useSelection } from "../selection/role";
+import { useSettings } from "../settings/role";
+import { useSounds } from "../sounds/role";
+import { useTracks } from "./role";
+import { useTransport } from "../transport/role";
 
 export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement }) {
-  const session = useSession();
-  const { project, selection } = session;
-  const { placement } = session.sounds;
+  const { smoothPlayhead, tick } = usePlayback();
+  const { catalog, project } = useProjectCopy();
+  const automation = useAutomation();
+  const selection = useSelection();
+  const settings = useSettings();
+  const sounds = useSounds();
+  const tracks = useTracks();
+  const transport = useTransport();
+  const { placement } = sounds;
   const [draft, setDraft] = createSignal<ClipDraft | null>(null);
   const [laneDraft, setLaneDraft] = createSignal<LaneDraft | null>(null);
   const [marquee, setMarquee] = createSignal<PixelRect | null>(null);
@@ -56,7 +68,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
   let rulerSurface!: HTMLDivElement;
   /** The ruler is as wide as the rows and scrolled with them, so both canvases draw the same window. */
   const viewport = createScrollWindow(() => surface);
-  const cue = createMemo(() => session.tick().cue);
+  const cue = createMemo(() => tick().cue);
 
   const pxPerTick = () => BASE_PX_PER_TICK * props.state.zoom();
   const clips = createMemo<Clip[]>(() => applyDraft(project.clips, draft()));
@@ -65,7 +77,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
   const rows = createMemo(() => trackRows(project.tracks, project.folders, ownedLanes(project)));
   const lanes = createMemo(() => lanesOf(rows()));
   /** Rows differ in height: a track's own or the appearance setting. */
-  const layout = createMemo(() => rowLayout(rows(), session.settings.appearance.rowHeight()));
+  const layout = createMemo(() => rowLayout(rows(), settings.appearance.rowHeight()));
   const clipColor = (clip: Clip) => clipColorOf(project.tracks, clip);
 
   const tempo = createTempoPointer({ surface: () => rulerSurface, map: () => project.tempoMap, pxPerTick });
@@ -75,8 +87,8 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
     markers: () => project.markers,
     pxPerTick,
     tempoMap: () => project.tempoMap,
-    actions: session.tracks.markers,
-    seek: (tick) => void session.transport.seek(tick),
+    actions: tracks.markers,
+    seek: (tick) => void transport.seek(tick),
   });
   /** Markers with the drag draft applied. */
   const shownMarkers = createMemo<Marker[]>(() => {
@@ -91,9 +103,9 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
     snap: props.state.snap,
     tempoMap: () => project.tempoMap,
     cue,
-    cueAt: (tick) => void session.transport.cueAt(tick),
-    clearCue: () => void session.transport.clearCue(),
-    setLoop: (region) => void session.transport.setLoopRegion(region),
+    cueAt: (tick) => void transport.cueAt(tick),
+    clearCue: () => void transport.clearCue(),
+    setLoop: (region) => void transport.setLoopRegion(region),
     loopDraft,
     setLoopDraft,
   });
@@ -107,7 +119,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
     tempoMap: () => project.tempoMap,
     pxPerTick,
     layout,
-    actions: session.tracks.clips,
+    actions: tracks.clips,
     selected: selection.clips,
     select: (ids, track) => selection.selectClips(ids, track ?? undefined),
     draft,
@@ -125,7 +137,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
     tempoMap: () => project.tempoMap,
     pxPerTick,
     layout,
-    actions: session.automation,
+    actions: automation,
     draft: laneDraft,
     setDraft: setLaneDraft,
   });
@@ -142,8 +154,8 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
         row: index,
         clips: moving?.lane === lane.id ? lane.clips.map((c) => (c.id === moving.clip.id ? moving.clip : c)) : lane.clips,
         selected: chosen?.lane === lane.id ? chosen.clip : null,
-        range: targetRange(lane.target, project, session.catalog()),
-        label: targetLabel(lane.target, project, session.catalog()),
+        range: targetRange(lane.target, project, catalog()),
+        label: targetLabel(lane.target, project, catalog()),
         pxPerTick: pxPerTick(),
         layout: layout(),
         window,
@@ -192,7 +204,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
   let playheadEl!: HTMLDivElement;
   let rulerPlayheadEl!: HTMLDivElement;
   createEffect(() => {
-    const position = session.smoothPlayhead();
+    const position = smoothPlayhead();
     // Step in device pixels: on a high-density screen the playhead moves in steps finer than a CSS pixel.
     const ratio = window.devicePixelRatio || 1;
     const shift = position === null ? "" : `translateX(${Math.round(position * pxPerTick() * ratio) / ratio}px)`;
@@ -248,7 +260,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
       pxPerTick: pxPerTick(),
       layout: layout(),
       window: shown,
-      position: session.smoothPlayhead(),
+      position: smoothPlayhead(),
     });
   });
 
@@ -287,7 +299,7 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
             {(marker) => (
               <div class="absolute z-10" style={{ left: `${marker.tick * pxPerTick()}px`, top: `${MARKER_TOP - 2}px` }}>
                 <InlineRename name={marker.name} editing class="!h-4 w-36 !px-1 text-[10px]"
-                  onRename={(name) => void session.tracks.markers.rename(marker.id, name)} onClose={markers.stopRenaming}>{null}</InlineRename>
+                  onRename={(name) => void tracks.markers.rename(marker.id, name)} onClose={markers.stopRenaming}>{null}</InlineRename>
               </div>
             )}
           </Show>

@@ -4,7 +4,7 @@ import { Show } from "solid-js";
 import type { Id } from "../api/types";
 import { peakToMeter } from "../mixer/mixer";
 import { t } from "../i18n";
-import { useSession } from "../session";
+import { useMixer } from "../mixer/role";
 
 export interface DotPoint {
   x: number;
@@ -26,10 +26,10 @@ export function StageDot(props: {
   onDblClick: () => void;
   onKeyDown: (event: KeyboardEvent) => void;
 }) {
-  const session = useSession();
+  const mixer = useMixer();
   /** 0…1 on the meter's scale. */
   const loudness = () => {
-    const level = session.mixer.levels[props.node];
+    const level = mixer.levels[props.node];
     return level ? peakToMeter(Math.max(level.l.level, level.r.level)) : 0;
   };
   return (

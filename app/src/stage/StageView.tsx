@@ -1,13 +1,12 @@
 // The Stage page: drag the instruments around a room and hear them move. The room from above (left/right, near/far),
 // the side view (near/far, height), the channel list and the shared room's settings. Where each channel stands is the
-// project's (`StageControl`, through `session.stage`); the geometry is `stage/stageRules.ts`. While a dot is being
+// project's (`StageControl`, through the stage role, `useStage`); the geometry is `stage/stageRules.ts`. While a dot is being
 // dragged the pictures show the dragged place itself, so a project re-read that is a move behind cannot pull it back.
 import { Show, createMemo, createSignal } from "solid-js";
 import { DEFAULT_STAGE_PLACE, type Id, type Listening, type ParamTarget, type Room } from "../api/types";
 import { formatPan } from "../mixer/mixer";
 import { hearing, roomMeasures, roomShape, type Spot, type StageChannel, stageChannels } from "./stageRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconAdd, IconHeadphones, IconSpeaker } from "../common/icons";
 import { ParamMenu } from "../common/ParamMenu";
 import { ToolButton, Toolbar, ToolbarDivider } from "../common/Toolbar";
@@ -16,15 +15,17 @@ import type { StageScene } from "./scene";
 import { StageList } from "./StageList";
 import { StageRoom } from "./StageRoom";
 import { StageSide } from "./StageSide";
+import { useProjectCopy } from "../core/roles";
+import { useStage } from "./role";
 
 /** A bus has no track color. */
 const BUS_COLOR = "var(--color-muted)";
 
 export function StageView() {
-  const session = useSession();
-  const stage = session.stage;
-  const channels = createMemo(() => stageChannels(session.project));
-  const room = () => session.project.room;
+  const { project } = useProjectCopy();
+  const stage = useStage();
+  const channels = createMemo(() => stageChannels(project));
+  const room = () => project.room;
   const [selected, setSelected] = createSignal<Id | null>(null);
   const [dragging, setDragging] = createSignal<{ node: Id; spot: Spot } | null>(null);
 
@@ -35,7 +36,7 @@ export function StageView() {
   };
   const colorOf = (node: Id): string => {
     const track = channelOf(node)?.track;
-    return (track != null ? trackColorOf(session.project.tracks, track) : null) ?? BUS_COLOR;
+    return (track != null ? trackColorOf(project.tracks, track) : null) ?? BUS_COLOR;
   };
   const placed = createMemo(() => channels().flatMap((c) => (c.spot ? [c.node] : [])), undefined, {
     equals: (a, b) => a.length === b.length && a.every((id, i) => id === b[i]),

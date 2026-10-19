@@ -6,7 +6,8 @@ import { clipBarTicks, clipNotes, ghostTicks, playheadInLoop, type NoteClip } fr
 import { pitchName } from "../common/pitch";
 import { activeStepOf, stepGroupOdd, stepOn, stepRows, stepTotal } from "./steps";
 import { t } from "../i18n";
-import { useSession } from "../session";
+import { usePlayback, useProjectCopy } from "../core/roles";
+import { usePianoroll } from "./role";
 
 /** How many steps fit without scrolling (a bar); longer — cells get wider and scrolling appears. */
 const STEPS_WITHOUT_SCROLL = 16;
@@ -17,17 +18,18 @@ const CELL_PITCH_PX = 23;
 const ROW_LABEL_PX = 90;
 
 export function StepGrid(props: { clip: NoteClip; track: Track }) {
-  const session = useSession();
-  const { pianoroll } = session;
+  const { playhead } = usePlayback();
+  const { project } = useProjectCopy();
+  const pianoroll = usePianoroll();
 
   const notes = () => clipNotes(props.clip);
   const rows = createMemo(() => stepRows(notes(), props.track.defaultPitch));
   const realSteps = () => stepTotal(props.clip.content.loopTicks);
   /** The spare bar: inactive while it has no notes; placing a note extends the clip. */
-  const totalSteps = () => stepTotal(props.clip.content.loopTicks, ghostTicks(props.clip.content, clipBarTicks(session.project.tempoMap, props.clip)));
+  const totalSteps = () => stepTotal(props.clip.content.loopTicks, ghostTicks(props.clip.content, clipBarTicks(project.tempoMap, props.clip)));
   const scrolling = () => totalSteps() > STEPS_WITHOUT_SCROLL;
   const activeStep = () => {
-    const position = session.playhead();
+    const position = playhead();
     return position === null ? null : activeStepOf(playheadInLoop(props.clip.startTick, props.clip.lengthTicks, props.clip.content.loopTicks, position), realSteps());
   };
 

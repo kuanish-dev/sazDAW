@@ -6,22 +6,25 @@ import type { GraphNode } from "../api/types";
 import { effectInfo, paramValue } from "../common/catalog";
 import { isPluginKind } from "../plugins/pluginRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconPower } from "../common/icons";
 import { ParamControl } from "../common/ParamControl";
 import { PresetBar } from "../common/PresetBar";
 import { EffectGraph } from "./EffectGraph";
 import { SidechainPicker } from "./SidechainPicker";
+import { useProjectCopy } from "../core/roles";
+import { useGraph } from "../graph/role";
+import { usePlugins } from "../plugins/role";
 
 /** The catalog param that makes an effect read its sidechain key (`set_sidechain` in the backend). */
 const SIDECHAIN_PARAM = "sidechain";
 
 export function EffectPanel(props: { node: GraphNode }) {
-  const session = useSession();
-  const { graph } = session;
-const { editor } = session.plugins;
+  const { catalog } = useProjectCopy();
+  const graph = useGraph();
+  const plugins = usePlugins();
+const { editor } = plugins;
   const kind = () => props.node.kind as Extract<GraphNode["kind"], { type: "effect" }>;
-  const info = () => effectInfo(session.catalog(), kind().effect);
+  const info = () => effectInfo(catalog(), kind().effect);
   const params = () => info()?.params ?? [];
   const hasSidechain = () => params().some((p) => p.name === SIDECHAIN_PARAM);
   const knobs = () => params().filter((p) => p.name !== SIDECHAIN_PARAM);

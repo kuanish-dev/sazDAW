@@ -2,23 +2,23 @@
 import { For, Show, createSignal, onMount } from "solid-js";
 import type { LogEntry } from "../api/types";
 import { language, t } from "../i18n";
-import { useSession } from "../session";
 import { CopyButton, SectionTitle, SettingGroup, SettingRow } from "./SettingRow";
+import { useSettings } from "./role";
 
 const LIMIT = 200;
 
 const stamp = (ms: number) => new Date(ms).toLocaleString(language());
 
 export function LogSection() {
-  const session = useSession();
+  const settings = useSettings();
   const [entries, setEntries] = createSignal<LogEntry[]>([]);
   const [file, setFile] = createSignal<string | null>(null);
   const [version, setVersion] = createSignal("…");
-  const reload = async () => setEntries(await session.settings.log.recent(LIMIT));
+  const reload = async () => setEntries(await settings.log.recent(LIMIT));
 
   onMount(async () => {
-    void session.settings.about.version().then(setVersion);
-    setFile(await session.settings.log.file());
+    void settings.about.version().then(setVersion);
+    setFile(await settings.log.file());
     await reload();
   });
 

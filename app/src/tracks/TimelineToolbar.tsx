@@ -7,13 +7,17 @@ import { GRID_CHOICES } from "../common/time";
 import { MAX_CLIP_GAIN } from "./clipRules";
 import { clipById } from "./trackRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconDrum, IconEraser, IconFlag, IconGuitar, IconLoop, IconPencil, IconScissors } from "../common/icons";
 import { PickSelect } from "../common/PickSelect";
 import { ToolButton, Toolbar, ToolbarDivider } from "../common/Toolbar";
 import { ChordPartDialog } from "../chords/ChordPartDialog";
 import { DrumPartDialog } from "../drums/DrumPartDialog";
 import type { Tool } from "./timelineLayout";
+import { usePlayback, useProjectCopy } from "../core/roles";
+import { useAutomation } from "../automation/role";
+import { useSelection } from "../selection/role";
+import { useTracks } from "./role";
+import { useTransport } from "../transport/role";
 
 /** Clip gain in percent on the slider (up to the backend's maximum, ×4). */
 const MAX_GAIN_PERCENT = MAX_CLIP_GAIN * 100;
@@ -33,17 +37,21 @@ export interface ToolbarState {
 }
 
 export function TimelineToolbar(props: { state: ToolbarState }) {
-  const session = useSession();
-  const { transport } = session;
-const { clips } = session.tracks;
+  const { tick } = usePlayback();
+  const { catalog, project } = useProjectCopy();
+  const automation = useAutomation();
+  const selection = useSelection();
+  const tracks = useTracks();
+  const transport = useTransport();
+const { clips } = tracks;
   const s = props.state;
   const [drumsOpen, setDrumsOpen] = createSignal(false);
   const [chordsOpen, setChordsOpen] = createSignal(false);
-  const selected = () => clipById(session.project, session.selection.clip());
+  const selected = () => clipById(project, selection.clip());
   const audio = () => (selected()?.content.type === "audio" ? selected() : undefined);
   /** "+ Track": instrument kinds from the catalog plus an audio track. */
   const trackKinds = () => [
-    ...kindChoices(session.catalog()?.instruments ?? []),
+    ...kindChoices(catalog()?.instruments ?? []),
     { value: AUDIO_TRACK, label: t().tracks.audioName },
   ];
 
@@ -65,11 +73,11 @@ const { clips } = session.tracks;
       {/* The new track's name and input pitch are decided by the `tracks.create` action. */}
       <PickSelect
         class="text-xs" placeholder={tb().addTrack} options={trackKinds()}
-        onPick={(value) => void session.tracks.create(value === AUDIO_TRACK ? null : value)}
+        onPick={(value) => void tracks.create(value === AUDIO_TRACK ? null : value)}
       />
       <ToolButton icon={<IconDrum />} label={tb().drumPart} title={tb().drumPartHint} text onClick={() => setDrumsOpen(true)} />
       <ToolButton icon={<IconGuitar />} label={tb().chordPart} title={tb().chordPartHint} text onClick={() => setChordsOpen(true)} />
-      <ToolButton icon={<IconFlag />} label={tb().marker} title={tb().markerHint} text onClick={() => void session.tracks.markers.addAtPlayhead()} />
+      <ToolButton icon={<IconFlag />} label={tb().marker} title={tb().markerHint} text onClick={() => void tracks.markers.addAtPlayhead()} />
       <Show when={drumsOpen()}><DrumPartDialog onClose={() => setDrumsOpen(false)} /></Show>
       <Show when={chordsOpen()}><ChordPartDialog onClose={() => setChordsOpen(false)} /></Show>
       <ToolbarDivider />
@@ -80,13 +88,13 @@ const { clips } = session.tracks;
       <Show when={selected()} keyed>
         {(clip) => <ToolButton icon={<IconLoop />} label={tb().loopClip} title={tb().loopClipHint} onClick={() => void transport.loopClip(clip)} />}
       </Show>
-      <Show when={session.project.loopRegion}>
+      <Show when={project.loopRegion}>
         <button class="btn btn-ghost !px-2 text-xs" onClick={() => void transport.setLoopRegion(null)}>{tb().clearLoop}</button>
       </Show>
       <ToolbarDivider />
       <label class="flex items-center gap-1.5" title={t().automation.writeHint}><span class="label">{t().automation.write}</span>
-        <select class="field text-xs" value={session.tick().automationWrite} aria-label={t().automation.write}
-          onChange={(e) => void session.automation.setWriteMode(e.currentTarget.value as AutomationWriteMode)}>
+        <select class="field text-xs" value={tick().automationWrite} aria-label={t().automation.write}
+          onChange={(e) => void automation.setWriteMode(e.currentTarget.value as AutomationWriteMode)}>
           <For each={WRITE_MODES}>{(mode) => <option value={mode}>{t().automation.writeModes[mode]}</option>}</For>
         </select></label>
       <Show when={audio()} keyed>

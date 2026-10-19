@@ -1,8 +1,8 @@
-// The tracks role as the session holds it: the tracks themselves (`tracks.ts`) and the jobs around them on the timeline —
-// clips, folders, markers and rendering a track to audio.
-import type { ParamTouch } from "../automation/paramTouch";
-import type { Core } from "../core/core";
-import type { Views } from "../shell/views";
+// The tracks role: the tracks themselves (`tracks.ts`) and the jobs around them on the timeline — clips, folders, markers
+// and rendering a track to audio.
+import { automationRole } from "../automation/role";
+import { defineRole, useRole } from "../core/roles";
+import { shellRole } from "../shell/role";
 import { type BounceActions, createBounceActions } from "./bounce";
 import { type ClipsActions, createClipsActions } from "./clips";
 import { createFoldersActions, type FoldersActions } from "./folders";
@@ -18,12 +18,15 @@ export type TracksRole = TracksActions & {
   readonly bounce: BounceActions;
 };
 
-export function createTracksRole(core: Core, views: Views, touch: ParamTouch): TracksRole {
+export const tracksRole = defineRole("tracks", ({ core, use }): TracksRole => {
+  const shell = use(shellRole);
   return {
-    ...createTracksActions(core, views, touch),
-    clips: createClipsActions(core, views),
+    ...createTracksActions(core, shell, use(automationRole).touch),
+    clips: createClipsActions(core, shell),
     folders: createFoldersActions(core),
     markers: createMarkersActions(core),
-    bounce: createBounceActions(core, views),
+    bounce: createBounceActions(core, shell),
   };
-}
+});
+
+export const useTracks = () => useRole(tracksRole);

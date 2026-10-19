@@ -5,9 +5,10 @@
 import { createEffect, createResource, createSignal, For, on, Show } from "solid-js";
 import type { HistorySteps } from "../api/types";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconHistory, IconSparkle } from "../common/icons";
 import { closeOnOutside } from "../common/pointer";
+import { useProjectCopy } from "../core/roles";
+import { useHistory } from "./role";
 
 /** How the AI labels its squashed requests (the MCP instructions in `daw-mcp/src/lib.rs`: "AI: drum part"). */
 const AI_PREFIX = "AI:";
@@ -40,10 +41,10 @@ export function HistoryButton() {
 }
 
 function HistoryPanel(props: { onClose: () => void }) {
-  const session = useSession();
-  const history = session.history;
+  const { status } = useProjectCopy();
+  const history = useHistory();
   // The status is a new object after every re-read of the project, so the list follows each change.
-  const [steps] = createResource(session.status, () => history.steps());
+  const [steps] = createResource(status, () => history.steps());
   const rows = () => {
     const latest = steps.latest;
     return latest ? timeline(latest) : [];

@@ -1,6 +1,6 @@
 # `src/shell/` — the window frame
 
-The activity bar and the status bar, the hover hint (`HintText`), the welcome screen and the loading overlay, and what the window shows (`views.ts`: the open tab, the settings section, the instrument window, and `showCreated`, which selects what a role just made once the project copy has it).
+The window itself (`AppWindow.tsx`: its layout and the window-wide listeners — keys, the computer keyboard piano, the release of live-written controls), the activity bar and the status bar, the hover hint (`HintText`), the welcome screen and the loading overlay, and what the window shows (`views.ts`: the open tab, the settings section, the instrument window, and `showCreated`, which selects what a role just made once the project copy has it).
 
 Map of the whole code: [ARCHITECTURE.md](../../../ARCHITECTURE.md).
 

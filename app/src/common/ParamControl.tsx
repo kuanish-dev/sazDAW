@@ -3,12 +3,12 @@
 import { For, type JSX, Match, Show, Switch } from "solid-js";
 import type { ParamInfo, ParamTarget } from "../api/types";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { Knob } from "./Knob";
 import { ParamMenu } from "./ParamMenu";
+import { useProjectCopy } from "../core/roles";
 
 export function ParamControl(props: { info: ParamInfo; value: number; target?: ParamTarget; onChange: (value: number) => void }) {
-  const session = useSession();
+  const { project } = useProjectCopy();
   const label = () => props.info.label.replace(/,.*$/, "");
   const on = () => props.value >= 0.5;
 
@@ -40,7 +40,7 @@ export function ParamControl(props: { info: ParamInfo; value: number; target?: P
         <Labeled wide>
           <select class="field !h-8 w-full text-[11px]" value={props.value} aria-label={props.info.label} onChange={(e) => props.onChange(Number(e.currentTarget.value))}>
             <option value={0}>{t().controls.noSample}</option>
-            <For each={session.project.samples}>{(s) => <option value={s.id}>{s.name}</option>}</For>
+            <For each={project.samples}>{(s) => <option value={s.id}>{s.name}</option>}</For>
           </select>
         </Labeled>
       </Match>

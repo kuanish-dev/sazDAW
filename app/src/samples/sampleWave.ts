@@ -3,7 +3,7 @@
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 import type { Id, Waveform } from "../api/types";
 import { clampView, fitAll, type View } from "./waveform";
-import { useSession } from "../session";
+import { useSamples } from "./role";
 
 /** Number of buckets in the whole-file overview strip. */
 const OVERVIEW_BUCKETS = 600;
@@ -13,8 +13,8 @@ const WAVE_DEBOUNCE_MS = 30;
 const FALLBACK_RATE = 48_000;
 
 export function createSampleWave(deps: { sample: () => Id | undefined; width: () => number }) {
-  const { samples } = useSession();
-const { editor } = useSession().samples;
+  const samples = useSamples();
+const { editor } = useSamples();
   const [meta, setMeta] = createSignal<{ frameCount: number; sampleRate: number } | null>(null);
   const [view, setView] = createSignal<View>({ start: 0, span: 1 });
   const [wave, setWave] = createSignal<Waveform | null>(null);

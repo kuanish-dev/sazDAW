@@ -1,14 +1,14 @@
-// Stack of notifications in the bottom-right corner; shows `session.toasts()`, closes via `session.dismissToast`.
+// Stack of notifications in the bottom-right corner; shows the toasts (`useToasts`), closes one via `dismissToast`.
 import { For } from "solid-js";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconClose, IconError, IconInfo } from "./icons";
+import { useToasts } from "../core/roles";
 
 export function Toasts() {
-  const session = useSession();
+  const { dismissToast, toasts } = useToasts();
   return (
     <div class="pointer-events-none fixed bottom-8 right-3 z-[60] flex w-96 flex-col gap-2">
-      <For each={session.toasts()}>
+      <For each={toasts()}>
         {(toast) => (
           <div
             class="anim-toast pointer-events-auto flex items-start gap-2 rounded border border-field-line bg-panel py-2 pl-3 pr-1.5 text-sm shadow-xl"
@@ -19,7 +19,7 @@ export function Toasts() {
               {toast.kind === "error" ? <IconError /> : <IconInfo />}
             </span>
             <span class="flex-1 break-words">{toast.text}</span>
-            <button class="btn btn-icon !h-6 !w-6 !min-w-6" onClick={() => session.dismissToast(toast.id)} aria-label={t().common.close}><IconClose size={14} /></button>
+            <button class="btn btn-icon !h-6 !w-6 !min-w-6" onClick={() => dismissToast(toast.id)} aria-label={t().common.close}><IconClose size={14} /></button>
           </div>
         )}
       </For>

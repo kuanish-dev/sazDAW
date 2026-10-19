@@ -9,7 +9,6 @@ import { BAR_GRID } from "../common/time";
 import { rowLayout, rowTop } from "./rowLayout";
 import { planTrackDrop, trackRows, type TrackRow } from "./trackRows";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { ClipPanel } from "../pianoroll/ClipPanel";
 import { SoundBrowser } from "../sounds/SoundBrowser";
 import { FolderHeader } from "./FolderHeader";
@@ -20,20 +19,26 @@ import { Timeline } from "./Timeline";
 import { TimelineToolbar, type ToolbarState } from "./TimelineToolbar";
 import { TrackHeader } from "./TrackHeader";
 import { createTrackReorder } from "./trackReorder";
+import { useProjectCopy } from "../core/roles";
+import { useSettings } from "../settings/role";
+import { useTracks } from "./role";
+import { useSamples } from "../samples/role";
 
 export function TracksView() {
-  const session = useSession();
+  const { project } = useProjectCopy();
+  const settings = useSettings();
+  const tracks = useTracks();
   const [tool, setTool] = createSignal<Tool>("draw");
   const [snap, setSnap] = createSignal<number>(BAR_GRID);
   const [zoom, setZoom] = createSignal(1);
   /** Header rows are the same as the timeline's: folders, visible tracks and their automation lanes. */
-  const rows = createMemo(() => trackRows(session.project.tracks, session.project.folders, ownedLanes(session.project)));
-  const layout = createMemo(() => rowLayout(rows(), session.settings.appearance.rowHeight()));
+  const rows = createMemo(() => trackRows(project.tracks, project.folders, ownedLanes(project)));
+  const layout = createMemo(() => rowLayout(rows(), settings.appearance.rowHeight()));
   const reorder = createTrackReorder({
     layout,
     drop: (id, slot) => {
-      const plan = planTrackDrop(rows(), session.project.tracks, id, slot);
-      if (plan) void session.tracks.folders.place(id, plan.folder, plan.index, plan.members);
+      const plan = planTrackDrop(rows(), project.tracks, id, slot);
+      if (plan) void tracks.folders.place(id, plan.folder, plan.index, plan.members);
     },
   });
   const state: ToolbarState = { tool, setTool, snap, setSnap, zoom, setZoom };
@@ -47,7 +52,7 @@ export function TracksView() {
     onCleanup(() => observer.disconnect());
   });
   const [rulerHost, setRulerHost] = createSignal<HTMLDivElement>();
-  const waves = createClipWaves(session);
+  const waves = createClipWaves(useSamples());
 
   return (
     <ClipWavesContext.Provider value={waves}>

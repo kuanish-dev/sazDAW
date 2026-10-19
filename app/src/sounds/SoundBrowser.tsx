@@ -5,23 +5,27 @@ import type { LibraryEntry, SampleInfo } from "../api/types";
 import type { SampleSource } from "../tracks/dropSample";
 import { clamp } from "../common/math";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { registerSampleDrop } from "../common/dragSample";
 import { IconArrowUp } from "../common/icons";
 import { SampleDragLabel } from "../common/SampleDragLabel";
 import { PlaceTabs } from "./PlaceTabs";
 import { createSoundPlaces } from "./soundPlaces";
 import { SoundRow, type SoundRowActions } from "./SoundRow";
+import { usePlayback, useProjectCopy } from "../core/roles";
+import { useSamples } from "../samples/role";
+import { useSounds } from "./role";
 
 export function SoundBrowser() {
-  const session = useSession();
-  const { samples } = session;
-const { preview } = session.samples;
-const { placement } = session.sounds;
+  const { previewPlayhead } = usePlayback();
+  const { project } = useProjectCopy();
+  const samples = useSamples();
+  const sounds = useSounds();
+const { preview } = samples;
+const { placement } = sounds;
   const places = createSoundPlaces();
   // Which project folder files are already samples (for the row's "✕"): re-read on any change of the sample list.
   const [projectSamples, setProjectSamples] = createSignal<SampleInfo[]>([]);
-  createEffect(on(() => session.project.samples.map((s) => s.id).join(","), async () => setProjectSamples(await samples.samples())));
+  createEffect(on(() => project.samples.map((s) => s.id).join(","), async () => setProjectSamples(await samples.samples())));
   const { dir, entries, root, load, shown } = places;
   const [selected, setSelected] = createSignal<string | null>(null);
   let list!: HTMLDivElement;
@@ -29,10 +33,10 @@ const { placement } = session.sounds;
   onCleanup(() => preview.stopQuietly());
   createEffect(on(dir, () => setSelected(null), { defer: true }));
   // A new project file (a copy from a pack, an extracted sound) appears in the list without a manual refresh.
-  createEffect(on(() => session.project.samples.length, () => places.inProject() && void places.reload(), { defer: true }));
+  createEffect(on(() => project.samples.length, () => places.inProject() && void places.reload(), { defer: true }));
 
   const files = () => entries().filter((e) => !e.isDir);
-  const playing = () => session.previewPlayhead() !== null;
+  const playing = () => previewPlayhead() !== null;
 
   const audition = (entry: LibraryEntry) => {
     setSelected(entry.path);

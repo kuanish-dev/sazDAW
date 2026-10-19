@@ -10,7 +10,6 @@ import { changedNotes, type TickPitchRect } from "./noteSelection";
 import { signatureAt } from "../common/tempoMap";
 import { BAR_GRID, FREE_GRID, GRID_CHOICES } from "../common/time";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { isZoomWheel } from "../common/pointer";
 import { createAudition } from "./audition";
 import { ControllerLaneView } from "./ControllerLaneView";
@@ -20,11 +19,16 @@ import { PianoRollToolbar } from "./PianoRollToolbar";
 import { createPianoRollPointer } from "./pointer";
 import { drawGrid, drawVelocity } from "./render";
 import { createVelocityPointer } from "./velocityPointer";
+import { usePlayback, useProjectCopy } from "../core/roles";
+import { useKeyboard } from "../keyboard/role";
+import { usePianoroll } from "./role";
 
 export function PianoRoll(props: { clip: NoteClip; defaultPitch: number }) {
-  const session = useSession();
-  const { pianoroll } = session;
-const { live } = session.keyboard;
+  const { playhead } = usePlayback();
+  const { project } = useProjectCopy();
+  const keyboard = useKeyboard();
+  const pianoroll = usePianoroll();
+const { live } = keyboard;
 
   const [snap, setSnap] = createSignal(STEP_TICKS);
   const [zoom, setZoom] = createSignal(1);
@@ -46,8 +50,8 @@ const { live } = session.keyboard;
   const target = () => props.clip.id;
   const pxPerTick = () => BASE_PX_PER_TICK * zoom();
   /** Inside the clip the grid is even, by the time signature at its start: that signature's bar and beat. */
-  const barTicks = () => clipBarTicks(session.project.tempoMap, props.clip);
-  const beatTicks = () => barTicks() / signatureAt(session.project.tempoMap, props.clip.startTick).signature.numerator;
+  const barTicks = () => clipBarTicks(project.tempoMap, props.clip);
+  const beatTicks = () => barTicks() / signatureAt(project.tempoMap, props.clip.startTick).signature.numerator;
   /** Grid in ticks: "Bar" means the clip's bar. */
   const grid = () => (snap() === BAR_GRID ? barTicks() : snap());
   /** Visible length: the clip content plus a translucent spare bar where a note can be placed. */
@@ -108,7 +112,7 @@ const { live } = session.keyboard;
   });
 
   const playheadX = () => {
-    const position = session.playhead();
+    const position = playhead();
     if (position === null) return null;
     const local = playheadInLoop(props.clip.startTick, props.clip.lengthTicks, props.clip.content.loopTicks, position);
     return local === null ? null : tickX(local, pxPerTick());
@@ -118,7 +122,7 @@ const { live } = session.keyboard;
     drawGrid(gridCanvas, {
       width: width(), pxPerTick: pxPerTick(), viewLength: viewLength(), contentTicks: props.clip.content.loopTicks, lineStep: quantizeStep(),
       barTicks: barTicks(), beatTicks: beatTicks(),
-      notes: noteList(), selected: selected(), pressedPitches: session.keyboard.pressedPitches(), marquee: marquee(), playheadX: playheadX(),
+      notes: noteList(), selected: selected(), pressedPitches: keyboard.pressedPitches(), marquee: marquee(), playheadX: playheadX(),
       scale: highlightScale() ? scale() : null,
     });
   });

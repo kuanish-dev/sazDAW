@@ -1,6 +1,6 @@
 // Musical note edits of the piano roll: Quantize / Humanize / Transpose / Fit to scale / Legato / Groove / Variation,
 // with small parameter panels. They work on the selected notes, or on all notes of the clip without a selection. The edit
-// logic itself is in the backend (`notes.quantize` etc.); here are only view parameters and `session.pianoroll` calls.
+// logic itself is in the backend (`notes.quantize` etc.); here are only view parameters and calls to the piano roll role (`usePianoroll`).
 import { For, type JSX, Show, createMemo, createSignal } from "solid-js";
 import type { Id, Variation } from "../api/types";
 import { GROOVE_PRESETS } from "./groove";
@@ -9,10 +9,11 @@ import { MAX_HUMANIZE_TICKS, MAX_HUMANIZE_VELOCITY, SCALES, isScale, type ScaleC
 import { pitchClassName } from "../common/pitch";
 import { barIndex } from "../common/tempoMap";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconChevronDown, IconDice } from "../common/icons";
 import { NumberField } from "../common/NumberField";
 import { closeOnOutside } from "../common/pointer";
+import { useProjectCopy } from "../core/roles";
+import { usePianoroll } from "./role";
 
 type Panel = "quantize" | "humanize" | "transpose" | "scale" | "groove" | "vary";
 
@@ -35,8 +36,9 @@ const ROOTS = Array.from({ length: 12 }, (_, i) => i);
 const newSeed = () => Math.floor(Math.random() * 2 ** 32);
 
 export function NoteTools(props: NoteToolsProps) {
-  const session = useSession();
-  const notes = session.pianoroll;
+  const { project } = useProjectCopy();
+  const pianoroll = usePianoroll();
+  const notes = pianoroll;
   const [open, setOpen] = createSignal<Panel | null>(null);
   const [strength, setStrength] = createSignal(100);
   const [ends, setEnds] = createSignal(false);
@@ -55,11 +57,11 @@ export function NoteTools(props: NoteToolsProps) {
 
   /** Other note clips of the project with notes — sources for "Take groove from clip". */
   const sources = createMemo(() =>
-    session.project.clips
+    project.clips
       .filter((c) => c.id !== props.clip && clipNotes(c).length > 0)
       .map((c) => {
-        const track = session.project.tracks.find((tr) => tr.id === c.track)?.name ?? t().noteTools.trackFallback;
-        return { id: c.id, label: t().noteTools.sourceClip(track, barIndex(session.project.tempoMap, c.startTick) + 1) };
+        const track = project.tracks.find((tr) => tr.id === c.track)?.name ?? t().noteTools.trackFallback;
+        return { id: c.id, label: t().noteTools.sourceClip(track, barIndex(project.tempoMap, c.startTick) + 1) };
       }),
   );
   const source = () => sources().find((c) => c.id === sourceClip())?.id ?? sources()[0]?.id;

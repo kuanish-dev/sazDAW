@@ -3,13 +3,13 @@ import { For, Show, createSignal, onMount } from "solid-js";
 import type { PluginList, PluginType } from "../api/types";
 import { filterPlugins } from "../plugins/pluginRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { SectionTitle, SettingGroup, Toggle } from "./SettingRow";
+import { usePlugins } from "../plugins/role";
 
 const TYPE_FILTERS: readonly (PluginType | "all")[] = ["all", "effect", "instrument"] as const;
 
 function ScanReportView() {
-  const { plugins } = useSession();
+  const plugins = usePlugins();
   const msg = () => t().settings.plugins;
   return (
     <Show when={plugins.lastScan()}>
@@ -44,7 +44,7 @@ function ScanReportView() {
 }
 
 export function PluginsSection() {
-  const { plugins } = useSession();
+  const plugins = usePlugins();
   const [list, setList] = createSignal<PluginList>({ folders: [], plugins: [] });
   const [text, setText] = createSignal("");
   const [type, setType] = createSignal<PluginType | "all">("all");

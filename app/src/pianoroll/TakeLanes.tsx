@@ -1,16 +1,17 @@
 // Take lanes of an audio clip (comping): a thin waveform row per take, with the currently playing parts highlighted.
 // Dragging along a take's row makes that part of the clip play that take (ends snap to the timeline grid, Alt — no snap);
 // clicking the name selects the whole take (the comp is cleared); the close button removes the take from the clip, the sample stays in Samples.
-// All edits go through `session.tracks.clips`.
+// All edits go through the tracks role's clips (`useTracks().clips`).
 import { For, Show, createSignal } from "solid-js";
 import type { Clip, Id } from "../api/types";
 import { compOf, draggedRange, takeRanges, takesOf } from "../tracks/takes";
 import { FREE_GRID } from "../common/time";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconClose } from "../common/icons";
 import { capture, localPoint } from "../common/pointer";
 import { useClipWaves } from "../tracks/clipWaves";
+import { useProjectCopy } from "../core/roles";
+import { useTracks } from "../tracks/role";
 
 /** Row waveform width in `viewBox` units (the SVG is stretched to the panel width). */
 const WAVE_WIDTH = 600;
@@ -25,25 +26,26 @@ interface Drag {
 }
 
 export function TakeLanes(props: { clip: Clip; snap: number }) {
-  const session = useSession();
-  const { clips } = session.tracks;
+  const { project } = useProjectCopy();
+  const tracks = useTracks();
+  const { clips } = tracks;
   const waves = useClipWaves();
   const [drag, setDrag] = createSignal<Drag | null>(null);
   const takes = () => takesOf(props.clip.content);
   const comped = () => compOf(props.clip.content).length > 0;
   const active = () => (props.clip.content.type === "audio" ? props.clip.content.sample : null);
   const ranges = () => takeRanges(props.clip.content, props.clip.lengthTicks);
-  const name = (sample: Id) => session.project.samples.find((s) => s.id === sample)?.name ?? t().pianoRoll.takeSound(sample);
+  const name = (sample: Id) => project.samples.find((s) => s.id === sample)?.name ?? t().pianoRoll.takeSound(sample);
   const x = (tick: number) => (tick / props.clip.lengthTicks) * WAVE_WIDTH;
 
   const tickAt = (element: Element, event: PointerEvent) => {
     const share = localPoint(element, event).x / Math.max(1, element.getBoundingClientRect().width);
     return Math.min(1, Math.max(0, share)) * props.clip.lengthTicks;
   };
-  const range = (d: Drag) => draggedRange(session.project.tempoMap, props.clip, d.anchor, d.current, d.free ? FREE_GRID : props.snap);
+  const range = (d: Drag) => draggedRange(project.tempoMap, props.clip, d.anchor, d.current, d.free ? FREE_GRID : props.snap);
 
   const wavePath = (take: Id) => {
-    const columns = waves.takeColumns(props.clip, take, WAVE_WIDTH, session.project.tempoMap);
+    const columns = waves.takeColumns(props.clip, take, WAVE_WIDTH, project.tempoMap);
     if (!columns) return "";
     const mid = ROW_HEIGHT / 2;
     const scale = mid - 2;

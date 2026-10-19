@@ -20,7 +20,7 @@ export interface ToastReads {
   dismissToast(id: number): void;
 }
 
-/** The notifications: what the UI reads, and how the rest of the session shows something. */
+/** The notifications: what the UI reads, and how the roles show something. */
 export type Toasts = ToastReads & {
   /** A notification from the interface: an error also goes to the log (console.error → errorReporter), otherwise it would be lost. */
   toast(kind: Toast["kind"], text: string): void;

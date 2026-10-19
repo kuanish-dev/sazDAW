@@ -3,10 +3,11 @@ import { For, Show } from "solid-js";
 import type { TimeSignature } from "../api/types";
 import { barIndex } from "../common/tempoMap";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { ContextMenu, MenuItem, MenuLabel } from "../common/ContextMenu";
 import { signatureLabel } from "./tempoLayout";
 import type { TempoMenu as Menu } from "./tempoPointer";
+import { useProjectCopy } from "../core/roles";
+import { useTransport } from "../transport/role";
 
 /** Signatures offered in the menu; any other is set with the transport bar fields (they edit the signature at the playhead). */
 const SIGNATURES: readonly TimeSignature[] = [
@@ -15,9 +16,10 @@ const SIGNATURES: readonly TimeSignature[] = [
 ] as const;
 
 export function TempoMenu(props: { menu: Menu; onClose: () => void }) {
-  const session = useSession();
-  const tempo = session.transport.tempo;
-  const map = () => session.project.tempoMap;
+  const { project } = useProjectCopy();
+  const transport = useTransport();
+  const tempo = transport.tempo;
+  const map = () => project.tempoMap;
   const bar = (tick: number) => barIndex(map(), tick) + 1;
   const close = props.onClose;
   const msg = () => t().tempo.menu;

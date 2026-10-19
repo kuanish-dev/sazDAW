@@ -1,7 +1,7 @@
-// The drums role as the session holds it: building a drum part from patterns (`drums.ts`) and which sounds the pattern
-// drums play, remembered between builds (`drumKit.ts`).
-import type { Core } from "../core/core";
-import type { Views } from "../shell/views";
+// The drums role: building a drum part from patterns (`drums.ts`) and which sounds the pattern drums play, remembered
+// between builds (`drumKit.ts`).
+import { defineRole, useRole } from "../core/roles";
+import { shellRole } from "../shell/role";
 import { createDrumKit, type DrumKit } from "./drumKit";
 import { createDrumsActions, type DrumsActions } from "./drums";
 
@@ -9,6 +9,6 @@ export type DrumsRole = DrumsActions & {
   readonly kit: DrumKit;
 };
 
-export function createDrumsRole(core: Core, views: Views): DrumsRole {
-  return { ...createDrumsActions(core, views), kit: createDrumKit() };
-}
+export const drumsRole = defineRole("drums", ({ core, use }): DrumsRole => ({ ...createDrumsActions(core, use(shellRole)), kit: createDrumKit() }));
+
+export const useDrums = () => useRole(drumsRole);

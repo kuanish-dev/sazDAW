@@ -2,8 +2,9 @@
 // bottom. The active view has an accent bar on its left edge; the name shows as a tooltip on hover and keyboard focus.
 import { For, type JSX } from "solid-js";
 import { t } from "../i18n";
-import { type Tab, useSession } from "../session";
 import { IconGear, IconGraph, IconMixer, IconStage, IconTracks, IconWave, type IconProps } from "../common/icons";
+import { useShell } from "./role";
+import type { Tab } from "./views";
 
 const VIEWS: readonly { tab: Tab; icon: (p: IconProps) => JSX.Element }[] = [
   { tab: "tracks", icon: IconTracks },
@@ -14,15 +15,15 @@ const VIEWS: readonly { tab: Tab; icon: (p: IconProps) => JSX.Element }[] = [
 ] as const;
 
 function ActivityButton(props: { tab: Tab; icon: (p: IconProps) => JSX.Element }) {
-  const session = useSession();
-  const active = () => session.shell.tab() === props.tab;
+  const shell = useShell();
+  const active = () => shell.tab() === props.tab;
   const name = () => t().shell.tabs[props.tab];
   return (
     <button
       class="group relative flex h-12 w-12 cursor-pointer items-center justify-center"
       classList={{ "text-text": active(), "text-muted hover:text-text": !active() }}
       aria-label={name()} aria-current={active() ? "page" : undefined}
-      onClick={() => session.shell.showTab(props.tab)}
+      onClick={() => shell.showTab(props.tab)}
     >
       {/* The accent bar grows from the middle when the view becomes active. */}
       <span class="absolute inset-y-0 left-0 w-0.5 bg-accent transition-[scale] duration-200 ease-out" classList={{ "scale-y-100": active(), "scale-y-0": !active() }} />

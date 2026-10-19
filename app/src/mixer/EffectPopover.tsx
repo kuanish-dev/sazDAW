@@ -4,9 +4,10 @@ import { Show } from "solid-js";
 import type { Id } from "../api/types";
 import { findNode, nodeLabel } from "../graph/graphRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconClose, IconTrash } from "../common/icons";
 import { EffectPanel } from "../effects/EffectPanel";
+import { useProjectCopy } from "../core/roles";
+import { useGraph } from "../graph/role";
 
 export interface OpenEffect {
   node: Id;
@@ -18,14 +19,15 @@ const PANEL_WIDTH = 288;
 const GAP = 4;
 
 export function EffectPopover(props: { open: OpenEffect; onClose: () => void }) {
-  const session = useSession();
-  const node = () => findNode(session.project.graph, props.open.node);
+  const { project } = useProjectCopy();
+  const graph = useGraph();
+  const node = () => findNode(project.graph, props.open.node);
   const left = () => Math.max(GAP, Math.min(props.open.anchor.left, window.innerWidth - PANEL_WIDTH - GAP));
   // No lower than the middle of the window: the panel is tall and wouldn't fit below.
   const top = () => Math.min(props.open.anchor.bottom + GAP, window.innerHeight / 2);
 
   const remove = () => {
-    void session.graph.removeEffectKeepPath(props.open.node);
+    void graph.removeEffectKeepPath(props.open.node);
     props.onClose();
   };
 

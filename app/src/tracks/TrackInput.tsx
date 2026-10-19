@@ -6,18 +6,20 @@ import { plainLevel } from "../mixer/mixer";
 import { hearsInput, INPUT_SHORT, inputChoices, nextMonitorMode, selectedInputChannels } from "../recording/recordInput";
 import { formatDuration } from "../common/time";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { ContextMenu, MenuCheck, MenuItem, MenuLabel, type MenuPoint } from "../common/ContextMenu";
 import { IconChevronDown, IconRecord } from "../common/icons";
 import { Meter } from "../common/Meter";
+import { useRecording } from "../recording/role";
+import { useSettings } from "../settings/role";
+import { useTracks } from "./role";
 
 /**
  * "Track input" menu: input channels available on the selected input device. The shared menu (`ContextMenu`) floats
  * above everything at the button, so the track header doesn't grow.
  */
 function InputMenu(props: { track: Id; current: InputChannels; at: MenuPoint; onClose: () => void }) {
-  const { audio } = useSession().settings;
-const { audioRecord } = useSession().recording;
+  const { audio } = useSettings();
+const { audioRecord } = useRecording();
   const [channels] = createResource(async () => {
     const [devices, settings] = await Promise.all([audio.devices(), audio.settings()]);
     return devices && settings ? selectedInputChannels(devices, settings) : 0;
@@ -45,10 +47,10 @@ const { audioRecord } = useSession().recording;
 }
 
 export function RecordButton(props: { track: Id }) {
-  const session = useSession();
-  const { audioRecord } = session.recording;
-  const input = () => session.recording.trackInput(props.track);
-  const take = () => session.recording.recordingStatus();
+  const recording = useRecording();
+  const { audioRecord } = recording;
+  const input = () => recording.trackInput(props.track);
+  const take = () => recording.recordingStatus();
   const recordingHere = () => take() !== null && input().armed;
   /** Where to open the input menu (below the button), or null — closed. */
   const [menuAt, setMenuAt] = createSignal<{ x: number; y: number } | null>(null);
@@ -97,10 +99,11 @@ export function RecordButton(props: { track: Id }) {
  * near the microphone there will be feedback — the tooltip warns about it.
  */
 export function MonitorButton(props: { track: Id; mode: MonitorMode }) {
-  const session = useSession();
-  const armed = () => session.recording.trackInput(props.track).armed;
+  const recording = useRecording();
+  const tracks = useTracks();
+  const armed = () => recording.trackInput(props.track).armed;
   /** The track should hear its input but it's silent (sample rates differ, the input didn't open). */
-  const problem = () => (hearsInput(props.mode, armed()) ? session.recording.monitorProblem() : null);
+  const problem = () => (hearsInput(props.mode, armed()) ? recording.monitorProblem() : null);
   const title = () =>
     [
       t().tracks.input.monitor(t().tracks.monitorModes[props.mode]),
@@ -114,7 +117,7 @@ export function MonitorButton(props: { track: Id; mode: MonitorMode }) {
       classList={{ "btn-on": props.mode === "on", "text-muted": props.mode === "off", "ring-1 ring-inset ring-accent text-accent": props.mode === "auto", "!text-danger": problem() !== null }}
       aria-label={title()} title={title()} aria-pressed={props.mode !== "off"}
       onPointerDown={(e) => e.stopPropagation()}
-      onClick={() => void session.tracks.setMonitor(props.track, nextMonitorMode(props.mode))}
+      onClick={() => void tracks.setMonitor(props.track, nextMonitorMode(props.mode))}
     >{props.mode === "auto" ? "IN·A" : "IN"}</button>
   );
 }

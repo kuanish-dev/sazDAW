@@ -10,7 +10,6 @@ import { MIDDLE_C } from "../common/pitch";
 import { barsBetween } from "../common/tempoMap";
 import { clipById, trackById } from "../tracks/trackRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { AutomationClipPanel } from "../automation/AutomationClipPanel";
 import { BarsStepper } from "../common/BarsStepper";
 import { IconLoop, IconRoll, IconSteps } from "../common/icons";
@@ -19,6 +18,10 @@ import { ToolButton } from "../common/Toolbar";
 import { AudioClipPanel } from "./AudioClipPanel";
 import { PianoRoll } from "./PianoRoll";
 import { StepGrid } from "./StepGrid";
+import { useProjectCopy } from "../core/roles";
+import { usePianoroll } from "./role";
+import { useSelection } from "../selection/role";
+import { useTransport } from "../transport/role";
 
 type ClipView = "roll" | "steps";
 
@@ -26,12 +29,12 @@ const VIEWS: readonly ClipView[] = ["roll", "steps"] as const;
 
 /** "Content length" in bars: how many bars of notes repeat inside the clip. Changing it by hand turns off auto length. */
 function ContentLength(props: { clip: NoteClip }) {
-  const session = useSession();
-  const { pianoroll } = session;
+  const { project } = useProjectCopy();
+  const pianoroll = usePianoroll();
   return (
     <BarsStepper
       label={t().pianoRoll.contentLength} hint={t().pianoRoll.contentLengthHint} ticks={props.clip.content.loopTicks}
-      bar={clipBarTicks(session.project.tempoMap, props.clip)} max={MAX_CLIP_LOOP_TICKS}
+      bar={clipBarTicks(project.tempoMap, props.clip)} max={MAX_CLIP_LOOP_TICKS}
       onSet={(ticks) => void pianoroll.setLoopTicks(props.clip.id, ticks)}
     />
   );
@@ -41,12 +44,13 @@ function ContentLength(props: { clip: NoteClip }) {
 const clipBars = (clip: NoteClip, map: TempoMap) => Math.round(barsBetween(map, clip.startTick, clip.startTick + clip.lengthTicks) * 100) / 100;
 
 function ClipPanelHeader(props: { clip: NoteClip; track: Track | undefined; view: ClipView; onView(view: ClipView): void }) {
-  const session = useSession();
+  const { project } = useProjectCopy();
+  const transport = useTransport();
   return (
     <div class="flex min-h-9 shrink-0 flex-wrap items-center gap-x-3 gap-y-1 border-b border-line py-1 pl-3 pr-1.5">
       <h2 class="label">{props.track?.name ?? t().pianoRoll.trackFallback}</h2>
-      <span class="text-xs text-muted">{t().pianoRoll.clipBars(clipBars(props.clip, session.project.tempoMap))}</span>
-      <ToolButton icon={<IconLoop />} label={t().pianoRoll.loopClip} title={t().pianoRoll.loopClipHint} text onClick={() => void session.transport.loopClip(props.clip)} />
+      <span class="text-xs text-muted">{t().pianoRoll.clipBars(clipBars(props.clip, project.tempoMap))}</span>
+      <ToolButton icon={<IconLoop />} label={t().pianoRoll.loopClip} title={t().pianoRoll.loopClipHint} text onClick={() => void transport.loopClip(props.clip)} />
       <ContentLength clip={props.clip} />
       <div class="ml-auto flex rounded border border-field-line p-px" role="tablist" aria-label={t().pianoRoll.clipView}>
         {VIEWS.map((v) => (
@@ -61,13 +65,14 @@ function ClipPanelHeader(props: { clip: NoteClip; track: Track | undefined; view
 
 /** `snap` is the timeline snap grid (ticks), used by the take lanes of an audio clip. */
 export function ClipPanel(props: { snap: number }) {
-  const session = useSession();
+  const { project } = useProjectCopy();
+  const selection = useSelection();
   const [view, setView] = createSignal<ClipView>("roll");
-  const selected = () => clipById(session.project, session.selection.clip());
+  const selected = () => clipById(project, selection.clip());
   const clip = () => asNoteClip(selected());
   const audio = () => (selected()?.content.type === "audio" ? selected() : undefined);
-  const autoClip = () => automationClipOf(session.project, session.selection.automation());
-  const track = () => trackById(session.project, selected()?.track ?? null);
+  const autoClip = () => automationClipOf(project, selection.automation());
+  const track = () => trackById(project, selected()?.track ?? null);
   // Children read "sticky" values: when the clip is deleted they disappear instead of crashing on a stale value.
   const lastClip = sticky(clip);
   const lastTrack = sticky(track);

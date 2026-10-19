@@ -40,10 +40,9 @@ it with the backend, so check it by eye against the Rust implementation).
    `app/src/tracks/tracks.ts`: `TracksActions`, `createTracksActions(core, …)`): this is where we decide how to show an
    error and what to re-read. An instant display goes through `core.patchProject`, the call through
    `core.exec`/`core.run`; something it creates is selected with `views.showCreated`. A new job of a role goes into
-   its `role.ts` (`app/src/tracks/role.ts`); a new role gets a field in `Session`, named as its folder, and a line in
-   `createSession` (`app/src/session.tsx`).
-9. **Interface** — the role's component calls `session.<role>.<method>()` (another job of the role:
-   `session.<role>.<job>.<method>()`, like `session.tracks.clips.split`); it sees neither `api` nor `core`. New text
+   its `role.ts` (`app/src/tracks/role.ts`); a new role is a folder with a `role.ts` (`defineRole` and its `useX` hook).
+9. **Interface** — the role's component takes its role through the hook and calls it: `useTracks().setColor(…)`
+   (another job of the role: `useTracks().clips.split(…)`); it sees neither `api` nor `core`. New text
    goes into `app/src/i18n/en.ts` and `ru.ts` (`ru.ts` is typed `Messages`: a missing key fails `tsc`).
 10. **Docs** — the `CLAUDE.md` of the area or the feature's `docs/features/<feature>.md`: where it lives, which contract
     it relies on, how to add a similar one. The map `ARCHITECTURE.md` changes only for a new crate, area, feature doc or recipe.

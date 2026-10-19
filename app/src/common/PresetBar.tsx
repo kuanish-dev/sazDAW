@@ -3,11 +3,11 @@
 import { For, Show, createResource, createSignal } from "solid-js";
 import type { EditorTarget } from "../api/types";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconClose } from "./icons";
+import { usePresets } from "../presets/role";
 
 export function PresetBar(props: { target: EditorTarget; kind: string }) {
-  const { presets } = useSession();
+  const presets = usePresets();
   const [names, { refetch }] = createResource(() => props.kind, (kind) => presets.list(kind));
   /** The last applied or saved preset: the one "✕" deletes. */
   const [current, setCurrent] = createSignal("");

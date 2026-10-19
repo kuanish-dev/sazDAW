@@ -5,13 +5,13 @@ import type { GraphEdge, GraphNode, Id } from "../api/types";
 import { canPreFader } from "./graphRules";
 import type { ShortcutHelp } from "../common/shortcuts";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { EdgeControls, EdgePath, WirePreview } from "./EdgePath";
 import { inPort, outPort, type View } from "./graphLayout";
 import type { GraphSelection } from "./graphSelection";
 import { sameEdge } from "./graphSelection";
 import { NodeCard } from "./NodeCard";
 import type { GraphPointer, Wire } from "./pointer";
+import { useGraph } from "./role";
 
 /** Background grid dot spacing in world coordinates. */
 const GRID = 24;
@@ -29,7 +29,7 @@ export function GraphCanvas(props: {
   pointer: GraphPointer;
   ref: (el: HTMLDivElement) => void;
 }) {
-  const { graph } = useSession();
+  const graph = useGraph();
   let container!: HTMLDivElement;
   const nodeById = (id: Id) => props.nodes.find((n) => n.id === id);
   /** A pre-fader send exists only on a regular connection from a track or bus. */

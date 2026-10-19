@@ -73,7 +73,7 @@ The frontend is split by role, like the backend's entities: each role folder in 
 | `src/pianoroll/`, `automation/`, `instruments/`, `keyboard/`, `recording/`, `midi/`, `transport/`, `history/`, `files/`, `selection/`, `stage/`, `samples/`, `sounds/`, `drums/`, `chords/`, `plugins/`, `presets/` | One role each (see [app/CLAUDE.md](app/CLAUDE.md)) |
 | [`src/i18n/`](app/src/i18n/CLAUDE.md) | Interface languages (English default, Russian) |
 | [`src/mock/`](app/src/mock/CLAUDE.md) | The browser stand-in for the backend |
-| `src/session.tsx` | Creates the core and every role once and gives the UI the `Session` |
+| `src/start.ts` | Starts the window: the core, the roles' registry (`core/roles.ts`), the startup order |
 | `src/composition.ts` | Composition root: the only place that picks the implementations |
 
 ## Features

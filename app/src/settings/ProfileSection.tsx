@@ -3,20 +3,20 @@ import { For, Show } from "solid-js";
 import type { ProfilePreferences } from "../api/types";
 import { AUTOSAVE_CHOICES, autosaveLabel } from "./preferenceRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { SectionTitle, SettingGroup, SettingRow, Toggle } from "./SettingRow";
 import { IconClose } from "../common/icons";
+import { useSettings } from "./role";
 
 export function ProfileSection() {
-  const session = useSession();
-  const { preferences } = session.settings;
-  const profile = () => session.settings.preferences.current().profile;
+  const settings = useSettings();
+  const { preferences } = settings;
+  const profile = () => settings.preferences.current().profile;
   const msg = () => t().profile;
   const setProfile = (patch: Partial<ProfilePreferences>) =>
     void preferences.update((p) => ({ ...p, profile: { ...p.profile, ...patch } }));
   /** A value outside the list (set elsewhere) is shown too, so the select doesn't jump. */
   const autosaveChoices = () => {
-    const current = session.settings.preferences.current().autosaveSeconds;
+    const current = settings.preferences.current().autosaveSeconds;
     return AUTOSAVE_CHOICES.includes(current) ? AUTOSAVE_CHOICES : [...AUTOSAVE_CHOICES, current].sort((a, b) => a - b);
   };
 
@@ -47,7 +47,7 @@ export function ProfileSection() {
         </SettingRow>
         <SettingRow label={msg().autosave} hint={msg().autosaveHint}>
           <select
-            class="field w-40" aria-label={msg().autosaveInterval} value={session.settings.preferences.current().autosaveSeconds}
+            class="field w-40" aria-label={msg().autosaveInterval} value={settings.preferences.current().autosaveSeconds}
             onChange={(e) => {
               const autosaveSeconds = Number(e.currentTarget.value);
               void preferences.update((p) => ({ ...p, autosaveSeconds }));

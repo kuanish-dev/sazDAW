@@ -1,11 +1,11 @@
 // Settings → Sounds & packs: linked folders to take sounds from (the sound browser shows them under Packs too).
 import { For, createSignal, onMount } from "solid-js";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { SectionTitle, SettingGroup } from "./SettingRow";
+import { useSounds } from "../sounds/role";
 
 export function SoundsSection() {
-  const { browser } = useSession().sounds;
+  const { browser } = useSounds();
   const [sources, setSources] = createSignal<string[]>([]);
 
   const reload = async () => setSources(await browser.soundSources());

@@ -6,21 +6,25 @@ import { clipLabel } from "./clipRules";
 import { FADE_SHAPES, type FadeEdge } from "./fades";
 import { clipById } from "./trackRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { ContextMenu, MenuCheck, MenuItem, MenuLabel } from "../common/ContextMenu";
 import type { ClipMenu as Menu } from "./timelinePointer";
+import { useProjectCopy } from "../core/roles";
+import { useSelection } from "../selection/role";
+import { useTracks } from "./role";
 
 export function ClipMenu(props: { menu: Menu; onClose: () => void }) {
-  const session = useSession();
-  const clips = session.tracks.clips;
+  const { project } = useProjectCopy();
+  const selection = useSelection();
+  const tracks = useTracks();
+  const clips = tracks.clips;
   const msg = () => t().tracks.clipEdit;
   const close = props.onClose;
-  const clip = () => clipById(session.project, props.menu.clip);
+  const clip = () => clipById(project, props.menu.clip);
   /** Normalize takes the whole selection when the clicked clip is part of it. */
   const normalizeIds = () => {
-    const selected = session.selection.clips();
+    const selected = selection.clips();
     const group = selected.includes(props.menu.clip) ? selected : [props.menu.clip];
-    return group.filter((id) => clipById(session.project, id)?.content.type === "audio");
+    return group.filter((id) => clipById(project, id)?.content.type === "audio");
   };
   const edges = (): FadeEdge[] => (props.menu.fade ? [props.menu.fade] : ["in", "out"]);
 
@@ -37,7 +41,7 @@ export function ClipMenu(props: { menu: Menu; onClose: () => void }) {
   return (
     <Show when={clip()}>
       {(c) => (
-        <ContextMenu at={props.menu.at} label={msg().menu(clipLabel(c(), session.project))} onClose={close}>
+        <ContextMenu at={props.menu.at} label={msg().menu(clipLabel(c(), project))} onClose={close}>
           <Show when={!props.menu.fade}>
             <MenuItem onClose={close} onPick={() => void clips.normalize(normalizeIds())}>{msg().normalize}</MenuItem>
             <MenuItem onClose={close} onPick={() => void clips.reverse(props.menu.clip)}>{msg().reverse}</MenuItem>

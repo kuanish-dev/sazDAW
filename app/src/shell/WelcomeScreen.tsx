@@ -3,24 +3,23 @@
 import { For, Show, createSignal, onMount } from "solid-js";
 import type { RecentProject } from "../api/types";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconAdd, IconFolder, IconNote, IconTracks } from "../common/icons";
 import { TemplatesDialog } from "../files/TemplatesDialog";
 import { WelcomeBackdrop } from "./WelcomeBackdrop";
+import { useFiles } from "../files/role";
 
 /**
  * Shown without an open project (first run, or the project was deleted by hand): nothing else can be opened
  * until there is a project. Disappears as soon as a project is created or opened.
  */
 export function WelcomeScreen() {
-  const session = useSession();
+  const files = useFiles();
   const [recent, setRecent] = createSignal<RecentProject[]>([]);
   const [templatesOpen, setTemplatesOpen] = createSignal(false);
 
-  onMount(() => void session.files.recent().then(setRecent));
+  onMount(() => void files.recent().then(setRecent));
 
   const link = "flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-left text-sm text-accent hover:bg-hover";
-  const files = session.files;
 
   return (
     <div class="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-bg p-8" role="dialog" aria-label={t().shell.welcome.noProject}>

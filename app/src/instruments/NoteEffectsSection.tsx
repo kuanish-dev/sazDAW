@@ -1,21 +1,23 @@
 // The instrument window's "MIDI effects" section: the track's chain before the instrument (arpeggiator, chord) — add,
-// bypass, reorder, remove and each effect's parameters. Everything goes through `session.instruments.noteEffects`.
+// bypass, reorder, remove and each effect's parameters. Everything goes through the instruments role (`useInstruments().noteEffects`).
 import { For, Show } from "solid-js";
 import type { Id, NoteEffectSpec } from "../api/types";
 import { kindChoices, noteEffectInfo, paramValue } from "../common/catalog";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { IconArrowDown, IconArrowUp, IconClose, IconPower } from "../common/icons";
 import { ParamControl } from "../common/ParamControl";
 import { PickSelect } from "../common/PickSelect";
+import { useProjectCopy } from "../core/roles";
+import { useInstruments } from "./role";
 
 export function NoteEffectsSection(props: { track: Id; effects: NoteEffectSpec[] }) {
-  const session = useSession();
-  const actions = session.instruments.noteEffects;
-  const kinds = () => kindChoices(session.catalog()?.noteEffects ?? []);
+  const { catalog } = useProjectCopy();
+  const instruments = useInstruments();
+  const actions = instruments.noteEffects;
+  const kinds = () => kindChoices(catalog()?.noteEffects ?? []);
 
   const Effect = (item: { spec: NoteEffectSpec; index: number }) => {
-    const info = () => noteEffectInfo(session.catalog(), item.spec.kind);
+    const info = () => noteEffectInfo(catalog(), item.spec.kind);
     const on = () => !item.spec.bypass;
     return (
       <div class="flex flex-col gap-2 rounded border border-line bg-bg p-2" classList={{ "opacity-60": !on() }}>

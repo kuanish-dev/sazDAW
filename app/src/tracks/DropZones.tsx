@@ -3,9 +3,9 @@
 import { Show, createSignal } from "solid-js";
 import type { NewTrackKind, SampleSource } from "./dropSample";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { registerSampleDrop } from "../common/dragSample";
 import type { DropGhost } from "./timelineDrop";
+import { useSettings } from "../settings/role";
 
 /** Translucent ghost while dragging a sample; labeled when it would replace the instrument. */
 export function DropGhostView(props: { ghost: DropGhost | null }) {
@@ -27,9 +27,9 @@ const ZONES: readonly NewTrackKind[] = ["instrument", "block"] as const;
 
 /** The zones sit at the left edge of the visible area. */
 export function DropZones(props: { onDrop: (source: SampleSource, kind: NewTrackKind) => void }) {
-  const session = useSession();
+  const settings = useSettings();
   return (
-    <div class="sticky left-0 flex w-[min(100%,44rem)] gap-2 p-2" style={{ height: `${session.settings.appearance.rowHeight()}px` }}>
+    <div class="sticky left-0 flex w-[min(100%,44rem)] gap-2 p-2" style={{ height: `${settings.appearance.rowHeight()}px` }}>
       {ZONES.map((kind) => {
         const [over, setOver] = createSignal(false);
         return (

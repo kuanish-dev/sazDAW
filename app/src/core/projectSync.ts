@@ -23,11 +23,20 @@ export interface ProjectSyncDeps {
   onError(error: unknown): void;
 }
 
-/** The project copy as a role uses it: reads, instant display before the backend replies, and re-reads. */
-export interface ProjectCopy {
+/** What the UI reads of the project copy. */
+export interface ProjectReads {
   readonly project: Project;
   status(): Status;
   catalog(): Catalog | null;
+  /** The first project read is done: the views can be shown. */
+  ready(): boolean;
+  /** A project is open (saved in its own folder). */
+  hasProject(): boolean;
+}
+
+/** The project copy as a role uses it: what the UI reads, instant display before the backend replies, re-reads, and
+ *  hearing each new copy. */
+export type ProjectCopy = ProjectReads & {
   /** Takes in what changed since the copy's revision. */
   refresh(): Promise<void>;
   /** Re-reads the whole project (after a refused call: its value may already be shown by `patchProject`). */
@@ -40,18 +49,10 @@ export interface ProjectCopy {
    * value does not stay on screen. Only roles change the copy, never a component.
    */
   patchProject(change: (project: Project) => void): void;
-}
-
-/** What the UI reads of the project copy. */
-export interface ProjectReads {
-  readonly project: Project;
-  status(): Status;
-  catalog(): Catalog | null;
-  /** The first project read is done: the views can be shown. */
-  ready(): boolean;
-  /** A project is open (saved in its own folder). */
-  hasProject(): boolean;
-}
+  /** Hears each new copy in the same update batch as it (so the selection can give way to vanished items); returns
+   *  the function that stops hearing. */
+  onLoaded(listener: (project: Project) => void): () => void;
+};
 
 export function createProjectSync(deps: ProjectSyncDeps) {
   const { api } = deps;
@@ -62,8 +63,7 @@ export function createProjectSync(deps: ProjectSyncDeps) {
 
   /** The revision the copy is at; `null` before the first read (which therefore takes the whole project). */
   let revision: number | null = null;
-  /** Hears each new copy in the same update batch (so the selection can give way to vanished items). */
-  let loaded: ((project: Project) => void) | null = null;
+  const listeners = new Set<(project: Project) => void>();
 
   /** Takes in what changed since the copy's revision, or the whole project. */
   const read = async (whole: boolean) => {
@@ -74,7 +74,7 @@ export function createProjectSync(deps: ProjectSyncDeps) {
     batch(() => {
       setProject(reconcile(next, { key: "id", merge: true }));
       setStatus(nextStatus);
-      loaded?.(next);
+      for (const listener of listeners) listener(next);
     });
   };
 
@@ -120,9 +120,9 @@ export function createProjectSync(deps: ProjectSyncDeps) {
     /** Instant edit of the copy before the backend replies (sliders); the backend's value of the part arrives with the
      *  event, or with `reload` if the call is refused. */
     patchProject: (change: (p: Project) => void) => setProject(produce(change)),
-    /** Who hears each new copy (one listener: the selection). */
-    onLoaded: (listener: (project: Project) => void) => {
-      loaded = listener;
+    onLoaded(listener: (project: Project) => void) {
+      listeners.add(listener);
+      return () => void listeners.delete(listener);
     },
   };
 }

@@ -2,22 +2,22 @@
 // (for a comp, per segment from its own take) are computed on demand. One cache serves the whole Tracks page:
 // `TracksView` provides it (`ClipWavesContext`), so the timeline and the take lanes share what was requested.
 import { createContext, createSignal, useContext } from "solid-js";
-import type { Session } from "../session";
 import type { Clip, Id, TempoMap } from "../api/types";
 import { bucketsFor, clipColumns, type SamplePeaks } from "./clipWave";
 import { averageTempo } from "../common/tempoMap";
 import { takeRanges } from "./takes";
 import { clipTempo } from "./warp";
+import type { SamplesRole } from "../samples/role";
 
-export function createClipWaves(session: Pick<Session, "samples">) {
+export function createClipWaves(samples: Pick<SamplesRole, "sampleInfo" | "editor">) {
   const [peaks, setPeaks] = createSignal<ReadonlyMap<Id, SamplePeaks>>(new Map());
   const requested = new Set<Id>();
   /** One entry per clip take: a changed clip (resize, tempo) replaces its own entry without evicting others. */
   const columns = new Map<string, { key: string; columns: [number, number][] }>();
 
   const load = async (sample: Id) => {
-    const info = await session.samples.sampleInfo(sample);
-    const wave = info && (await session.samples.editor.waveform(sample, 0, info.frameCount, bucketsFor(info.frameCount, info.sampleRate)));
+    const info = await samples.sampleInfo(sample);
+    const wave = info && (await samples.editor.waveform(sample, 0, info.frameCount, bucketsFor(info.frameCount, info.sampleRate)));
     // Failed: allow requesting it again on the next draw.
     if (!wave) return requested.delete(sample);
     columns.clear();

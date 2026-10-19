@@ -6,15 +6,15 @@ import {
   DELAY_RANGE, WIDTH_RANGE, flipBoth, formatDelayMs, formatDelaySamples, formatWidth, nudgeDelay,
 } from "../mixer/channelUtility";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { Knob } from "./Knob";
 import { ParamMenu } from "./ParamMenu";
+import { useGraph } from "../graph/role";
 
 const BUTTON = "btn !h-5 !min-w-0 !px-1 text-[10px]";
 const NUDGE = "btn btn-icon !h-4 !w-4 !min-w-4 text-[10px]";
 
 export function ChannelUtility(props: { node: Id; strip: Strip; sampleRate: number; knobSize: number }) {
-  const { graph } = useSession();
+  const graph = useGraph();
   const text = () => t().mixer.utility;
   const polarity = () => props.strip.polarity;
   const both = () => polarity().invertLeft && polarity().invertRight;

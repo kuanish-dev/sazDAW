@@ -11,7 +11,6 @@ import { gateCurve } from "./gateCurve";
 import { limiterCurve } from "./limiterCurve";
 import { type Transfer, crusherTransfer, distortionTransfer, saturatorTransfer, tapeTransfer } from "./shaperCurve";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { ChorusGraph } from "./ChorusGraph";
 import { DeEsserGraph } from "./DeEsserGraph";
 import { DelayGraph } from "./DelayGraph";
@@ -25,6 +24,9 @@ import { PhaserGraph } from "./PhaserGraph";
 import { ReverbGraph } from "./ReverbGraph";
 import { ShaperGraph } from "./ShaperGraph";
 import { TransientGraph } from "./TransientGraph";
+import { useProjectCopy } from "../core/roles";
+import { useGraph } from "../graph/role";
+import { useMixer } from "../mixer/role";
 
 type Curve<T> = (infos: ParamInfo[], values: Params) => T | null;
 
@@ -50,10 +52,11 @@ const OWN_GRAPHS = new Set(["eq", "linear_eq", "filter", "delay", "chorus", "pha
 export const hasEffectGraph = (kind: string) => OWN_GRAPHS.has(kind) || kind in DYNAMICS || kind in SHAPERS;
 
 export function EffectGraph(props: { node: GraphNode }) {
-  const session = useSession();
-  const { graph } = session;
+  const { catalog } = useProjectCopy();
+  const graph = useGraph();
+  const mixer = useMixer();
   const kind = () => props.node.kind as Extract<GraphNode["kind"], { type: "effect" }>;
-  const params = () => effectInfo(session.catalog(), kind().effect)?.params ?? [];
+  const params = () => effectInfo(catalog(), kind().effect)?.params ?? [];
   const setParam = (name: string, value: number) => void graph.setEffectParam(props.node.id, name, value);
   const dynamics = () => DYNAMICS[kind().effect];
   const dynamicsCurve = createMemo(() => dynamics()?.curve(params(), kind().params) ?? null);
@@ -73,7 +76,7 @@ export function EffectGraph(props: { node: GraphNode }) {
         {(curve) => (
           <DynamicsGraph
             node={props.node.id} curve={curve()} label={dynamics()?.label() ?? ""} hint={dynamics()?.hint() ?? ""}
-            reduction={session.mixer.reductions[props.node.id] ?? 0}
+            reduction={mixer.reductions[props.node.id] ?? 0}
           />
         )}
       </Match>
@@ -100,7 +103,7 @@ export function EffectGraph(props: { node: GraphNode }) {
       </Match>
       <Match when={kind().effect === "de_esser"}>
         <DeEsserGraph
-          node={props.node.id} infos={params()} values={kind().params} reduction={session.mixer.reductions[props.node.id] ?? 0} onChange={setParam}
+          node={props.node.id} infos={params()} values={kind().params} reduction={mixer.reductions[props.node.id] ?? 0} onChange={setParam}
         />
       </Match>
       <Match when={kind().effect === "transient"}>

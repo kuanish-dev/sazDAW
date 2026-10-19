@@ -3,7 +3,6 @@
 // `GraphCanvas`, panels in their own components (`Inspector`, `SignalPath`).
 import { Show, createMemo, createSignal } from "solid-js";
 import type { Id } from "../api/types";
-import { useSession } from "../session";
 import { GraphCanvas } from "./GraphCanvas";
 import { CARD_WIDTH, autoLayout, insertedEffectPosition, toWorld, type Point, type View } from "./graphLayout";
 import { createGraphSelection } from "./graphSelection";
@@ -11,14 +10,16 @@ import { GraphToolbar } from "./GraphToolbar";
 import { Inspector } from "./Inspector";
 import { createGraphPointer, type Wire } from "./pointer";
 import { SignalPath } from "./SignalPath";
+import { useProjectCopy } from "../core/roles";
+import { useGraph } from "./role";
 
 const HOME: Readonly<View> = { x: 0, y: 0, zoom: 1 } as const;
 /** A new node is placed slightly above the middle of the visible area. */
 const NEW_NODE_LIFT = 30;
 
 export function GraphView() {
-  const session = useSession();
-  const { graph } = session;
+  const { catalog, project } = useProjectCopy();
+  const graph = useGraph();
 
   const [view, setView] = createSignal<View>(HOME);
   const [drafts, setDrafts] = createSignal<Record<Id, Point>>({});
@@ -27,8 +28,8 @@ export function GraphView() {
   let container!: HTMLDivElement;
 
   /** Nodes with dragged positions (drafts) applied; the rest stay the same objects, so they don't re-render. */
-  const nodes = createMemo(() => session.project.graph.nodes.map((n) => (drafts()[n.id] ? { ...n, ...drafts()[n.id] } : n)));
-  const selection = createGraphSelection({ graph, nodes, edges: () => session.project.graph.edges });
+  const nodes = createMemo(() => project.graph.nodes.map((n) => (drafts()[n.id] ? { ...n, ...drafts()[n.id] } : n)));
+  const selection = createGraphSelection({ graph, nodes, edges: () => project.graph.edges });
   const selectAndFocus = (id: Id | null) => {
     selection.selectNode(id);
     container.focus();
@@ -36,7 +37,7 @@ export function GraphView() {
 
   const pointer = createGraphPointer({
     graph,
-    data: () => session.project.graph,
+    data: () => project.graph,
     nodes,
     container: () => container,
     view,
@@ -72,14 +73,14 @@ export function GraphView() {
   };
 
   const arrange = async () => {
-    await graph.arrange(autoLayout(nodes(), session.project.graph.edges, session.project.tracks.map((t) => t.id)));
+    await graph.arrange(autoLayout(nodes(), project.graph.edges, project.tracks.map((t) => t.id)));
     setView(HOME);
   };
 
   return (
     <div class="flex h-full min-h-[420px] flex-col">
       <GraphToolbar
-        effects={session.catalog()?.effects ?? []}
+        effects={catalog()?.effects ?? []}
         canRemove={selection.canRemove()}
         canInsert={selection.node() !== null}
         canKeepPath={selection.node()?.kind.type === "effect"}
@@ -98,7 +99,7 @@ export function GraphView() {
         <div class="flex min-w-0 flex-1 flex-col">
           <GraphCanvas
             ref={(el) => { container = el; }}
-            nodes={nodes()} edges={session.project.graph.edges} view={view()} wire={wire()} selection={selection} pointer={pointer}
+            nodes={nodes()} edges={project.graph.edges} view={view()} wire={wire()} selection={selection} pointer={pointer}
           />
           <Show when={pathOpen()}>
             <SignalPath selected={selection.node()?.id ?? null} onSelect={selectAndFocus} />

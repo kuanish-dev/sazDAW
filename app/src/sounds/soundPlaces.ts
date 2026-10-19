@@ -4,18 +4,20 @@ import { createEffect, createSignal, on } from "solid-js";
 import type { LibraryEntry } from "../api/types";
 import { basename, joinPath, parentDir } from "../common/format";
 import { t } from "../i18n";
-import { useSession } from "../session";
+import { useProjectCopy } from "../core/roles";
+import { useSounds } from "./role";
 
 export function createSoundPlaces() {
-  const session = useSession();
-  const lib = session.sounds.browser;
+  const { status } = useProjectCopy();
+  const sounds = useSounds();
+  const lib = sounds.browser;
   const [dir, setDir] = createSignal("/");
   const [entries, setEntries] = createSignal<LibraryEntry[]>([]);
   const [sources, setSources] = createSignal<string[]>([]);
   /** Root of the current place (the project folder or a link). */
   const [place, setPlace] = createSignal("");
 
-  const root = () => session.status().folder;
+  const root = () => status().folder;
   const samplesFolder = () => (root() ? joinPath(root()!, "samples") : undefined);
 
   const load = async (path: string): Promise<boolean> => {

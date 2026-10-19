@@ -5,19 +5,20 @@ import type { DrumPattern, PatternSlot } from "../api/types";
 import { drumRequest, lanesOf, totalBars } from "./drumPart";
 import { parseStartBar } from "../common/partFields";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { createLoopPreview } from "../common/loopPreview";
 import { Modal } from "../common/Modal";
 import { DrumKitPicker } from "./DrumKitPicker";
 import { PartList } from "./PartList";
 import { PatternBrowser } from "./PatternBrowser";
+import { useProjectCopy } from "../core/roles";
+import { useDrums } from "./role";
 
 /** Preview key of the whole part (a pattern's key is its id). */
 const WHOLE_PART = "part";
 
 export function DrumPartDialog(props: { onClose: () => void }) {
-  const session = useSession();
-  const { drums } = session;
+  const { project } = useProjectCopy();
+  const drums = useDrums();
   const [patterns, setPatterns] = createSignal<DrumPattern[]>([]);
   const [slots, setSlots] = createSignal<PatternSlot[]>([]);
   const [startBar, setStartBar] = createSignal(0);
@@ -28,7 +29,7 @@ export function DrumPartDialog(props: { onClose: () => void }) {
   const nameOf = (id: string) => patterns().find((p) => p.id === id)?.name ?? id;
   const lanes = createMemo(() => lanesOf(slots(), patterns()));
   const requestFor = (list: PatternSlot[]) =>
-    drumRequest({ startBar: startBar(), slots: list, replace: replace() }, session.drums.kit.choices(), patterns(), session.project);
+    drumRequest({ startBar: startBar(), slots: list, replace: replace() }, drums.kit.choices(), patterns(), project);
   const preview = createLoopPreview(drums);
 
   const build = async () => {

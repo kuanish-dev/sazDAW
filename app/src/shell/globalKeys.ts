@@ -6,8 +6,19 @@
 // - a view that gives Space its own meaning while it is shown, whatever has focus (the sample editor), `claimSpace`s it.
 import { codeLabel, type ShortcutHelp } from "../common/shortcuts";
 import { t, type Messages } from "../i18n";
-import { handleClipKey } from "../tracks/clipKeys";
-import type { Session } from "../session";
+import type { FilesRole } from "../files/role";
+import type { HistoryActions } from "../history/history";
+import { type ClipKeyRoles, handleClipKey } from "../tracks/clipKeys";
+import type { TransportRole } from "../transport/role";
+import type { Views } from "./views";
+
+/** The roles the window keys ask: the clip keys' and the transport, history, files and what the window shows. */
+export type WindowKeyRoles = ClipKeyRoles & {
+  readonly transport: TransportRole;
+  readonly history: HistoryActions;
+  readonly files: FilesRole;
+  readonly shell: Views;
+};
 
 interface Shortcut {
   /** Caption for the help (Settings → Keyboard shortcuts); a function when it depends on the language. */
@@ -20,7 +31,7 @@ interface Shortcut {
   alt?: boolean;
   /** Works without an open project too (welcome screen). */
   withoutProject?: boolean;
-  run(session: Session, event: KeyboardEvent): Promise<void>;
+  run(roles: WindowKeyRoles, event: KeyboardEvent): Promise<void>;
 }
 
 const SHORTCUTS: readonly Shortcut[] = [
@@ -44,19 +55,19 @@ const OWN_TEXT_KEYS = "input, select, textarea, [data-owns-space]";
 const OWN_PANEL_KEYS = "[data-owns-keys]";
 
 /** Installs the keys on the window; returns the uninstall function. */
-export function installGlobalKeys(session: Session): () => void {
+export function installGlobalKeys(roles: WindowKeyRoles): () => void {
   const onKey = (event: KeyboardEvent) => {
     const target = event.target as HTMLElement;
     if (event.defaultPrevented || target.closest(OWN_TEXT_KEYS)) return;
     const meta = event.metaKey || event.ctrlKey;
     // Space works with any modifiers, the rest only with Cmd/Ctrl.
     const shortcut = SHORTCUTS.find((s) => s.code === event.code && (s.meta ? meta : true) && (s.alt ? event.altKey : true));
-    if (!session.hasProject() && !shortcut?.withoutProject) return;
+    if (!roles.copy.hasProject() && !shortcut?.withoutProject) return;
     if (shortcut) {
       event.preventDefault();
-      void shortcut.run(session, event);
-    } else if (session.shell.tab() === "tracks" && !target.closest(OWN_PANEL_KEYS)) {
-      handleClipKey(event, session);
+      void shortcut.run(roles, event);
+    } else if (roles.shell.tab() === "tracks" && !target.closest(OWN_PANEL_KEYS)) {
+      handleClipKey(event, roles);
     }
   };
   window.addEventListener("keydown", onKey);

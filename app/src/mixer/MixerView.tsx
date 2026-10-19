@@ -5,15 +5,15 @@ import { For, Show, createMemo, createSignal } from "solid-js";
 import type { Id } from "../api/types";
 import { stripOrder } from "./mixerStrips";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { createStreamRate } from "../common/streamRate";
 import { ChannelStrip, MasterStrip } from "./ChannelStrip";
 import { EffectPopover, type OpenEffect } from "./EffectPopover";
 import { MasterMeters } from "./MasterMeters";
+import { useProjectCopy } from "../core/roles";
 
 export function MixerView() {
-  const session = useSession();
-  const order = createMemo(() => stripOrder(session.project));
+  const { project } = useProjectCopy();
+  const order = createMemo(() => stripOrder(project));
   const [openEffect, setOpenEffect] = createSignal<OpenEffect | null>(null);
   const sampleRate = createStreamRate();
   const showEffect = (node: Id, anchor: HTMLElement) => setOpenEffect({ node, anchor: anchor.getBoundingClientRect() });

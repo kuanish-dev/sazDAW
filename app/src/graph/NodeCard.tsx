@@ -4,10 +4,11 @@ import type { GraphNode } from "../api/types";
 import { effectInfo } from "../common/catalog";
 import { acceptsInput, hasOutput, nodeLabel } from "./graphRules";
 import { t } from "../i18n";
-import { useSession } from "../session";
 import { InlineRename } from "../common/InlineRename";
 import { CARD_WIDTH, HEADER_HEIGHT, cardHeight, hasSidechain, sidechainTop } from "./graphLayout";
 import { NodeStrip } from "./NodeStrip";
+import { useProjectCopy } from "../core/roles";
+import { useGraph } from "./role";
 
 export type PortState = "ok" | "bad" | null;
 
@@ -30,8 +31,8 @@ export function NodeCard(props: {
   onOutputDown: (event: PointerEvent) => void;
   onSelect: () => void;
 }) {
-  const session = useSession();
-  const { graph } = session;
+  const { catalog } = useProjectCopy();
+  const graph = useGraph();
   const [renaming, setRenaming] = createSignal(false);
   const effect = () => (props.node.kind.type === "effect" ? props.node.kind : null);
 
@@ -80,7 +81,7 @@ export function NodeCard(props: {
               onPointerDown={(ev) => ev.stopPropagation()}
               onClick={() => void graph.setEffectBypass(props.node.id, !e().bypass)}
             />
-            <span class="truncate text-xs" classList={{ "text-muted line-through": e().bypass }}>{effectInfo(session.catalog(), e().effect)?.label ?? e().effect}</span>
+            <span class="truncate text-xs" classList={{ "text-muted line-through": e().bypass }}>{effectInfo(catalog(), e().effect)?.label ?? e().effect}</span>
           </div>
         )}
       </Show>
