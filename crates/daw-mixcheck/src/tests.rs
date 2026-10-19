@@ -57,6 +57,7 @@ fn kinds() -> Kinds {
         info("cutoff", "Cutoff, Hz", 40.0, 20_000.0),
         info("pitch", "Pitch", -24.0, 24.0),
         ParamInfo { kind: ParamKind::Switch, ..info("volume_lock", "Volume lock", 0.0, 1.0) },
+        ParamInfo { default: 0.0, ..info("lfo_volume", "LFO to volume, %", 0.0, 100.0) },
     ];
     Kinds {
         instruments: HashMap::from([("synth".to_string(), synth)]),
@@ -155,14 +156,15 @@ fn muted_and_soloed_nodes_are_reported() {
 #[test]
 fn level_and_cutoff_params_at_their_minimum_are_suspicious() {
     let mut project = project();
-    // A volume of 0.32 % and a cutoff of 41 Hz (log scale 40..20,000) are suspicious; pitch -24 is not a level; the
-    // lead is fine.
+    // A volume of 0.32 % and a cutoff of 41 Hz (log scale 40..20,000) are suspicious; pitch -24 is not a level; an LFO
+    // depth at 0 is its default, off rather than lost; the lead is fine.
     let params = &mut project.tracks[0].instrument.as_mut().unwrap().params;
     params.extend([
         ("gain".to_string(), 0.0032),
         ("cutoff".to_string(), 41.0),
         ("pitch".to_string(), -24.0),
         ("volume_lock".to_string(), 0.0),
+        ("lfo_volume".to_string(), 0.0),
     ]);
     project.tracks[1].instrument.as_mut().unwrap().params.extend([("gain".to_string(), 0.2), ("cutoff".to_string(), 150.0)]);
     let findings = rules::suspicious_params(&project, &kinds());
@@ -263,6 +265,10 @@ impl MixAnalysis for FakeAnalysis {
         self.asked.lock().unwrap().push(*request);
         let (tracks, master) = self.result.clone()?;
         Ok(if request.per == LevelTargets::Track { tracks } else { master })
+    }
+
+    fn balance(&self, _: &Project, _: Option<u32>, _: Option<u32>) -> Result<BalanceReport, ContractError> {
+        unreachable!("the mix check does not ask for the balance")
     }
 }
 

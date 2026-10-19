@@ -54,8 +54,8 @@ pub mod warp;
 pub mod workspace;
 
 pub use analysis::{
-    DEFAULT_RESOLUTION_BARS, Finding, Level, LevelReport, LevelRequest, LevelTargets, MAX_ANALYSIS_SECONDS, MAX_RESOLUTION_BARS,
-    MixAnalysis, MixCheck, SILENCE_DB, Section, Severity, TargetLevels,
+    BalanceReport, DEFAULT_RESOLUTION_BARS, Finding, Level, LevelReport, LevelRequest, LevelTargets, LoudnessLevels, MAX_ANALYSIS_SECONDS,
+    MAX_RESOLUTION_BARS, MixAnalysis, MixCheck, SILENCE_DB, Section, Severity, TargetLevels, TrackBalance,
 };
 pub use app::Controls;
 pub use audio::{

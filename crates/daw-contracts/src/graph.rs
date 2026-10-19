@@ -389,6 +389,20 @@ impl Graph {
         self.nodes.iter().find(|n| n.kind.track() == Some(track))
     }
 
+    /// Nodes whose sound reaches the master through regular (not sidechain) edges, the master included.
+    pub fn reaching_master(&self) -> BTreeSet<NodeId> {
+        let mut found = BTreeSet::from([MASTER]);
+        let mut stack = vec![MASTER];
+        while let Some(current) = stack.pop() {
+            for edge in self.incoming(current).filter(|e| !e.sidechain) {
+                if found.insert(edge.from) {
+                    stack.push(edge.from);
+                }
+            }
+        }
+        found
+    }
+
     /// All nodes whose sound reaches `id` (excluding `id` itself), e.g. for stems.
     pub fn upstream(&self, id: NodeId) -> BTreeSet<NodeId> {
         let mut found = BTreeSet::new();

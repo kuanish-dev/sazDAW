@@ -50,7 +50,9 @@ Fewer calls: an effect takes its params at creation (`graph_insertEffect`, `grap
 `params`), and a param is automated in one call with `automation_addDrawnClip` (lane, clip and shape or points at once). \
 You cannot hear the sound, so check your work with numbers: after building or changing a track, call `analysis_check` and fix the \
 findings (silent or quiet tracks, master overload, mute/solo, params at their minimum) BEFORE reporting that it is done; levels of \
-tracks, buses and the master per bar — `analysis_levels`.";
+tracks, buses and the master per bar — `analysis_levels`. To set the volume balance between tracks, call `analysis_balance`: each \
+track's sound in the mix (the mix minus the mix without it), its loudness and `relativeLu` against the whole mix; move the faders with \
+`graph_setVolume` (volume × 10^(dB/20)) and measure again.";
 
 /// An MCP tool: name, description and input schema; `method` is the RPC method it calls.
 struct Tool {

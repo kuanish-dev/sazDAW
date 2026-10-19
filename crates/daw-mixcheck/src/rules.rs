@@ -237,7 +237,8 @@ pub(crate) fn suspicious_params(project: &Project, kinds: &Kinds) -> Vec<Finding
     for track in &project.tracks {
         let Some(spec) = track.sounding_instrument() else { continue };
         let Some(infos) = kinds.instruments.get(&spec.kind) else { continue };
-        for info in infos.iter().filter(|info| is_level_param(info)) {
+        // A parameter at its minimum by default (an LFO or envelope depth) is off there, not lost.
+        for info in infos.iter().filter(|info| is_level_param(info) && !near_min(info, info.default)) {
             let value = spec.params.get(info.name).copied().unwrap_or(info.default);
             if near_min(info, value) {
                 let mut found = finding(
@@ -257,24 +258,10 @@ pub(crate) fn suspicious_params(project: &Project, kinds: &Kinds) -> Vec<Finding
     findings
 }
 
-/// Nodes whose sound reaches the master through regular (not sidechain) edges.
-fn reaching_master(project: &Project) -> BTreeSet<NodeId> {
-    let mut found = BTreeSet::from([MASTER]);
-    let mut stack = vec![MASTER];
-    while let Some(current) = stack.pop() {
-        for edge in project.graph.edges.iter().filter(|e| e.to == current && !e.sidechain) {
-            if found.insert(edge.from) {
-                stack.push(edge.from);
-            }
-        }
-    }
-    found
-}
-
 /// Tracks and buses whose sound does not reach the master (`Warning`; a node with only sidechain outputs is fine), and
 /// empty buses (`Info`).
 pub(crate) fn routing(project: &Project) -> Vec<Finding> {
-    let reaching = reaching_master(project);
+    let reaching = project.graph.reaching_master();
     let mut findings = Vec::new();
     for node in project.graph.nodes.iter().filter(|n| n.kind.strip().is_some()) {
         let who = node_text(&node.kind, &node.name);

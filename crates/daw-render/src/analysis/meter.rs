@@ -1,10 +1,11 @@
 //! Measuring audio while it renders (pure math, no engine): peak and RMS of the whole range and of each section
-//! (`Meter`) and the integrated loudness (the shared BS.1770 meter, `crate::loudness`). Audio arrives in chunks and
-//! never piles up in memory.
+//! with the integrated loudness (`Meter`, for `levels`), and the loudness of the whole range for balancing
+//! (`LoudnessMeter`, for `balance`), both on the shared BS.1770 meters (`crate::loudness`). Audio arrives in chunks
+//! and never piles up in memory.
 
-use daw_contracts::{Level, SILENCE_DB};
+use daw_contracts::{Level, LoudnessLevels, SILENCE_DB};
 
-use crate::loudness::{Loudness, round_tenth};
+use crate::loudness::{Loudness, TruePeak, round_tenth};
 
 /// Sample rate of the project level analysis.
 pub(crate) const ANALYSIS_SAMPLE_RATE: u32 = 48_000;
@@ -89,6 +90,40 @@ impl Meter {
     }
 }
 
+/// The integrated loudness, the loudest short-term loudness and the true peak of the whole range.
+pub(crate) struct LoudnessMeter {
+    loudness: Loudness,
+    peak: TruePeak,
+    max_short_term: Option<f32>,
+}
+
+impl LoudnessMeter {
+    pub(crate) fn new() -> Self {
+        Self { loudness: Loudness::new(ANALYSIS_SAMPLE_RATE), peak: TruePeak::new(), max_short_term: None }
+    }
+
+    /// Takes interleaved stereo frames.
+    pub(crate) fn push(&mut self, interleaved: &[f32]) {
+        for frame in interleaved.chunks_exact(2) {
+            self.peak.push(frame[0], frame[1]);
+            // The short-term loudness changes only when a 100 ms step ends.
+            if self.loudness.push(frame[0], frame[1])
+                && let Some(short_term) = self.loudness.short_term()
+            {
+                self.max_short_term = Some(self.max_short_term.map_or(short_term, |max| max.max(short_term)));
+            }
+        }
+    }
+
+    pub(crate) fn finish(&self) -> LoudnessLevels {
+        LoudnessLevels {
+            loudness_lufs: self.loudness.integrated(),
+            max_short_term_lufs: self.max_short_term,
+            true_peak_db: self.peak.peak_db().map(round_tenth),
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -112,5 +147,38 @@ mod tests {
         assert_eq!(measured.sections[3], None, "the audio never reached the fourth section");
         assert_eq!(measured.level.unwrap().peak_db, -6.0);
         assert_eq!(measured.level.unwrap().rms_db, -9.0, "mean power of three sections: (0.126 + 0 + 0.25) / 3");
+    }
+
+    #[test]
+    fn loudness_meter_holds_the_loudest_three_seconds_and_the_true_peak() {
+        // 4 s of a quiet sine, then 4 s of a sine 20 dB louder: the loudest 3 s are the loud part only, the integrated
+        // loudness gates the quiet part out (more than 10 LU below; the blocks across the change pull it down a little),
+        // the true peak is the loud sine's.
+        let mut audio = sine(1000.0, -40.0, 4.0, true, true);
+        audio.extend(sine(1000.0, -20.0, 4.0, true, true));
+        let mut meter = LoudnessMeter::new();
+        for chunk in audio.chunks(4096 * 2 + 2) {
+            meter.push(chunk);
+        }
+        let levels = meter.finish();
+        let mut alone = LoudnessMeter::new();
+        alone.push(&sine(1000.0, -20.0, 4.0, true, true));
+        let loud = alone.finish().loudness_lufs.unwrap();
+        let near = |value: Option<f32>, tolerance: f32| value.is_some_and(|v| (v - loud).abs() <= tolerance);
+        assert!(near(levels.max_short_term_lufs, 0.1), "the loud part: {levels:?}, alone {loud}");
+        assert!(near(levels.loudness_lufs, 0.3), "the quiet part is gated out: {levels:?}, alone {loud}");
+        assert!(levels.true_peak_db.is_some_and(|peak| (peak + 20.0).abs() <= 0.2), "{levels:?}");
+    }
+
+    #[test]
+    fn loudness_meter_reads_silence_and_short_ranges_as_none() {
+        let mut silent = LoudnessMeter::new();
+        silent.push(&vec![0.0; 48_000 * 2 * 4]);
+        assert_eq!(silent.finish(), LoudnessLevels { loudness_lufs: None, max_short_term_lufs: None, true_peak_db: None });
+        let mut short = LoudnessMeter::new();
+        short.push(&sine(1000.0, -20.0, 1.0, true, true));
+        let levels = short.finish();
+        assert!(levels.loudness_lufs.is_some() && levels.true_peak_db.is_some(), "{levels:?}");
+        assert_eq!(levels.max_short_term_lufs, None, "a second is shorter than the 3 s window");
     }
 }

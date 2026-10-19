@@ -1,5 +1,6 @@
-//! Full session: sound levels (`MixAnalysis`) match the export bar by bar, a silent built-in synth track (volume 0) and
-//! master overload are found by the mix check (`MixCheck`), and "listening" does not change the project.
+//! Full session: sound levels (`MixAnalysis`) match the export bar by bar, the balance hears each track as it reaches the
+//! master, a silent built-in synth track (volume 0) and master overload are found by the mix check (`MixCheck`), and
+//! "listening" does not change the project.
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,
@@ -14,10 +15,14 @@ const BAR_FRAMES: usize = 96_000;
 
 /// Mono WAV at 48 kHz: a 440 Hz sine with peak `amplitude`, `seconds` long.
 fn write_tone(path: &Path, amplitude: f32, seconds: f32) {
+    write_sine(path, amplitude, 440.0, seconds);
+}
+
+fn write_sine(path: &Path, amplitude: f32, frequency: f32, seconds: f32) {
     let spec = hound::WavSpec { channels: 1, sample_rate: 48_000, bits_per_sample: 32, sample_format: hound::SampleFormat::Float };
     let mut writer = hound::WavWriter::create(path, spec).unwrap();
     for i in 0..(48_000.0 * seconds) as usize {
-        writer.write_sample(amplitude * (std::f32::consts::TAU * 440.0 * i as f32 / 48_000.0).sin()).unwrap();
+        writer.write_sample(amplitude * (std::f32::consts::TAU * frequency * i as f32 / 48_000.0).sin()).unwrap();
     }
     writer.finalize().unwrap();
 }
@@ -89,6 +94,91 @@ fn levels_per_bar_match_the_exported_mix_for_a_known_tone() {
     assert_eq!(tracks.targets.len(), 1);
     assert_eq!(tracks.targets[0].sections, master.sections);
     assert_eq!(controls.view.snapshot(), before, "analysis does not change the project");
+    std::fs::remove_dir_all(dir).ok();
+}
+
+#[test]
+fn balance_hears_each_track_as_it_reaches_the_master() {
+    let dir = temp_dir("analysis-balance");
+    let session = start(false);
+    let controls = &session.controls;
+    controls.tempo.set_tempo(Bpm::new(120.0).unwrap()).unwrap();
+    controls.graph.set_volume(MASTER, 1.0).unwrap();
+    write_tone(&dir.join("tone.wav"), 0.25, 4.0);
+    let sample = controls.samples.import(&dir.join("tone.wav")).unwrap().id;
+    // The same tone in step four times: at full volume, at half volume (soloed), at full volume into a bus at half
+    // volume, and muted; plus a track without clips.
+    let full = tone_track(controls, sample, 0, 1.0);
+    let half = tone_track(controls, sample, 0, 0.5);
+    let bused = tone_track(controls, sample, 0, 1.0);
+    let bus = controls.graph.add_bus("Group", 0.0, 0.0).unwrap();
+    controls.graph.set_volume(bus, 0.5).unwrap();
+    controls.graph.set_output(source_node(controls, bused), bus).unwrap();
+    let muted = tone_track(controls, sample, 0, 1.0);
+    controls.graph.set_mute(source_node(controls, muted), true).unwrap();
+    let empty = controls.tracks.add_track("Empty", None, 60).unwrap();
+    controls.graph.set_solo(source_node(controls, half), true).unwrap();
+    let before = controls.view.snapshot();
+
+    let report = controls.analysis.balance(&before, None, None).unwrap();
+    assert_eq!((report.from_tick, report.to_tick), (0, BAR_TICKS * 2), "4 s at 120 BPM");
+    assert_eq!(report.tracks.iter().map(|t| t.track).collect::<Vec<_>>(), [full, half, bused, muted, empty]);
+    let near = |value: Option<f32>, expected: f32| value.is_some_and(|v| (v - expected).abs() < 0.2);
+    // Solo is ignored: the mix is full + half + bused (the muted one is out), twice the full track's amplitude.
+    for (index, relative) in [(0, -6.0), (1, -12.0), (2, -12.0), (3, -6.0)] {
+        let track = &report.tracks[index];
+        assert!(near(track.relative_lu, relative), "track {index} at {relative} LU: {track:?}, mix {:?}", report.mix);
+        assert!(!track.silent && near(track.levels.max_short_term_lufs, track.levels.loudness_lufs.unwrap()), "{track:?}");
+    }
+    let first = &report.tracks[0];
+    assert!(near(first.levels.true_peak_db, db(0.25)), "{first:?}");
+    assert_eq!((first.node, first.volume, first.muted), (source_node(controls, full), 1.0, false));
+    assert!(report.tracks[3].muted, "the mute is reported, the track is still measured");
+    let silent = &report.tracks[4];
+    assert!(silent.silent && silent.levels.loudness_lufs.is_none() && silent.relative_lu.is_none(), "{silent:?}");
+    assert!(near(report.mix.true_peak_db, db(0.5)), "{:?}", report.mix);
+    assert_eq!(report.floor_lufs, None, "built-in renders repeat sample for sample");
+    assert!(report.tracks.iter().all(|t| !t.keys_only), "every track reaches the master");
+    assert_eq!(controls.view.snapshot(), before, "the balance does not change the project");
+    std::fs::remove_dir_all(dir).ok();
+}
+
+#[test]
+fn balance_hears_ducking_and_a_gate_keyed_by_other_tracks() {
+    let dir = temp_dir("analysis-balance-keys");
+    let session = start(false);
+    let controls = &session.controls;
+    controls.tempo.set_tempo(Bpm::new(120.0).unwrap()).unwrap();
+    controls.graph.set_volume(MASTER, 1.0).unwrap();
+    // The keys play a lower tone than the tracks they key, so the difference renders do not cancel one in the other.
+    write_tone(&dir.join("tone.wav"), 0.25, 4.0);
+    write_sine(&dir.join("key.wav"), 0.25, 220.0, 4.0);
+    let tone = controls.samples.import(&dir.join("tone.wav")).unwrap().id;
+    let key_tone = controls.samples.import(&dir.join("key.wav")).unwrap().id;
+    let params = |pairs: &[(&str, f32)]| pairs.iter().map(|(name, value)| ((*name).to_string(), *value)).collect::<daw_contracts::Params>();
+    // A track ducked hard by a compressor keyed by another one.
+    let key = tone_track(controls, key_tone, 0, 1.0);
+    let ducked = tone_track(controls, tone, 0, 1.0);
+    let duck = params(&[("threshold", -40.0), ("ratio", 20.0), ("attack", 0.1), ("release", 50.0), ("sidechain", 1.0)]);
+    let compressor = controls.graph.insert_effect(source_node(controls, ducked), "compressor", &duck, 0.0, 0.0).unwrap();
+    controls.graph.connect(source_node(controls, key), compressor, 1.0, true).unwrap();
+    // A pad behind a gate that only another track opens; that track reaches the master only as the gate's key.
+    let pad = tone_track(controls, tone, 0, 1.0);
+    let opener = tone_track(controls, key_tone, 0, 1.0);
+    let open = params(&[("threshold", -40.0), ("range", -80.0), ("attack", 0.1), ("sidechain", 1.0)]);
+    let gate = controls.graph.insert_effect(source_node(controls, pad), "gate", &open, 0.0, 0.0).unwrap();
+    controls.graph.connect(source_node(controls, opener), gate, 1.0, true).unwrap();
+    controls.graph.disconnect(source_node(controls, opener), MASTER, false).unwrap();
+
+    let report = controls.analysis.balance(&controls.view.snapshot(), None, None).unwrap();
+    let row = |track| report.tracks.iter().find(|t| t.track == track).unwrap();
+    let loudness = |track| row(track).levels.loudness_lufs.unwrap();
+    assert_eq!(report.floor_lufs, None, "built-in renders repeat sample for sample");
+    assert!(loudness(ducked) < loudness(key) - 10.0, "the key ducks it in the mix: {:?}, key {:?}", row(ducked), row(key));
+    let open_pad = row(pad);
+    assert!(open_pad.levels.true_peak_db.is_some_and(|peak| (peak - db(0.25)).abs() < 0.3), "the opener keeps the gate open: {open_pad:?}");
+    assert!(row(opener).keys_only && !row(opener).silent, "it shows what it opens: {:?}", row(opener));
+    assert!(!row(key).keys_only && !row(pad).keys_only && !row(ducked).keys_only);
     std::fs::remove_dir_all(dir).ok();
 }
 

@@ -102,7 +102,7 @@ Cross-layer features (`docs/features/`):
 | Master visualizer: spectrum and oscilloscope | [master-visualizer.md](docs/features/master-visualizer.md) |
 | Audio export | [audio-export.md](docs/features/audio-export.md) |
 | Rendering a track to audio (bounce, freeze) | [bounce.md](docs/features/bounce.md) |
-| Checking the result by ear: levels and mix check | [mix-check.md](docs/features/mix-check.md) |
+| Checking the result by ear: levels, track balance and mix check | [mix-check.md](docs/features/mix-check.md) |
 | Project templates and presets | [templates-and-presets.md](docs/features/templates-and-presets.md) |
 | User and app preferences | [preferences.md](docs/features/preferences.md) |
 | Sounds: the project folder, the sound browser, dragging a sound | [sounds.md](docs/features/sounds.md) |
