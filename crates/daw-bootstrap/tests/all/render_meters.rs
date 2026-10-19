@@ -13,21 +13,22 @@ use crate::common::*;
 fn the_demo_is_measured_as_it_plays_from_the_start() {
     let mut session = start(true);
     let controls = session.controls.clone();
-    assert_eq!(controls.master_meter.reading(), None, "off until watched");
+    let first = controls.master_meter.reading();
+    assert_eq!((first.integrated_lufs, first.seconds), (None, 0.0), "the first reading starts the measuring");
 
-    controls.master_meter.watch(true);
     render(&mut session, 4_800);
     controls.transport.play();
-    render(&mut session, 4 * 48_000);
-    let reading = controls.master_meter.reading().unwrap();
+    // Read along as the interface does, so the measuring goes on however slowly the test renders.
+    for _ in 0..8 {
+        render(&mut session, 24_000);
+        controls.master_meter.reading();
+    }
+    let reading = controls.master_meter.reading();
     assert!(reading.integrated_lufs.is_some_and(|lufs| (-40.0..0.0).contains(&lufs)), "{reading:?}");
     assert!(reading.short_term_lufs.is_some() && reading.max_true_peak_db.is_some(), "{reading:?}");
     // Where playback from the start began, give or take the latency compensation of the demo's effects.
     assert!(reading.seconds > 3.9 && reading.seconds <= 4.0, "the silence before playing is left out: {}", reading.seconds);
     assert_eq!(reading.sample_rate, 48_000);
-
-    controls.master_meter.watch(false);
-    assert_eq!(controls.master_meter.reading(), None);
 }
 
 #[test]

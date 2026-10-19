@@ -169,6 +169,7 @@ const ENGLISH = {
   "RC-240": "Record quantize {ticks} is outside 0..={max} ticks",
   "RP-001": "Unknown method \"{method}\"",
   "RP-101": "Invalid params for \"{method}\": {details}",
+  "RP-502": "Method \"{method}\" has no binary reply",
   "SM-001": "Sample {id} not found",
   "SM-110": "Region {from}..{to} is empty or starts beyond the sample end ({frames} frames)",
   "SM-111": "Choose at least one region",

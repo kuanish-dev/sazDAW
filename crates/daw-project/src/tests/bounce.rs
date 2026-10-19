@@ -61,7 +61,7 @@ fn song(s: &Setup) -> (TrackId, TrackId, NodeId, NodeId) {
     rig.clips.add_note_clip(NewNoteClip::empty(bass, 3840, None)).unwrap();
     rig.clips.add_note_clip(NewNoteClip::empty(bass, 7680, None)).unwrap();
     let bus = rig.graph.add_bus("Group", 0.0, 0.0).unwrap();
-    let eq = rig.graph.insert_effect(source(rig, bass), "eq", 0.0, 0.0).unwrap();
+    let eq = rig.graph.insert_effect(source(rig, bass), "eq", &Params::new(), 0.0, 0.0).unwrap();
     rig.graph.set_output(eq, bus).unwrap();
     rig.graph.connect(eq, bus, 0.6, false).unwrap();
     rig.service.mark_baseline();

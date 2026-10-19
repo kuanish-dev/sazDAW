@@ -63,7 +63,7 @@ fn graph_effects_change_the_sound() {
     render(&mut session, 100);
     // A reverb between the instrument and the master: instrument → effect → master.
     let source = source_node(&controls, track);
-    let fx = controls.graph.add_effect("reverb", 220.0, 40.0).unwrap();
+    let fx = controls.graph.add_effect("reverb", &Params::new(), 220.0, 40.0).unwrap();
     controls.graph.disconnect(source, MASTER, false).unwrap();
     controls.graph.connect(source, fx, 1.0, false).unwrap();
     controls.graph.connect(fx, MASTER, 1.0, false).unwrap();

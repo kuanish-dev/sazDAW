@@ -63,12 +63,11 @@ fn the_tick_reports_tempo_and_signature_at_the_playhead() {
         { "tick": 3840, "signature": { "numerator": 6, "denominator": 8 } }
     ] }),
     );
-    let mut telemetry = daw_rpc::Telemetry::new();
-    assert_eq!(telemetry.poll(c).tick["tempo"], 100.0);
+    assert_eq!(daw_rpc::tick(c)["tempo"], 100.0);
     call(&table, c, "transport.seek", json!({ "tick": 4000 }));
     // Seeking is applied by the engine clock: without sound in the test session, one block moves the position by hand.
     session.renderer.render(&mut [0.0; 128]);
-    let tick = telemetry.poll(&session.controls).tick;
+    let tick = daw_rpc::tick(&session.controls);
     assert_eq!(tick["tempo"], 150.0);
     assert_eq!(tick["signature"], json!({ "numerator": 6, "denominator": 8 }));
 }
@@ -77,33 +76,31 @@ fn the_tick_reports_tempo_and_signature_at_the_playhead() {
 fn the_cue_is_set_over_rpc_and_shown_in_the_telemetry() {
     let mut session = build_session(false);
     let (table, c) = (RpcTable::new(), &session.controls);
-    let mut telemetry = daw_rpc::Telemetry::new();
-    assert_eq!(telemetry.poll(c).tick["cue"], Value::Null);
+    assert_eq!(daw_rpc::tick(c)["cue"], Value::Null);
     call(&table, c, "transport.setCue", json!({ "tick": 3840 }));
-    assert_eq!(telemetry.poll(c).tick["cue"], 3840);
+    assert_eq!(daw_rpc::tick(c)["cue"], 3840);
     call(&table, c, "transport.stop", Value::Null);
     session.renderer.render(&mut [0.0; 128]);
-    assert_eq!(telemetry.poll(c).tick["positionTicks"], 3840, "stop returns to the cue");
+    assert_eq!(daw_rpc::tick(c)["positionTicks"], 3840, "stop returns to the cue");
     call(&table, c, "transport.setCue", json!({ "tick": null }));
-    assert_eq!(telemetry.poll(c).tick["cue"], Value::Null);
+    assert_eq!(daw_rpc::tick(c)["cue"], Value::Null);
 }
 
 #[test]
 fn the_song_loop_is_switched_over_rpc_and_shown_in_the_telemetry() {
     let session = build_session(false);
     let (table, c) = (RpcTable::new(), &session.controls);
-    let mut telemetry = daw_rpc::Telemetry::new();
-    let tick = telemetry.poll(c).tick;
+    let tick = daw_rpc::tick(c);
     assert_eq!((&tick["songLoop"], &tick["wrap"]), (&json!(true), &Value::Null), "on, but an empty song has nothing to loop");
 
     let track = call(&table, c, "tracks.add", json!({ "name": "Kick", "kind": "kick", "defaultPitch": 36 }));
     call(&table, c, "clips.addNote", json!({ "track": track, "startTick": 0, "lengthTicks": 4800 }));
-    assert_eq!(telemetry.poll(c).tick["wrap"], json!([0, 7680]), "the song end rounded up to a whole bar");
+    assert_eq!(daw_rpc::tick(c)["wrap"], json!([0, 7680]), "the song end rounded up to a whole bar");
     call(&table, c, "clips.setLoopRegion", json!({ "region": [0, 1920] }));
-    assert_eq!(telemetry.poll(c).tick["wrap"], json!([0, 1920]), "the loop region wins");
+    assert_eq!(daw_rpc::tick(c)["wrap"], json!([0, 1920]), "the loop region wins");
     call(&table, c, "clips.setLoopRegion", json!({ "region": null }));
 
     call(&table, c, "transport.setSongLoop", json!({ "enabled": false }));
-    let tick = telemetry.poll(c).tick;
+    let tick = daw_rpc::tick(c);
     assert_eq!((&tick["songLoop"], &tick["wrap"]), (&json!(false), &Value::Null), "off: playback runs on past the end");
 }

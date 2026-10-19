@@ -109,7 +109,7 @@ pub trait AudioRecordControl: Send + Sync {
     /// written. A take over an audio clip on the same track that the recording covers at least halfway, or lies
     /// entirely inside (of several, the most covered one), becomes that clip's new active take
     /// (`TakeControl::add_take`): the clip does not move or change length, and the sound is aligned to its start (cut
-    /// before it, silence in front if later). Otherwise it becomes a new clip at the start bar. Loop recording: when
+    /// before it, silence in front if later). Otherwise it becomes a new clip at the tick where the take started. Loop recording: when
     /// playback jumped back at the end of the loop region (as it was at `start`) during the take, the take is cut at
     /// the jumps and every pass becomes a take of one clip on the loop region — the clip the loop covers by the same
     /// rule, or a new one at the loop start; the last pass that played to the loop end is active, and a pass cut short

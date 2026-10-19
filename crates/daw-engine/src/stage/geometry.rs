@@ -2,7 +2,7 @@
 //! stands in the middle of the room, ears halfway up, facing ahead), and what the listener hears from it — the direct
 //! sound's distance, direction and level, and the first reflections off the walls (the method of images, first order).
 //! Pure math, no state. The stage view draws the room and its distance readout with the same numbers
-//! (`app/src/domain/stage.ts`: `roomShape`, `position`, `directGain`): change both together.
+//! (`app/src/stage/stageRules.ts`: `roomShape`, `position`, `directGain`): change both together.
 
 use daw_contracts::StagePlace;
 

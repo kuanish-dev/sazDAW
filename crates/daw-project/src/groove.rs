@@ -1,6 +1,6 @@
 //! Groove as pure functions (`NoteTransform::Groove` and `GrooveFromClip`): a table on the sixteenth grid — for each
 //! step a start offset in ticks and a velocity factor in percent — from a template or taken from a source clip, and
-//! applying it to notes. The frontend mock repeats this exactly (`app/src/domain/groove.ts`), so the rounding is simple.
+//! applying it to notes. The frontend mock repeats this exactly (`app/src/pianoroll/groove.ts`), so the rounding is simple.
 
 use daw_contracts::codes::notes;
 use daw_contracts::{ContractError, GrooveTemplate, MAX_GROOVE_SHIFT_TICKS, Note, NoteContent, STEP_TICKS, SwingGrid};

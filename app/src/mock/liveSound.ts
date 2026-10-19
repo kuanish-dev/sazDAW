@@ -3,15 +3,15 @@
 // a bass with harmonics, a chord, a little air and noise, and a kick on every beat. The mock does not run the node's
 // effect: its input and output are the same music, so an EQ shows it whatever its bands and a distortion's trace lies on
 // the 1:1 line.
-import { secondsAt, tempoAt } from "../domain/tempoMap";
+import { secondsAt, tempoAt } from "../common/tempoMap";
 import type { MockWorld } from "./world";
 
 /** Frames in the master window, as `MASTER_WINDOW_FRAMES` in Rust. */
 export const MASTER_WINDOW_FRAMES = 2048;
 /** Tones as [Hz, amplitude]: an A bass with its harmonics, an A major chord above it, a little high content. */
-const TONES: [number, number][] = [
+const TONES: readonly [number, number][] = [
   [55, 0.22], [110, 0.12], [165, 0.05], [277.2, 0.06], [329.6, 0.05], [440, 0.04], [1760, 0.012], [3520, 0.006],
-];
+] as const;
 const NOISE = 0.015;
 /** The kick: its pitch falls from KICK_TOP_HZ + KICK_LOW_HZ to KICK_LOW_HZ, both decays in seconds. */
 const KICK_LEVEL = 0.5;

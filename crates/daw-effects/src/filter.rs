@@ -1,7 +1,7 @@
 //! Filter: low-pass, high-pass or band-pass with resonance, a state variable filter (SVF, Simper's trapezoidal design).
 //! Why an SVF rather than a biquad: it stays stable under fast cutoff changes (automation, sweeps)
 //! and at high Q, and all three outputs come at once, so a type change is a crossfade between them.
-//! The graph in the interface draws its response from the same design (`app/src/domain/filterCurve.ts`): a change here
+//! The graph in the interface draws its response from the same design (`app/src/effects/filterCurve.ts`): a change here
 //! must be mirrored there.
 
 use std::f32::consts::PI;

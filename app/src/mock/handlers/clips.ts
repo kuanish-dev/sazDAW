@@ -1,9 +1,9 @@
 // Timeline clips: note and audio clips, position, split, trim, duplicate, loop region, audio clip takes and comping,
 // normalize and reverse (`ClipProcessing`; the mock has no audio, so normalize assumes a fixed peak).
 import type { Clip, ClipContent, CompSegment, Id, Project } from "../../api/types";
-import { sampleLengthTicks } from "../../domain/dropSample";
-import { barLengthAt } from "../../domain/tempoMap";
-import { ticksToSourceFrames } from "../../domain/warp";
+import { sampleLengthTicks } from "../../tracks/dropSample";
+import { barLengthAt } from "../../common/tempoMap";
+import { ticksToSourceFrames } from "../../tracks/warp";
 import { t } from "../../i18n";
 import { MAX_GAIN, MAX_TICK, applyEdit, checkFits, checkLimit, checkNoOverlaps, checkPlacement, duplicateClip, newClip, trimStart } from "../clipRules";
 import { MOCK_SAMPLE_RATE } from "../audio";

@@ -1,8 +1,8 @@
 // Tracks: adding (together with the graph source node), removing, name, color, instrument params.
 import type { Id, MonitorMode, NewTrack, NodeKind, Params, Project, TrackColor } from "../../api/types";
-import { neutralUtility } from "../../domain/channelUtility";
-import { sourceOfTrack } from "../../domain/graph";
-import { MAX_TRACK_HEIGHT, MIN_TRACK_HEIGHT } from "../../domain/rowLayout";
+import { neutralUtility } from "../../mixer/channelUtility";
+import { sourceOfTrack } from "../../graph/graphRules";
+import { MAX_TRACK_HEIGHT, MIN_TRACK_HEIGHT } from "../../tracks/rowLayout";
 import { t } from "../../i18n";
 import { fitParam, paramsFor } from "../catalog";
 import { fail } from "../errors";

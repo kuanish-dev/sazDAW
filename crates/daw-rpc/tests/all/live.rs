@@ -7,30 +7,19 @@
 )]
 
 use crate::common::*;
-use daw_rpc::Telemetry;
 
 #[test]
-fn telemetry_reports_position_meters_and_revision_changes_once() {
+fn the_tick_reports_position_and_meters() {
     let session = build_session(true);
-    let (table, c) = (RpcTable::new(), &session.controls);
-    let mut telemetry = Telemetry::new();
-
-    let first = telemetry.poll(c);
-    assert!(first.project_revision.is_some(), "the first poll reports the revision");
-    assert!(telemetry.poll(c).project_revision.is_none(), "without edits the revision is not repeated");
-    assert_eq!(first.tick["state"], "stopped");
-    assert!(first.tick["signature"]["denominator"].is_number());
-    assert_eq!(first.tick["latencyMs"], 0.0, "without plugin latency there is no compensation");
-    let meters = first.tick["meters"].as_array().unwrap();
+    let tick = daw_rpc::tick(&session.controls);
+    assert_eq!(tick["state"], "stopped");
+    assert!(tick["signature"]["denominator"].is_number());
+    assert_eq!(tick["latencyMs"], 0.0, "without plugin latency there is no compensation");
+    let meters = tick["meters"].as_array().unwrap();
     for meter in meters {
         assert!(meter["node"].is_number() && meter["left"].is_number() && meter["right"].is_number());
         assert!(meter.get("track").is_none(), "the key is called node");
     }
-
-    let bus = call(&table, c, "graph.addBus", json!({ "name": "Bass", "x": 0.0, "y": 0.0 }));
-    let _ = telemetry.poll(c);
-    call(&table, c, "graph.setPan", json!({ "id": bus, "pan": 0.3 }));
-    assert!(telemetry.poll(c).project_revision.is_some(), "an edit is seen in the next poll");
 }
 
 #[test]
@@ -61,16 +50,15 @@ fn midi_and_live_methods_take_clip_and_track_params() {
 fn record_state_is_exposed_and_controllable() {
     let session = build_session(false);
     let (table, c) = (RpcTable::new(), &session.controls);
-    let mut telemetry = Telemetry::new();
 
-    let idle = telemetry.poll(c).tick["record"].clone();
+    let idle = daw_rpc::tick(c)["record"].clone();
     assert_eq!(idle["armed"], false);
     assert_eq!(idle["capturing"], false);
     assert_eq!(idle["quantizeTicks"], 0, "recording is not snapped by default");
 
     call(&table, c, "record.setArmed", json!({ "armed": true }));
     call(&table, c, "record.setQuantize", json!({ "ticks": 480 }));
-    let armed = telemetry.poll(c).tick["record"].clone();
+    let armed = daw_rpc::tick(c)["record"].clone();
     assert_eq!(armed["armed"], true);
     assert_eq!(armed["capturing"], false, "the transport is stopped");
     assert_eq!(armed["quantizeTicks"], 480);

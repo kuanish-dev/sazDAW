@@ -34,10 +34,17 @@ impl ProjectGraph {
         })
     }
 
-    /// Node name and default params of a new effect from the catalog.
-    fn new_effect(&self, effect: &str) -> Result<(String, Params), ContractError> {
-        let params = self.effects.defaults(effect)?;
-        let name = self.effects.kinds().into_iter().find(|k| k.kind == effect).map_or_else(|| effect.to_string(), |k| k.label.to_string());
+    /// Node name and params of a new effect: the catalog defaults with `overrides` on top, each checked and clamped as
+    /// in `set_effect_param`.
+    fn new_effect(&self, effect: &str, overrides: &Params) -> Result<(String, Params), ContractError> {
+        let mut params = self.effects.defaults(effect)?;
+        let kinds = self.effects.kinds();
+        for (name, value) in overrides {
+            let value = ops::finite(*value, graph::PARAM_NOT_A_NUMBER)?;
+            let info = ops::param_info(kinds.clone(), effect, name, graph::UNKNOWN_EFFECT_PARAM)?;
+            params.insert(name.clone(), info.fit(value));
+        }
+        let name = kinds.into_iter().find(|k| k.kind == effect).map_or_else(|| effect.to_string(), |k| k.label.to_string());
         Ok((name, params))
     }
 }
@@ -68,8 +75,8 @@ impl GraphControl for ProjectGraph {
         self.project.read(|p| p.graph.clone())
     }
 
-    fn add_effect(&self, effect: &str, x: f32, y: f32) -> Result<NodeId, ContractError> {
-        let (name, params) = self.new_effect(effect)?;
+    fn add_effect(&self, effect: &str, params: &Params, x: f32, y: f32) -> Result<NodeId, ContractError> {
+        let (name, params) = self.new_effect(effect, params)?;
         let (x, y) = finite_pos(x, y)?;
         self.project.edit(&tr!("Add effect", "Добавить эффект"), |project| push_effect(project, effect, name, params, x, y))
     }
@@ -248,8 +255,8 @@ impl GraphControl for ProjectGraph {
         })
     }
 
-    fn insert_effect(&self, after: NodeId, effect: &str, x: f32, y: f32) -> Result<NodeId, ContractError> {
-        let (name, params) = self.new_effect(effect)?;
+    fn insert_effect(&self, after: NodeId, effect: &str, params: &Params, x: f32, y: f32) -> Result<NodeId, ContractError> {
+        let (name, params) = self.new_effect(effect, params)?;
         let (x, y) = finite_pos(x, y)?;
         self.project.edit(&tr!("Insert effect", "Вставить эффект"), |project| {
             ops::node(project, after)?;
@@ -271,8 +278,8 @@ impl GraphControl for ProjectGraph {
         })
     }
 
-    fn insert_effect_before(&self, node: NodeId, effect: &str, x: f32, y: f32) -> Result<NodeId, ContractError> {
-        let (name, params) = self.new_effect(effect)?;
+    fn insert_effect_before(&self, node: NodeId, effect: &str, params: &Params, x: f32, y: f32) -> Result<NodeId, ContractError> {
+        let (name, params) = self.new_effect(effect, params)?;
         let (x, y) = finite_pos(x, y)?;
         self.project.edit(&tr!("Insert effect", "Вставить эффект"), |project| {
             if !ops::node(project, node)?.kind.accepts_input() {

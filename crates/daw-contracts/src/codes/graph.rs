@@ -35,4 +35,5 @@ crate::codes! {
     TOO_MANY_ON_STAGE = "GR-212", "The stage already holds the maximum of {max} channels";
     EFFECT_NOT_CREATED = "GR-410", "Effect \"{name}\" ({kind}) was not created: {details}";
     EFFECT_NOT_REMOVED = "GR-411", "The effect of node {id} was not removed from the engine: {details}";
+    EFFECT_WORKER_FAILED = "GR-412", "Effect \"{kind}\" could not start its background thread: {details}";
 }

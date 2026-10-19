@@ -62,7 +62,7 @@ impl GuardMap {
         let file = OpenOptions::new().read(true).write(true).create(true).truncate(true).open(path)?;
         file.set_len(FILE_BYTES as u64)?;
         // SAFETY: the file is ours (the app state folder) and was just truncated to the right size; no other process writes to it
-        // while this app runs (the limitation is described in ARCHITECTURE.md: one app per state folder).
+        // while this app runs (the limitation is described in `crates/daw-vst3/CLAUDE.md`: one app per state folder).
         let map = unsafe { MmapOptions::new().len(FILE_BYTES).map_mut(&file) }?;
         Ok((Self::start(map), previous))
     }

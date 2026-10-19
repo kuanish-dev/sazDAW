@@ -1,5 +1,5 @@
 //! Shapes drawn over a range of an automation clip pattern (`AutomationControl::draw_shape`): pure point generation.
-//! The interface mock mirrors it (`app/src/domain/automation.ts`, `shapePoints`).
+//! The interface mock mirrors it (`app/src/automation/automationCurve.ts`, `shapePoints`).
 
 use std::f32::consts::TAU;
 

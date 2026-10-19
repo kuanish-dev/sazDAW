@@ -1,13 +1,13 @@
-//! The master window for the visualizer (`EngineStats::watch_master`, `master_window`): off until watched, the latest
-//! master frames in mono, the music before the clamp and the metronome. The node windows for the effect pictures
-//! (`NodeScope::watch_nodes`, `node_windows`): a set of watched nodes, each with its input before the node changes it and
-//! its output as it is sent on, paired frame by frame, and only the new frames for a reader's cursor. The live meter's
+//! The master window for the visualizer (`EngineStats::master_window`): captured from the first read for as long as
+//! reads come, the latest master frames in mono, the music before the clamp and the metronome. The node windows for the
+//! effect pictures (`NodeScope::node_windows`): the nodes read, each with its input before the node changes it and its
+//! output as it is sent on, paired frame by frame, and only the new frames for a reader's cursor. The live meter's
 //! tap (`MasterTap`): every stereo frame of the exported mix, numbered from the opening, with the restart mark of playback
 //! from the song start. The mono check (`MonoCheck`): only the device output is summed.
 
 use daw_contracts::{
-    BlockTiming, MASTER_TAP_FRAMES, MASTER_WINDOW_FRAMES, MasterTap, MasterWindow, MonoCheck, NODE_WINDOW_FRAMES, NodeCursor, NodeScope,
-    NodeWindow,
+    BlockTiming, CAPTURE_LEASE_SECONDS, MASTER_TAP_FRAMES, MASTER_WINDOW_FRAMES, MasterTap, MasterWindow, MonoCheck, NODE_WINDOW_FRAMES,
+    NodeCursor, NodeScope, NodeWindow,
 };
 
 use super::*;
@@ -23,8 +23,13 @@ impl AudioProcessor for Click {
     }
 }
 
+/// Frames of a read's lease at the rig's rate.
+fn lease() -> usize {
+    (CAPTURE_LEASE_SECONDS * SR as f32) as usize
+}
+
 #[test]
-fn the_window_is_empty_until_watched_and_carries_the_prepared_rate() {
+fn the_first_read_of_the_window_starts_the_capture_and_carries_the_prepared_rate() {
     let mut rig = Rig::new();
     rig.renderer.prepare(StreamConfig { sample_rate: 44_100, channels: 2 });
     rig.add_track(10, MASTER);
@@ -35,13 +40,13 @@ fn the_window_is_empty_until_watched_and_carries_the_prepared_rate() {
 }
 
 #[test]
-fn the_watched_window_ends_with_the_rendered_master_in_mono() {
+fn the_window_read_ends_with_the_rendered_master_in_mono_until_reads_stop() {
     let mut rig = Rig::new();
     let node = rig.add_track(10, MASTER);
     // Panned left: the channels differ, so the window must hold their middle, not one of them.
     rig.set_strip(node, 1.0, -1.0, false, false);
     rig.publish();
-    rig.link.watch_master(true);
+    rig.link.master_window();
     rig.link.note_on(10, 60, 1.0);
     let out = rig.render(1_000);
 
@@ -49,15 +54,15 @@ fn the_watched_window_ends_with_the_rendered_master_in_mono() {
     assert_eq!(window.samples.len(), MASTER_WINDOW_FRAMES);
     assert_eq!(window.sample_rate, SR);
     let (before, rendered) = window.samples.split_at(MASTER_WINDOW_FRAMES - 1_000);
-    assert!(before.iter().all(|v| *v == 0.0), "nothing was rendered before watching");
+    assert!(before.iter().all(|v| *v == 0.0), "nothing was rendered before the first read");
     for (frame, sample) in rendered.iter().enumerate() {
         let mono = f32::midpoint(Rig::left(&out, frame), Rig::right(&out, frame));
         assert!(near(*sample, mono), "frame {frame}: {sample} instead of {mono}");
     }
     assert!(near(rendered[999], 0.25), "the left channel 0.5 and a silent right one");
 
-    rig.link.watch_master(false);
-    assert!(rig.link.master_window().samples.is_empty());
+    rig.render(lease());
+    assert!(rig.link.master_window().samples.is_empty(), "nobody read for a whole lease: the capture stopped");
 }
 
 #[test]
@@ -67,7 +72,7 @@ fn the_window_shows_the_music_before_the_clamp_and_the_metronome() {
         rig.add_track(track, MASTER);
     }
     rig.publish();
-    rig.link.watch_master(true);
+    rig.link.master_window();
     for track in 10..13 {
         rig.link.note_on(track, 60, 1.0);
     }
@@ -77,9 +82,9 @@ fn the_window_shows_the_music_before_the_clamp_and_the_metronome() {
     assert!(near(newest, 1.5), "three notes of 0.5, not clamped and without the click: {newest}");
 }
 
-/// The window of `node` among the watched ones (a whole window: no cursor).
+/// The window of `node` (a whole window: no cursor).
 fn window_of(rig: &Rig, node: NodeId) -> NodeWindow {
-    let window = rig.link.node_windows(&[]).into_iter().find(|w| w.node == node).expect("the node is watched");
+    let window = rig.link.node_windows(&[node], &[]).remove(0);
     assert_eq!((window.input.len(), window.output.len()), (NODE_WINDOW_FRAMES, NODE_WINDOW_FRAMES));
     window
 }
@@ -95,7 +100,7 @@ fn near_pair((input, output): (f32, f32), expected: (f32, f32)) -> bool {
 }
 
 #[test]
-fn no_node_window_until_a_node_is_watched() {
+fn a_node_is_captured_from_its_first_read_until_reads_stop() {
     let mut rig = Rig::new();
     let fx = rig.add_fx(false, Box::new(Double));
     rig.connect(fx, MASTER, 1.0, false);
@@ -103,7 +108,13 @@ fn no_node_window_until_a_node_is_watched() {
     rig.publish();
     rig.link.note_on(10, 60, 1.0);
     rig.render(1_000);
-    assert!(rig.link.node_windows(&[]).is_empty());
+    assert!(rig.link.node_windows(&[], &[]).is_empty(), "no node asked for");
+    assert_eq!(window_of(&rig, fx).end, 0, "nothing was copied before the first read");
+    rig.render(1_000);
+    assert_eq!(window_of(&rig, fx).end, 1_000);
+
+    rig.render(lease());
+    assert_eq!(window_of(&rig, fx).end, 0, "nobody read it for a whole lease: a new watch from silence");
 }
 
 #[test]
@@ -115,7 +126,7 @@ fn the_watched_effect_window_is_its_input_and_output_and_the_input_twice_while_b
     // Panned left: the channels differ, so the window must hold their middle, not one of them.
     rig.set_strip(track, 1.0, -1.0, false, false);
     rig.publish();
-    rig.link.watch_nodes(&[fx]);
+    window_of(&rig, fx);
     rig.link.note_on(10, 60, 1.0);
     rig.render(1_000);
 
@@ -123,7 +134,7 @@ fn the_watched_effect_window_is_its_input_and_output_and_the_input_twice_while_b
     assert_eq!((window.end, window.sample_rate), (1_000, SR));
     for (samples, value) in [(&window.input, 0.25), (&window.output, 0.5)] {
         let (before, rendered) = samples.split_at(NODE_WINDOW_FRAMES - 1_000);
-        assert!(before.iter().all(|v| *v == 0.0), "nothing was rendered before watching");
+        assert!(before.iter().all(|v| *v == 0.0), "nothing was rendered before the first read");
         assert!(rendered.iter().all(|v| near(*v, value)), "the left channel 0.5 doubled by the effect, a silent right one");
     }
 
@@ -136,34 +147,28 @@ fn the_watched_effect_window_is_its_input_and_output_and_the_input_twice_while_b
 }
 
 #[test]
-fn a_whole_path_is_watched_at_once_and_a_cursor_gets_only_the_new_frames() {
+fn a_whole_path_is_read_at_once_and_a_cursor_gets_only_the_new_frames() {
     let mut rig = Rig::new();
     let bus = rig.add_bus(0.5);
     let track = rig.add_track(10, bus);
     rig.publish();
     rig.link.note_on(10, 60, 1.0);
 
-    rig.link.watch_nodes(&[track, bus]);
+    let path = [track, bus];
+    rig.link.node_windows(&path, &[]);
     rig.render(1_000);
     assert!(near_pair(newest_of(&rig, track), (0.5, 0.5)));
     assert!(near_pair(newest_of(&rig, bus), (0.5, 0.25)), "the bus input before its fader, the output after: 0.5 · 0.5");
-    assert!(rig.link.master_window().samples.is_empty(), "the master visualizer has its own switch");
+    assert!(rig.link.master_window().samples.is_empty(), "the master visualizer has its own capture");
 
     let cursor = |w: &NodeWindow| NodeCursor { node: w.node, watch: w.watch, end: w.end };
-    let seen: Vec<NodeCursor> = rig.link.node_windows(&[]).iter().map(cursor).collect();
+    let seen: Vec<NodeCursor> = rig.link.node_windows(&path, &[]).iter().map(cursor).collect();
     rig.render(300);
-    let fresh = rig.link.node_windows(&seen);
-    assert_eq!(fresh.len(), 2);
+    let fresh = rig.link.node_windows(&path, &seen);
+    assert_eq!(fresh.iter().map(|w| w.node).collect::<Vec<_>>(), path, "in the order asked");
     for window in &fresh {
         assert_eq!((window.end, window.input.len(), window.output.len()), (1_300, 300, 300), "node {}: the new frames only", window.node);
     }
-
-    rig.link.watch_nodes(&[track]);
-    let kept = window_of(&rig, track);
-    assert_eq!((kept.watch, kept.end), (seen.iter().find(|c| c.node == track).unwrap().watch, 1_300), "the track keeps its watch");
-    assert_eq!(rig.link.node_windows(&[]).len(), 1, "the bus left the set");
-    rig.link.watch_nodes(&[]);
-    assert!(rig.link.node_windows(&[]).is_empty());
 }
 
 /// A track panned hard left playing a note: the left channel gets 0.5, the right one nothing.
@@ -266,7 +271,7 @@ fn playback_from_the_song_start_marks_the_restart_frame() {
 fn the_mono_check_sums_only_what_the_device_gets() {
     let mut rig = Rig::new();
     left_only(&mut rig);
-    rig.link.watch_master(true);
+    rig.link.master_window();
     rig.link.open_tap(true);
     assert!(!rig.link.is_mono(), "stereo at creation");
     rig.link.set_mono(true);

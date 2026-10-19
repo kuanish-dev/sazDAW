@@ -7,7 +7,7 @@ use std::sync::Arc;
 use daw_contracts::codes::tracks;
 use daw_contracts::{
     AutoPoint, AutomationControl, BAR_TICKS, Bpm, ClipControl, ContractError, DEFAULT_VELOCITY, DemoProject, GraphControl, HistoryControl,
-    L10n, MASTER, NewNote, NewNoteClip, NodeId, ParamTarget, STEP_TICKS, SYNTH_KIND, TempoControl, TrackControl, TrackId, tr,
+    L10n, MASTER, NewNote, NewNoteClip, NodeId, ParamTarget, Params, STEP_TICKS, SYNTH_KIND, TempoControl, TrackControl, TrackId, tr,
 };
 
 /// Length of the demo clips: one bar of notes repeats four times. The beat is written in 4/4 (16 steps per bar), so its
@@ -92,8 +92,8 @@ impl DemoBeat {
         let drums = g.add_bus(&tr!("Drums", "Ударные"), 420.0, 60.0)?;
         let bass_bus = g.add_bus(&tr!("Bass", "Бас"), 420.0, 260.0)?;
         let reverb_bus = g.add_bus(&tr!("Reverb", "Реверб"), 640.0, 360.0)?;
-        let compressor = g.add_effect("compressor", 220.0, 60.0)?;
-        let reverb = g.add_effect("reverb", 420.0, 360.0)?;
+        let compressor = g.add_effect("compressor", &Params::new(), 220.0, 60.0)?;
+        let reverb = g.add_effect("reverb", &Params::new(), 420.0, 360.0)?;
         g.set_effect_param(reverb, "mix", 1.0)?;
         g.set_effect_param(reverb, "room", 0.7)?;
         g.set_volume(drums, 0.9)?;

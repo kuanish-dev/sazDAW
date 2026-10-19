@@ -43,7 +43,7 @@ fn instrument_state_is_one_undo_step_and_rebuilds_the_instrument() {
 #[test]
 fn effect_state_rebuilds_the_effect_and_survives_param_changes() {
     let rig = Rig::new();
-    let node = rig.graph.add_effect("eq", 0.0, 0.0).unwrap();
+    let node = rig.graph.add_effect("eq", &Params::new(), 0.0, 0.0).unwrap();
     let target = EditorTarget::Effect { node };
     let add = format!("add_effect:{node}");
     rig.plugin_states.set(target, state(b"room")).unwrap();

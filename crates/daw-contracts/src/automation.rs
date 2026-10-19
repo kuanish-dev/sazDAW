@@ -20,7 +20,7 @@ pub const CURVE_STRENGTH: f32 = 4.0;
 /// The bent progress `0..=1` at linear progress `t` (`0..=1`) along a segment with `curve` (`-1..=1`, clamped):
 /// `curve = 0` is a straight line `t`; `curve > 0` starts slowly and speeds up, `t^e`; `curve < 0` starts fast and
 /// slows down, `1 - (1 - t)^e`; where `e = CURVE_STRENGTH^|curve|`. Mirror-symmetric: `curve` and `-curve` bend the
-/// same amount in opposite directions. The interface draws with the same formula (`app/src/domain/automation.ts`).
+/// same amount in opposite directions. The interface draws with the same formula (`app/src/automation/automationCurve.ts`, `curveShape`).
 pub fn curve_shape(t: f32, curve: f32) -> f32 {
     let t = t.clamp(0.0, 1.0);
     let curve = if curve.is_finite() { curve.clamp(-1.0, 1.0) } else { 0.0 };
@@ -100,6 +100,32 @@ pub struct ShapeRequest {
     pub max: f32,
 }
 
+/// What a clip made by [`AutomationControl::add_drawn_clip`] plays over its whole pattern (`0..=loop_ticks`).
+/// JSON: `{ "type": "shape", "shape": "sine", "periodTicks": 960, "min": 0, "max": 1 }` or
+/// `{ "type": "points", "points": [{ "tick": 0, "value": 0.2 }, …] }`.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, JsonSchema)]
+#[serde(tag = "type", rename_all = "camelCase", rename_all_fields = "camelCase")]
+pub enum ClipDrawing {
+    /// A shape from the pattern start to its end, as [`AutomationControl::draw_shape`].
+    Shape {
+        shape: AutomationShape,
+        /// Length of one repetition in ticks; ignored by the ramps.
+        period_ticks: u32,
+        /// Lowest and highest value in param units.
+        min: f32,
+        max: f32,
+    },
+    /// The pattern points, as [`AutomationControl::set_points`].
+    Points { points: Vec<AutoPoint> },
+}
+
+/// Where [`AutomationControl::add_drawn_clip`] put the drawing: the lane (found or created) and the new clip.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, JsonSchema)]
+pub struct DrawnClip {
+    pub lane: LaneId,
+    pub clip: AutomationClipId,
+}
+
 /// Partial change of an automation clip; `None` (field omitted) leaves the value unchanged.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Deserialize, JsonSchema)]
 #[serde(rename_all = "camelCase", default)]
@@ -148,6 +174,17 @@ pub trait AutomationControl: Send + Sync {
     /// shorter than [`MIN_SHAPE_PERIOD`] for a repeating shape, or a non-number `min`/`max` is `ErrorKind::Invalid`;
     /// a pattern over [`MAX_POINTS`] is `ErrorKind::Limit`.
     fn draw_shape(&self, lane: LaneId, clip: AutomationClipId, shape: ShapeRequest) -> Result<(), ContractError>;
+    /// A param's automation in one call and one undo step: the lane of `target` (created under the rules of
+    /// `add_lane` when there is none), a new clip in it (as `add_clip`) and `drawing` over the clip's whole pattern
+    /// (a shape as `draw_shape` from 0 to `loop_ticks`, or points as `set_points`). Their errors are this method's;
+    /// on any of them the project is unchanged — no empty lane or clip is left behind.
+    fn add_drawn_clip(
+        &self,
+        target: ParamTarget,
+        start_tick: u32,
+        length_ticks: u32,
+        drawing: ClipDrawing,
+    ) -> Result<DrawnClip, ContractError>;
 }
 
 #[cfg(test)]

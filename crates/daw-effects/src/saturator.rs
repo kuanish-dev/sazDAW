@@ -1,13 +1,13 @@
 //! Saturator: soft (tanh), tube (asymmetric, adds even harmonics) or hard clipping.
-//! The nonlinearity runs at twice the sample rate (linear interpolation up, a 4th-order filter and decimation down):
-//! this noticeably reduces aliasing from harmonics above Nyquist, though it does not remove it fully, which is enough
-//! for a cheap built-in effect.
+//! The nonlinearity runs at twice the sample rate (`oversample.rs`: linear interpolation up, a 4th-order filter and
+//! decimation down), which noticeably reduces aliasing from harmonics above Nyquist.
 //! The graph in the interface draws its curve by the same `shapes` and drive/mix/output path
-//! (`app/src/domain/shaperCurve.ts`): a change here must be mirrored there.
+//! (`app/src/effects/shaperCurve.ts`): a change here must be mirrored there.
 
 use daw_contracts::{Effect, L10n, ParamInfo, ParamKind, StreamConfig};
 
-use crate::biquad::{Biquad, Coefficients};
+use crate::biquad::DcBlocker;
+use crate::oversample::{Decimation, Oversampled};
 use crate::smooth::{Smoothed, smooth_coefficient};
 use crate::{EffectKind, clamp_param, db_to_gain};
 
@@ -54,10 +54,6 @@ const PARAMS: [ParamInfo; 4] = [
 
 /// Offset of the tube type: the tanh curve shifted so the positive half-wave clips earlier than the negative one.
 const TUBE_BIAS: f32 = 0.3;
-/// Q of the two sections of the 4th-order Butterworth filter (flat passband).
-const DECIMATION_Q: [f32; 2] = [0.541_196_1, 1.306_563];
-/// Decimation filter cutoff as a fraction of the original sample rate (just below half of it).
-const DECIMATION_CUTOFF: f32 = 0.45;
 /// DC blocker cutoff, Hz: the tube curve is asymmetric and offsets the signal.
 const DC_CUTOFF_HZ: f32 = 10.0;
 
@@ -68,16 +64,14 @@ fn shapes(x: f32) -> [f32; 3] {
 
 #[derive(Clone, Copy, Default)]
 struct Channel {
-    previous: f32,
-    decimation: [Biquad; 2],
-    dc_in: f32,
-    dc_out: f32,
+    oversampled: Oversampled,
+    dc: DcBlocker,
 }
 
 pub struct Saturator {
     sample_rate: f32,
     smoothing: f32,
-    decimation: [Coefficients; 2],
+    decimation: Decimation,
     dc_pole: f32,
     drive: Smoothed,
     weights: [Smoothed; 3],
@@ -89,27 +83,16 @@ pub struct Saturator {
 impl Saturator {
     fn update_filters(&mut self) {
         self.smoothing = smooth_coefficient(self.sample_rate);
-        let cutoff = self.sample_rate * DECIMATION_CUTOFF;
-        self.decimation = DECIMATION_Q.map(|q| Coefficients::low_pass(self.sample_rate * 2.0, cutoff, q));
-        self.dc_pole = (-std::f32::consts::TAU * DC_CUTOFF_HZ / self.sample_rate).exp();
+        self.decimation = Decimation::new(self.sample_rate);
+        self.dc_pole = DcBlocker::pole(self.sample_rate, DC_CUTOFF_HZ);
     }
 }
 
 impl Channel {
-    /// One frame of the already amplified signal: two steps at twice the rate, the second goes out, then DC is removed.
-    fn process(&mut self, filters: &[Coefficients; 2], weights: &[f32; 3], dc_pole: f32, input: f32) -> f32 {
-        let halfway = f32::midpoint(self.previous, input);
-        self.previous = input;
-        let mut shaped = 0.0;
-        for x in [halfway, input] {
-            let curve: f32 = shapes(x).iter().zip(weights).map(|(s, w)| s * w).sum();
-            let first = self.decimation[0].process(&filters[0], curve);
-            shaped = self.decimation[1].process(&filters[1], first);
-        }
-        let out = shaped - self.dc_in + dc_pole * self.dc_out;
-        self.dc_in = shaped;
-        self.dc_out = out;
-        out
+    /// One frame of the already amplified signal: the curves at twice the rate, then DC is removed.
+    fn process(&mut self, decimation: &Decimation, weights: &[f32; 3], dc_pole: f32, input: f32) -> f32 {
+        let shaped = self.oversampled.process(decimation, input, |x| shapes(x).iter().zip(weights).map(|(s, w)| s * w).sum());
+        self.dc.process(dc_pole, shaped)
     }
 }
 
@@ -122,7 +105,7 @@ impl EffectKind for Saturator {
         let mut saturator = Self {
             sample_rate: config.sample_rate as f32,
             smoothing: 0.0,
-            decimation: [Coefficients::PASS; 2],
+            decimation: Decimation::new(config.sample_rate as f32),
             dc_pole: 0.0,
             drive: Smoothed::new(1.0),
             weights: [Smoothed::new(1.0), Smoothed::new(0.0), Smoothed::new(0.0)],

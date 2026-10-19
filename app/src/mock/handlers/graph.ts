@@ -1,8 +1,8 @@
-// The audio graph: effects, buses, connections, volume. Connection rules come from domain/graph (as in the backend).
-import { MAX_CHANNEL_DELAY_MS, MAX_WIDTH, MASTER_NODE, type GraphEdge, type Id, type KindInfo, type Project } from "../../api/types";
-import { neutralUtility } from "../../domain/channelUtility";
-import { acceptsInput, canPreFader, hasStrip, hasVolume, MAX_LEVEL } from "../../domain/graph";
-import { clamp } from "../../domain/math";
+// The audio graph: effects, buses, connections, volume. Connection rules come from graph/graphRules (as in the backend).
+import { MAX_CHANNEL_DELAY_MS, MAX_WIDTH, MASTER_NODE, type GraphEdge, type Id, type KindInfo, type Params, type Project } from "../../api/types";
+import { neutralUtility } from "../../mixer/channelUtility";
+import { acceptsInput, canPreFader, hasStrip, hasVolume, MAX_LEVEL } from "../../graph/graphRules";
+import { clamp } from "../../common/math";
 import { t } from "../../i18n";
 import { fitParam, paramsFor } from "../catalog";
 import { type ErrorCode, fail } from "../errors";
@@ -35,17 +35,23 @@ function strip(p: Project, id: Id, code: ErrorCode) {
 export function graphHandlers(w: MockWorld): HandlerSet {
   const h: HandlerSet = {};
   const effectKind = (effect: string) => w.must(w.catalog.effects.find((k) => k.kind === effect), fail("GR-002", { kind: effect }));
-  const pushEffect = (p: Project, info: KindInfo, x: number, y: number): Id => {
+  /** Catalog defaults with `overrides` on top, checked before the edit as in the backend's `new_effect`. */
+  const effectParams = (info: KindInfo, overrides: Params = {}): Params => {
+    for (const value of Object.values(overrides)) finite("GR-114", value);
+    return paramsFor(info, overrides, "GR-121");
+  };
+  const pushEffect = (p: Project, info: KindInfo, params: Params, x: number, y: number): Id => {
     const id = w.id(p);
-    p.graph.nodes.push({ id, name: info.label, kind: { type: "effect", effect: info.kind, bypass: false, params: paramsFor(info, {}, "GR-121") }, x, y });
+    p.graph.nodes.push({ id, name: info.label, kind: { type: "effect", effect: info.kind, bypass: false, params }, x, y });
     return id;
   };
-  h["graph.addEffect"] = ({ effect, x, y }) => {
+  h["graph.addEffect"] = ({ effect, params, x, y }) => {
     const info = effectKind(effect);
+    const values = effectParams(info, params);
     checkPosition(x, y);
     return w.edit(t().mock.undo.addEffect, (p) => {
       limitNodes(p);
-      return pushEffect(p, info, x, y);
+      return pushEffect(p, info, values, x, y);
     });
   };
   h["graph.addBus"] = ({ name, x, y }) => {
@@ -155,8 +161,9 @@ export function graphHandlers(w: MockWorld): HandlerSet {
     if (kind.type !== "effect") throw fail("GR-160", { id });
     kind.bypass = bypass;
   });
-  h["graph.insertEffect"] = ({ after, effect, x, y }) => {
+  h["graph.insertEffect"] = ({ after, effect, params, x, y }) => {
     const info = effectKind(effect);
+    const values = effectParams(info, params);
     checkPosition(x, y);
     return w.edit(t().mock.undo.insertEffect, (p) => {
       nodeOf(p, after);
@@ -166,7 +173,7 @@ export function graphHandlers(w: MockWorld): HandlerSet {
       const path = (e: GraphEdge) => e.from === after && !e.sidechain && !e.preFader;
       const moved = p.graph.edges.filter(path);
       p.graph.edges = p.graph.edges.filter((e) => !path(e));
-      const id = pushEffect(p, info, x, y);
+      const id = pushEffect(p, info, values, x, y);
       checkEdge(p, after, id, false);
       p.graph.edges.push({ from: after, to: id, level: 1, sidechain: false, preFader: false });
       for (const edge of moved) {
@@ -177,8 +184,9 @@ export function graphHandlers(w: MockWorld): HandlerSet {
       return id;
     });
   };
-  h["graph.insertEffectBefore"] = ({ node, effect, x, y }) => {
+  h["graph.insertEffectBefore"] = ({ node, effect, params, x, y }) => {
     const info = effectKind(effect);
+    const values = effectParams(info, params);
     checkPosition(x, y);
     return w.edit(t().mock.undo.insertEffect, (p) => {
       if (!acceptsInput(nodeOf(p, node).kind)) throw fail("GR-103");
@@ -187,7 +195,7 @@ export function graphHandlers(w: MockWorld): HandlerSet {
       // The node's regular inputs move to the effect with the same levels; sidechain stays on the node.
       const moved = p.graph.edges.filter((e) => e.to === node && !e.sidechain);
       p.graph.edges = p.graph.edges.filter((e) => !(e.to === node && !e.sidechain));
-      const id = pushEffect(p, info, x, y);
+      const id = pushEffect(p, info, values, x, y);
       for (const edge of moved) {
         checkEdge(p, edge.from, id, false);
         p.graph.edges.push({ ...edge, to: id });

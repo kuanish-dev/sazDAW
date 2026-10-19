@@ -1,4 +1,5 @@
-// The project file and everything around it: status, recent projects, audio export, error log.
+// The project file and everything around it: status, the project feed, recent projects, audio export, error log.
+import type { ProjectChanges } from "./model";
 
 export interface Status {
   name: string;
@@ -6,11 +7,26 @@ export interface Status {
   canUndo: boolean;
   canRedo: boolean;
   undoLabel: string | null;
-  revision: number;
   /** Project file; `null` until the project is saved. */
   path: string | null;
   /** Project folder: holds the project file, samples/, autosave/, exports/. */
   folder: string | null;
+}
+
+/** One update of the project feed (the `project` event, `ProjectUpdate` in `daw-rpc/src/feed.rs`). */
+export interface ProjectUpdate {
+  /** `changes` is the whole project: it becomes the copy. Otherwise they go on top of the update before. */
+  whole: boolean;
+  changes: ProjectChanges;
+  status: Status;
+}
+
+/** The undo history as a list (`history.list`): each step is its undo label; the project sits after the last done step. */
+export interface HistorySteps {
+  /** Steps undo takes back, oldest first: the last one is the next undo. */
+  done: string[];
+  /** Undone steps redo brings back, the next redo first. */
+  undone: string[];
 }
 
 export interface RecentProject {

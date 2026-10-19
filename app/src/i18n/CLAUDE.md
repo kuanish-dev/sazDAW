@@ -1,0 +1,9 @@
+# `src/i18n/` — interface languages
+
+Map of the whole code: [ARCHITECTURE.md](../../../ARCHITECTURE.md). Cross-layer features it takes part in: [errors](../../../docs/features/errors.md).
+
+**Interface languages (frontend).** English is the default, Russian the second language; the choice is `Preferences.language` (Settings → Appearance), applied live without a restart. `en.ts` is the source of truth for keys (sections by interface area; functions for parameters and plurals), `ru.ts` is typed `Messages` (a missing or extra key fails `tsc`), `index.ts` gives the reactive `t()`, `setLanguage`, `LANGUAGE_CHOICES` and `plural` (`plural.ts`).
+
+i18n is a leaf: it imports nothing of the app (Biome rule for `src/i18n/**`), so every part may import it — a role's pure math reads `t()` for labels and input hints, the mock so the names it creates and its catalog follow the language like the real backend. `settings/appearance.ts` sets the language from preferences (cached in `localStorage` with the theme to avoid an English flash). The backend writes its catalog labels and pattern names in the current language and the frontend shows them as is, so after a language change `settings/preferences.ts` re-reads the catalog. Errors arrive as codes (`daw_contracts::ContractError`, see "Errors as codes" ([docs/features/errors.md](../../../docs/features/errors.md))) and are shown in the current language by `src/i18n/errors/`; the mock fails with the same codes ([src/mock/CLAUDE.md](../mock/CLAUDE.md)). Native dialog titles and buttons are passed from the frontend through `t()`.
+
+**Adding a string:** a key in `en.ts`, the same key in `ru.ts`, `t().section.key` at the place of use — read it at render time, not once at setup, or it won't switch. Data identifiers (kinds, ids, enum values) are never translated.

@@ -7,7 +7,7 @@
 //! Everything that touches the plugin or the window runs on the MAIN thread (`AppHandle::run_on_main_thread`): both AppKit
 //! and plugin interfaces require it. The window is a `tauri::window::WindowBuilder` (no web page): the plugin view sits right in its `NSView`.
 //! This part of the app knows about Tauri, so `daw-rpc` does not contain it: the `pluginEditor.open` method is intercepted in the
-//! `rpc` command before the shared table (see `ARCHITECTURE.md`, "Plugin windows"). It is also the app's
+//! `rpc` command before the shared table (see "Plugin windows" in `crates/daw-vst3/CLAUDE.md`). It is also the app's
 //! `PluginStateFlush`: the RPC table asks it before every method that saves or renders the project, whichever door
 //! (the window or the AI server) the call came through.
 

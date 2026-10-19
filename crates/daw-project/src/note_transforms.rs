@@ -1,7 +1,7 @@
 //! Musical edits of a group of notes (`NoteTransform`) as pure functions over `NoteContent`: quantize, humanize,
 //! transpose, fit to scale, legato; groove lives in `groove.rs`, pattern variation in `variation.rs`.
 //! `ProjectNotes::transform_notes` calls them; the frontend mock repeats them exactly
-//! (`app/src/domain/noteTransforms.ts`), so the integer rounding and the random generator here are simple and portable.
+//! (`app/src/pianoroll/noteTransforms.ts`), so the integer rounding and the random generator here are simple and portable.
 
 use daw_contracts::codes::notes;
 use daw_contracts::{

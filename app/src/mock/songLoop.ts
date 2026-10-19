@@ -1,7 +1,7 @@
 // The song loop as in `daw-transport`: what playback wraps around now. The loop region wins; otherwise the whole song
 // (0 → the end of the last clip rounded up to a whole bar) while the song loop is on and nothing records.
-import { songEnd } from "../domain/clips";
-import { barLengthAt, barStart } from "../domain/tempoMap";
+import { songEnd } from "../tracks/clipRules";
+import { barLengthAt, barStart } from "../common/tempoMap";
 import type { MockWorld } from "./world";
 
 export function wrapRegion(w: MockWorld): [number, number] | null {

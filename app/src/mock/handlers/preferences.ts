@@ -2,7 +2,7 @@
 import type { Preferences } from "../../api/types";
 import {
   ACCENT_CHOICES, AUTOSAVE_MAX_SECONDS, AUTOSAVE_MIN_SECONDS, AUTOSAVE_OFF, THEME_CHOICES, TRACK_ROW_HEIGHTS, UI_SCALE_MAX, UI_SCALE_MIN,
-} from "../../domain/preferences";
+} from "../../settings/preferenceRules";
 import { isLanguage } from "../../i18n";
 import { fail } from "../errors";
 import type { MockWorld } from "../world";

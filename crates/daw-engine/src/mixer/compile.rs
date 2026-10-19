@@ -213,7 +213,7 @@ impl GraphMixer {
 
     /// Binds a stage voice to every channel on the stage and runs it where the channel's insert path ends: from the node
     /// along its first regular post-fader connection while that leads into an effect with no other regular input (the
-    /// rule of `Graph::insert_path` and of the mixer strips, `app/src/domain/mixerStrips.ts`).
+    /// rule of `Graph::insert_path` and of the mixer strips, `app/src/mixer/mixerStrips.ts`).
     fn bind_stage(&mut self) {
         let count = self.nodes.len();
         let inputs = &mut self.scratch.inputs;

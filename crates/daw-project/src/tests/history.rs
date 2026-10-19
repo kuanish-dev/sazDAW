@@ -128,6 +128,49 @@ fn mark_baseline_clears_history_and_dirty_flag() {
 }
 
 #[test]
+fn steps_list_the_history_on_both_sides_of_the_current_point() {
+    let (rig, _, clip) = rig_with_clip();
+    for (label, pitch) in [("One", 60), ("Two", 62), ("Three", 64)] {
+        rig.service.begin_group(label);
+        rig.notes.add_note(clip, note(pitch, 0, 120)).unwrap();
+        rig.service.end_group();
+    }
+    assert!(rig.service.undo() && rig.service.undo());
+    let revision = rig.service.revision();
+
+    let steps = rig.service.steps();
+    assert_eq!(steps.done, ["Add track", "Add clip", "One"], "oldest first, the next undo last");
+    assert_eq!(steps.undone, ["Two", "Three"], "the next redo first");
+    assert_eq!(rig.service.revision(), revision, "reading publishes nothing");
+    assert_eq!(rig.service.steps(), steps, "and changes nothing");
+    assert_eq!(rig.notes.notes(clip).unwrap().len(), 1);
+
+    // A new edit drops the undone steps; a fresh baseline drops everything.
+    rig.notes.add_note(clip, note(67, 240, 120)).unwrap();
+    assert_eq!(rig.service.steps().done, ["Add track", "Add clip", "One", "Add note"]);
+    assert!(rig.service.steps().undone.is_empty());
+    rig.service.mark_baseline();
+    assert_eq!(rig.service.steps(), HistorySteps::default());
+}
+
+#[test]
+fn steps_show_a_squashed_change_as_one_step_and_an_open_group_only_when_it_closes() {
+    let (rig, _, clip) = rig_with_clip();
+    let mark = rig.service.checkpoint();
+    rig.tracks.add_track("Bass", Some("synth"), 36).unwrap();
+    rig.notes.add_note(clip, note(60, 0, 120)).unwrap();
+    assert_eq!(rig.service.steps().done, ["Add track", "Add clip", "Add track", "Add note"], "ordinary steps until the squash");
+    assert_eq!(rig.service.squash(mark, "AI: bass line"), Ok(true));
+    assert_eq!(rig.service.steps().done, ["Add track", "Add clip", "AI: bass line"]);
+
+    rig.service.begin_group("Recording");
+    rig.notes.add_note(clip, note(62, 240, 120)).unwrap();
+    assert_eq!(rig.service.steps().done.last().map(String::as_str), Some("AI: bass line"), "an open group is not a step yet");
+    assert!(rig.service.end_group());
+    assert_eq!(rig.service.steps().done.last().map(String::as_str), Some("Recording"));
+}
+
+#[test]
 fn squash_turns_the_steps_after_a_checkpoint_into_one_undo_step() {
     let (rig, _, clip) = rig_with_clip();
     let mark = rig.service.checkpoint();

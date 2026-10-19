@@ -163,7 +163,7 @@ fn legato_extends_each_note_to_the_next_start_of_the_group() {
 
 #[test]
 fn humanize_numbers_match_the_frontend_mock() {
-    // `app/src/domain/noteTransforms.ts: humanizeGroup` (mulberry32) gives the same numbers: the mock must match the
+    // `app/src/pianoroll/noteTransforms.ts: humanizeGroup` (mulberry32) gives the same numbers: the mock must match the
     // backend.
     let (rig, clip, _) = clip_with(vec![note(60, 480, 240), note(62, 960, 240)]);
     let changed = rig.notes.transform_notes(clip, None, NoteTransform::Humanize { timing_ticks: 30, velocity: 20, seed: Some(7) }).unwrap();

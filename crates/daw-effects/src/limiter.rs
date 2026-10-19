@@ -1,5 +1,5 @@
 //! Zero-latency limiter: instant attack, smooth release, hard ceiling.
-//! The graph in the interface draws its transfer curve (input gain, ceiling) in `app/src/domain/limiterCurve.ts`: a
+//! The graph in the interface draws its transfer curve (input gain, ceiling) in `app/src/effects/limiterCurve.ts`: a
 //! change here must be mirrored there.
 
 use daw_contracts::{Effect, L10n, ParamInfo, ParamKind, StreamConfig};

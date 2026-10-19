@@ -1,7 +1,7 @@
 // The backend's in-memory state: the project with undo history (the tempo map lives in it), transport, kinds catalog,
 // a file "system", recording. Method handlers (`handlers/`) read and change only it; it knows nothing about RPC.
 import type { AutomationWriteMode, Catalog, Id, Preferences, Project, SampleInfo, TransportState } from "../api/types";
-import { DEFAULT_PREFERENCES } from "../domain/preferences";
+import { DEFAULT_PREFERENCES } from "../settings/preferenceRules";
 import { t } from "../i18n";
 import type { BackendError } from "../i18n/errors";
 import { MOCK_FRAME_COUNT, MOCK_SAMPLE_RATE } from "./audio";
@@ -43,7 +43,7 @@ export class MockWorld {
   songLoop = true;
   recordingAudio = false;
   metronome = false;
-  /** The mono check, a monitoring mode like the song loop; the live master meter while watched (`masterMeter.ts`). */
+  /** The mono check, a monitoring mode like the song loop; the live master meter while it is read (`masterMeter.ts`). */
   mono = false;
   meter: MeterState | null = null;
   /** Live automation write mode and whether this play pass has already written (one undo step per pass). */
@@ -59,7 +59,6 @@ export class MockWorld {
   heldNotes = new Map<string, { tick: number; velocity: number }>();
   /** Held meter peaks per node (smooth fall-off and bursts from live notes). */
   peaks = new Map<number, number>();
-  projectListeners = new Set<(r: number) => void>();
   files: Record<string, { name: string; isDir: boolean }[]> = {
     "/home/user": [{ name: "Samples", isDir: true }, { name: "Projects", isDir: true }, { name: "notes.wav", isDir: false }],
     "/home/user/Samples": [{ name: "Kicks", isDir: true }, { name: "kick.wav", isDir: false }, { name: "snare.wav", isDir: false }, { name: "loop.wav", isDir: false }],
@@ -82,6 +81,8 @@ export class MockWorld {
 
   /** Asks to start the `tick` stream (set by `MockRpc`); called when playback starts. */
   needTicks: () => void = () => undefined;
+  /** Told after each edit: the mock's project feed (`MockRpc`) sends the window an update. */
+  projectChanged: () => void = () => undefined;
 
   /** The app's start project in the browser: already saved in its folder and listed in recent projects. */
   openStartProject() {
@@ -197,7 +198,7 @@ export class MockWorld {
 
   touch() {
     this.revision += 1;
-    for (const listener of this.projectListeners) listener(this.revision);
+    this.projectChanged();
   }
 
   id(p: Project = this.project): Id {

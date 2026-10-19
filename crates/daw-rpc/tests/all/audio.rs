@@ -43,30 +43,29 @@ fn audio_methods_report_devices_status_and_keep_the_choice_on_an_empty_host() {
 }
 
 #[test]
-fn the_master_window_is_empty_until_watched() {
+fn the_master_window_is_captured_from_the_first_read_and_answers_as_bytes_too() {
     let session = build_session(false);
     let (table, c) = (RpcTable::new(), &session.controls);
     let window = call(&table, c, "audio.masterWindow", Value::Null);
-    assert_eq!(window["samples"], json!([]));
+    assert_eq!(window["samples"], json!([]), "the first read starts the capture");
     assert!(window["sampleRate"].is_u64(), "{window}");
 
-    assert_eq!(call(&table, c, "audio.watchMaster", json!({ "on": true })), Value::Null);
     let window = call(&table, c, "audio.masterWindow", Value::Null);
     assert_eq!(window["samples"].as_array().unwrap().len(), 2048, "MASTER_WINDOW_FRAMES");
     assert!(window["samples"].as_array().unwrap().iter().all(Value::is_f64), "plain numbers");
 
-    call(&table, c, "audio.watchMaster", json!({ "on": false }));
-    assert_eq!(call(&table, c, "audio.masterWindow", Value::Null)["samples"], json!([]));
+    let bytes = table.call_binary(c, "audio.masterWindow", Value::Null).unwrap();
+    assert_eq!(bytes.len(), 8 + 4 * 2048, "the rate, the count and the samples");
+    let refused = table.call_binary(c, "audio.status", Value::Null).unwrap_err();
+    assert!(refused.is(daw_contracts::codes::rpc::NO_BINARY_REPLY), "{refused}");
 }
 
 #[test]
-fn the_master_meter_reads_null_until_watched_and_the_mono_check_shows_in_the_tick() {
+fn the_master_meter_starts_on_reading_and_the_mono_check_shows_in_the_tick() {
     let session = build_session(false);
     let (table, c) = (RpcTable::new(), &session.controls);
-    assert_eq!(call(&table, c, "audio.masterMeter", Value::Null), Value::Null, "off until watched");
-
-    assert_eq!(call(&table, c, "audio.watchMasterMeter", json!({ "on": true })), Value::Null);
     let reading = call(&table, c, "audio.masterMeter", Value::Null);
+    assert_eq!((&reading["seconds"], &reading["integratedLufs"]), (&json!(0.0), &Value::Null), "a fresh measurement");
     for key in [
         "momentaryLufs",
         "shortTermLufs",
@@ -83,25 +82,21 @@ fn the_master_meter_reads_null_until_watched_and_the_mono_check_shows_in_the_tic
         assert!(reading.get(key).is_some(), "the reading has no {key}: {reading}");
     }
     assert_eq!(call(&table, c, "audio.resetMasterMeter", Value::Null), Value::Null);
-    call(&table, c, "audio.watchMasterMeter", json!({ "on": false }));
-    assert_eq!(call(&table, c, "audio.masterMeter", Value::Null), Value::Null);
 
-    let mut telemetry = daw_rpc::Telemetry::new();
-    assert_eq!(telemetry.poll(c).tick["mono"], false, "stereo at the start");
+    assert_eq!(daw_rpc::tick(c)["mono"], false, "stereo at the start");
     assert_eq!(call(&table, c, "audio.setMono", json!({ "on": true })), Value::Null);
-    assert_eq!(telemetry.poll(c).tick["mono"], true);
+    assert_eq!(daw_rpc::tick(c)["mono"], true);
     call(&table, c, "audio.setMono", json!({ "on": false }));
-    assert_eq!(telemetry.poll(c).tick["mono"], false);
+    assert_eq!(daw_rpc::tick(c)["mono"], false);
 }
 
 #[test]
-fn node_windows_follow_the_watched_set_and_the_reader_cursors() {
+fn node_windows_follow_the_nodes_read_and_the_reader_cursors() {
     let session = build_session(false);
     let (table, c) = (RpcTable::new(), &session.controls);
-    assert_eq!(call(&table, c, "audio.nodeWindows", json!({})), json!([]), "nothing watched");
+    assert_eq!(call(&table, c, "audio.nodeWindows", json!({ "nodes": [] })), json!([]), "no node asked for");
 
-    assert_eq!(call(&table, c, "audio.watchNodes", json!({ "nodes": [0, 5, 0] })), Value::Null);
-    let windows = call(&table, c, "audio.nodeWindows", json!({ "seen": [] }));
+    let windows = call(&table, c, "audio.nodeWindows", json!({ "nodes": [0, 5, 0], "seen": [] }));
     let windows = windows.as_array().unwrap();
     assert_eq!(windows.iter().map(|w| w["node"].clone()).collect::<Vec<_>>(), [json!(0), json!(5)], "a repeated id counts once");
     for window in windows {
@@ -113,12 +108,12 @@ fn node_windows_follow_the_watched_set_and_the_reader_cursors() {
 
     // With nothing rendered since, a cursor at the window's end gets no frames.
     let seen = json!([{ "node": 0, "watch": windows[0]["watch"], "end": windows[0]["end"] }]);
-    let next = call(&table, c, "audio.nodeWindows", json!({ "seen": seen }));
+    let next = call(&table, c, "audio.nodeWindows", json!({ "nodes": [0, 5], "seen": seen }));
     assert_eq!((&next[0]["input"], &next[0]["output"]), (&json!([]), &json!([])));
     assert_eq!(next[1]["input"].as_array().unwrap().len(), 4096, "node 5 has no cursor: a whole window");
 
-    call(&table, c, "audio.watchNodes", json!({ "nodes": [] }));
-    assert_eq!(call(&table, c, "audio.nodeWindows", json!({})), json!([]));
+    let bytes = table.call_binary(c, "audio.nodeWindows", json!({ "nodes": [5] })).unwrap();
+    assert_eq!(bytes.len(), 4 + 24 + 2 * 4 * 4096, "one window: its header and both lanes");
 }
 
 #[test]

@@ -4,8 +4,8 @@ use std::sync::Arc;
 
 use daw_contracts::codes::automation;
 use daw_contracts::{
-    AutoPoint, AutomationClip, AutomationClipEdit, AutomationClipId, AutomationControl, AutomationLane, ContractError, LaneId,
-    MAX_AUTOMATION_CLIPS, MAX_CLIP_LOOP_TICKS, MAX_LANES, MAX_POINTS, ParamTarget, Project, ShapeRequest, tr,
+    AutoPoint, AutomationClip, AutomationClipEdit, AutomationClipId, AutomationControl, AutomationLane, ClipDrawing, ContractError,
+    DrawnClip, LaneId, MAX_AUTOMATION_CLIPS, MAX_CLIP_LOOP_TICKS, MAX_LANES, MAX_POINTS, ParamTarget, Project, ShapeRequest, tr,
 };
 
 use crate::ProjectService;
@@ -202,6 +202,48 @@ impl AutomationControl for ProjectAutomation {
             }
             clip.points = points;
             Ok(())
+        })
+    }
+
+    fn add_drawn_clip(
+        &self,
+        target: ParamTarget,
+        start_tick: u32,
+        length_ticks: u32,
+        drawing: ClipDrawing,
+    ) -> Result<DrawnClip, ContractError> {
+        let loop_ticks = length_ticks.min(MAX_CLIP_LOOP_TICKS);
+        check_span(start_tick, length_ticks, loop_ticks)?;
+        let points = match drawing {
+            ClipDrawing::Shape { shape, period_ticks, min, max } => {
+                let points = shape_points(&ShapeRequest { from_tick: 0, to_tick: loop_ticks, shape, period_ticks, min, max })?;
+                if points.len() > MAX_POINTS {
+                    return Err(automation::TOO_MANY_POINTS.with("max", MAX_POINTS));
+                }
+                points
+            }
+            ClipDrawing::Points { points } => normalize(points, loop_ticks)?,
+        };
+        // One edit: an error at any step (a refused target, an overlap) rolls back the lane it may have created.
+        self.project.edit(&tr!("Draw automation", "Нарисовать автоматизацию"), |project| {
+            let existing = project.automation.iter().find(|lane| lane.target == target).map(|lane| lane.id);
+            let lane = match existing {
+                Some(id) => id,
+                None => {
+                    ops::limit(project.automation.len(), MAX_LANES, automation::TOO_MANY_LANES)?;
+                    ops::validate_target(project, &target)?;
+                    let id = project.alloc_id();
+                    project.automation.push(AutomationLane { id, target, clips: Vec::new() });
+                    id
+                }
+            };
+            let clip = project.alloc_id();
+            let entry = lane_mut(project, lane)?;
+            ops::limit(entry.clips.len(), MAX_AUTOMATION_CLIPS, automation::TOO_MANY_CLIPS)?;
+            check_free(entry, None, start_tick, length_ticks)?;
+            entry.clips.push(AutomationClip { id: clip, start_tick, length_ticks, loop_ticks, points });
+            sort_clips(entry);
+            Ok(DrawnClip { lane, clip })
         })
     }
 }

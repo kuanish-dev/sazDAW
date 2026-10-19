@@ -1,6 +1,6 @@
 //! Gate: mutes the signal while it (or the sidechain key) is below the threshold. It opens above the threshold and
 //! closes `HYSTERESIS_DB` below it, only after the hold time (`hold`), so it does not chatter on a signal near the threshold.
-//! The graph in the interface draws its transfer curve (threshold, hysteresis, depth) in `app/src/domain/gateCurve.ts`:
+//! The graph in the interface draws its transfer curve (threshold, hysteresis, depth) in `app/src/effects/gateCurve.ts`:
 //! a change here must be mirrored there.
 
 use daw_contracts::{Effect, L10n, ParamInfo, ParamKind, StreamConfig};

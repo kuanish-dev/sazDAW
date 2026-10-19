@@ -1,7 +1,7 @@
 // Loop passes of an audio take, as in `daw-audio-recorder/src/passes.rs`: playback that jumps back at the end of the
 // loop region cuts one straight recording into passes. In seconds rather than frames: the mock has no audio.
 import type { TempoMap } from "../api/types";
-import { secondsAt } from "../domain/tempoMap";
+import { secondsAt } from "../common/tempoMap";
 
 export interface LoopPass {
   seconds: number;

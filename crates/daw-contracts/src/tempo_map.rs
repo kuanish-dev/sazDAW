@@ -1,7 +1,7 @@
 //! The song's tempo map: where each tempo applies (as a step or a smooth ramp) and where each time signature applies,
 //! and the only time math based on it: ticks ↔ seconds and frames, ticks ↔ bars. Pure functions without
 //! allocations, used by the audio thread (transport clock), export, clip rules and recording alike.
-//! The frontend mirrors it in `app/src/domain/tempoMap.ts`.
+//! The frontend mirrors it in `app/src/common/tempoMap.ts`.
 
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};

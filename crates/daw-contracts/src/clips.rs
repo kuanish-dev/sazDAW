@@ -34,7 +34,7 @@ const EXPONENTIAL_STEEPNESS: f64 = 5.0;
 
 impl FadeShape {
     /// Gain at `progress` through the fade (clamped to 0..=1). Allocation-free: the engine calls it per frame. The
-    /// interface draws the curves with the same formulas (`app/src/domain/fades.ts`).
+    /// interface draws the curves with the same formulas (`app/src/tracks/fades.ts`).
     pub fn gain(self, progress: f64) -> f64 {
         let x = progress.clamp(0.0, 1.0);
         match self {

@@ -1,25 +1,38 @@
-//! `project.*`, `history.*` and `library.home` methods: the whole project, files, recent projects, autosave, export, undo.
+//! `project.*`, `history.*` and `library.home` methods: the whole project, files, recent projects, autosave, export,
+//! undo.
 
 use std::path::PathBuf;
 
-use daw_contracts::{ClearOptions, ExportRequest, HistoryMark, NodeKind, Project};
+use daw_contracts::{ClearOptions, Controls, ExportRequest, HistoryMark, Node, NodeKind, Project, Track};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use crate::RpcTable;
 use crate::params::Path;
 
-#[derive(Serialize)]
+/// A short status of the project: for `project.status` and with each update of the window's feed (`feed.rs`).
+#[derive(Clone, Serialize)]
 #[serde(rename_all = "camelCase")]
-struct Status {
+pub(crate) struct Status {
     name: String,
     dirty: bool,
     can_undo: bool,
     can_redo: bool,
     undo_label: Option<String>,
-    revision: u64,
     path: Option<PathBuf>,
     folder: Option<PathBuf>,
+}
+
+pub(crate) fn status(c: &Controls) -> Status {
+    Status {
+        name: c.project.project_name(),
+        dirty: c.project.is_dirty(),
+        can_undo: c.history.can_undo(),
+        can_redo: c.history.can_redo(),
+        undo_label: c.history.undo_label(),
+        path: c.project.path(),
+        folder: c.project.folder(),
+    }
 }
 
 #[derive(Serialize)]
@@ -37,17 +50,24 @@ struct Squash {
 }
 
 /// The project for the interface and AI without saved plugin states. Those are opaque bytes (~70 KB of base64 for Surge XT)
-/// needed only by the plugins themselves, while `project.get` is called after every edit and read by AI in full.
-fn without_plugin_states(mut project: Project) -> Project {
-    for spec in project.tracks.iter_mut().filter_map(|track| track.instrument.as_mut()) {
+/// needed only by the plugins themselves, while AI reads `project.get` in full and the window's feed (`feed.rs`) compares and
+/// sends the project after every edit.
+pub(crate) fn without_plugin_states(mut project: Project) -> Project {
+    project.tracks.iter_mut().for_each(strip_track);
+    project.graph.nodes.iter_mut().for_each(strip_node);
+    project
+}
+
+fn strip_track(track: &mut Track) {
+    if let Some(spec) = track.instrument.as_mut() {
         spec.state = None;
     }
-    for node in &mut project.graph.nodes {
-        if let NodeKind::Effect { state, .. } = &mut node.kind {
-            *state = None;
-        }
+}
+
+fn strip_node(node: &mut Node) {
+    if let NodeKind::Effect { state, .. } = &mut node.kind {
+        *state = None;
     }
-    project
 }
 
 pub(crate) fn register(table: &mut RpcTable) {
@@ -57,18 +77,7 @@ pub(crate) fn register(table: &mut RpcTable) {
          those are bytes for the plugins themselves). The main way to see the state.",
         |c, ()| Ok(without_plugin_states(c.view.snapshot())),
     );
-    table.add("project.status", "Returns a short status: file path, unsaved edits, revision, whether undo is possible.", |c, ()| {
-        Ok(Status {
-            name: c.project.project_name(),
-            dirty: c.project.is_dirty(),
-            can_undo: c.history.can_undo(),
-            can_redo: c.history.can_redo(),
-            undo_label: c.history.undo_label(),
-            revision: c.view.revision(),
-            path: c.project.path(),
-            folder: c.project.folder(),
-        })
-    });
+    table.add("project.status", "Returns a short status: file path, unsaved edits, whether undo is possible.", |c, ()| Ok(status(c)));
     table.add("project.new", "Creates a new empty project without a file.", |c, ()| Ok(c.project.new_project()));
     table
         .add_flushing("project.create", "Creates a project folder at a path and makes it current.", |c, p: Path| c.project.create(&p.path));
@@ -127,6 +136,13 @@ pub(crate) fn register(table: &mut RpcTable) {
     );
     table.add("history.undo", "Undoes the last project edit (a compound edit is undone as a whole).", |c, ()| Ok(c.history.undo()));
     table.add("history.redo", "Redoes an undone edit.", |c, ()| Ok(c.history.redo()));
+    table.add(
+        "history.list",
+        "Lists the undo history without changing it: `done` — the steps undo takes back, oldest first (the last one is the \
+         next undo); `undone` — the undone steps redo brings back, the next redo first. A step is its undo label; a squashed \
+         change is one step under its label (\"AI: drum part\").",
+        |c, ()| Ok(c.history.steps()),
+    );
     table.add(
         "history.checkpoint",
         "Marks the current point in the undo history and returns it (a number): call it before a change made of many \

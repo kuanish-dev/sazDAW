@@ -65,7 +65,7 @@ fn the_write_mode_is_set_read_and_shown_in_the_tick_and_touches_while_stopped_wr
     assert_eq!(call(&table, c, "automation.writeMode", Value::Null), json!("off"));
     call(&table, c, "automation.setWriteMode", json!({ "mode": "latch" }));
     assert_eq!(call(&table, c, "automation.writeMode", Value::Null), json!("latch"));
-    assert_eq!(daw_rpc::Telemetry::new().poll(c).tick["automationWrite"], json!("latch"));
+    assert_eq!(daw_rpc::tick(c)["automationWrite"], json!("latch"));
 
     let target = json!({ "type": "nodeVolume", "node": 0 });
     call(&table, c, "automation.touch", json!({ "target": target, "value": 0.5 }));
@@ -73,4 +73,35 @@ fn the_write_mode_is_set_read_and_shown_in_the_tick_and_touches_while_stopped_wr
     call(&table, c, "automation.releaseAll", Value::Null);
     assert_eq!(project(&table, c)["automation"], json!([]), "the transport is stopped: nothing is written");
     call(&table, c, "automation.setWriteMode", json!({ "mode": "off" }));
+}
+
+#[test]
+fn add_drawn_clip_automates_a_param_in_one_call() {
+    let session = build_session(false);
+    let (table, c) = (RpcTable::new(), &session.controls);
+    let drawn = call(
+        &table,
+        c,
+        "automation.addDrawnClip",
+        json!({
+            "target": { "type": "nodeVolume", "node": 0 }, "startTick": 0, "lengthTicks": 3840,
+            "drawing": { "type": "shape", "shape": "rampUp", "periodTicks": 3840, "min": 0.1, "max": 0.9 }
+        }),
+    );
+    let lanes = project(&table, c)["automation"].clone();
+    assert_eq!(drawn["lane"], lanes[0]["id"]);
+    assert_eq!(drawn["clip"], lanes[0]["clips"][0]["id"]);
+    let points = lanes[0]["clips"][0]["points"].as_array().unwrap().clone();
+    assert!(
+        (points[0]["value"].as_f64().unwrap() - 0.1).abs() < 1e-6 && (points.last().unwrap()["value"].as_f64().unwrap() - 0.9).abs() < 1e-6
+    );
+
+    let points = json!({ "type": "points", "points": [{ "tick": 0, "value": 0.5 }] });
+    let next = call(
+        &table,
+        c,
+        "automation.addDrawnClip",
+        json!({ "target": { "type": "nodeVolume", "node": 0 }, "startTick": 3840, "lengthTicks": 960, "drawing": points }),
+    );
+    assert_eq!(next["lane"], drawn["lane"], "the same lane");
 }

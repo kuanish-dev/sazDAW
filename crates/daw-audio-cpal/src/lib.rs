@@ -1,7 +1,7 @@
 //! Audio through cpal: input and output devices, buffer size, stream restart when the choice changes.
 //! The only crate that knows about cpal. One type is visible outside: `CpalAudio` (contract `AudioDevices`).
 //!
-//! How it works: cpal streams cannot move between threads, so `CpalAudio` runs a dedicated host thread (`host.rs`)
+//! How it works: cpal streams cannot move between threads, so `CpalAudio` runs a dedicated host thread (`host/`)
 //! and sends it commands over a channel. The engine lives outside the output stream (`Arc<Mutex<..>>`) and moves to
 //! the new stream when the device changes. The input opens only on request (`watch_input` and friends), otherwise
 //! macOS would ask for microphone access at startup.

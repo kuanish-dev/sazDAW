@@ -14,9 +14,10 @@ use daw_contracts::codes::{audio, clips, general, tracks};
 use daw_contracts::{
     AppLog, AssetStore, AudioCapture, AudioDeviceInfo, AudioDevices, AudioRecordControl, AudioSettings, AudioStatus, Bpm, Clip,
     ClipContent, ClipControl, ClipEdit, ClipId, CompSegment, ContractError, EngineLatency, EngineLosses, EngineStats, HistoryControl,
-    HistoryMark, InputChannels, InputLevel, InputMonitor, InstrumentSpec, LiveInput, LogEntry, LogLevel, MonitorMode, MonitorStatus,
-    NewNoteClip, ProjectIo, SampleCatalog, SampleData, SampleId, SampleInfo, SampleWriter, SignatureChange, StreamConfig, TakeControl,
-    TempoChange, TempoControl, TempoMap, TimeSignature, Track, TrackControl, TrackId, TrackInput, TransportControl, TransportState,
+    HistoryMark, HistorySteps, InputChannels, InputLevel, InputMonitor, InstrumentSpec, LiveInput, LogEntry, LogLevel, MonitorMode,
+    MonitorStatus, NewNoteClip, ProjectIo, SampleCatalog, SampleData, SampleId, SampleInfo, SampleWriter, SignatureChange, StreamConfig,
+    TakeControl, TempoChange, TempoControl, TempoMap, TimeSignature, Track, TrackControl, TrackId, TrackInput, TransportControl,
+    TransportState,
 };
 
 use crate::{AudioRecorder, Deps};
@@ -107,6 +108,9 @@ impl EngineStats for FakeStats {
     fn gain_reductions(&self) -> Vec<daw_contracts::GainReduction> {
         Vec::new()
     }
+    fn band_gains(&self) -> Vec<daw_contracts::BandGains> {
+        Vec::new()
+    }
     fn preview_position(&self) -> Option<usize> {
         None
     }
@@ -116,7 +120,6 @@ impl EngineStats for FakeStats {
     fn latency(&self) -> EngineLatency {
         EngineLatency { frames: self.latency.load(Ordering::Relaxed) as u32, sample_rate: 48_000 }
     }
-    fn watch_master(&self, _: bool) {}
     fn master_window(&self) -> daw_contracts::MasterWindow {
         daw_contracts::MasterWindow { samples: Vec::new(), sample_rate: 48_000 }
     }
@@ -477,6 +480,9 @@ impl HistoryControl for FakeHistory {
     }
     fn undo_label(&self) -> Option<String> {
         None
+    }
+    fn steps(&self) -> HistorySteps {
+        HistorySteps::default()
     }
     fn begin_group(&self, label: &str) {
         self.events.lock().unwrap().push(format!("group.begin {label}"));

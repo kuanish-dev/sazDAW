@@ -1,10 +1,10 @@
-//! Compressor with a soft knee and an external key signal (sidechain).
-//! The graph in the interface draws its transfer curve by `target_reduction` (`app/src/domain/compressorCurve.ts`): a
-//! change here must be mirrored there.
+//! Compressor with a soft knee and an external key signal (sidechain). The curve and the attack/release are the shared
+//! dynamics blocks (`dynamics.rs`); the graph in the interface draws the same curve (`app/src/effects/compressorCurve.ts`).
 
 use daw_contracts::{Effect, L10n, ParamInfo, ParamKind, StreamConfig};
 
-use crate::{EffectKind, clamp_param, db_to_gain, time_coefficient};
+use crate::dynamics::{Follower, GainComputer, peak_db};
+use crate::{EffectKind, clamp_param, db_to_gain};
 
 const PARAMS: [ParamInfo; 7] = [
     ParamInfo {
@@ -66,36 +66,18 @@ const PARAMS: [ParamInfo; 7] = [
 
 pub struct Compressor {
     sample_rate: f32,
-    threshold: f32,
-    ratio: f32,
+    curve: GainComputer,
     attack_ms: f32,
     release_ms: f32,
-    knee: f32,
     makeup: f32,
     use_sidechain: bool,
-    attack_coef: f32,
-    release_coef: f32,
     /// Current gain reduction in dB (a positive number).
-    reduction_db: f32,
+    reduction: Follower,
 }
 
 impl Compressor {
     fn update_times(&mut self) {
-        self.attack_coef = time_coefficient(self.attack_ms, self.sample_rate);
-        self.release_coef = time_coefficient(self.release_ms, self.sample_rate);
-    }
-
-    /// Gain reduction (dB) needed for the signal level `level_db`.
-    fn target_reduction(&self, level_db: f32) -> f32 {
-        let over = level_db - self.threshold;
-        let slope = 1.0 - 1.0 / self.ratio;
-        if 2.0 * over < -self.knee {
-            0.0
-        } else if 2.0 * over.abs() <= self.knee {
-            slope * (over + self.knee / 2.0).powi(2) / (2.0 * self.knee.max(f32::EPSILON))
-        } else {
-            slope * over
-        }
+        self.reduction.set_times(self.attack_ms, self.release_ms, self.sample_rate);
     }
 }
 
@@ -107,16 +89,12 @@ impl EffectKind for Compressor {
     fn new(config: StreamConfig) -> Self {
         let mut c = Self {
             sample_rate: config.sample_rate as f32,
-            threshold: 0.0,
-            ratio: 1.0,
+            curve: GainComputer { threshold: 0.0, ratio: 1.0, knee: 0.0 },
             attack_ms: 0.0,
             release_ms: 0.0,
-            knee: 0.0,
             makeup: 0.0,
             use_sidechain: false,
-            attack_coef: 0.0,
-            release_coef: 0.0,
-            reduction_db: 0.0,
+            reduction: Follower::default(),
         };
         c.update_times();
         c
@@ -135,11 +113,11 @@ impl Effect for Compressor {
             return;
         };
         match name {
-            "threshold" => self.threshold = value,
-            "ratio" => self.ratio = value,
+            "threshold" => self.curve.threshold = value,
+            "ratio" => self.curve.ratio = value,
             "attack" => self.attack_ms = value,
             "release" => self.release_ms = value,
-            "knee" => self.knee = value,
+            "knee" => self.curve.knee = value,
             "makeup" => self.makeup = value,
             "sidechain" => self.use_sidechain = value >= 0.5,
             _ => {}
@@ -148,7 +126,7 @@ impl Effect for Compressor {
     }
 
     fn reset(&mut self) {
-        self.reduction_db = 0.0;
+        self.reduction.reset();
     }
 
     fn process(&mut self, interleaved: &mut [f32], sidechain: Option<&[f32]>) {
@@ -157,18 +135,15 @@ impl Effect for Compressor {
         let makeup = db_to_gain(self.makeup);
         for frame in interleaved.chunks_exact_mut(2) {
             let source = key.as_mut().and_then(Iterator::next).unwrap_or(&frame[..]);
-            let level = source[0].abs().max(source[1].abs()).max(1e-6);
-            let target = self.target_reduction(20.0 * level.log10());
-            let coef = if target > self.reduction_db { self.attack_coef } else { self.release_coef };
-            self.reduction_db = target + coef * (self.reduction_db - target);
-            let gain = db_to_gain(-self.reduction_db) * makeup;
+            let reduction = self.reduction.follow(self.curve.reduction(peak_db(source[0], source[1])));
+            let gain = db_to_gain(-reduction) * makeup;
             frame[0] *= gain;
             frame[1] *= gain;
         }
     }
 
     fn gain_reduction_db(&self) -> Option<f32> {
-        Some(self.reduction_db)
+        Some(self.reduction.value())
     }
 }
 

@@ -37,6 +37,7 @@ pub mod plugin_editor;
 pub mod plugin_state;
 pub mod preferences;
 pub mod presets;
+pub mod project_changes;
 pub mod project_io;
 pub mod record;
 pub mod sample;
@@ -62,8 +63,8 @@ pub use audio::{
     InputLevel, LiveInput, StreamConfig,
 };
 pub use automation::{
-    AutomationClipEdit, AutomationControl, AutomationShape, CURVE_STRENGTH, MAX_AUTOMATION_CLIPS, MAX_LANES, MAX_POINTS, MIN_SHAPE_PERIOD,
-    ShapeRequest, clip_value_at, curve_shape, lane_value_at, value_at,
+    AutomationClipEdit, AutomationControl, AutomationShape, CURVE_STRENGTH, ClipDrawing, DrawnClip, MAX_AUTOMATION_CLIPS, MAX_LANES,
+    MAX_POINTS, MIN_SHAPE_PERIOD, ShapeRequest, clip_value_at, curve_shape, lane_value_at, value_at,
 };
 pub use automation_write::{AutomationHold, AutomationWriteMode, AutomationWriter, MAX_HELD_LANES, TOUCH_IDLE_MS, TouchEnd};
 pub use bounce::{TrackBounce, TrackRender, TrackSound};
@@ -74,13 +75,13 @@ pub use chord_part::{
 pub use clip_processing::{ClipProcessing, DEFAULT_NORMALIZE_PEAK_DB, MIN_NORMALIZE_PEAK_DB};
 pub use clips::{ClipControl, ClipEdit, FadeShape, MAX_CLIP_GAIN, MAX_CLIP_TICK, MAX_CLIPS, NewNoteClip};
 pub use effect::{
-    Effect, EffectCatalog, EffectFactory, EffectGroups, InstalledPlugin, PluginCacheStore, PluginScanner, PluginType, ScanFailure,
-    ScanReport,
+    Effect, EffectCatalog, EffectFactory, EffectGroups, InstalledPlugin, MAX_EFFECT_BANDS, PluginCacheStore, PluginScanner, PluginType,
+    ScanFailure, ScanReport,
 };
 pub use engine::{
-    DspCommand, DspSink, EngineFactory, EngineInstance, EngineLatency, EngineLosses, EngineSnapshot, EngineStats, GainReduction,
-    InputMonitor, LiveMessage, LiveNoteSink, MASTER_WINDOW_FRAMES, MAX_WATCHED_NODES, MasterWindow, Meter, MonitorStatus,
-    NODE_WINDOW_FRAMES, NodeCursor, NodeScope, NodeWindow, RecordSource, RecordedEvent, SnapshotSink, TrackInput,
+    BandGains, CAPTURE_LEASE_SECONDS, DspCommand, DspSink, EngineFactory, EngineInstance, EngineLatency, EngineLosses, EngineSnapshot,
+    EngineStats, GainReduction, InputMonitor, LiveMessage, LiveNoteSink, MASTER_WINDOW_FRAMES, MAX_WATCHED_NODES, MasterWindow, Meter,
+    MonitorStatus, NODE_WINDOW_FRAMES, NodeCursor, NodeScope, NodeWindow, RecordSource, RecordedEvent, SnapshotSink, TrackInput,
 };
 pub use error::{ContractError, ErrorCode, ErrorKind};
 pub use export::{BitDepth, ExportFormat, ExportRange, ExportReport, ExportRequest, Exporter, MAX_TAIL_SECONDS, Normalize, check_tail};
@@ -90,7 +91,7 @@ pub use graph::{
     NodeKind, Polarity, Strip, TrackChain,
 };
 pub use graph_control::GraphControl;
-pub use history::{HistoryControl, HistoryMark};
+pub use history::{HistoryControl, HistoryMark, HistorySteps};
 pub use i18n::{L10n, Language};
 pub use instrument::{
     BASS_GUITAR_KIND, ELECTRIC_GUITAR_KIND, GUITAR_KIND, Instrument, InstrumentCatalog, InstrumentFactory, InstrumentGroups, KindInfo,
@@ -119,6 +120,7 @@ pub use preferences::{
     Preferences, PreferencesStore, Profile, Theme, TrackHeight,
 };
 pub use presets::{MAX_PRESET_NAME_CHARS, Presets, ProjectTemplates, check_preset_name};
+pub use project_changes::{ListChanges, ProjectChanges};
 pub use project_io::{ClearOptions, DemoProject, ProjectClear, ProjectIo, ProjectStorage, ProjectView};
 pub use record::{AudioRecordControl, AudioRecordStatus, InputChannels, RecordControl, RecordStatus, TrackRecordState};
 pub use sample::{

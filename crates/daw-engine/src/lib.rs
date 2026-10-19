@@ -7,7 +7,7 @@
 //!
 //! Modules by role: `engine` is the audio thread (the conductor of a segment), `link` the connection to the control
 //! side (queues, telemetry, the input table, the mono check), `meters` the level meters, `scope` the live windows of
-//! sound (the master for the visualizer, the watched nodes for the effect pictures, every master frame for the live
+//! sound (the master for the visualizer, the captured nodes for the effect pictures, every master frame for the live
 //! loudness meter), `instruments` the track
 //! instruments, `note_effects` the track MIDI effects (notes before the instruments), `playback` (`notes`,
 //! `controllers`, `audio_voices`) what to play from the timeline, `automation` the automation lanes, `mixer` the

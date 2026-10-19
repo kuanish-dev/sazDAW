@@ -78,3 +78,30 @@ unreadable_literal = "allow"
 assert_is_empty = "allow"
 default_trait_access = "allow"
 struct_field_names = "allow"
+
+# The crates that make the sound (the audio thread, the instruments and effects, rendering and the loudness meter) are
+# optimized in the dev profile too: unoptimized DSP runs 10–30 times slower, so `tauri dev` overloaded the audio
+# thread on a real project (AU-443, the sound breaks up). Only these crates build slower; the rest of a dev build,
+# daw-contracts included, keeps its debug speed and checks.
+[profile.dev.package.daw-engine]
+opt-level = 3
+[profile.dev.package.daw-effects]
+opt-level = 3
+[profile.dev.package.daw-synth]
+opt-level = 3
+[profile.dev.package.daw-strings]
+opt-level = 3
+[profile.dev.package.daw-sampler]
+opt-level = 3
+[profile.dev.package.daw-drums]
+opt-level = 3
+[profile.dev.package.daw-metronome]
+opt-level = 3
+[profile.dev.package.daw-note-effects]
+opt-level = 3
+[profile.dev.package.daw-stretch]
+opt-level = 3
+[profile.dev.package.daw-render]
+opt-level = 3
+[profile.dev.package.daw-audio-cpal]
+opt-level = 3

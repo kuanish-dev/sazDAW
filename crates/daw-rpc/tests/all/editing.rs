@@ -259,6 +259,24 @@ fn checkpoint_and_squash_make_many_calls_one_undo_step() {
 }
 
 #[test]
+fn history_list_shows_done_and_undone_steps_and_changes_nothing() {
+    let session = build_session(false);
+    let (table, c) = (RpcTable::new(), &session.controls);
+    let mark = call(&table, c, "history.checkpoint", Value::Null);
+    let track = add_synth(&table, c);
+    add_clip(&table, c, &track);
+    call(&table, c, "history.squash", json!({ "since": mark, "label": "AI: intro" }));
+    add_clip(&table, c, &track);
+    assert_eq!(call(&table, c, "history.undo", Value::Null), true);
+    let revision = call(&table, c, "project.status", Value::Null)["revision"].clone();
+
+    let list = call(&table, c, "history.list", Value::Null);
+    assert_eq!(list, json!({ "done": ["AI: intro"], "undone": ["Add clip"] }));
+    assert_eq!(call(&table, c, "project.status", Value::Null)["revision"], revision, "reading changed nothing");
+    assert_eq!(call(&table, c, "history.list", Value::Null), list);
+}
+
+#[test]
 fn a_track_height_travels_in_the_project_json_only_while_it_is_set() {
     let session = build_session(false);
     let (table, c) = (RpcTable::new(), &session.controls);

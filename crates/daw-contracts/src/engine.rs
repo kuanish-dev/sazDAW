@@ -114,6 +114,14 @@ pub struct GainReduction {
     pub db: f32,
 }
 
+/// The dynamic gain of each band of an effect node since the previous read (`Effect::band_gains_db`), in dB, lowest
+/// band first: per band the value farthest from 0 dB, so a short cut or boost between two reads is not lost.
+#[derive(Debug, Clone, PartialEq)]
+pub struct BandGains {
+    pub node: NodeId,
+    pub db: Vec<f32>,
+}
+
 /// What the audio engine dropped to avoid blocking the audio thread. Counters only grow from engine creation; the
 /// control side logs every increase.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -147,6 +155,13 @@ impl EngineLatency {
     }
 }
 
+/// How long a read keeps a live capture going, seconds: the master window (`EngineStats::master_window`), a node's
+/// window (`NodeScope::node_windows`) and the live master meter (`MasterMeter::reading`). There is no on/off switch:
+/// reading is the request to keep capturing. So any number of readers (the interface, an AI client) share a capture
+/// without turning it off under each other, and a reader that goes away without a word (a closed panel, a reloaded
+/// window, a client that crashed) stops the copying by itself this long after its last read.
+pub const CAPTURE_LEASE_SECONDS: f32 = 10.0;
+
 /// How many frames of the master output `EngineStats::master_window` keeps: enough for a 2048-point spectrum and about
 /// 46 ms of waveform at 44.1 kHz.
 pub const MASTER_WINDOW_FRAMES: usize = 2048;
@@ -155,8 +170,8 @@ pub const MASTER_WINDOW_FRAMES: usize = 2048;
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct MasterWindow {
-    /// Mono samples (the middle of the two channels), oldest first: `MASTER_WINDOW_FRAMES` while watched, empty
-    /// otherwise.
+    /// Mono samples (the middle of the two channels), oldest first: `MASTER_WINDOW_FRAMES`, or none when this read
+    /// started the capture.
     pub samples: Vec<f32>,
     /// Stream sample rate the samples are in, Hz.
     pub sample_rate: u32,
@@ -171,30 +186,31 @@ pub trait EngineStats: Send + Sync {
     /// Gain reduction of the effect nodes that report it (compressor, gate, limiter) and were processed since the
     /// previous read (a bypassed effect is not); reading resets it.
     fn gain_reductions(&self) -> Vec<GainReduction>;
+    /// Band gains of the effect nodes that report them (multiband compressor, dynamic EQ) and were processed since the
+    /// previous read (a bypassed effect is not); reading resets them.
+    fn band_gains(&self) -> Vec<BandGains>;
     /// Position of the preview voice in file frames; `None` when it is silent.
     fn preview_position(&self) -> Option<usize>;
     /// Losses since engine creation (see `EngineLosses`).
     fn losses(&self) -> EngineLosses;
     /// Total compensation delay (PDC) for the last applied snapshot; 0 frames when nothing adds latency.
     fn latency(&self) -> EngineLatency;
-    /// Turns capturing of the master output for `master_window` on or off. Off at creation: while no visualizer is
-    /// shown the audio thread copies nothing. One switch for the whole app (the interface shows one visualizer).
-    fn watch_master(&self, on: bool);
     /// The latest `MASTER_WINDOW_FRAMES` frames of the master output: after the master fader and the preview voice,
-    /// before the ±1 clamp and the metronome (the visualizer shows the music, not the clicks). Empty samples while not
-    /// watched.
+    /// before the ±1 clamp and the metronome (the visualizer shows the music, not the clicks). Reading keeps the
+    /// capture going for `CAPTURE_LEASE_SECONDS` of the stream; while nobody reads, the audio thread copies nothing. A
+    /// read that finds the capture stopped starts it and gets no samples; the frames before it started are silence.
     fn master_window(&self) -> MasterWindow;
 }
 
-/// How many frames of a node's sound `NodeScope` keeps per watched node: a 4096-point spectrum, whose bins (about 12 Hz
+/// How many frames of a node's sound `NodeScope` keeps per captured node: a 4096-point spectrum, whose bins (about 12 Hz
 /// at 48 kHz) still tell apart the low end of the EQ graph, from about 85 ms of sound.
 pub const NODE_WINDOW_FRAMES: usize = 4096;
 
-/// How many nodes `NodeScope` watches at once: every effect along a long signal path plus an open editor. The engine
-/// keeps this many pairs of windows preallocated, so watching another node never allocates on the audio thread.
+/// How many nodes `NodeScope` captures at once: every effect along a long signal path plus an open editor. The engine
+/// keeps this many pairs of windows preallocated, so capturing another node never allocates on the audio thread.
 pub const MAX_WATCHED_NODES: usize = 16;
 
-/// How far a reader has read a watched node's sound: the watch the frames came from and the end of the last frame it
+/// How far a reader has read a captured node's sound: the watch the frames came from and the end of the last frame it
 /// has (`NodeWindow::watch` and `NodeWindow::end` of its previous reading).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Deserialize, schemars::JsonSchema)]
 #[serde(rename_all = "camelCase")]
@@ -204,14 +220,15 @@ pub struct NodeCursor {
     pub end: u64,
 }
 
-/// The newest stretch of one watched node's sound, for the live picture in its editor or along a signal path: what came
-/// into the node and what it sent on, frame by frame (the live visuals of the built-in effects).
+/// The newest stretch of one captured node's sound, for the live picture in its editor or along a signal path: what
+/// came into the node and what it sent on, frame by frame (the live visuals of the built-in effects).
 #[derive(Debug, Clone, PartialEq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct NodeWindow {
     pub node: NodeId,
-    /// Which watch of the node the frames belong to: a node that starts being watched (again) gets a new number, and its
-    /// sound starts from silence. A reader's cursor counts only within the same watch.
+    /// Which watch of the node the frames belong to: a node whose capture starts (again: its lease ran out, or its slot
+    /// went to another node) gets a new number, and its sound starts from silence. A reader's cursor counts only within
+    /// the same watch.
     pub watch: u32,
     /// Frames captured since the watch began: the last sample of `input` and `output` is frame `end − 1` of it.
     pub end: u64,
@@ -236,20 +253,18 @@ pub struct NodeWindow {
 /// silence), a delay lights its echo taps by the input that feeds them, and a reverb finds its tail as the output minus
 /// the dry part of the input; none of this can be recovered from the output of a nonlinear or dynamic effect.
 ///
-/// Why a set and cursors: a signal path shows every effect along it live at once, and one batched read per picture
-/// frame with only the new frames keeps the traffic near the audio rate itself rather than a whole window per node per
-/// read.
+/// Why many nodes in one read and cursors: a signal path shows every effect along it live at once, and one batched read
+/// per picture frame with only the new frames keeps the traffic near the audio rate itself rather than a whole window per
+/// node per read.
 pub trait NodeScope: Send + Sync {
-    /// Replaces the watched nodes with `nodes` (a repeated id counts once; ids beyond the first `MAX_WATCHED_NODES`
-    /// distinct ones are not watched). A node that stays in the set keeps its watch and window; a node that joins it
-    /// gets a new watch whose sound starts from silence; an empty set watches nothing. The set belongs to the whole app:
-    /// the interface sends the union of everything it shows. Off at creation: while nothing is watched, the audio thread
-    /// copies nothing. A node that is not in the graph is watched like any other and adds nothing to its window.
-    fn watch_nodes(&self, nodes: &[NodeId]);
-    /// One window per watched node (see `NodeWindow`). For a node in `seen` with its current watch, only the frames
-    /// after the cursor's end (none when nothing new came); for the others, the last `NODE_WINDOW_FRAMES`. Empty while
-    /// nothing is watched.
-    fn node_windows(&self, seen: &[NodeCursor]) -> Vec<NodeWindow>;
+    /// One window per node of `nodes` that is captured (see `NodeWindow`), in the order of `nodes`; a repeated id counts
+    /// once. Reading a node keeps its capture going for `CAPTURE_LEASE_SECONDS` of the stream; while nobody reads a
+    /// node, the audio thread copies nothing of it. A node not captured yet gets a slot and a new watch whose sound
+    /// starts from silence: a free slot, else the one read longest ago, unless all `MAX_WATCHED_NODES` were read in this
+    /// same call (then the node gets no window). For a node with a cursor in `seen` of its current watch, only the
+    /// frames after the cursor's end (none when nothing new came); otherwise the last `NODE_WINDOW_FRAMES`. A node that
+    /// is not in the graph is captured like any other and adds nothing to its window.
+    fn node_windows(&self, nodes: &[NodeId], seen: &[NodeCursor]) -> Vec<NodeWindow>;
 }
 
 /// An event played live while recording. Its time is the transport tick at the start of the audio segment in which

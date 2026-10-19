@@ -1,6 +1,6 @@
 //! Pattern variation (`NoteTransform::Vary`) as a pure function over the group's notes: remove and add notes, move
 //! pitches to neighbouring steps, shift, split or merge notes, spread velocities. The frontend mock repeats this
-//! exactly (`app/src/domain/variation.ts`): the same mulberry32 generator and the same order of random numbers.
+//! exactly (`app/src/pianoroll/variation.ts`): the same mulberry32 generator and the same order of random numbers.
 
 use daw_contracts::codes::notes;
 use daw_contracts::{ContractError, ErrorCode, NewNote, Note, STEP_TICKS, ScaleKey, Variation};

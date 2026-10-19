@@ -1,9 +1,21 @@
 //! Undo and redo of project edits, edit groups and checkpoints (`HistoryControl`).
 
+use serde::Serialize;
+
 use crate::ContractError;
 
 /// A point in the undo history returned by `HistoryControl::checkpoint`, for `HistoryControl::squash`.
 pub type HistoryMark = u64;
+
+/// The undo history as a list, for showing it (`HistoryControl::steps`). A step is named by its undo label, a squashed
+/// change by the squash label ("AI: drum part"). The project is between the two lists: after the last done step.
+#[derive(Debug, Clone, Default, PartialEq, Eq, Serialize)]
+pub struct HistorySteps {
+    /// The steps undo can take back, oldest first: the last one is the next undo (`undo_label`).
+    pub done: Vec<String>,
+    /// The undone steps redo can bring back, in the order it does: the first one is the next redo.
+    pub undone: Vec<String>,
+}
 
 /// Undo and redo of project edits.
 ///
@@ -26,6 +38,9 @@ pub trait HistoryControl: Send + Sync {
     fn can_redo(&self) -> bool;
     /// Label of the next undo action.
     fn undo_label(&self) -> Option<String>;
+    /// Every step undo and redo can reach, for showing the history; it only reads. The edits of an open group are not
+    /// in it yet: they become one step when the group closes. Steps the step limit forgot are gone from it too.
+    fn steps(&self) -> HistorySteps;
     /// Opens an edit group (or enters a nested one, see the trait docs).
     fn begin_group(&self, label: &str);
     /// Closes a group level. `true` means the outermost group was closed and an undo step recorded (the project

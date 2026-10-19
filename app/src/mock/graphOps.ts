@@ -1,7 +1,7 @@
 // Shared graph edits inside a project: the life cycle of source nodes and connection-level lanes (like `ops.rs` in the backend).
 import type { GraphEdge, GraphNode, Id, NodeKind, Project } from "../api/types";
 import { MASTER_NODE } from "../api/types";
-import { acceptsInput, hasOutput, MAX_EDGES, MAX_NODES, reaches } from "../domain/graph";
+import { acceptsInput, hasOutput, MAX_EDGES, MAX_NODES, reaches } from "../graph/graphRules";
 import { fail } from "./errors";
 
 export function limitNodes(p: Project) {

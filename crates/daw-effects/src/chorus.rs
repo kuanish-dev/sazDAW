@@ -1,5 +1,5 @@
 //! Chorus: two modulated delay lines with an LFO phase offset between the channels.
-//! The graph in the interface draws the voices' sweep from the same LFO (`app/src/domain/chorusSweep.ts`): a change
+//! The graph in the interface draws the voices' sweep from the same LFO (`app/src/effects/chorusSweep.ts`): a change
 //! here must be mirrored there.
 
 use std::f32::consts::TAU;

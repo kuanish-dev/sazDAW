@@ -41,10 +41,14 @@ export interface InputLevel {
   right: number;
 }
 
+/** How long a read keeps a live capture going, seconds, as `CAPTURE_LEASE_SECONDS` in Rust: the master window, a node's
+ *  window and the master meter have no on/off switch, reading them is what keeps them captured. */
+export const CAPTURE_LEASE_SECONDS = 10;
+
 /** The latest stretch of the master output for the visualizer (oscilloscope and spectrum). */
 export interface MasterWindow {
-  /** Mono samples (the middle of the two channels), oldest first: 2048 while watched, empty otherwise. */
-  samples: number[];
+  /** Mono samples (the middle of the two channels), oldest first: 2048, or none when this read started the capture. */
+  samples: Float32Array;
   /** Sample rate of the samples, Hz. */
   sampleRate: number;
 }
@@ -84,31 +88,32 @@ export interface MasterReading {
   sampleRate: number;
 }
 
-/** Frames of sound kept per watched node, as `NODE_WINDOW_FRAMES` in Rust: a 4096-point spectrum. */
+/** Frames of sound kept per captured node, as `NODE_WINDOW_FRAMES` in Rust: a 4096-point spectrum. */
 export const NODE_WINDOW_FRAMES = 4096;
-/** How many nodes the engine watches at once, as `MAX_WATCHED_NODES` in Rust. */
+/** How many nodes the engine captures at once, as `MAX_WATCHED_NODES` in Rust. */
 export const MAX_WATCHED_NODES = 16;
 
-/** How far a reader has read a watched node's sound: the `watch` and `end` of its previous window. */
+/** How far a reader has read a captured node's sound: the `watch` and `end` of its previous window. */
 export interface NodeCursor {
   node: Id;
   watch: number;
   end: number;
 }
 
-/** The newest stretch of one watched node's sound, for its live picture (the effect visuals). */
+/** The newest stretch of one captured node's sound, for its live picture (the effect visuals). */
 export interface NodeWindow {
   node: Id;
-  /** Which watch of the node the frames belong to: a node that starts being watched (again) gets a new number and its
-   *  sound starts from silence; a cursor counts only within the same watch. */
+  /** Which watch of the node the frames belong to: a node whose capture starts (again: nobody read it for
+   *  `CAPTURE_LEASE_SECONDS`, or its slot went to another node) gets a new number and its sound starts from silence; a
+   *  cursor counts only within the same watch. */
   watch: number;
   /** Frames captured since the watch began: the last sample is frame `end − 1`. */
   end: number;
   /** What came into the node: before the effect (the same as `output` while bypassed), before the fader for sources,
    *  buses and the master. Mono, oldest first: the frames after the reader's cursor, or the last `NODE_WINDOW_FRAMES`. */
-  input: number[];
+  input: Float32Array;
   /** What the node sent on, over the same frames as `input` (sample `i` of both is the same moment). */
-  output: number[];
+  output: Float32Array;
   /** Sample rate of the samples, Hz. */
   sampleRate: number;
 }

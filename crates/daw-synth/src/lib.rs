@@ -1,111 +1,99 @@
-//! Synth: the built-in polyphonic subtractive synth (8 voices; waveform, AHDSR envelope, low cut and high cut filters, volume).
-//! Of the MIDI controllers it understands pitch bend (±2 semitones) and the mod wheel (CC1 opens the filter).
-//! The sound is in `engine`; this file is the `Instrument` glue: parameters in real units, smoothing of the cuts and
-//! volume (so knob moves and automation do not click), notes and controllers.
+//! Synth: the built-in polyphonic subtractive synth. Two oscillators (sine, triangle, saw, square, noise) with up to
+//! seven detuned unison copies across the stereo field, an AHDSR volume envelope, a resonant lowpass with its own
+//! envelope, a low cut, a pitch envelope, mono mode with glide and an LFO (pitch, filter, volume; free or synced to
+//! the song). Of the MIDI controllers it understands pitch bend (±2 semitones) and the mod wheel (CC1 opens the filter).
+//! The sound is in `engine` and its parts; this file is the `Instrument` glue: parameters in real units, smoothing of the
+//! cuts and volume (so knob moves and automation do not click), notes, controllers and the song tempo.
 
 mod engine;
+mod envelope;
+mod filter;
+mod lfo;
+mod osc;
 
 use daw_contracts::{
-    AudioBlock, CC_MODULATION, ContractError, ControllerKind, Instrument, InstrumentFactory, L10n, ParamInfo, ParamKind, Params,
-    PluginState, SYNTH_KIND, StreamConfig,
+    AudioBlock, BlockTiming, CC_MODULATION, ContractError, ControllerKind, Instrument, InstrumentFactory, L10n, PPQ, ParamInfo, ParamKind,
+    Params, PluginState, SYNTH_KIND, StreamConfig,
 };
 
-use engine::{Engine, Settings, Waveform};
+use engine::{Engine, Settings, Unison};
+use lfo::LfoShape;
+use osc::Waveform;
 
 /// How long cutoff and volume glide to a new value.
 const SMOOTH_SECONDS: f32 = 0.02;
 
-const WAVEFORMS: [L10n; 4] = [
+const WAVEFORMS: [L10n; 5] = [
     L10n { en: "Sine", ru: "Синус" },
     L10n { en: "Triangle", ru: "Треугольник" },
     L10n { en: "Saw", ru: "Пила" },
     L10n { en: "Square", ru: "Меандр" },
+    L10n { en: "Noise", ru: "Шум" },
 ];
 
+const LFO_SHAPES: [L10n; 5] = [
+    L10n { en: "Sine", ru: "Синус" },
+    L10n { en: "Triangle", ru: "Треугольник" },
+    L10n { en: "Saw", ru: "Пила" },
+    L10n { en: "Square", ru: "Меандр" },
+    L10n { en: "Random", ru: "Случайная" },
+];
+
+/// "Off", then the note lengths of `lfo::SYNC_BEATS` in the same order.
+const LFO_SYNC: [L10n; 9] = [
+    L10n { en: "Off", ru: "Выкл" },
+    L10n::same("1/1"),
+    L10n::same("1/2"),
+    L10n::same("1/4"),
+    L10n::same("1/8"),
+    L10n::same("1/16"),
+    L10n { en: "1/4 triplet", ru: "1/4 триоль" },
+    L10n { en: "1/8 triplet", ru: "1/8 триоль" },
+    L10n { en: "1/16 triplet", ru: "1/16 триоль" },
+];
+
+const fn number(name: &'static str, label: L10n, min: f32, max: f32, default: f32) -> ParamInfo {
+    ParamInfo { name, label, min, max, default, kind: ParamKind::Number, choices: &[] }
+}
+
+const fn choice(name: &'static str, label: L10n, choices: &'static [L10n], max: f32, default: f32) -> ParamInfo {
+    ParamInfo { name, label, min: 0.0, max, default, kind: ParamKind::Choice, choices }
+}
+
+/// Grouped as the instrument window shows them: oscillators, unison, volume envelope, filter, pitch, mono, LFO, volume.
 /// Envelope names follow the convention the interface draws as an envelope graph (attack/hold/decay/sustain/release;
 /// sustain is a level `0..1`).
-const PARAMS: [ParamInfo; 9] = [
-    ParamInfo {
-        name: "waveform",
-        label: L10n { en: "Waveform", ru: "Форма волны" },
-        min: 0.0,
-        max: 3.0,
-        default: 2.0,
-        kind: ParamKind::Choice,
-        choices: &WAVEFORMS,
-    },
-    ParamInfo {
-        name: "attack",
-        label: L10n { en: "Attack, s", ru: "Attack, с" },
-        min: 0.0005,
-        max: 4.0,
-        default: 0.005,
-        kind: ParamKind::Number,
-        choices: &[],
-    },
-    ParamInfo {
-        name: "hold",
-        label: L10n { en: "Hold, s", ru: "Hold, с" },
-        min: 0.0,
-        max: 4.0,
-        default: 0.0,
-        kind: ParamKind::Number,
-        choices: &[],
-    },
-    ParamInfo {
-        name: "decay",
-        label: L10n { en: "Decay, s", ru: "Decay, с" },
-        min: 0.0005,
-        max: 4.0,
-        default: 0.15,
-        kind: ParamKind::Number,
-        choices: &[],
-    },
-    ParamInfo {
-        name: "sustain",
-        label: L10n { en: "Sustain", ru: "Sustain" },
-        min: 0.0,
-        max: 1.0,
-        default: 0.6,
-        kind: ParamKind::Number,
-        choices: &[],
-    },
-    ParamInfo {
-        name: "release",
-        label: L10n { en: "Release, s", ru: "Release, с" },
-        min: 0.0005,
-        max: 8.0,
-        default: 0.12,
-        kind: ParamKind::Number,
-        choices: &[],
-    },
-    ParamInfo {
-        name: "low_cut",
-        label: L10n { en: "Low cut, Hz", ru: "Срез низов, Гц" },
-        min: 20.0,
-        max: 2_000.0,
-        default: 20.0,
-        kind: ParamKind::Number,
-        choices: &[],
-    },
-    ParamInfo {
-        name: "high_cut",
-        label: L10n { en: "High cut, Hz", ru: "Срез верхов, Гц" },
-        min: 40.0,
-        max: 18_000.0,
-        default: 1_800.0,
-        kind: ParamKind::Number,
-        choices: &[],
-    },
-    ParamInfo {
-        name: "gain",
-        label: L10n { en: "Volume, %", ru: "Громкость, %" },
-        min: 0.0,
-        max: 100.0,
-        default: 25.0,
-        kind: ParamKind::Number,
-        choices: &[],
-    },
+const PARAMS: [ParamInfo; 30] = [
+    choice("waveform", L10n { en: "Waveform", ru: "Форма волны" }, &WAVEFORMS, 4.0, 2.0),
+    number("osc2_level", L10n { en: "Osc 2 level, %", ru: "Осц. 2: уровень, %" }, 0.0, 100.0, 0.0),
+    choice("osc2_waveform", L10n { en: "Osc 2 waveform", ru: "Осц. 2: форма волны" }, &WAVEFORMS, 4.0, 2.0),
+    number("osc2_semitones", L10n { en: "Osc 2 pitch, semitones", ru: "Осц. 2: высота, полутоны" }, -24.0, 24.0, 0.0),
+    number("osc2_detune", L10n { en: "Osc 2 detune, cents", ru: "Осц. 2: расстройка, центы" }, -50.0, 50.0, 0.0),
+    number("unison", L10n { en: "Unison voices", ru: "Голоса унисона" }, 1.0, 7.0, 1.0),
+    number("unison_detune", L10n { en: "Unison detune, cents", ru: "Расстройка унисона, центы" }, 0.0, 100.0, 20.0),
+    number("unison_width", L10n { en: "Unison width, %", ru: "Ширина унисона, %" }, 0.0, 100.0, 50.0),
+    number("attack", L10n { en: "Attack, s", ru: "Attack, с" }, 0.0005, 4.0, 0.005),
+    number("hold", L10n { en: "Hold, s", ru: "Hold, с" }, 0.0, 4.0, 0.0),
+    number("decay", L10n { en: "Decay, s", ru: "Decay, с" }, 0.0005, 4.0, 0.15),
+    number("sustain", L10n::same("Sustain"), 0.0, 1.0, 0.6),
+    number("release", L10n { en: "Release, s", ru: "Release, с" }, 0.0005, 8.0, 0.12),
+    number("low_cut", L10n { en: "Low cut, Hz", ru: "Срез низов, Гц" }, 20.0, 2_000.0, 20.0),
+    number("high_cut", L10n { en: "High cut, Hz", ru: "Срез верхов, Гц" }, 40.0, 18_000.0, 1_800.0),
+    number("resonance", L10n { en: "Resonance, %", ru: "Резонанс, %" }, 0.0, 100.0, 0.0),
+    number("filter_env", L10n { en: "Filter envelope, octaves", ru: "Огибающая фильтра, октавы" }, -6.0, 6.0, 0.0),
+    number("filter_attack", L10n { en: "Filter attack, s", ru: "Атака фильтра, с" }, 0.0005, 4.0, 0.005),
+    number("filter_decay", L10n { en: "Filter decay, s", ru: "Спад фильтра, с" }, 0.0005, 4.0, 0.3),
+    number("pitch_env", L10n { en: "Pitch envelope, semitones", ru: "Огибающая высоты, полутоны" }, -48.0, 48.0, 0.0),
+    number("pitch_decay", L10n { en: "Pitch decay, s", ru: "Спад высоты, с" }, 0.001, 2.0, 0.08),
+    ParamInfo { kind: ParamKind::Switch, ..number("mono", L10n { en: "Mono", ru: "Моно" }, 0.0, 1.0, 0.0) },
+    number("glide", L10n { en: "Glide, s", ru: "Глайд, с" }, 0.0, 2.0, 0.0),
+    choice("lfo_shape", L10n { en: "LFO shape", ru: "LFO: форма" }, &LFO_SHAPES, 4.0, 0.0),
+    number("lfo_rate", L10n { en: "LFO rate, Hz", ru: "LFO: скорость, Гц" }, 0.05, 20.0, 5.0),
+    choice("lfo_sync", L10n { en: "LFO tempo sync", ru: "LFO: синхронизация с темпом" }, &LFO_SYNC, 8.0, 0.0),
+    number("lfo_pitch", L10n { en: "LFO to pitch, cents", ru: "LFO → высота, центы" }, 0.0, 100.0, 0.0),
+    number("lfo_filter", L10n { en: "LFO to filter, octaves", ru: "LFO → фильтр, октавы" }, 0.0, 4.0, 0.0),
+    number("lfo_volume", L10n { en: "LFO to volume, %", ru: "LFO → громкость, %" }, 0.0, 100.0, 0.0),
+    number("gain", L10n { en: "Volume, %", ru: "Громкость, %" }, 0.0, 100.0, 25.0),
 ];
 
 /// A value that glides linearly to its target over a fixed number of frames.
@@ -150,6 +138,10 @@ struct Synth {
     high_cut_octaves: Ramp,
     gain: Ramp,
     smooth_frames: u32,
+    /// The unison knobs (voices, detune in cents, width `0..=1`): the copies are rebuilt from all three when one moves.
+    unison: [f32; 3],
+    /// Osc 2 offset: semitones and cents.
+    osc2_pitch: [f32; 2],
 }
 
 impl Synth {
@@ -161,6 +153,8 @@ impl Synth {
             high_cut_octaves: Ramp::at(0.0),
             gain: Ramp::at(0.0),
             smooth_frames: smooth_frames(StreamConfig::DEFAULT.sample_rate as f32),
+            unison: [1.0, 0.0, 0.0],
+            osc2_pitch: [0.0; 2],
         };
         for info in &PARAMS {
             synth.set_param(info.name, info.default);
@@ -180,6 +174,14 @@ fn smooth_frames(sample_rate: f32) -> u32 {
     (SMOOTH_SECONDS * sample_rate) as u32
 }
 
+fn unison([voices, detune, width]: [f32; 3]) -> Unison {
+    Unison::new(voices, detune, width)
+}
+
+fn osc2_ratio([semitones, cents]: [f32; 2]) -> f32 {
+    ((semitones + cents / 100.0) / 12.0).exp2()
+}
+
 impl Instrument for Synth {
     fn prepare(&mut self, config: StreamConfig) {
         let sample_rate = config.sample_rate as f32;
@@ -191,15 +193,15 @@ impl Instrument for Synth {
     }
 
     fn note_on(&mut self, note: u8, velocity: f32) {
-        self.engine.note_on(note, velocity);
+        self.engine.note_on(note, velocity, &self.settings);
     }
 
     fn note_off(&mut self, note: u8) {
-        self.engine.note_off(note, self.settings.release);
+        self.engine.note_off(note, &self.settings);
     }
 
     fn all_notes_off(&mut self) {
-        self.engine.all_notes_off(self.settings.release);
+        self.engine.all_notes_off(self.settings.envelope.release);
     }
 
     fn controller(&mut self, kind: ControllerKind, value: f32) {
@@ -219,13 +221,41 @@ impl Instrument for Synth {
         let s = &mut self.settings;
         match name {
             "waveform" => s.waveform = Waveform::from_index(value),
-            "attack" => s.attack = value,
-            "hold" => s.hold = value,
-            "decay" => s.decay = value,
-            "sustain" => s.sustain = value,
-            "release" => s.release = value,
+            "osc2_level" => s.osc2_level = value / 100.0,
+            "osc2_waveform" => s.osc2 = Waveform::from_index(value),
+            "osc2_semitones" | "osc2_detune" => {
+                self.osc2_pitch[usize::from(name == "osc2_detune")] = value;
+                s.osc2_ratio = osc2_ratio(self.osc2_pitch);
+            }
+            "unison" | "unison_detune" | "unison_width" => {
+                match name {
+                    "unison" => self.unison[0] = value,
+                    "unison_detune" => self.unison[1] = value,
+                    _ => self.unison[2] = value / 100.0,
+                }
+                s.unison = unison(self.unison);
+            }
+            "attack" => s.envelope.attack = value,
+            "hold" => s.envelope.hold = value,
+            "decay" => s.envelope.decay = value,
+            "sustain" => s.envelope.sustain = value,
+            "release" => s.envelope.release = value,
             "low_cut" => self.low_cut_octaves.glide_to(value.log2(), self.smooth_frames),
             "high_cut" => self.high_cut_octaves.glide_to(value.log2(), self.smooth_frames),
+            "resonance" => s.resonance = value / 100.0,
+            "filter_env" => s.filter_env_octaves = value,
+            "filter_attack" => s.filter_attack = value,
+            "filter_decay" => s.filter_decay = value,
+            "pitch_env" => s.pitch_env_semitones = value,
+            "pitch_decay" => s.pitch_decay = value,
+            "mono" => s.mono = value >= 0.5,
+            "glide" => s.glide = value,
+            "lfo_shape" => s.lfo.shape = LfoShape::from_index(value),
+            "lfo_rate" => s.lfo.rate_hz = value,
+            "lfo_sync" => s.lfo.sync_beats = lfo::sync_beats(value),
+            "lfo_pitch" => s.lfo.pitch_cents = value,
+            "lfo_filter" => s.lfo.filter_octaves = value,
+            "lfo_volume" => s.lfo.volume = value / 100.0,
             "gain" => self.gain.glide_to(value / 100.0, self.smooth_frames),
             _ => {}
         }
@@ -237,11 +267,24 @@ impl Instrument for Synth {
             self.settings.low_cut_hz = self.low_cut_octaves.next().exp2();
             self.settings.high_cut_hz = self.high_cut_octaves.next().exp2();
             self.settings.gain = self.gain.next();
-            let sample = self.engine.next_sample(&self.settings);
-            for out in frame {
-                *out += sample;
+            let [left, right] = self.engine.next_frame(&self.settings);
+            match frame {
+                [mono] => *mono += 0.5 * (left + right),
+                [l, r, rest @ ..] => {
+                    *l += left;
+                    *r += right;
+                    for out in rest {
+                        *out += 0.5 * (left + right);
+                    }
+                }
+                [] => {}
             }
         }
+    }
+
+    fn set_timing(&mut self, timing: &BlockTiming) {
+        let ppq = f64::from(PPQ);
+        self.engine.set_timing(timing.start_tick / ppq, timing.ticks_per_frame / ppq, timing.playing, self.settings.lfo.sync_beats);
     }
 }
 

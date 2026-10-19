@@ -1,21 +1,48 @@
 //! Live windows of sound for the interface: the master window for the visualizer (`EngineStats::master_window`), the
-//! windows of the watched graph nodes for their pictures (`NodeScope`, the live visuals of the effects, one editor or a
+//! windows of the captured graph nodes for their pictures (`NodeScope`, the live visuals of the effects, one editor or a
 //! whole signal path at once), both kept in `Lane`s, and every frame of the stereo master for the live meter
 //! (`MasterTap`, `MeterTap`). Atomics only on the audio thread: it writes into preallocated rings, the control side
-//! copies them out; while nobody watches, the audio thread copies nothing.
+//! copies them out. The windows have no switch: a read holds a lease on its capture (`CAPTURE_LEASE_SECONDS`), counted
+//! on the engine's `FrameClock`, and while no lease runs, the audio thread copies nothing.
 
-use std::sync::Mutex;
 use std::sync::atomic::{AtomicBool, AtomicU32, AtomicU64, AtomicUsize, Ordering};
+use std::sync::{Arc, Mutex};
 
 use daw_contracts::sync::lock;
 use daw_contracts::{
-    MASTER_TAP_FRAMES, MASTER_WINDOW_FRAMES, MAX_WATCHED_NODES, MasterFrames, NODE_WINDOW_FRAMES, NodeCursor, NodeId, NodeWindow,
+    CAPTURE_LEASE_SECONDS, MASTER_TAP_FRAMES, MASTER_WINDOW_FRAMES, MAX_WATCHED_NODES, MasterFrames, NODE_WINDOW_FRAMES, NodeCursor,
+    NodeId, NodeWindow,
 };
 
 use crate::SEGMENT_FRAMES;
 
+/// Frames the engine has rendered since it was created: the clock of the capture leases. The audio thread moves it once
+/// per segment, both sides read it. Why frames and not wall time: the audio thread checks a lease with one atomic load
+/// and no clock call, and while no audio runs nothing is copied anyway, so a lease may as well stand still.
+pub struct FrameClock(AtomicU64);
+
+impl FrameClock {
+    pub fn new() -> Self {
+        Self(AtomicU64::new(0))
+    }
+
+    pub fn now(&self) -> u64 {
+        self.0.load(Ordering::Acquire)
+    }
+
+    /// The audio thread rendered `frames` more (the only writer).
+    pub fn advance(&self, frames: usize) {
+        self.0.store(self.0.load(Ordering::Relaxed) + frames as u64, Ordering::Release);
+    }
+}
+
+/// The frame up to which a capture read now is copied: `CAPTURE_LEASE_SECONDS` at `sample_rate` after `now`.
+fn lease_end(now: u64, sample_rate: u32) -> u64 {
+    now + (CAPTURE_LEASE_SECONDS * sample_rate as f32) as u64
+}
+
 /// A ring of mono frames. The position (where the next frame goes, which is also the oldest one) is kept by the owner:
-/// a watched node moves two lanes with one frame count, so its input and output stay paired frame by frame.
+/// a captured node moves two lanes with one frame count, so its input and output stay paired frame by frame.
 struct Lane {
     /// Mono samples as f32 bits.
     samples: Box<[AtomicU32]>,
@@ -55,42 +82,38 @@ impl Lane {
 }
 
 pub struct MasterScope {
-    on: AtomicBool,
+    clock: Arc<FrameClock>,
+    /// The lease: the audio thread copies while the clock is before this frame.
+    until: AtomicU64,
     lane: Lane,
     position: AtomicUsize,
 }
 
 impl MasterScope {
-    pub fn new() -> Self {
-        Self { on: AtomicBool::new(false), lane: Lane::new(MASTER_WINDOW_FRAMES), position: AtomicUsize::new(0) }
-    }
-
-    /// Turning on clears the lane, so a stale window from the last time it was watched is not shown. It is cleared
-    /// before switching on, while the audio thread is not copying (at worst a segment that was finishing leaves a few
-    /// samples, harmless for a picture), and a repeated "on" keeps the live picture.
-    pub fn watch(&self, on: bool) {
-        if on && !self.on.load(Ordering::Relaxed) {
-            self.lane.clear();
-        }
-        // Release: the audio thread that sees "on" also sees the cleared lane and does not write under the clearing.
-        self.on.store(on, Ordering::Release);
+    pub fn new(clock: Arc<FrameClock>) -> Self {
+        Self { clock, until: AtomicU64::new(0), lane: Lane::new(MASTER_WINDOW_FRAMES), position: AtomicUsize::new(0) }
     }
 
     /// Adds a segment of the interleaved stereo master as mono (audio thread).
     pub fn write(&self, master: &[f32]) {
-        if self.on.load(Ordering::Acquire) {
+        if self.clock.now() < self.until.load(Ordering::Acquire) {
             let next = self.lane.write(self.position.load(Ordering::Relaxed), master);
             self.position.store(next, Ordering::Release);
         }
     }
 
-    /// The window oldest first (control side); empty while off.
-    pub fn read(&self) -> Vec<f32> {
-        if self.on.load(Ordering::Relaxed) {
-            self.lane.read(self.position.load(Ordering::Acquire), MASTER_WINDOW_FRAMES)
-        } else {
-            Vec::new()
+    /// The window oldest first, and the lease renewed (control side, see `EngineStats::master_window`). A read that
+    /// finds the lease run out clears the lane first, so a stale window from the last time is not shown; the audio
+    /// thread is not copying then (at worst a segment that was finishing leaves a few samples, harmless for a picture).
+    pub fn read(&self, sample_rate: u32) -> Vec<f32> {
+        let now = self.clock.now();
+        let running = now < self.until.load(Ordering::Relaxed);
+        if !running {
+            self.lane.clear();
         }
+        // Release: the audio thread that sees the lease also sees the cleared lane and does not write under the clearing.
+        self.until.store(lease_end(now, sample_rate), Ordering::Release);
+        if running { self.lane.read(self.position.load(Ordering::Acquire), MASTER_WINDOW_FRAMES) } else { Vec::new() }
     }
 }
 
@@ -193,10 +216,13 @@ fn position(end: u64) -> usize {
     (end % NODE_WINDOW_FRAMES as u64) as usize
 }
 
-/// One slot of the tap: a watched node's input and output lanes, moved by one frame count.
+/// One slot of the tap: a captured node's input and output lanes, moved by one frame count.
 struct Watch {
-    /// The node; `NO_NODE` while the slot is free.
+    /// The node; `NO_NODE` while the slot was never taken or is being handed to another node.
     node: AtomicU32,
+    /// The lease: the audio thread copies the node while the clock is before this frame; once it is past, the slot is
+    /// free.
+    until: AtomicU64,
     input: Lane,
     output: Lane,
     /// Frames captured since the watch began. Only the output moves it: a segment's input is written first at the same
@@ -210,77 +236,45 @@ struct Numbers {
     next: u32,
 }
 
-/// The tap on the watched graph nodes (`NodeScope`): the mixer offers every node's input before the node changes it and
-/// its output after; a watched node's go into its slot's lanes. `MAX_WATCHED_NODES` slots are preallocated, so watching
-/// another node never allocates on the audio thread.
+/// The tap on the captured graph nodes (`NodeScope`): the mixer offers every node's input before the node changes it
+/// and its output after; a captured node's go into its slot's lanes. `MAX_WATCHED_NODES` slots are preallocated, so
+/// capturing another node never allocates on the audio thread.
 pub struct NodeTap {
+    clock: Arc<FrameClock>,
     slots: Box<[Watch]>,
-    /// Whether any slot is taken: while none is, a node costs the audio thread one atomic load.
-    any: AtomicBool,
-    /// Control side only (`watch`, `windows`, which may come from several threads at once); the audio thread never
-    /// takes it.
+    /// The latest lease of any slot: once the clock is past it, a node costs the audio thread two atomic loads.
+    any_until: AtomicU64,
+    /// Control side only (`windows`, which may come from several threads at once); the audio thread never takes it.
     numbers: Mutex<Numbers>,
 }
 
 impl NodeTap {
-    pub fn new() -> Self {
+    pub fn new(clock: Arc<FrameClock>) -> Self {
         let slot = || Watch {
             node: AtomicU32::new(NO_NODE),
+            until: AtomicU64::new(0),
             input: Lane::new(NODE_WINDOW_FRAMES),
             output: Lane::new(NODE_WINDOW_FRAMES),
             end: AtomicU64::new(0),
         };
         Self {
+            clock,
             slots: (0..MAX_WATCHED_NODES).map(|_| slot()).collect(),
-            any: AtomicBool::new(false),
+            any_until: AtomicU64::new(0),
             numbers: Mutex::new(Numbers { slots: [0; MAX_WATCHED_NODES], next: 0 }),
         }
     }
 
-    /// Replaces the watched nodes (control side, see `NodeScope::watch_nodes`). A node leaving the set frees its slot at
-    /// once; a joining one takes a free slot, cleared while the audio thread does not write it (at worst a segment that
-    /// was finishing leaves a few samples, harmless for a picture), with a new watch number.
-    pub fn watch(&self, nodes: &[NodeId]) {
-        let mut numbers = lock(&self.numbers);
-        let mut wanted: Vec<NodeId> = Vec::with_capacity(MAX_WATCHED_NODES);
-        for &node in nodes {
-            if node != NO_NODE && !wanted.contains(&node) && wanted.len() < MAX_WATCHED_NODES {
-                wanted.push(node);
-            }
-        }
-        for slot in &self.slots {
-            if !wanted.contains(&slot.node.load(Ordering::Relaxed)) {
-                slot.node.store(NO_NODE, Ordering::Release);
-            }
-        }
-        for &node in &wanted {
-            if self.slots.iter().any(|slot| slot.node.load(Ordering::Relaxed) == node) {
-                continue;
-            }
-            // There is a free slot: at most `MAX_WATCHED_NODES` are wanted, and every slot not wanted was just freed.
-            let Some((index, slot)) = self.slots.iter().enumerate().find(|(_, slot)| slot.node.load(Ordering::Relaxed) == NO_NODE) else {
-                break;
-            };
-            slot.input.clear();
-            slot.output.clear();
-            slot.end.store(0, Ordering::Relaxed);
-            numbers.slots[index] = numbers.next;
-            numbers.next = numbers.next.wrapping_add(1);
-            // Release: the audio thread that sees the node also sees the cleared lanes.
-            slot.node.store(node, Ordering::Release);
-        }
-        self.any.store(!wanted.is_empty(), Ordering::Release);
-    }
-
-    /// The slot watching `node` (audio thread: atomic loads only).
+    /// The slot capturing `node` (audio thread: atomic loads only).
     fn slot_of(&self, node: NodeId) -> Option<&Watch> {
-        if node == NO_NODE || !self.any.load(Ordering::Acquire) {
+        let now = self.clock.now();
+        if node == NO_NODE || now >= self.any_until.load(Ordering::Acquire) {
             return None;
         }
-        self.slots.iter().find(|slot| slot.node.load(Ordering::Acquire) == node)
+        self.slots.iter().find(|slot| slot.node.load(Ordering::Acquire) == node && now < slot.until.load(Ordering::Acquire))
     }
 
-    /// Node `node`'s input segment (interleaved stereo) as mono if it is watched, before the node processes it (audio
+    /// Node `node`'s input segment (interleaved stereo) as mono if it is captured, before the node processes it (audio
     /// thread). It takes the frames its output will take and does not move the frame count.
     pub fn input(&self, node: NodeId, input: &[f32]) {
         if let Some(slot) = self.slot_of(node) {
@@ -288,7 +282,7 @@ impl NodeTap {
         }
     }
 
-    /// Node `node`'s output segment as mono if it is watched, after the node processed it (audio thread); the frame
+    /// Node `node`'s output segment as mono if it is captured, after the node processed it (audio thread); the frame
     /// count moves past the segment.
     pub fn output(&self, node: NodeId, output: &[f32]) {
         if let Some(slot) = self.slot_of(node) {
@@ -298,30 +292,67 @@ impl NodeTap {
         }
     }
 
-    /// One window per watched node, in slot order (control side, see `NodeScope::node_windows`). A read between a
-    /// segment's input and output sees that newest input in place of the oldest frame of a whole window: harmless for a
-    /// picture.
-    pub fn windows(&self, seen: &[NodeCursor], sample_rate: u32) -> Vec<NodeWindow> {
-        let numbers = lock(&self.numbers);
-        self.slots
+    /// One window per captured node of `nodes`, in their order, with their leases renewed (control side, see
+    /// `NodeScope::node_windows`). A read between a segment's input and output sees that newest input in place of the
+    /// oldest frame of a whole window: harmless for a picture.
+    pub fn windows(&self, nodes: &[NodeId], seen: &[NodeCursor], sample_rate: u32) -> Vec<NodeWindow> {
+        let mut numbers = lock(&self.numbers);
+        let now = self.clock.now();
+        let until = lease_end(now, sample_rate);
+        // The slots read in this call: a later node of the same call may not take them.
+        let mut read = [false; MAX_WATCHED_NODES];
+        let mut windows = Vec::with_capacity(nodes.len().min(MAX_WATCHED_NODES));
+        for (i, &node) in nodes.iter().enumerate() {
+            if node == NO_NODE || nodes[..i].contains(&node) {
+                continue;
+            }
+            let running =
+                self.slots.iter().position(|slot| slot.node.load(Ordering::Relaxed) == node && now < slot.until.load(Ordering::Relaxed));
+            let Some(index) = running.or_else(|| self.start(node, &read, &mut numbers)) else {
+                continue;
+            };
+            read[index] = true;
+            let slot = &self.slots[index];
+            slot.until.store(until, Ordering::Release);
+            windows.push(Self::window(slot, node, numbers.slots[index], seen, sample_rate));
+        }
+        if !windows.is_empty() {
+            // The newest lease is the latest one: the clock only moves forward, and reads take turns under the lock.
+            self.any_until.store(until, Ordering::Release);
+        }
+        windows
+    }
+
+    /// Hands `node` a slot with a new watch: a free one (never taken, or its lease ran out), else the one read longest
+    /// ago, but none read in this call; `None` when all were. The lanes are cleared while the audio thread does not
+    /// write them (at worst a segment that was finishing leaves a few samples, harmless for a picture).
+    fn start(&self, node: NodeId, read: &[bool; MAX_WATCHED_NODES], numbers: &mut Numbers) -> Option<usize> {
+        // A free slot's lease is in the past, so the earliest lease is a free slot whenever there is one.
+        let (index, slot) =
+            self.slots.iter().enumerate().filter(|(index, _)| !read[*index]).min_by_key(|(_, slot)| slot.until.load(Ordering::Relaxed))?;
+        // The audio thread stops copying the slot's old node before the lanes are cleared.
+        slot.node.store(NO_NODE, Ordering::Release);
+        slot.input.clear();
+        slot.output.clear();
+        slot.end.store(0, Ordering::Relaxed);
+        numbers.slots[index] = numbers.next;
+        numbers.next = numbers.next.wrapping_add(1);
+        // Release: the audio thread that sees the node also sees the cleared lanes (its lease follows in `windows`).
+        slot.node.store(node, Ordering::Release);
+        Some(index)
+    }
+
+    /// The window of `node` in `slot` for a reader that has the cursors `seen`.
+    fn window(slot: &Watch, node: NodeId, watch: u32, seen: &[NodeCursor], sample_rate: u32) -> NodeWindow {
+        let end = slot.end.load(Ordering::Acquire);
+        let whole = NODE_WINDOW_FRAMES as u64;
+        // A cursor counts only within the same watch and not past what was captured; otherwise a whole window.
+        let count = seen
             .iter()
-            .zip(numbers.slots)
-            .filter_map(|(slot, watch)| {
-                let node = slot.node.load(Ordering::Acquire);
-                if node == NO_NODE {
-                    return None;
-                }
-                let end = slot.end.load(Ordering::Acquire);
-                let whole = NODE_WINDOW_FRAMES as u64;
-                // A cursor counts only within the same watch and not past what was captured; otherwise a whole window.
-                let count = seen
-                    .iter()
-                    .find(|cursor| cursor.node == node && cursor.watch == watch && cursor.end <= end)
-                    .map_or(whole, |cursor| (end - cursor.end).min(whole)) as usize;
-                let at = position(end);
-                Some(NodeWindow { node, watch, end, input: slot.input.read(at, count), output: slot.output.read(at, count), sample_rate })
-            })
-            .collect()
+            .find(|cursor| cursor.node == node && cursor.watch == watch && cursor.end <= end)
+            .map_or(whole, |cursor| (end - cursor.end).min(whole)) as usize;
+        let at = position(end);
+        NodeWindow { node, watch, end, input: slot.input.read(at, count), output: slot.output.read(at, count), sample_rate }
     }
 }
 
@@ -329,26 +360,37 @@ impl NodeTap {
 mod tests {
     use super::*;
 
+    const RATE: u32 = 48_000;
+
+    /// Frames a read's lease lasts at `RATE`.
+    fn lease() -> usize {
+        lease_end(0, RATE) as usize
+    }
+
     /// Interleaved stereo whose middle of the channels is `values`.
     fn stereo(values: impl Iterator<Item = f32>) -> Vec<f32> {
         values.flat_map(|v| [v - 1.0, v + 1.0]).collect()
     }
 
+    fn master_scope() -> (Arc<FrameClock>, MasterScope) {
+        let clock = Arc::new(FrameClock::new());
+        (Arc::clone(&clock), MasterScope::new(clock))
+    }
+
     #[test]
-    fn nothing_is_copied_or_shown_while_off() {
-        let scope = MasterScope::new();
+    fn nothing_is_copied_until_read_and_the_first_read_starts_the_capture() {
+        let (_, scope) = master_scope();
         scope.write(&stereo((1..=10).map(|v| v as f32)));
-        assert!(scope.read().is_empty());
-        scope.watch(true);
-        assert!(scope.read().iter().all(|v| *v == 0.0), "the write while off left nothing");
+        assert!(scope.read(RATE).is_empty(), "the first read starts the capture and has nothing yet");
+        assert!(scope.read(RATE).iter().all(|v| *v == 0.0), "the write before it left nothing");
     }
 
     #[test]
     fn the_window_is_the_latest_frames_oldest_first_across_the_wrap() {
-        let scope = MasterScope::new();
-        scope.watch(true);
+        let (_, scope) = master_scope();
+        scope.read(RATE);
         scope.write(&stereo((1..=100).map(|v| v as f32)));
-        let window = scope.read();
+        let window = scope.read(RATE);
         assert_eq!(window.len(), MASTER_WINDOW_FRAMES);
         let (silence, played) = window.split_at(MASTER_WINDOW_FRAMES - 100);
         assert!(silence.iter().all(|v| *v == 0.0));
@@ -358,23 +400,30 @@ mod tests {
         let total = MASTER_WINDOW_FRAMES + 10;
         scope.write(&stereo((101..=total + 100).map(|v| v as f32)));
         let expected: Vec<f32> = (total + 100 - MASTER_WINDOW_FRAMES + 1..=total + 100).map(|v| v as f32).collect();
-        assert_eq!(scope.read(), expected);
+        assert_eq!(scope.read(RATE), expected);
     }
 
     #[test]
-    fn turning_on_again_clears_the_stale_window_but_a_repeated_on_does_not() {
-        let scope = MasterScope::new();
-        scope.watch(true);
+    fn reads_keep_the_capture_going_and_without_them_it_stops_and_starts_over() {
+        let (clock, scope) = master_scope();
+        scope.read(RATE);
         scope.write(&stereo((1..=10).map(|v| v as f32)));
-        scope.watch(true);
-        assert_eq!(scope.read().last(), Some(&10.0), "already on: the picture stays");
-        scope.watch(false);
-        assert!(scope.read().is_empty());
-        scope.watch(true);
-        assert!(scope.read().iter().all(|v| *v == 0.0), "the old window is gone");
+        clock.advance(lease() - 1);
+        assert_eq!(scope.read(RATE).last(), Some(&10.0), "read within the lease: the picture stays");
+        clock.advance(lease() - 1);
+        scope.write(&stereo((11..=20).map(|v| v as f32)));
+        assert_eq!(scope.read(RATE).last(), Some(&20.0), "the read renewed the lease");
+
+        clock.advance(lease());
+        scope.write(&stereo((21..=30).map(|v| v as f32)));
+        assert!(scope.read(RATE).is_empty(), "nobody read for a whole lease: nothing copied, the read starts it again");
+        assert!(scope.read(RATE).iter().all(|v| *v == 0.0), "the old window is gone");
     }
 
-    const RATE: u32 = 48_000;
+    fn node_tap() -> (Arc<FrameClock>, NodeTap) {
+        let clock = Arc::new(FrameClock::new());
+        (Arc::clone(&clock), NodeTap::new(clock))
+    }
 
     /// Writes `values` as one segment of node `node`: its input, then its output ten times louder.
     fn segment(tap: &NodeTap, node: NodeId, values: impl Iterator<Item = f32> + Clone) {
@@ -386,105 +435,129 @@ mod tests {
         NodeCursor { node: window.node, watch: window.watch, end: window.end }
     }
 
-    #[test]
-    fn only_watched_nodes_are_copied_with_input_and_output_paired() {
-        let tap = NodeTap::new();
-        segment(&tap, 7, (1..=10).map(|v| v as f32));
-        assert!(tap.windows(&[], RATE).is_empty(), "off at creation");
+    /// The window of the one node `node` (no cursor).
+    fn window_of(tap: &NodeTap, node: NodeId) -> NodeWindow {
+        tap.windows(&[node], &[], RATE).remove(0)
+    }
 
-        tap.watch(&[7, 9]);
+    #[test]
+    fn only_read_nodes_are_copied_with_input_and_output_paired() {
+        let (_, tap) = node_tap();
+        segment(&tap, 7, (1..=10).map(|v| v as f32));
+        assert!(tap.windows(&[], &[], RATE).is_empty(), "no node asked for");
+        let started = tap.windows(&[9, 7], &[], RATE);
+        assert_eq!(started.iter().map(|w| w.node).collect::<Vec<_>>(), [9, 7], "in the order asked");
+        assert!(started.iter().all(|w| w.end == 0 && w.input.iter().all(|v| *v == 0.0)), "the segment before the read is not in it");
+
         for node in [7, 8, 9] {
             segment(&tap, node, (1..=10).map(|v| (node * 100 + v) as f32));
         }
-        let windows = tap.windows(&[], RATE);
-        assert_eq!(windows.iter().map(|w| w.node).collect::<Vec<_>>(), [7, 9], "node 8 is not copied");
-        for window in &windows {
+        for window in tap.windows(&[7, 9], &[], RATE) {
             assert_eq!((window.end, window.sample_rate), (10, RATE));
             assert_eq!((window.input.len(), window.output.len()), (NODE_WINDOW_FRAMES, NODE_WINDOW_FRAMES), "a whole window");
             let expected: Vec<f32> = (1..=10).map(|v| (window.node * 100 + v) as f32).collect();
             assert_eq!(window.input[NODE_WINDOW_FRAMES - 10..], expected);
             assert_eq!(window.output[NODE_WINDOW_FRAMES - 10..], expected.iter().map(|v| 10.0 * v).collect::<Vec<_>>());
         }
+        let unread = window_of(&tap, 8);
+        assert!(unread.end == 0 && unread.input.iter().all(|v| *v == 0.0), "node 8 was not copied before its first read");
     }
 
     #[test]
     fn a_cursor_of_the_same_watch_gets_only_the_new_frames() {
-        let tap = NodeTap::new();
-        tap.watch(&[7]);
+        let (_, tap) = node_tap();
+        window_of(&tap, 7);
         segment(&tap, 7, (1..=10).map(|v| v as f32));
-        let first = tap.windows(&[], RATE).remove(0);
+        let first = window_of(&tap, 7);
 
         segment(&tap, 7, (11..=15).map(|v| v as f32));
-        let next = tap.windows(&[cursor(&first)], RATE).remove(0);
+        let next = tap.windows(&[7], &[cursor(&first)], RATE).remove(0);
         assert_eq!((next.watch, next.end), (first.watch, 15));
         assert_eq!(next.input, [11.0, 12.0, 13.0, 14.0, 15.0]);
         assert_eq!(next.output, [110.0, 120.0, 130.0, 140.0, 150.0]);
-        let nothing = tap.windows(&[cursor(&next)], RATE).remove(0);
+        let nothing = tap.windows(&[7], &[cursor(&next)], RATE).remove(0);
         assert!(nothing.input.is_empty() && nothing.output.is_empty(), "nothing new");
 
         let other_watch = NodeCursor { watch: first.watch.wrapping_add(1), ..cursor(&next) };
         let ahead = NodeCursor { end: 99, ..cursor(&next) };
         for stale in [other_watch, ahead] {
-            assert_eq!(tap.windows(&[stale], RATE)[0].input.len(), NODE_WINDOW_FRAMES, "{stale:?}: a whole window");
+            assert_eq!(tap.windows(&[7], &[stale], RATE)[0].input.len(), NODE_WINDOW_FRAMES, "{stale:?}: a whole window");
         }
         segment(&tap, 7, (0..NODE_WINDOW_FRAMES + 5).map(|v| v as f32));
-        let behind = tap.windows(&[cursor(&next)], RATE).remove(0);
+        let behind = tap.windows(&[7], &[cursor(&next)], RATE).remove(0);
         assert_eq!(behind.input.len(), NODE_WINDOW_FRAMES, "fell behind by more than a window: the last whole window");
         assert_eq!(behind.input.last(), Some(&((NODE_WINDOW_FRAMES + 4) as f32)));
     }
 
     #[test]
-    fn a_staying_node_keeps_its_window_and_a_joining_one_starts_from_silence() {
-        let tap = NodeTap::new();
-        tap.watch(&[7]);
+    fn a_node_read_again_keeps_its_window_and_one_unread_for_a_lease_starts_over() {
+        let (clock, tap) = node_tap();
+        window_of(&tap, 7);
         segment(&tap, 7, (1..=10).map(|v| v as f32));
-        let before = tap.windows(&[], RATE).remove(0);
+        let before = window_of(&tap, 7);
 
-        tap.watch(&[8, 7, 7]);
-        let windows = tap.windows(&[], RATE);
+        let windows = tap.windows(&[8, 7, 7], &[], RATE);
+        assert_eq!(windows.len(), 2, "a repeated id counts once");
         let kept = windows.iter().find(|w| w.node == 7).unwrap();
         assert_eq!((kept.watch, kept.end, kept.input.last()), (before.watch, 10, Some(&10.0)), "node 7 stays as it was");
         let joined = windows.iter().find(|w| w.node == 8).unwrap();
         assert_ne!(joined.watch, before.watch);
         assert_eq!(joined.end, 0);
         assert!(joined.input.iter().chain(&joined.output).all(|v| *v == 0.0), "node 8 starts from silence");
-        assert_eq!(windows.len(), 2, "a repeated id counts once");
 
-        tap.watch(&[8]);
-        tap.watch(&[8, 7]);
-        let again = tap.windows(&[], RATE).into_iter().find(|w| w.node == 7).unwrap();
-        assert!(again.watch != before.watch && again.end == 0, "watched again: a new watch from silence");
+        // Node 8 is read again halfway through the lease, node 7 is not: at its end only node 8 is still captured.
+        clock.advance(lease() / 2);
+        window_of(&tap, 8);
+        clock.advance(lease() / 2);
+        segment(&tap, 7, (11..=20).map(|v| v as f32));
+        segment(&tap, 8, (11..=20).map(|v| v as f32));
+        assert_eq!(window_of(&tap, 8).end, 10, "node 8 kept its lease");
+        let again = window_of(&tap, 7);
+        assert!(again.watch != before.watch && again.end == 0, "node 7's lease ran out: a new watch from silence");
         assert!(again.input.iter().all(|v| *v == 0.0));
-
-        tap.watch(&[]);
-        segment(&tap, 8, (1..=10).map(|v| v as f32));
-        assert!(tap.windows(&[], RATE).is_empty(), "an empty set watches nothing");
     }
 
     #[test]
-    fn at_most_max_watched_nodes_are_watched() {
-        let tap = NodeTap::new();
+    fn a_full_tap_hands_the_slot_read_longest_ago_to_a_new_node() {
+        let (clock, tap) = node_tap();
         let nodes: Vec<NodeId> = (0..MAX_WATCHED_NODES as NodeId + 4).collect();
-        tap.watch(&nodes);
-        let watched: Vec<NodeId> = tap.windows(&[], RATE).iter().map(|w| w.node).collect();
-        assert_eq!(watched, nodes[..MAX_WATCHED_NODES], "the first distinct ones");
+        let first = tap.windows(&nodes, &[], RATE);
+        assert_eq!(
+            first.iter().map(|w| w.node).collect::<Vec<_>>(),
+            nodes[..MAX_WATCHED_NODES],
+            "the rest found every slot read in this call"
+        );
+
+        clock.advance(1);
+        let others = &nodes[1..MAX_WATCHED_NODES];
+        tap.windows(others, &[], RATE);
+        clock.advance(1);
+        assert_eq!(window_of(&tap, 100).node, 100, "node 0, read longest ago, gave up its slot");
+        let watches = |windows: &[NodeWindow]| windows.iter().map(|w| (w.node, w.watch)).collect::<Vec<_>>();
+        assert_eq!(watches(&tap.windows(others, &[], RATE)), watches(&first[1..]), "the others keep their watches");
     }
 
     #[test]
     fn the_input_waits_at_the_frames_of_its_output() {
-        let tap = NodeTap::new();
-        tap.watch(&[7]);
+        let (clock, tap) = node_tap();
+        let nodes: Vec<NodeId> = (0..MAX_WATCHED_NODES as NodeId).collect();
+        tap.windows(&nodes, &[], RATE);
+        clock.advance(1);
+        tap.windows(&nodes.iter().copied().filter(|node| *node != 7).collect::<Vec<_>>(), &[], RATE);
         tap.input(7, &stereo([1.0, 2.0].into_iter()));
-        let staged = tap.windows(&[], RATE).remove(0);
+        let staged = tap.windows(&[7], &[], RATE).remove(0);
         assert_eq!(staged.end, 0, "a staged input is not counted before its output");
         assert!(staged.output.iter().all(|v| *v == 0.0));
 
-        // A switch between the two writes: the output of node 7 is not copied, and node 8's lanes stay paired.
-        tap.watch(&[8]);
+        // Node 7's slot goes to node 100 between the two writes: node 7's output is not copied, and node 100's lanes stay
+        // paired.
+        clock.advance(1);
+        tap.windows(&nodes.iter().copied().filter(|node| *node != 7).collect::<Vec<_>>(), &[], RATE);
+        window_of(&tap, 100);
         tap.output(7, &stereo([3.0, 4.0].into_iter()));
-        segment(&tap, 8, [5.0].into_iter());
-        let window = tap.windows(&[], RATE).remove(0);
-        assert_eq!((window.node, window.end), (8, 1));
+        segment(&tap, 100, [5.0].into_iter());
+        let window = window_of(&tap, 100);
+        assert_eq!(window.end, 1);
         assert_eq!((window.input.last(), window.output.last()), (Some(&5.0), Some(&50.0)));
         assert!(window.input[..NODE_WINDOW_FRAMES - 1].iter().chain(&window.output[..NODE_WINDOW_FRAMES - 1]).all(|v| *v == 0.0));
     }

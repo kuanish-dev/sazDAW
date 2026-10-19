@@ -86,15 +86,15 @@ pub struct MasterReading {
 /// The live master meter (implemented over the engine's `MasterTap`). Job: measure the master's loudness, peaks and
 /// phase as it plays.
 pub trait MasterMeter: Send + Sync {
-    /// Starts (`true`) or stops measuring. Off at creation: while nobody looks, the engine copies nothing. Starting begins
-    /// a fresh measurement. While on, the meter reads the master on its own, so every frame is measured however rarely
-    /// `reading` is called; frames it still loses (a stall of seconds) are logged.
-    fn watch(&self, on: bool);
     /// Starts the integrated loudness, the loudness range and the held true peak over (the "Reset" button). Playback
-    /// starting from the song start does the same on its own, so a full play-through measures the whole song.
+    /// starting from the song start does the same on its own, so a full play-through measures the whole song. Nothing
+    /// to do while the meter is not measuring.
     fn reset(&self);
-    /// The current readings; `None` while not watched.
-    fn reading(&self) -> Option<MasterReading>;
+    /// The current readings. Reading keeps the meter measuring for [`crate::CAPTURE_LEASE_SECONDS`]; while nobody reads,
+    /// the engine copies nothing. A read that finds it stopped starts a fresh measurement (nothing measured yet:
+    /// `sample_rate` 0). While measuring, the meter reads the master on its own, so every frame is measured however
+    /// rarely `reading` is called; frames it still loses (a stall of seconds) are logged.
+    fn reading(&self) -> MasterReading;
 }
 
 /// Listening to the master in mono (implemented by the audio engine). Job: let the engineer hear how the mix sums to

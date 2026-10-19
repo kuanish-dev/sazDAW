@@ -3,8 +3,8 @@
 // at the start position, or a new take of the clip the recording covered by half or lies within (one undo step). A take
 // that played around the loop region becomes one sample per pass, all takes of one clip on the loop (`loopPasses.ts`).
 import type { Clip, Id, InputChannels, TrackRecordState } from "../../api/types";
-import { clamp } from "../../domain/math";
-import { secondsAt, tickAtSeconds } from "../../domain/tempoMap";
+import { clamp } from "../../common/math";
+import { secondsAt, tickAtSeconds } from "../../common/tempoMap";
 import { t } from "../../i18n";
 import { isBackendError } from "../../i18n/errors";
 import { MOCK_SAMPLE_RATE } from "../audio";
@@ -17,7 +17,7 @@ import type { HandlerSet } from "./types";
 
 /** Anything shorter is not a recording (stop right after start). */
 const MIN_SECONDS = 0.2;
-const INPUTS: InputChannels[] = ["stereo", "left", "right"];
+const INPUTS: readonly InputChannels[] = ["stereo", "left", "right"] as const;
 
 export function audioRecordHandlers(w: MockWorld): HandlerSet {
   /** Per-track arming and input are session state, as in the backend. */

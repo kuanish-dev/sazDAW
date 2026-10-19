@@ -5,8 +5,9 @@ use std::sync::Mutex;
 use daw_contracts::codes::{clips, general};
 use daw_contracts::{
     BAR_TICKS, Bpm, Clip, ClipContent, ClipControl, ClipEdit, ClipId, ContractError, ControllerKind, ControllerLane, ControllerPoint,
-    HistoryControl, HistoryMark, MAX_CLIP_LOOP_TICKS, NewNote, NewNoteClip, Note, NoteContent, NoteControl, NoteId, Preferences,
-    PreferencesStore, SampleId, SignatureChange, TempoChange, TempoControl, TempoMap, TimeSignature, Track, TrackControl, TrackId,
+    HistoryControl, HistoryMark, HistorySteps, MAX_CLIP_LOOP_TICKS, NewNote, NewNoteClip, Note, NoteContent, NoteControl, NoteId,
+    Preferences, PreferencesStore, SampleId, SignatureChange, TempoChange, TempoControl, TempoMap, TimeSignature, Track, TrackControl,
+    TrackId,
 };
 
 /// An in-memory project, enough for file I/O: tracks, clips and their notes.
@@ -232,6 +233,9 @@ impl HistoryControl for Fake {
     }
     fn undo_label(&self) -> Option<String> {
         None
+    }
+    fn steps(&self) -> HistorySteps {
+        HistorySteps::default()
     }
     fn begin_group(&self, _: &str) {
         self.groups.lock().unwrap().0 += 1;

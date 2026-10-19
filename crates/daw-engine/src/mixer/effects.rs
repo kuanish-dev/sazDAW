@@ -85,6 +85,11 @@ impl EffectPool {
         self.slots.get(position).and_then(Option::as_ref).map_or(0, |slot| slot.effect.latency_samples())
     }
 
+    /// The band gains of the effect after its last `process` (`Effect::band_gains_db`); empty for an empty slot.
+    pub fn band_gains(&self, position: usize) -> &[f32] {
+        self.slots.get(position).and_then(Option::as_ref).map_or(&[], |slot| slot.effect.band_gains_db())
+    }
+
     /// Processes the buffer; returns the effect's gain reduction after it (`Effect::gain_reduction_db`).
     pub fn process(&mut self, position: usize, buffer: &mut [f32], sidechain: Option<&[f32]>) -> Option<f32> {
         let slot = self.slots.get_mut(position).and_then(Option::as_mut)?;

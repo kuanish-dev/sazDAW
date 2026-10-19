@@ -1,5 +1,5 @@
 //! Plugin windows on real plugins, WITHOUT showing the window: creating the interface, size, closing, errors.
-//! Attaching to an `NSView` is tested separately (`editor_view.rs`, main thread). No plugin — the test is skipped.
+//! Attaching to an `NSView` is not tested (it needs the main thread and a real window). No plugin — the test is skipped.
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,

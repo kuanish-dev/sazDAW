@@ -1,14 +1,22 @@
 //! Stereo delay with feedback, ping-pong mode and time synced to the project tempo.
 //! A new time comes in through a short crossfade (`FADE_MS`) from the old echo to the new one: a jump of the read
 //! position is heard as a click, and a fast glide of the time as a pitch squeal.
+//! `low_cut` and `high_cut` sit in the loop: the echo is filtered as it is read, so the first repeat passes the filters
+//! once, the second twice, and every repeat comes back thinner and darker (a tape or analog delay); at their ends they
+//! are off and the echo is untouched.
 //! The graph in the interface draws the echoes from the same rules (`SYNC_QUARTERS`, feedback, ping-pong, the mix) in
-//! `app/src/domain/delayTaps.ts`: a change here must be mirrored there.
+//! `app/src/effects/delayTaps.ts`: a change here must be mirrored there. The loop filters change the echoes' tone, not
+//! their level in the passband, so the graph leaves them out.
 
 use daw_contracts::{BlockTiming, Bpm, Effect, L10n, ParamInfo, ParamKind, StreamConfig};
 
-use crate::{EffectKind, clamp_param, mix_over_dry};
+use crate::biquad::{BUTTERWORTH_Q, Biquad, Coefficients};
+use crate::{EffectKind, clamp_param, mix_over_dry, number};
 
 const MAX_SECONDS: f32 = 2.0;
+/// The loop filters at these ends are off.
+const LOW_CUT_OFF_HZ: f32 = 20.0;
+const HIGH_CUT_OFF_HZ: f32 = 20_000.0;
 /// Length of the crossfade from the old time to the new one.
 const FADE_MS: f32 = 20.0;
 
@@ -29,7 +37,7 @@ const SYNC: [L10n; 12] = [
 ];
 const SYNC_QUARTERS: [f64; 12] = [0.0, 2.0, 1.0, 1.5, 2.0 / 3.0, 0.5, 0.75, 1.0 / 3.0, 0.25, 0.375, 1.0 / 6.0, 0.125];
 
-const PARAMS: [ParamInfo; 5] = [
+const PARAMS: [ParamInfo; 7] = [
     ParamInfo {
         name: "time",
         label: L10n { en: "Time, ms", ru: "Время, мс" },
@@ -67,6 +75,8 @@ const PARAMS: [ParamInfo; 5] = [
         kind: ParamKind::Choice,
         choices: &SYNC,
     },
+    number("low_cut", L10n { en: "Echo low cut, Hz", ru: "Срез низов эха, Гц" }, LOW_CUT_OFF_HZ, 2_000.0, LOW_CUT_OFF_HZ),
+    number("high_cut", L10n { en: "Echo high cut, Hz", ru: "Срез верхов эха, Гц" }, 1_000.0, HIGH_CUT_OFF_HZ, HIGH_CUT_OFF_HZ),
 ];
 
 pub struct Delay {
@@ -87,14 +97,33 @@ pub struct Delay {
     feedback: f32,
     mix: f32,
     ping_pong: bool,
+    low_cut_hz: f32,
+    high_cut_hz: f32,
+    /// The loop filters: low cut, then high cut.
+    loop_filters: [Coefficients; 2],
+    /// Their memory, per channel.
+    loop_state: [[Biquad; 2]; 2],
 }
 
 impl Delay {
+    /// The loop filters for the current cuts: a filter at its end passes everything.
+    fn tune_filters(&mut self) {
+        let sample_rate = self.sample_rate;
+        let low = self.low_cut_hz;
+        let high = self.high_cut_hz.min(0.45 * sample_rate);
+        self.loop_filters = [
+            if low <= LOW_CUT_OFF_HZ { Coefficients::PASS } else { Coefficients::high_pass(sample_rate, low, BUTTERWORTH_Q) },
+            if self.high_cut_hz >= HIGH_CUT_OFF_HZ { Coefficients::PASS } else { Coefficients::low_pass(sample_rate, high, BUTTERWORTH_Q) },
+        ];
+    }
+
     fn resize(&mut self) {
         let len = (MAX_SECONDS * self.sample_rate) as usize + 2;
         self.lines = [vec![0.0; len], vec![0.0; len]];
         self.write = 0;
         self.fade_frames = (FADE_MS * 0.001 * self.sample_rate) as usize;
+        self.loop_state = [[Biquad::default(); 2]; 2];
+        self.tune_filters();
         self.update();
         self.settle();
     }
@@ -153,6 +182,10 @@ impl EffectKind for Delay {
             feedback: 0.0,
             mix: 0.0,
             ping_pong: false,
+            low_cut_hz: LOW_CUT_OFF_HZ,
+            high_cut_hz: HIGH_CUT_OFF_HZ,
+            loop_filters: [Coefficients::PASS; 2],
+            loop_state: [[Biquad::default(); 2]; 2],
         };
         delay.resize();
         delay
@@ -175,6 +208,14 @@ impl Effect for Delay {
             "mix" => self.mix = value,
             "ping_pong" => self.ping_pong = value >= 0.5,
             "sync" => self.sync = value as usize,
+            "low_cut" => {
+                self.low_cut_hz = value;
+                self.tune_filters();
+            }
+            "high_cut" => {
+                self.high_cut_hz = value;
+                self.tune_filters();
+            }
             _ => {}
         }
         self.update();
@@ -184,6 +225,7 @@ impl Effect for Delay {
         for line in &mut self.lines {
             line.fill(0.0);
         }
+        self.loop_state = [[Biquad::default(); 2]; 2];
         self.settle();
     }
 
@@ -197,7 +239,12 @@ impl Effect for Delay {
     fn process(&mut self, interleaved: &mut [f32], _sidechain: Option<&[f32]>) {
         let len = self.lines[0].len();
         for frame in interleaved.chunks_exact_mut(2) {
-            let echo = self.echo();
+            let raw = self.echo();
+            let filters = &self.loop_filters;
+            let echo = [0, 1].map(|c| {
+                let [low, high] = &mut self.loop_state[c];
+                high.process(&filters[1], low.process(&filters[0], raw[c]))
+            });
             let dry = [frame[0], frame[1]];
 
             let feed = if self.ping_pong {
@@ -313,6 +360,33 @@ mod tests {
         // The first echo is on the left (from the input), the second on the right.
         assert!(buffer[2_400 * 2] > 0.5 && buffer[2_400 * 2 + 1].abs() < 1e-5);
         assert!(buffer[4_800 * 2 + 1] > 0.1 && buffer[4_800 * 2].abs() < 1e-5);
+    }
+
+    /// RMS of the first echo of a short burst of `hz` (100 ms later, no feedback), with `set` on top.
+    fn echo_level(hz: f32, set: &[(&str, f32)]) -> f32 {
+        let mut d = build::<Delay>([("time", 100.0), ("feedback", 0.0), ("mix", 1.0)].into_iter().chain(set.iter().copied()));
+        let mut buffer = sine(hz, 0.5, SR as usize / 2);
+        buffer[2 * 2_400..].fill(0.0);
+        d.process(&mut buffer, None);
+        crate::testing::rms(&buffer[2 * 5_000..2 * 6_800])
+    }
+
+    #[test]
+    fn loop_filters_thin_and_darken_the_echo() {
+        let (low, high) = (echo_level(80.0, &[]), echo_level(8_000.0, &[]));
+        assert!(echo_level(80.0, &[("low_cut", 1_000.0)]) < low * 0.1, "the low cut takes the lows out of the echo");
+        assert!(echo_level(8_000.0, &[("high_cut", 1_500.0)]) < high * 0.1, "the high cut takes the highs out");
+        assert!(echo_level(1_000.0, &[("low_cut", 100.0), ("high_cut", 10_000.0)]) > echo_level(1_000.0, &[]) * 0.9, "the middle stays");
+    }
+
+    #[test]
+    fn every_repeat_passes_the_loop_filters_again() {
+        let mut d = build::<Delay>([("time", 50.0), ("feedback", 0.9), ("mix", 1.0), ("high_cut", 3_000.0)]);
+        let mut buffer = sine(6_000.0, 0.5, SR as usize);
+        buffer[2 * 1_200..].fill(0.0);
+        d.process(&mut buffer, None);
+        let echo = |n: usize| crate::testing::rms(&buffer[2 * (n * 2_400 + 100)..2 * (n * 2_400 + 1_100)]);
+        assert!(echo(2) < echo(1) * 0.9 * 0.5 && echo(3) < echo(2) * 0.9 * 0.5, "{} {} {}", echo(1), echo(2), echo(3));
     }
 
     #[test]

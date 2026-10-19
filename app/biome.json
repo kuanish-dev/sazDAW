@@ -1,25 +1,55 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.15/schema.json",
-  "files": { "includes": ["src/**", "!**/node_modules", "!src/index.css"] },
-  "formatter": { "enabled": false },
-  "assist": { "enabled": false },
+  "files": {
+    "includes": [
+      "src/**",
+      "!**/node_modules",
+      "!src/index.css"
+    ]
+  },
+  "formatter": {
+    "enabled": false
+  },
+  "assist": {
+    "enabled": false
+  },
   "linter": {
     "enabled": true,
     "rules": {
       "suspicious": {
-        "noConsole": { "level": "warn", "options": { "allow": ["error", "warn"] } },
+        "noConsole": {
+          "level": "warn",
+          "options": {
+            "allow": [
+              "error",
+              "warn"
+            ]
+          }
+        },
         "noEmptyBlockStatements": "error"
       },
       "a11y": "off",
-      "style": { "noNonNullAssertion": "off", "useImportType": "error" },
-      "correctness": { "noUnusedImports": "error", "noUnusedVariables": "error" },
-      "complexity": { "noExcessiveCognitiveComplexity": "off" }
+      "style": {
+        "noNonNullAssertion": "off",
+        "useImportType": "error"
+      },
+      "correctness": {
+        "noUnusedImports": "error",
+        "noUnusedVariables": "error"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "off"
+      }
     }
   },
-  "plugins": ["./lint/no-extends.grit"],
+  "plugins": [
+    "./lint/no-extends.grit"
+  ],
   "overrides": [
     {
-      "includes": ["src/i18n/**"],
+      "includes": [
+        "src/i18n/**"
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -28,7 +58,14 @@
               "options": {
                 "paths": {},
                 "patterns": [
-                  { "group": ["**/ui/**", "**/state/**", "**/actions/**", "**/domain/**", "**/api/**", "**/mock/**", "**/log/**", "**/composition"], "message": "i18n is a leaf: every layer imports it, so it imports no layer itself (only solid-js)." }
+                  {
+                    "group": [
+                      "../**",
+                      "**/session",
+                      "**/composition"
+                    ],
+                    "message": "i18n is a leaf: every part of the app imports it, so it imports nothing of the app (only solid-js)."
+                  }
                 ]
               }
             }
@@ -37,7 +74,9 @@
       }
     },
     {
-      "includes": ["src/ui/**"],
+      "includes": [
+        "src/api/**"
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -46,7 +85,39 @@
               "options": {
                 "paths": {},
                 "patterns": [
-                  { "group": ["**/api/api", "**/api/rpc", "**/api/dialogs", "**/api/tauri*", "**/mock/**", "**/composition"], "message": "The ui layer only goes through session.actions (via state/session); api, rpc, dialogs and mocks are off limits." }
+                  {
+                    "group": [
+                      "**/automation/**",
+                      "**/chords/**",
+                      "**/drums/**",
+                      "**/effects/**",
+                      "**/graph/**",
+                      "**/history/**",
+                      "**/instruments/**",
+                      "**/keyboard/**",
+                      "**/midi/**",
+                      "**/mixer/**",
+                      "**/pianoroll/**",
+                      "**/plugins/**",
+                      "**/presets/**",
+                      "**/project/**",
+                      "**/recording/**",
+                      "**/samples/**",
+                      "**/selection/**",
+                      "**/settings/**",
+                      "**/shell/**",
+                      "**/sounds/**",
+                      "**/stage/**",
+                      "**/tracks/**",
+                      "**/transport/**",
+                      "**/core/**",
+                      "**/common/**",
+                      "**/mock/**",
+                      "**/session",
+                      "**/composition"
+                    ],
+                    "message": "api is the contract with the backend: it knows nothing of the roles, the core or the mock."
+                  }
                 ]
               }
             }
@@ -55,7 +126,9 @@
       }
     },
     {
-      "includes": ["src/actions/**"],
+      "includes": [
+        "src/core/**"
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -64,7 +137,39 @@
               "options": {
                 "paths": {},
                 "patterns": [
-                  { "group": ["**/ui/**", "**/state/**", "**/mock/**", "**/composition", "**/api/tauri*"], "message": "The actions layer knows only api and domain (plus the i18n leaf)." }
+                  {
+                    "group": [
+                      "**/automation/**",
+                      "**/chords/**",
+                      "**/drums/**",
+                      "**/effects/**",
+                      "**/graph/**",
+                      "**/history/**",
+                      "**/instruments/**",
+                      "**/keyboard/**",
+                      "**/midi/**",
+                      "**/mixer/**",
+                      "**/pianoroll/**",
+                      "**/plugins/**",
+                      "**/presets/**",
+                      "**/project/**",
+                      "**/recording/**",
+                      "**/samples/**",
+                      "**/selection/**",
+                      "**/settings/**",
+                      "**/shell/**",
+                      "**/sounds/**",
+                      "**/stage/**",
+                      "**/tracks/**",
+                      "**/transport/**",
+                      "**/common/**",
+                      "**/mock/**",
+                      "**/session",
+                      "**/composition",
+                      "**/api/tauri*"
+                    ],
+                    "message": "The core is what every role shares: it knows the backend contract, never a role (roles ask the core, not the other way round)."
+                  }
                 ]
               }
             }
@@ -73,7 +178,9 @@
       }
     },
     {
-      "includes": ["src/domain/**"],
+      "includes": [
+        "src/mock/**"
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -82,7 +189,15 @@
               "options": {
                 "paths": {},
                 "patterns": [
-                  { "group": ["**/ui/**", "**/state/**", "**/actions/**", "**/mock/**", "**/composition", "**/api/api", "**/api/rpc", "**/api/dialogs", "**/api/tauri*"], "message": "domain is pure functions: it may use only types from api/types and the i18n dictionary." }
+                  {
+                    "group": [
+                      "**/session",
+                      "**/core/**",
+                      "**/composition",
+                      "**/api/tauri*"
+                    ],
+                    "message": "The mock stands in for the backend: it may share the pure rules the backend mirrors, never the session or the core."
+                  }
                 ]
               }
             }
@@ -91,7 +206,12 @@
       }
     },
     {
-      "includes": ["src/api/**"],
+      "includes": [
+        "src/**/*.tsx",
+        "!src/App.tsx",
+        "!src/index.tsx",
+        "!src/session.tsx"
+      ],
       "linter": {
         "rules": {
           "style": {
@@ -100,25 +220,21 @@
               "options": {
                 "paths": {},
                 "patterns": [
-                  { "group": ["**/ui/**", "**/state/**", "**/actions/**", "**/domain/**", "**/mock/**", "**/composition"], "message": "The api layer (backend client) knows nothing about upper layers." }
-                ]
-              }
-            }
-          }
-        }
-      }
-    },
-    {
-      "includes": ["src/mock/**"],
-      "linter": {
-        "rules": {
-          "style": {
-            "noRestrictedImports": {
-              "level": "error",
-              "options": {
-                "paths": {},
-                "patterns": [
-                  { "group": ["**/ui/**", "**/state/**", "**/actions/**", "**/composition"], "message": "The mock stands in for the backend and knows nothing about upper layers." }
+                  {
+                    "group": [
+                      "**/api/api",
+                      "**/api/rpc",
+                      "**/api/dialogs",
+                      "**/api/shell",
+                      "**/api/tauri*",
+                      "**/mock/**",
+                      "**/composition",
+                      "**/core/core",
+                      "**/core/calls",
+                      "**/core/projectSync"
+                    ],
+                    "message": "A component reads the session and asks its role (rule 4); it never calls the backend or the core itself."
+                  }
                 ]
               }
             }

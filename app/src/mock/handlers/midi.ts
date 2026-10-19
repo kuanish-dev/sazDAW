@@ -1,7 +1,7 @@
 // MIDI: one made-up keyboard for live input (connecting checks the device and track); export checks the clip.
 // MIDI learn: there is no knob, so it is "turned" at once and the mapping gets the first free CC from 20.
 import type { MidiMapping, ParamTarget, Project } from "../../api/types";
-import { sameTarget, targetRange } from "../../domain/automation";
+import { sameTarget, targetRange } from "../../automation/automationRules";
 import { t } from "../../i18n";
 import { fail } from "../errors";
 import type { MockWorld } from "../world";
@@ -15,7 +15,7 @@ function liveMappings(p: Project): MidiMapping[] {
   return (p.midiMappings ?? []).filter((m) => targetProblem(p, m.target) === null);
 }
 
-const DEVICES = ["Mock Keys 49"];
+const DEVICES = ["Mock Keys 49"] as const;
 
 export function midiHandlers(w: MockWorld): HandlerSet {
   const h: HandlerSet = {};

@@ -8,8 +8,8 @@
 //! takes the node sound before volume and pan: before the fader, a node with such sends copies its buffer into the
 //! preallocated `pre_fader` (mute/solo apply to it). A connection level can be overridden by automation for a segment;
 //! its change is smoothed over the segment. The result is the master buffer. The peaks of tracks, buses and the master
-//! go to `Meters`, and so does the gain reduction of effects that report it. Every node's input (before the effect
-//! or the fader) and output are offered to the `NodeTap`, which copies only the watched nodes (the live pictures of the
+//! go to `Meters`, and so do the gain reduction and the band gains of effects that report them. Every node's input (before the effect
+//! or the fader) and output are offered to the `NodeTap`, which copies only the captured nodes (the live pictures of the
 //! effects). A connection bypassing a longer path goes through a delay line (plugin delay compensation, `latency.rs`).
 //! A channel standing on the virtual stage (`crate::stage`) plays its volume at its fader but not its pan: its voice
 //! places it in the room where its sound leaves its insert path (after its effects, so they shape the instrument's own
@@ -453,6 +453,7 @@ impl GraphMixer {
                     if let Some(db) = self.effects.process(effect, &mut self.buffers[index][..len], key) {
                         meters.report_reduction(effect, node.id, db);
                     }
+                    meters.report_bands(effect, node.id, self.effects.band_gains(effect));
                 }
             } else {
                 // The master is never muted; sources and buses are muted by their own mute and another node's solo.

@@ -1,14 +1,15 @@
 //! Engine telemetry: what the audio thread reports outside through atomics — the stream format, load, preview position,
-//! level meters, the master window for the visualizer, the watched nodes' windows for the effect pictures, the master's
-//! every frame for the live meter, the total compensation latency, loss counters. The audio thread only writes, the
-//! control side only reads.
+//! level meters, the master window for the visualizer, the captured nodes' windows for the effect pictures, the master's
+//! every frame for the live meter, the total compensation latency, loss counters, the frame clock of the capture leases.
+//! The audio thread only writes, the control side only reads (and renews leases).
 
+use std::sync::Arc;
 use std::sync::atomic::{AtomicU32, AtomicU64, Ordering};
 
 use daw_contracts::{EngineLatency, EngineLosses, StreamConfig};
 
 use crate::meters::Meters;
-use crate::scope::{MasterScope, MeterTap, NodeTap};
+use crate::scope::{FrameClock, MasterScope, MeterTap, NodeTap};
 
 /// What the audio thread lost so as not to wait or allocate (`EngineStats::losses`).
 #[derive(Clone, Copy)]
@@ -26,6 +27,8 @@ pub struct Telemetry {
     /// The preview position: frame + 1 (0 means not playing).
     preview_position: AtomicU64,
     pub meters: Meters,
+    /// The engine's frame count, shared with the scope and the node tap for their leases.
+    pub clock: Arc<FrameClock>,
     pub scope: MasterScope,
     pub node_tap: NodeTap,
     pub meter_tap: MeterTap,
@@ -41,13 +44,15 @@ fn pack(config: StreamConfig) -> u64 {
 
 impl Telemetry {
     pub fn new() -> Self {
+        let clock = Arc::new(FrameClock::new());
         Self {
             config: AtomicU64::new(pack(StreamConfig::DEFAULT)),
             cpu_load: AtomicU32::new(0),
             preview_position: AtomicU64::new(0),
             meters: Meters::new(),
-            scope: MasterScope::new(),
-            node_tap: NodeTap::new(),
+            scope: MasterScope::new(Arc::clone(&clock)),
+            node_tap: NodeTap::new(Arc::clone(&clock)),
+            clock,
             meter_tap: MeterTap::new(),
             latency: AtomicU32::new(0),
             losses: Default::default(),

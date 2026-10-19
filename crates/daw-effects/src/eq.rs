@@ -1,6 +1,7 @@
 //! Equalizer: low cut (high-pass), low shelf, peaking, high shelf, high cut (low-pass). The cuts are 12 dB/oct
 //! Butterworth biquads; a cut at its extreme frequency (`low_cut` at its minimum, `high_cut` at its maximum) is off, so a
-//! new EQ changes nothing. The interface draws its response curve by the same formulas (`app/src/domain/eqCurve.ts`).
+//! new EQ changes nothing. The interface draws its response curve by the same formulas (`app/src/effects/eqCurve.ts`).
+//! The linear-phase EQ (`linear_eq`) has the same table and bands: it takes their magnitude from `filters`.
 
 use daw_contracts::{Effect, L10n, ParamInfo, ParamKind, StreamConfig};
 
@@ -11,7 +12,8 @@ use crate::{EffectKind, clamp_param};
 const LOW_CUT_OFF: f32 = 20.0;
 const HIGH_CUT_OFF: f32 = 20_000.0;
 
-const PARAMS: [ParamInfo; 9] = [
+/// The params of both EQs (this one and the linear-phase one).
+pub(crate) const PARAMS: [ParamInfo; VALUES] = [
     ParamInfo {
         name: "low_cut",
         label: L10n { en: "Low cut, Hz", ru: "Срез низа, Гц" },
@@ -95,26 +97,33 @@ const PARAMS: [ParamInfo; 9] = [
     },
 ];
 
+/// How many params (values) and bands the EQ has.
+pub(crate) const VALUES: usize = 9;
 const BANDS: usize = 5;
 
 pub struct Eq {
     sample_rate: f32,
-    values: [f32; 9],
+    values: [f32; VALUES],
     coefficients: [Coefficients; BANDS],
     state: [[Biquad; BANDS]; 2],
 }
 
+/// The bands' filters for the param values in table order.
+pub(crate) fn filters(sample_rate: f32, values: &[f32; VALUES]) -> [Coefficients; BANDS] {
+    let [low_cut, low_gain, low_freq, mid_gain, mid_freq, mid_q, high_gain, high_freq, high_cut] = *values;
+    let sr = sample_rate;
+    [
+        if low_cut <= LOW_CUT_OFF { Coefficients::PASS } else { Coefficients::high_pass(sr, low_cut, BUTTERWORTH_Q) },
+        Coefficients::low_shelf(sr, low_freq, low_gain),
+        Coefficients::peaking(sr, mid_freq, mid_gain, mid_q),
+        Coefficients::high_shelf(sr, high_freq, high_gain),
+        if high_cut >= HIGH_CUT_OFF { Coefficients::PASS } else { Coefficients::low_pass(sr, high_cut, BUTTERWORTH_Q) },
+    ]
+}
+
 impl Eq {
     fn update(&mut self) {
-        let [low_cut, low_gain, low_freq, mid_gain, mid_freq, mid_q, high_gain, high_freq, high_cut] = self.values;
-        let sr = self.sample_rate;
-        self.coefficients = [
-            if low_cut <= LOW_CUT_OFF { Coefficients::PASS } else { Coefficients::high_pass(sr, low_cut, BUTTERWORTH_Q) },
-            Coefficients::low_shelf(sr, low_freq, low_gain),
-            Coefficients::peaking(sr, mid_freq, mid_gain, mid_q),
-            Coefficients::high_shelf(sr, high_freq, high_gain),
-            if high_cut >= HIGH_CUT_OFF { Coefficients::PASS } else { Coefficients::low_pass(sr, high_cut, BUTTERWORTH_Q) },
-        ];
+        self.coefficients = filters(self.sample_rate, &self.values);
     }
 }
 

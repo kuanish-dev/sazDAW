@@ -1,9 +1,11 @@
-//! `LiveMeter` honours `MasterMeter`: off until watched, the BS.1770 readings of what the tap captured, the reset and
+//! `LiveMeter` honours `MasterMeter`: started by a reading and stopped a lease after the last one, the BS.1770 readings of what the tap captured, the reset and
 //! the playback restart mark, phase, the vectorscope frames, and lost frames in the log. The tap is a fake that holds the
 //! frames the test writes.
 
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
+use std::thread;
+use std::time::{Duration, Instant};
 
 use daw_contracts::sync::lock;
 use daw_contracts::{AppLog, LogEntry, MASTER_TAP_FRAMES, MasterFrames, MasterMeter, MasterTap, VECTOR_FRAMES};
@@ -36,7 +38,7 @@ impl FakeTap {
 
     fn play(&self, samples: &[f32]) {
         let mut captured = lock(&self.captured);
-        assert!(captured.open, "the meter keeps the tap open while watched");
+        assert!(captured.open, "the meter keeps the tap open while it measures");
         captured.samples.extend_from_slice(samples);
     }
 
@@ -88,8 +90,21 @@ impl AppLog for MemoryLog {
 fn meter_on(tap: &Arc<FakeTap>) -> (LiveMeter, Arc<MemoryLog>) {
     let log = Arc::new(MemoryLog::default());
     let meter = LiveMeter::new(tap.clone(), log.clone());
-    meter.watch(true);
+    meter.reading();
     (meter, log)
+}
+
+/// A meter whose readings keep it measuring for only a tenth of a second.
+fn short_lease(tap: &Arc<FakeTap>) -> LiveMeter {
+    LiveMeter::with_lease(tap.clone(), Arc::new(MemoryLog::default()), Duration::from_millis(100))
+}
+
+/// Waits (a few seconds at most) for the meter's thread to close the tap.
+fn wait_closed(tap: &FakeTap) {
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while tap.is_open() && Instant::now() < deadline {
+        thread::sleep(Duration::from_millis(10));
+    }
 }
 
 fn close(actual: Option<f32>, expected: f32, tolerance: f32) -> bool {
@@ -97,20 +112,17 @@ fn close(actual: Option<f32>, expected: f32, tolerance: f32) -> bool {
 }
 
 #[test]
-fn nothing_is_measured_until_watched_and_the_tap_follows_the_watch() {
+fn a_reading_starts_the_measuring_and_without_readings_the_tap_closes() {
     let tap = FakeTap::new();
-    let meter = LiveMeter::new(tap.clone(), Arc::new(MemoryLog::default()));
-    assert_eq!(meter.reading(), None);
+    let meter = short_lease(&tap);
     assert!(!tap.is_open(), "closed at creation");
 
-    meter.watch(true);
-    assert!(tap.is_open());
-    let empty = meter.reading().unwrap();
+    let empty = meter.reading();
+    assert!(tap.is_open(), "the reading started the measuring");
     assert_eq!((empty.integrated_lufs, empty.seconds, empty.vector.len()), (None, 0.0, 0), "nothing played yet");
 
-    meter.watch(false);
-    assert!(!tap.is_open());
-    assert_eq!(meter.reading(), None);
+    wait_closed(&tap);
+    assert!(!tap.is_open(), "no reading for a whole lease: the meter's thread closed the tap");
 }
 
 /// EBU Tech 3341's reference: a 1 kHz sine at −23 dBFS in both channels reads −23 LUFS momentary, short-term and
@@ -121,7 +133,7 @@ fn the_reference_sine_reads_its_loudness_peak_and_phase() {
     let (meter, log) = meter_on(&tap);
     let tone = sine(1000.0, -23.0, 10.0, true, true);
     tap.play(&tone);
-    let reading = meter.reading().unwrap();
+    let reading = meter.reading();
     for (name, value) in
         [("momentary", reading.momentary_lufs), ("short-term", reading.short_term_lufs), ("integrated", reading.integrated_lufs)]
     {
@@ -143,7 +155,7 @@ fn opposite_channels_read_minus_one_and_a_lone_channel_reads_zero() {
         let tap = FakeTap::new();
         let (meter, _) = meter_on(&tap);
         tap.play(&samples);
-        meter.reading().unwrap().correlation
+        meter.reading().correlation
     };
     let inverted: Vec<f32> = sine(1000.0, -20.0, 1.0, true, true).chunks_exact(2).flat_map(|f| [f[0], -f[1]]).collect();
     assert!(close(correlation_of(inverted), -1.0, 1e-3));
@@ -156,14 +168,14 @@ fn a_true_peak_over_full_scale_lights_the_clip_until_the_reset() {
     let tap = FakeTap::new();
     let (meter, _) = meter_on(&tap);
     tap.play(&sine(997.0, -1.0, 1.0, true, true));
-    assert!(!meter.reading().unwrap().clipped, "−1 dBTP is below the clip");
+    assert!(!meter.reading().clipped, "−1 dBTP is below the clip");
     tap.play(&sine(997.0, 1.0, 1.0, true, true));
-    let over = meter.reading().unwrap();
+    let over = meter.reading();
     assert!(over.clipped && close(over.max_true_peak_db, 1.0, 0.1), "{over:?}");
 
     meter.reset();
     tap.play(&sine(997.0, -6.0, 1.0, true, true));
-    let after = meter.reading().unwrap();
+    let after = meter.reading();
     assert!(!after.clipped && close(after.max_true_peak_db, -6.0, 0.1), "{after:?}");
 }
 
@@ -174,12 +186,12 @@ fn a_reset_starts_the_integration_over() {
     let (meter, _) = meter_on(&tap);
     tap.play(&sine(1000.0, -10.0, 5.0, true, true));
     meter.reset();
-    let right_after = meter.reading().unwrap();
+    let right_after = meter.reading();
     assert_eq!((right_after.integrated_lufs, right_after.max_true_peak_db, right_after.seconds), (None, None, 0.0));
     assert!(close(right_after.momentary_lufs, -10.0, 0.1), "the momentary window runs on");
 
     tap.play(&sine(1000.0, -30.0, 5.0, true, true));
-    let reading = meter.reading().unwrap();
+    let reading = meter.reading();
     assert!(close(reading.integrated_lufs, -30.0, 0.1), "{:?}", reading.integrated_lufs);
     assert!(close(reading.max_true_peak_db, -30.0, 0.1));
 }
@@ -194,16 +206,16 @@ fn playback_from_the_start_restarts_at_its_frame() {
     let mark = tap.frames();
     tap.mark_restart(mark);
     tap.play(&sine(1000.0, -30.0, 5.0, true, true));
-    let reading = meter.reading().unwrap();
+    let reading = meter.reading();
     assert!(close(reading.integrated_lufs, -30.0, 0.1), "only after the mark: {:?}", reading.integrated_lufs);
     assert!((reading.seconds - 5.0).abs() < 1e-9);
 
     let ahead = tap.frames() + u64::from(RATE);
     tap.mark_restart(ahead);
-    let waiting = meter.reading().unwrap();
+    let waiting = meter.reading();
     assert!((waiting.seconds - 5.0).abs() < 1e-9, "the mark ahead waits");
     tap.play(&sine(1000.0, -20.0, 2.0, true, true));
-    let reached = meter.reading().unwrap();
+    let reached = meter.reading();
     assert!((reached.seconds - 1.0).abs() < 1e-9, "restarted one second into the last stretch: {}", reached.seconds);
     assert!(close(reached.integrated_lufs, -20.0, 0.1));
 }
@@ -213,22 +225,21 @@ fn frames_the_meter_could_not_read_in_time_are_logged() {
     let tap = FakeTap::holding(1_000);
     let (meter, log) = meter_on(&tap);
     tap.play(&sine(1000.0, -20.0, 1.0, true, true));
-    assert!(meter.reading().is_some());
+    meter.reading();
     let entries = lock(&log.0);
     assert_eq!(entries.len(), 1, "{entries:?}");
     assert!(entries[0].source == "meter" && entries[0].message.contains("missed"), "{:?}", entries[0]);
 }
 
 #[test]
-fn watching_again_starts_a_fresh_measurement() {
+fn a_reading_after_the_lease_ran_out_starts_a_fresh_measurement() {
     let tap = FakeTap::new();
-    let (meter, _) = meter_on(&tap);
+    let meter = short_lease(&tap);
+    meter.reading();
     tap.play(&sine(1000.0, -10.0, 2.0, true, true));
-    meter.watch(true);
-    assert!(meter.reading().unwrap().integrated_lufs.is_some(), "a repeated on keeps measuring");
+    assert!(meter.reading().integrated_lufs.is_some(), "a reading within the lease keeps measuring");
 
-    meter.watch(false);
-    meter.watch(true);
-    let fresh = meter.reading().unwrap();
+    wait_closed(&tap);
+    let fresh = meter.reading();
     assert_eq!((fresh.integrated_lufs, fresh.seconds), (None, 0.0));
 }

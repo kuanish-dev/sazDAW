@@ -2,9 +2,9 @@
 // Names are in the language current at creation, as the real backend creates them.
 import type { Id, NewNote, Project } from "../api/types";
 import { BAR_TICKS, DEFAULT_ROOM, MASTER_NODE, STEP_TICKS } from "../api/types";
-import { sourceOfTrack } from "../domain/graph";
-import { DEFAULT_VELOCITY } from "../domain/pitch";
-import { constantMap } from "../domain/tempoMap";
+import { sourceOfTrack } from "../graph/graphRules";
+import { DEFAULT_VELOCITY } from "../common/pitch";
+import { constantMap } from "../common/tempoMap";
 import { t } from "../i18n";
 import { fail } from "./errors";
 import type { HandlerSet } from "./handlers/types";

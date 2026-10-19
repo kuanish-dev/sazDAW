@@ -1,6 +1,6 @@
 // Project: file, folder, recent projects, autosave, export, undo and redo.
-import type { Project, Status } from "../../api/types";
-import { pathForFormat } from "../../domain/exportAudio";
+import type { HistorySteps, Project, ProjectChanges, Status } from "../../api/types";
+import { pathForFormat } from "../../files/exportAudio";
 import { t } from "../../i18n";
 import { emptyProject } from "../demo";
 import { fail } from "../errors";
@@ -9,14 +9,31 @@ import type { HandlerSet } from "./types";
 
 const stem = (path: string) => (path.split("/").pop() ?? "").replace(/\.[^.]+$/, "") || t().mock.projectName;
 
+/** The project status, as `project.status` and the feed's updates bring it. */
+export function projectStatus(w: MockWorld): Status {
+  return {
+    name: w.project.name, dirty: w.dirty, canUndo: w.undoStack.length > 0, canRedo: w.redoStack.length > 0,
+    undoLabel: w.undoStack.at(-1)?.label ?? null, path: w.path, folder: w.folder(),
+  };
+}
+
+/** The whole project as changes: the mock's feed always sends it (which the contract allows), the backend only what
+ *  changed (`daw-rpc/src/feed.rs`). */
+export function wholeChanges(w: MockWorld): ProjectChanges {
+  const p = w.clone(w.project);
+  const list = <T extends { id: number }>(items: T[]) => ({ ids: items.map((item) => item.id), changed: items });
+  return {
+    name: p.name, tempoMap: p.tempoMap, tracks: list(p.tracks), clips: list(p.clips), loopRegion: p.loopRegion,
+    nodes: list(p.graph.nodes), edges: p.graph.edges, room: p.room, automation: list(p.automation),
+    samples: list(p.samples), markers: list(p.markers), folders: list(p.folders), midiMappings: p.midiMappings ?? [],
+    nextId: p.nextId,
+  };
+}
+
 export function projectHandlers(w: MockWorld): HandlerSet {
   const h: HandlerSet = {};
   h["project.get"] = () => w.clone(w.project);
-  h["project.status"] = (): Status => ({
-    name: w.project.name, dirty: w.dirty, canUndo: w.undoStack.length > 0, canRedo: w.redoStack.length > 0,
-    undoLabel: w.undoStack.at(-1)?.label ?? null, revision: w.revision, path: w.path,
-    folder: w.folder(),
-  });
+  h["project.status"] = () => projectStatus(w);
   // Built anew on each call, in the current language: the interface re-reads the catalog after a language switch.
   h["catalog.get"] = () => w.catalog;
   h["project.new"] = () => { w.install(emptyProject(), null, false); };
@@ -63,6 +80,11 @@ export function projectHandlers(w: MockWorld): HandlerSet {
   };
   h["history.undo"] = () => w.step(w.undoStack, w.redoStack);
   h["history.redo"] = () => w.step(w.redoStack, w.undoStack);
+  // `step` pops redo from the end of its stack: the next redo is listed first.
+  h["history.list"] = (): HistorySteps => ({
+    done: w.undoStack.map((entry) => entry.label),
+    undone: w.redoStack.map((entry) => entry.label).reverse(),
+  });
   // A mark is the undo depth; squashing folds every step after it into one (the backend's `HistoryControl::squash`).
   h["history.checkpoint"] = () => w.undoStack.length;
   h["history.squash"] = ({ since, label }: { since: number; label: string }) => {

@@ -1,5 +1,5 @@
-// High-frequency transport data (the `tick` stream): position, tempo, meters, gain reduction, record and preview state,
-// the monitoring modes (song loop, metronome, mono check).
+// High-frequency transport data (the `tick` stream): position, tempo, meters, gain reduction and band gains, record and
+// preview state, the monitoring modes (song loop, metronome, mono check).
 import type { AutomationWriteMode, Id, TimeSignature } from "./model";
 
 export type TransportState = "stopped" | "playing" | "paused";
@@ -14,6 +14,13 @@ export interface MeterReading {
 export interface GainReductionReading {
   node: Id;
   db: number;
+}
+
+/** What each band of a band-split effect (multiband compressor, dynamic EQ) did to its band since the previous tick, in
+ *  dB, lowest band first: negative a cut, positive a boost (per band the value farthest from 0). */
+export interface BandGainsReading {
+  node: Id;
+  db: number[];
 }
 
 export interface RecordState {
@@ -53,6 +60,8 @@ export interface Tick {
   meters: MeterReading[];
   /** Effects that report gain reduction and were processed since the previous tick (a bypassed one is absent). */
   reductions: GainReductionReading[];
+  /** Band-split effects that were processed since the previous tick (a bypassed one is absent). */
+  bands: BandGainsReading[];
   record: RecordState;
   /** Sample preview position in file frames; `null` when nothing is playing. */
   preview: number | null;

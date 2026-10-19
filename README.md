@@ -28,7 +28,8 @@ is in active development: project formats and APIs change without migrations.
 - **Error log** on disk: backend failures, interface failures and panics never disappear silently. Every backend
   failure is a registered error code (for example `TR-001`) shown in the interface language.
 
-The detailed design is in [ARCHITECTURE.md](ARCHITECTURE.md).
+The map of the design is [ARCHITECTURE.md](ARCHITECTURE.md); each crate and frontend area describes itself in its own
+`CLAUDE.md`, features that cross layers are in `docs/features/`.
 
 ## Platform
 
@@ -101,7 +102,7 @@ host tests that need a fixture are skipped with a message when it is not built.
 Every RPC method of the app is available to an AI client as an MCP tool (the name with `_` instead of `.`, for
 example `drums_build`); descriptions and parameter schemas come from the RPC self-description, so a new method
 appears for the AI automatically. A failed call returns `CODE: message` (for example `TR-001: Track 7 not found`).
-More in the "AI interface" section of [ARCHITECTURE.md](ARCHITECTURE.md).
+More in the "AI interface" section of [crates/daw-rpc/CLAUDE.md](crates/daw-rpc/CLAUDE.md).
 
 Three ways to connect:
 
@@ -178,7 +179,8 @@ implementations are wired together in one place — `daw-bootstrap` (Rust) and `
 | `test-plugins/synth`, `test-plugins/distortion` | Dev-only VST3 fixtures for the host tests, built on nih-plug (separate workspaces, GPL, not shipped) |
 | `scripts/` | Building the test plugins, MCP, dmg; third-party license list |
 
-- [ARCHITECTURE.md](ARCHITECTURE.md) — how layers and areas are built, "how to add a similar one".
+- [ARCHITECTURE.md](ARCHITECTURE.md) — the map: where each crate, area and feature lives, with links to their docs and
+  to the step-by-step recipes.
 - [CONTRIBUTING.md](CONTRIBUTING.md) — code rules and the workflow for changes.
 - [SECURITY.md](SECURITY.md) — how to report a vulnerability privately, and what is in scope.
 
@@ -196,5 +198,5 @@ they are built on nih-plug, whose VST3 bindings are distributed under GPLv3. The
 are not distributed with the app.
 
 Third-party components (including LAME under LGPL-3.0 and Symphonia under MPL-2.0) and their licenses are listed in
-[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), full license texts are in `licenses/`. More in the "Licenses"
-section of [ARCHITECTURE.md](ARCHITECTURE.md).
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md), full license texts are in `licenses/`. More in
+[docs/licenses.md](docs/licenses.md).

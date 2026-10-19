@@ -1,10 +1,11 @@
-//! Level meters: slots where the graph mixer reports the peaks of tracks, buses and the master and the gain reduction
-//! of effects, and the control side collects them (`EngineStats::meters`, `EngineStats::gain_reductions`). Atomics
-//! only: the audio thread writes, the control side reads and resets.
+//! Level meters: slots where the graph mixer reports the peaks of tracks, buses and the master, the gain reduction of
+//! effects and the band gains of band-split effects, and the control side collects them (`EngineStats::meters`,
+//! `EngineStats::gain_reductions`, `EngineStats::band_gains`). Atomics only: the audio thread writes, the control side
+//! reads and resets.
 
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 
-use daw_contracts::{GainReduction, MAX_NODES, Meter, NodeId};
+use daw_contracts::{BandGains, GainReduction, MAX_EFFECT_BANDS, MAX_NODES, Meter, NodeId};
 
 /// The most nodes that get meters.
 pub const MAX_METERS: usize = MAX_NODES;
@@ -24,9 +25,32 @@ struct ReductionSlot {
     reported: AtomicBool,
 }
 
+/// The band gains of one effect, by the effect's fixed position in the mixer effect store. Per band the deepest cut and
+/// the highest boost since the last read are kept apart: `fetch_max` on f32 bits orders only non-negative values.
+struct BandSlot {
+    node: AtomicU32,
+    count: AtomicU32,
+    cuts: [AtomicU32; MAX_EFFECT_BANDS],
+    boosts: [AtomicU32; MAX_EFFECT_BANDS],
+    reported: AtomicBool,
+}
+
+impl BandSlot {
+    fn new() -> Self {
+        Self {
+            node: AtomicU32::new(NO_NODE),
+            count: AtomicU32::new(0),
+            cuts: std::array::from_fn(|_| AtomicU32::new(0)),
+            boosts: std::array::from_fn(|_| AtomicU32::new(0)),
+            reported: AtomicBool::new(false),
+        }
+    }
+}
+
 pub struct Meters {
     slots: Vec<MeterSlot>,
     reductions: Vec<ReductionSlot>,
+    bands: Vec<BandSlot>,
 }
 
 impl Meters {
@@ -37,7 +61,8 @@ impl Meters {
         let reductions = (0..MAX_NODES)
             .map(|_| ReductionSlot { node: AtomicU32::new(NO_NODE), db: AtomicU32::new(0), reported: AtomicBool::new(false) })
             .collect();
-        Self { slots, reductions }
+        let bands = (0..MAX_NODES).map(|_| BandSlot::new()).collect();
+        Self { slots, reductions, bands }
     }
 
     /// Binds node `node` to slot `slot`.
@@ -94,6 +119,43 @@ impl Meters {
             .iter()
             .filter(|slot| slot.reported.swap(false, Ordering::Relaxed))
             .map(|slot| GainReduction { node: slot.node.load(Ordering::Relaxed), db: f32::from_bits(slot.db.swap(0, Ordering::Relaxed)) })
+            .collect()
+    }
+
+    /// Accumulates the band gains of the effect at store position `slot` (node `node`): per band the farthest from 0 dB
+    /// since the last read. Nothing for an effect without bands.
+    pub fn report_bands(&self, slot: usize, node: NodeId, gains: &[f32]) {
+        let Some(meter) = self.bands.get(slot).filter(|_| !gains.is_empty()) else {
+            return;
+        };
+        let gains = &gains[..gains.len().min(MAX_EFFECT_BANDS)];
+        meter.node.store(node, Ordering::Relaxed);
+        meter.count.store(gains.len() as u32, Ordering::Relaxed);
+        for ((&db, cut), boost) in gains.iter().zip(&meter.cuts).zip(&meter.boosts) {
+            // `max` drops a NaN: a broken band reads as 0 dB.
+            cut.fetch_max((-db).max(0.0).to_bits(), Ordering::Relaxed);
+            boost.fetch_max(db.max(0.0).to_bits(), Ordering::Relaxed);
+        }
+        meter.reported.store(true, Ordering::Relaxed);
+    }
+
+    /// The band gains reported since the last read; reading resets them.
+    pub fn take_bands(&self) -> Vec<BandGains> {
+        self.bands
+            .iter()
+            .filter(|slot| slot.reported.swap(false, Ordering::Relaxed))
+            .map(|slot| {
+                let count = (slot.count.load(Ordering::Relaxed) as usize).min(MAX_EFFECT_BANDS);
+                let db = slot
+                    .cuts
+                    .iter()
+                    .zip(&slot.boosts)
+                    .map(|(cut, boost)| (f32::from_bits(cut.swap(0, Ordering::Relaxed)), f32::from_bits(boost.swap(0, Ordering::Relaxed))))
+                    .take(count)
+                    .map(|(cut, boost)| if boost > cut { boost } else { -cut })
+                    .collect();
+                BandGains { node: slot.node.load(Ordering::Relaxed), db }
+            })
             .collect()
     }
 }

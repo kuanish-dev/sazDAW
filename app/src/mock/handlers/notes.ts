@@ -1,17 +1,17 @@
 // Notes of a note clip: add, edit, delete, replace, content length, musical edits of a note group
-// (rules in `domain/noteTransforms.ts`, `groove.ts`, `variation.ts`, copies of the backend) and controller lanes. Each is one undo step.
+// (rules in `pianoroll/noteTransforms.ts`, `groove.ts`, `variation.ts`, copies of the backend) and controller lanes. Each is one undo step.
 import {
   MAX_CLIP_LOOP_TICKS, type GrooveTemplate, type Id, type NewNote, type Note, type NoteContent, type Project, type ScaleKey, type Variation,
 } from "../../api/types";
 import {
   checkLoopTicks, contentOf, createNote, fitLength, limitCount, noteLimit, replaceNotes, setControllerLane, setLoopTicks, validateNote,
 } from "../noteOps";
-import { clipBarTicks } from "../../domain/noteClip";
+import { clipBarTicks } from "../../pianoroll/noteClip";
 import {
   MAX_HUMANIZE_TICKS, MAX_HUMANIZE_VELOCITY, fitGroupToScale, humanizeGroup, isScale, legatoGroup, quantizeGroup, transposeGroup,
-} from "../../domain/noteTransforms";
-import { applyGroove, extractGroove, MAX_GROOVE_SHIFT_TICKS, templateTable } from "../../domain/groove";
-import { varyGroup } from "../../domain/variation";
+} from "../../pianoroll/noteTransforms";
+import { applyGroove, extractGroove, MAX_GROOVE_SHIFT_TICKS, templateTable } from "../../pianoroll/groove";
+import { varyGroup } from "../../pianoroll/variation";
 import { duplicateClip } from "../clipRules";
 import { fail } from "../errors";
 import { t } from "../../i18n";

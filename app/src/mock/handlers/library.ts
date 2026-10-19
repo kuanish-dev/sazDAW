@@ -1,6 +1,6 @@
 // Sounds and samples: project folders and linked folders, import, waveform, markers, preview, extraction.
 import type { SampleInfo } from "../../api/types";
-import { cleanMarkers } from "../../domain/waveform";
+import { cleanMarkers } from "../../samples/waveform";
 import { t } from "../../i18n";
 import { MOCK_FRAME_COUNT, MOCK_SAMPLE_RATE, mockPeaks } from "../audio";
 import { fail } from "../errors";

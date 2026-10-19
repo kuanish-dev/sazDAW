@@ -1,14 +1,14 @@
 // The song's tempo map (`tempo.*`): edits are undo steps; an invalid map is refused with the backend's codes
 // (as `TempoMap::new` in `daw-contracts/src/tempo_map.rs`).
 import type { SignatureChange, TempoChange, TempoMap } from "../../api/types";
-import { MAX_SIGNATURE_CHANGES, MAX_TEMPO_CHANGES, MAX_TICK } from "../../domain/tempoMap";
-import { barTicks, MAX_NUMERATOR, MAX_TEMPO, MIN_TEMPO } from "../../domain/time";
+import { MAX_SIGNATURE_CHANGES, MAX_TEMPO_CHANGES, MAX_TICK } from "../../common/tempoMap";
+import { barTicks, MAX_NUMERATOR, MAX_TEMPO, MIN_TEMPO } from "../../common/time";
 import { t } from "../../i18n";
 import { fail } from "../errors";
 import type { MockWorld } from "../world";
 import type { HandlerSet } from "./types";
 
-const DENOMINATORS = [1, 2, 4, 8, 16, 32];
+const DENOMINATORS: readonly number[] = [1, 2, 4, 8, 16, 32] as const;
 
 function checkBpm(bpm: number) {
   if (!(bpm >= MIN_TEMPO && bpm <= MAX_TEMPO)) throw fail("TM-101", { bpm, min: MIN_TEMPO, max: MAX_TEMPO });

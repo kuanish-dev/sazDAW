@@ -3,20 +3,20 @@
 // play roots and builds the part as one undo step).
 import type { ChordPartRequest, Id, NewNote, StrumPattern } from "../../api/types";
 import { BAR_TICKS } from "../../api/types";
-import { QUALITIES } from "../../domain/chordPart";
-import { barIndex, barTick } from "../../domain/tempoMap";
+import { QUALITIES } from "../../chords/chordPart";
+import { barIndex, barTick } from "../../common/tempoMap";
 import { t } from "../../i18n";
 import { fail } from "../errors";
 import type { MockWorld } from "../world";
 import type { HandlerSet } from "./types";
 
 /** The backend's strums (`daw_contracts::STRUMS`). */
-const STRUM_GRIDS = { four: "D.U.X.U.", six: "D.DU.UDU", eight: "DUXUDUXU" };
+const STRUM_GRIDS = { four: "D.U.X.U.", six: "D.DU.UDU", eight: "DUXUDUXU" } as const;
 type StrumId = keyof typeof STRUM_GRIDS;
 const STRUM_STEP_TICKS = BAR_TICKS / 8;
 /** Semitones of each chord type, in the order of `QUALITIES` (the backend's `ChordQuality::intervals`). */
-const INTERVALS = [[0, 4, 7], [0, 3, 7], [0, 4, 7, 10], [0, 4, 7, 11], [0, 3, 7, 10], [0, 2, 7], [0, 5, 7], [0, 3, 6], [0, 4, 8]];
-const NATURALS: Record<string, number> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 };
+const INTERVALS = [[0, 4, 7], [0, 3, 7], [0, 4, 7, 10], [0, 4, 7, 11], [0, 3, 7, 10], [0, 2, 7], [0, 5, 7], [0, 3, 6], [0, 4, 8]] as const;
+const NATURALS: Readonly<Record<string, number>> = { C: 0, D: 2, E: 4, F: 5, G: 7, A: 9, B: 11 } as const;
 const C3 = 48;
 
 const isStrum = (id: string): id is StrumId => id in STRUM_GRIDS;

@@ -1,6 +1,6 @@
 //! Sound graph commands: nodes, volume and pan, buses, effects, connections, meters.
 
-use daw_contracts::{Controls, Node, NodeKind};
+use daw_contracts::{Controls, Node, NodeKind, Params};
 
 use super::{Words, number, report};
 
@@ -72,7 +72,7 @@ pub(super) fn run(controls: &Controls, command: &str, words: &Words) -> bool {
         }
         "fx" => {
             if let Some(kind) = words.arg(1) {
-                report(controls.graph.add_effect(kind, EFFECT_POSITION.0, EFFECT_POSITION.1));
+                report(controls.graph.add_effect(kind, &Params::new(), EFFECT_POSITION.0, EFFECT_POSITION.1));
             }
         }
         "rmnode" => {

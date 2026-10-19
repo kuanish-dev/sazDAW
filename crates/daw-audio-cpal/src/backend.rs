@@ -1,5 +1,5 @@
 //! Thin boundary with system audio: everything real cpal does, in five methods.
-//! It lets the host thread (`host.rs`) be tested with a fake device and no sound card.
+//! It lets the host thread (`host/`) be tested with a fake device and no sound card.
 //! Private to the crate: only `CpalAudio` is visible outside.
 
 use std::any::Any;

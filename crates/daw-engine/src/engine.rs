@@ -298,6 +298,8 @@ impl Engine {
         // The visualizer gets the music with the preview, before the clamp and the metronome (`EngineStats::master_window`).
         self.link.telemetry.scope.write(self.mixer.master(frames));
         self.link.telemetry.set_preview_position(self.preview.position());
+        // After the segment's captures: a lease that runs out with this segment still had it copied.
+        self.link.telemetry.clock.advance(frames);
         self.snapshot = snapshot;
     }
 
