@@ -5,8 +5,8 @@ import { defineRole, useRole } from "../core/roles";
 import { createSelection } from "./selection";
 
 export const selectionRole = defineRole("selection", ({ core }) => {
-  const selection = createSelection(core.project);
-  onCleanup(core.onLoaded(selection.prune));
+  const selection = createSelection(core.copy.project);
+  onCleanup(core.copy.onLoaded(selection.prune));
   return selection;
 });
 

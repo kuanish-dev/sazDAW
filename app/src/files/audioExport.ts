@@ -9,7 +9,7 @@ import { homeDir } from "./paths";
 
 const EXPORT_FILTERS = { wav: WAV_FILTER, flac: FLAC_FILTER, mp3: MP3_FILTER } as const;
 
-export interface AudioExportActions {
+export interface AudioExport {
   /** Renders to an audio file; on success, a "Done: …" toast with the mix loudness and peak. */
   render(options: ExportOptions): Promise<ExportResult | undefined>;
   /** Default path: `<project folder>/exports/<name>.<format>`, otherwise in the home folder. */
@@ -18,20 +18,20 @@ export interface AudioExportActions {
   choosePath(format: ExportFormat, current?: string): Promise<string | null>;
 }
 
-export function createAudioExportActions(core: Core): AudioExportActions {
+export function createAudioExport(core: Core): AudioExport {
   const { api, dialogs } = core;
   return {
     async render(options) {
-      const result = await core.run(api.project.exportAudio(options));
+      const result = await core.calls.run(api.project.exportAudio(options));
       if (result) {
         const seconds = (result.frames / options.sampleRate).toFixed(1);
-        core.toast("info", t().project.exported(result.files.length, seconds, loudnessSummary(result, options.normalize)));
+        core.notifications.toast("info", t().project.exported(result.files.length, seconds, loudnessSummary(result, options.normalize)));
       }
       return result;
     },
 
     async suggestedPath(format) {
-      const { folder, name } = core.status();
+      const { folder, name } = core.copy.status();
       const fileName = `${name || "export"}.${format}`;
       return joinPath(folder ? joinPath(folder, "exports") : await homeDir(api), fileName);
     },

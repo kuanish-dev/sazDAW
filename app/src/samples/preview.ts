@@ -2,7 +2,7 @@
 import type { Id } from "../api/types";
 import type { Core } from "../core/core";
 
-export interface PreviewActions {
+export interface Preview {
   play(sample: Id, from: number, to: number, looping: boolean): Promise<void>;
   /** Plays a file from disk without adding it to the project. */
   playFile(path: string): Promise<void>;
@@ -11,12 +11,12 @@ export interface PreviewActions {
   stopQuietly(): void;
 }
 
-export function createPreviewActions(core: Core): PreviewActions {
+export function createPreview(core: Core): Preview {
   const { api } = core;
   return {
-    play: (sample, from, to, looping) => core.exec(api.preview.play(sample, from, to, looping)),
-    playFile: (path) => core.exec(api.preview.playFile(path)),
-    stop: () => core.exec(api.preview.stop()),
+    play: (sample, from, to, looping) => core.calls.exec(api.preview.play(sample, from, to, looping)),
+    playFile: (path) => core.calls.exec(api.preview.playFile(path)),
+    stop: () => core.calls.exec(api.preview.stop()),
     stopQuietly: () => void api.preview.stop().catch((error) => console.error("preview.stop", error)),
   };
 }

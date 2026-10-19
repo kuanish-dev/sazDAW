@@ -1,6 +1,6 @@
 // Mouse on the piano roll grid: creating, moving and resizing notes, marquee selection, key audition, right click.
-// Holds the gesture and note "drafts" while dragging; the result goes to `NotesActions` (via `commitDrafts`).
-import type { NotesActions } from "./notes";
+// Holds the gesture and note "drafts" while dragging; the result goes to `Notes` (via `commitDrafts`).
+import type { Notes } from "./notes";
 import { STEP_TICKS, type Id, type NewNote, type Note } from "../api/types";
 import { fitNote, hitTest, stripId } from "./noteFit";
 import { DEFAULT_VELOCITY } from "../common/pitch";
@@ -18,7 +18,7 @@ type Drag =
   | { mode: "marquee"; startTick: number; startPitch: number; additive: boolean };
 
 export interface PianoRollPointerDeps {
-  notes: NotesActions;
+  notes: Notes;
   audition: Audition;
   gridCanvas(): HTMLCanvasElement;
   /** Clip being edited; `null` if no clip is selected. */

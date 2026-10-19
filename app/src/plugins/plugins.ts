@@ -8,7 +8,7 @@ import { t } from "../i18n";
 import type { Core } from "../core/core";
 import type { AppPreferences } from "../settings/preferences";
 
-export interface PluginsActions {
+export interface Plugins {
   /** Installed plugins and search folders; failure — a toast and `undefined`. */
   list(): Promise<PluginList | undefined>;
   /** Scans for plugins, refreshes the effect and instrument catalogs and reports the result; per-plugin failures go to `lastScan`. */
@@ -23,31 +23,31 @@ export interface PluginsActions {
   offerCrashReport(): Promise<void>;
 }
 
-export function createPluginsActions(core: Core, preferences: AppPreferences): PluginsActions {
+export function createPlugins(core: Core, preferences: AppPreferences): Plugins {
   const [scanning, setScanning] = createSignal(false);
   const [lastScan, setLastScan] = createSignal<ScanReport | null>(null);
 
   const setDisabled = async (kind: string, disabled: boolean) => {
-    if (!(await core.attempt(core.api.plugins.setDisabled(kind, disabled)))) return false;
-    await core.run(core.refreshCatalog());
+    if (!(await core.calls.attempt(core.api.plugins.setDisabled(kind, disabled)))) return false;
+    await core.calls.run(core.copy.refreshCatalog());
     // The disabled list lives in preferences: without a fresh copy the next `preferences.set` would restore the old list.
-    const stored = await core.run(core.api.preferences.get());
+    const stored = await core.calls.run(core.api.preferences.get());
     if (stored) preferences.show(stored);
     return true;
   };
 
   return {
-    list: () => core.run(core.api.plugins.list()),
+    list: () => core.calls.run(core.api.plugins.list()),
     async scan() {
       if (scanning()) return;
       setScanning(true);
       try {
-        const report = await core.run(core.api.plugins.scan());
+        const report = await core.calls.run(core.api.plugins.scan());
         if (!report) return;
         setLastScan(report);
-        await core.run(core.refreshCatalog());
+        await core.calls.run(core.copy.refreshCatalog());
         // The backend logs per-plugin failure reasons, and the Plugins section lists them.
-        core.toast("info", t().settings.plugins.scanToast(report.effects, report.instruments));
+        core.notifications.toast("info", t().settings.plugins.scanToast(report.effects, report.instruments));
       } finally {
         setScanning(false);
       }
@@ -56,12 +56,12 @@ export function createPluginsActions(core: Core, preferences: AppPreferences): P
     lastScan,
     setDisabled,
     async offerCrashReport() {
-      const crash = await core.run(core.api.plugins.lastCrash());
+      const crash = await core.calls.run(core.api.plugins.lastCrash());
       if (!crash) return;
       const msg = t().settings.plugins;
       const disable = await core.dialogs.confirm(crashQuestion(crash), msg.crashTitle, { ok: msg.crashDisable, cancel: msg.crashKeep });
-      if (disable && (await setDisabled(crash.kind, true))) core.toast("info", msg.crashDisabled(crash.name));
-      await core.exec(core.api.plugins.dismissCrash());
+      if (disable && (await setDisabled(crash.kind, true))) core.notifications.toast("info", msg.crashDisabled(crash.name));
+      await core.calls.exec(core.api.plugins.dismissCrash());
     },
   };
 }

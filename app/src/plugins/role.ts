@@ -2,16 +2,16 @@
 // (`pluginEditor.ts`).
 import { defineRole, useRole } from "../core/roles";
 import { settingsRole } from "../settings/role";
-import { createPluginEditorActions, type PluginEditorActions } from "./pluginEditor";
-import { createPluginsActions, type PluginsActions } from "./plugins";
+import { createPluginEditor, type PluginEditor } from "./pluginEditor";
+import { createPlugins, type Plugins } from "./plugins";
 
-export type PluginsRole = PluginsActions & {
-  readonly editor: PluginEditorActions;
+export type PluginsRole = Plugins & {
+  readonly editor: PluginEditor;
 };
 
 export const pluginsRole = defineRole("plugins", ({ core, use }): PluginsRole => ({
-  ...createPluginsActions(core, use(settingsRole).preferences),
-  editor: createPluginEditorActions(core),
+  ...createPlugins(core, use(settingsRole).preferences),
+  editor: createPluginEditor(core),
 }));
 
 export const usePlugins = () => useRole(pluginsRole);

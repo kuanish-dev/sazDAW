@@ -21,7 +21,7 @@ export interface ToastReads {
 }
 
 /** The notifications: what the UI reads, and how the roles show something. */
-export type Toasts = ToastReads & {
+export type Notifications = ToastReads & {
   /** A notification from the interface: an error also goes to the log (console.error → errorReporter), otherwise it would be lost. */
   toast(kind: Toast["kind"], text: string): void;
   /**
@@ -31,7 +31,7 @@ export type Toasts = ToastReads & {
   showFailure(error: unknown): void;
 };
 
-export function createToasts(): Toasts {
+export function createNotifications(): Notifications {
   const [toasts, setToasts] = createSignal<Toast[]>([]);
   let lastId = 0;
 

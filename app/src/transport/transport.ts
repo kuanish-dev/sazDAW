@@ -4,7 +4,7 @@
 import type { Clip } from "../api/types";
 import type { Core } from "../core/core";
 
-export interface TransportActions {
+export interface Transport {
   play(): Promise<void>;
   pause(): Promise<void>;
   stop(): Promise<void>;
@@ -25,20 +25,20 @@ export interface TransportActions {
   setMetronome(enabled: boolean): Promise<void>;
 }
 
-export function createTransportActions(core: Core): TransportActions {
-  const { api, exec } = core;
-  const setLoopRegion: TransportActions["setLoopRegion"] = (region) => exec(api.clips.setLoopRegion(region));
+export function createTransport(core: Core): Transport {
+  const { api, calls } = core;
+  const setLoopRegion: Transport["setLoopRegion"] = (region) => calls.exec(api.clips.setLoopRegion(region));
   return {
-    play: () => exec(api.transport.play()),
-    pause: () => exec(api.transport.pause()),
-    stop: () => exec(api.transport.stop()),
-    togglePlay: () => exec(core.tick().state === "playing" ? api.transport.pause() : api.transport.play()),
-    seek: (tick) => exec(api.transport.seek(tick)),
-    cueAt: (tick) => exec(api.transport.setCue(tick).then(() => api.transport.seek(tick))),
-    clearCue: () => exec(api.transport.setCue(null)),
+    play: () => calls.exec(api.transport.play()),
+    pause: () => calls.exec(api.transport.pause()),
+    stop: () => calls.exec(api.transport.stop()),
+    togglePlay: () => calls.exec(core.playback.tick().state === "playing" ? api.transport.pause() : api.transport.play()),
+    seek: (tick) => calls.exec(api.transport.seek(tick)),
+    cueAt: (tick) => calls.exec(api.transport.setCue(tick).then(() => api.transport.seek(tick))),
+    clearCue: () => calls.exec(api.transport.setCue(null)),
     setLoopRegion,
     loopClip: (clip) => setLoopRegion([clip.startTick, clip.startTick + clip.lengthTicks]),
-    setSongLoop: (enabled) => exec(api.transport.setSongLoop(enabled)),
-    setMetronome: (enabled) => exec(api.metronome.setEnabled(enabled)),
+    setSongLoop: (enabled) => calls.exec(api.transport.setSongLoop(enabled)),
+    setMetronome: (enabled) => calls.exec(api.metronome.setEnabled(enabled)),
   };
 }

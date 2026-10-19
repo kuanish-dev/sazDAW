@@ -4,7 +4,7 @@
 import type { MasterReading, MasterWindow } from "../api/types";
 import type { Core } from "../core/core";
 
-export interface MasterActions {
+export interface Master {
   /** The latest master window (the first read starts the capture); on failure — a toast and undefined (the caller stops
    *  polling then, to avoid a flood of errors). */
   masterWindow(): Promise<MasterWindow | undefined>;
@@ -17,12 +17,12 @@ export interface MasterActions {
   setMono(on: boolean): Promise<void>;
 }
 
-export function createMasterActions(core: Core): MasterActions {
+export function createMaster(core: Core): Master {
   const { api } = core;
   return {
-    masterWindow: () => core.run(api.audio.masterWindow()),
-    masterMeter: () => core.run(api.audio.masterMeter()),
-    resetMasterMeter: () => core.exec(api.audio.resetMasterMeter()),
-    setMono: (on) => core.exec(api.audio.setMono(on)),
+    masterWindow: () => core.calls.run(api.audio.masterWindow()),
+    masterMeter: () => core.calls.run(api.audio.masterMeter()),
+    resetMasterMeter: () => core.calls.exec(api.audio.resetMasterMeter()),
+    setMono: (on) => core.calls.exec(api.audio.setMono(on)),
   };
 }

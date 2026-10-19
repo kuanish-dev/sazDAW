@@ -37,9 +37,9 @@ it with the backend, so check it by eye against the Rust implementation).
    as the real backend and the same error codes (`app/src/mock/errors.ts`); edits go through `w.edit(label, (p) => …)`,
    the mock's undo labels are `t().mock.undo.*` in `app/src/i18n/en.ts` + `ru.ts`.
 8. **The role's work** — a method in the job's interface and its factory in the role's folder (for tracks
-   `app/src/tracks/tracks.ts`: `TracksActions`, `createTracksActions(core, …)`): this is where we decide how to show an
-   error and what to re-read. An instant display goes through `core.patchProject`, the call through
-   `core.exec`/`core.run`; something it creates is selected with `views.showCreated`. A new job of a role goes into
+   `app/src/tracks/tracks.ts`: `Tracks`, `createTracks(core, …)`): this is where we decide how to show an
+   error and what to re-read. An instant display goes through `core.copy.patchProject`, the call through
+   `core.calls.exec`/`core.calls.run`; something it creates is selected with `views.showCreated`. A new job of a role goes into
    its `role.ts` (`app/src/tracks/role.ts`); a new role is a folder with a `role.ts` (`defineRole` and its `useX` hook).
 9. **Interface** — the role's component takes its role through the hook and calls it: `useTracks().setColor(…)`
    (another job of the role: `useTracks().clips.split(…)`); it sees neither `api` nor `core`. New text

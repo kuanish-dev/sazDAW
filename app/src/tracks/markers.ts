@@ -7,7 +7,7 @@ import type { Core } from "../core/core";
 /** Jumping "to previous" during playback skips a marker passed less than an eighth note ago. */
 const JUMP_SLACK_TICKS = PPQ / 2;
 
-export interface MarkersActions {
+export interface Markers {
   /** Marker at `tick` (default name "Section N"). */
   add(tick: number, name?: string): Promise<void>;
   /** "+ Marker": a marker at the start of the playhead's bar. */
@@ -19,26 +19,26 @@ export interface MarkersActions {
   jump(direction: -1 | 1): Promise<void>;
 }
 
-export function createMarkersActions(core: Core): MarkersActions {
+export function createMarkers(core: Core): Markers {
   const { api } = core;
-  const add: MarkersActions["add"] = (tick, name) => core.exec(api.markers.add(tick, name ?? nextMarkerName(core.project.markers)));
+  const add: Markers["add"] = (tick, name) => core.calls.exec(api.markers.add(tick, name ?? nextMarkerName(core.copy.project.markers)));
   return {
     add,
-    addAtPlayhead: () => add(barStart(core.project.tempoMap, core.tick().positionTicks)),
+    addAtPlayhead: () => add(barStart(core.copy.project.tempoMap, core.playback.tick().positionTicks)),
     async move(id, tick) {
       // The flag stays where it was dropped without waiting for the backend.
-      core.patchProject((p) => {
+      core.copy.patchProject((p) => {
         const marker = p.markers.find((m) => m.id === id);
         if (marker) marker.tick = tick;
         p.markers.sort((a, b) => a.tick - b.tick);
       });
-      await core.exec(api.markers.edit(id, { tick }));
+      await core.calls.exec(api.markers.edit(id, { tick }));
     },
-    rename: (id, name) => core.exec(api.markers.edit(id, { name })),
-    remove: (id) => core.exec(api.markers.remove(id)),
+    rename: (id, name) => core.calls.exec(api.markers.edit(id, { name })),
+    remove: (id) => core.calls.exec(api.markers.remove(id)),
     async jump(direction) {
-      const target = neighbourMarker(core.project.markers, core.tick().positionTicks, direction, JUMP_SLACK_TICKS);
-      if (target) await core.exec(api.transport.seek(target.tick));
+      const target = neighbourMarker(core.copy.project.markers, core.playback.tick().positionTicks, direction, JUMP_SLACK_TICKS);
+      if (target) await core.calls.exec(api.transport.seek(target.tick));
     },
   };
 }

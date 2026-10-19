@@ -9,7 +9,7 @@ import { roundSemitones } from "./warp";
 import type { Core } from "../core/core";
 import type { Views } from "../shell/views";
 
-export interface ClipsActions {
+export interface Clips {
   /** Empty note clip on an instrument track (one bar by default); selects the clip and its track. */
   addNote(track: Id, startTick: number, lengthTicks?: number): Promise<Clip | undefined>;
   edit(id: Id, edit: ClipEdit): Promise<Clip | undefined>;
@@ -52,11 +52,11 @@ export interface ClipsActions {
   chooseTakeRange(id: Id, from: number, to: number, take: Id): Promise<void>;
 }
 
-export function createClipsActions(core: Core, views: Views): ClipsActions {
+export function createClips(core: Core, views: Views): Clips {
   const { api } = core;
   let clipboard: Id[] = [];
   /** Clips by id that still exist in the project (the clipboard must survive deletions). */
-  const existing = (ids: Id[]) => ids.filter((id) => core.project.clips.some((c) => c.id === id));
+  const existing = (ids: Id[]) => ids.filter((id) => core.copy.project.clips.some((c) => c.id === id));
 
   /**
    * Shows edits at once, before the backend replies: otherwise a dropped clip is drawn at its old place for a frame
@@ -64,38 +64,38 @@ export function createClipsActions(core: Core, views: Views): ClipsActions {
    * the backend computes, so it waits for the reply.
    */
   const showEdits = (changes: { id: Id; edit: ClipEdit }[]) =>
-    core.patchProject((p) => {
+    core.copy.patchProject((p) => {
       for (const { id, edit } of changes) {
         const clip = p.clips.find((c) => c.id === id);
         if (clip && edit.warp === undefined) Object.assign(clip, edit);
       }
     });
 
-  const copy: ClipsActions["copy"] = async (ids, atTick) => {
+  const copy: Clips["copy"] = async (ids, atTick) => {
     if (ids.length === 0) return undefined;
-    const copies = await core.run(api.clips.copy(ids, atTick));
+    const copies = await core.calls.run(api.clips.copy(ids, atTick));
     if (copies) await views.showCreated({ clips: copies.map((c) => c.id) });
     return copies;
   };
 
   return {
     async addNote(track, startTick, lengthTicks) {
-      const clip = await core.run(api.clips.addNote({ track, startTick, lengthTicks }));
+      const clip = await core.calls.run(api.clips.addNote({ track, startTick, lengthTicks }));
       if (clip) await views.showCreated({ clips: [clip.id] });
       return clip;
     },
     edit(id, edit) {
       showEdits([{ id, edit }]);
-      return core.run(api.clips.edit(id, edit));
+      return core.calls.run(api.clips.edit(id, edit));
     },
     async commitMany(changes) {
-      const real = changes.filter((c) => isEditChanged(core.project.clips, c.id, c.edit));
+      const real = changes.filter((c) => isEditChanged(core.copy.project.clips, c.id, c.edit));
       if (real.length === 0) return;
       showEdits(real);
-      await core.exec(api.clips.editMany(real));
+      await core.calls.exec(api.clips.editMany(real));
     },
     async removeMany(ids) {
-      if (ids.length > 0) await core.exec(api.clips.removeMany(ids));
+      if (ids.length > 0) await core.calls.exec(api.clips.removeMany(ids));
     },
     copy,
     remember: (ids) => {
@@ -103,31 +103,31 @@ export function createClipsActions(core: Core, views: Views): ClipsActions {
     },
     async paste() {
       const ids = existing(clipboard);
-      if (ids.length > 0) await copy(ids, snapNearestInBars(core.project.tempoMap, core.tick().positionTicks, BAR_GRID));
+      if (ids.length > 0) await copy(ids, snapNearestInBars(core.copy.project.tempoMap, core.playback.tick().positionTicks, BAR_GRID));
     },
     async duplicateMany(ids) {
-      const group = core.project.clips.filter((c) => ids.includes(c.id));
+      const group = core.copy.project.clips.filter((c) => ids.includes(c.id));
       if (group.length > 0) await copy(ids, groupEnd(group));
     },
-    split: (id, tick) => core.run(api.clips.split(id, tick)),
-    remove: (id) => core.exec(api.clips.remove(id)),
+    split: (id, tick) => core.calls.run(api.clips.split(id, tick)),
+    remove: (id) => core.calls.exec(api.clips.remove(id)),
     trimStart(trimmed) {
-      core.patchProject((p) => {
+      core.copy.patchProject((p) => {
         const index = p.clips.findIndex((c) => c.id === trimmed.id);
         if (index >= 0) p.clips[index] = trimmed;
       });
-      return core.exec(api.clips.trimStart(trimmed.id, trimmed.startTick));
+      return core.calls.exec(api.clips.trimStart(trimmed.id, trimmed.startTick));
     },
-    setFadeShape: (id, edge, shape) => core.exec(api.clips.edit(id, edge === "in" ? { fadeInShape: shape } : { fadeOutShape: shape })),
+    setFadeShape: (id, edge, shape) => core.calls.exec(api.clips.edit(id, edge === "in" ? { fadeInShape: shape } : { fadeOutShape: shape })),
     async normalize(ids) {
-      if (ids.length > 0) await core.exec(api.clips.normalize(ids));
+      if (ids.length > 0) await core.calls.exec(api.clips.normalize(ids));
     },
-    reverse: (id) => core.exec(api.clips.reverse(id)),
-    setWarp: (id, on) => core.exec(api.clips.edit(id, { warp: on ? {} : null })),
-    setSourceBpm: (id, bpm) => core.exec(api.clips.edit(id, { warp: { sourceBpm: bpm } })),
-    setPitch: (id, semitones) => core.exec(api.clips.edit(id, { pitchSemitones: roundSemitones(semitones) })),
-    setActiveTake: (id, take) => core.exec(api.clips.setActiveTake(id, take)),
-    removeTake: (id, take) => core.exec(api.clips.removeTake(id, take)),
-    chooseTakeRange: (id, from, to, take) => core.exec(api.clips.chooseTakeRange(id, from, to, take)),
+    reverse: (id) => core.calls.exec(api.clips.reverse(id)),
+    setWarp: (id, on) => core.calls.exec(api.clips.edit(id, { warp: on ? {} : null })),
+    setSourceBpm: (id, bpm) => core.calls.exec(api.clips.edit(id, { warp: { sourceBpm: bpm } })),
+    setPitch: (id, semitones) => core.calls.exec(api.clips.edit(id, { pitchSemitones: roundSemitones(semitones) })),
+    setActiveTake: (id, take) => core.calls.exec(api.clips.setActiveTake(id, take)),
+    removeTake: (id, take) => core.calls.exec(api.clips.removeTake(id, take)),
+    chooseTakeRange: (id, from, to, take) => core.calls.exec(api.clips.chooseTakeRange(id, from, to, take)),
   };
 }

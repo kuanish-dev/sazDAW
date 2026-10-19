@@ -1,5 +1,5 @@
 // Note audition: the note sounds on the clip's track while held (keys on the left or a dragged note).
-import type { LiveActions } from "../keyboard/live";
+import type { LiveNotes } from "../keyboard/live";
 import type { Id } from "../api/types";
 import { LIVE_VELOCITY } from "../common/pitch";
 
@@ -8,7 +8,7 @@ export interface Audition {
   stop(): void;
 }
 
-export function createAudition(trackId: () => Id | undefined, live: LiveActions): Audition {
+export function createAudition(trackId: () => Id | undefined, live: LiveNotes): Audition {
   let pitch = -1;
   const stop = () => {
     const track = trackId();

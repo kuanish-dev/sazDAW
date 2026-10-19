@@ -7,7 +7,7 @@ import type { Core } from "../core/core";
 import type { Views } from "../shell/views";
 import type { ParamTouch } from "../automation/paramTouch";
 
-export interface TracksActions {
+export interface Tracks {
   /** The "+ Track" button: name from the catalog ("Synth", "Synth 2", …), step input pitch by instrument kind; selects the track. */
   create(kind: string | null): Promise<Id | undefined>;
   remove(id: Id): Promise<void>;
@@ -26,11 +26,11 @@ export interface TracksActions {
   setHeight(id: Id, height: number | null): Promise<void>;
 }
 
-export function createTracksActions(core: Core, views: Views, touch: ParamTouch): TracksActions {
+export function createTracks(core: Core, views: Views, touch: ParamTouch): Tracks {
   const { api } = core;
 
-  const resize: TracksActions["resize"] = (id, height) => {
-    core.patchProject((p) => {
+  const resize: Tracks["resize"] = (id, height) => {
+    core.copy.patchProject((p) => {
       const track = p.tracks.find((t) => t.id === id);
       if (track) track.height = height;
     });
@@ -38,47 +38,47 @@ export function createTracksActions(core: Core, views: Views, touch: ParamTouch)
 
   /** New track (`kind: null` — audio) with a given name; selects it. Returns the id or `undefined` on failure. */
   const add = async (name: string, kind: string | null, defaultPitch: number) => {
-    const id = await core.run(api.tracks.add(name, kind, defaultPitch));
+    const id = await core.calls.run(api.tracks.add(name, kind, defaultPitch));
     if (id !== undefined) await views.showCreated({ track: id });
     return id;
   };
 
   return {
     async create(kind) {
-      const label = kind === null ? t().tracks.audioName : instrumentInfo(core.catalog(), kind)?.label;
+      const label = kind === null ? t().tracks.audioName : instrumentInfo(core.copy.catalog(), kind)?.label;
       if (label === undefined) return undefined;
-      const count = core.project.tracks.filter((t) => (t.instrument?.kind ?? null) === kind).length;
+      const count = core.copy.project.tracks.filter((t) => (t.instrument?.kind ?? null) === kind).length;
       return add(nextTrackName(label, count), kind, defaultPitchFor(kind));
     },
-    remove: (id) => core.exec(api.tracks.remove(id)),
-    rename: (id, name) => core.exec(api.tracks.rename(id, name)),
-    move: (id, index) => core.exec(api.tracks.move(id, index)),
+    remove: (id) => core.calls.exec(api.tracks.remove(id)),
+    rename: (id, name) => core.calls.exec(api.tracks.rename(id, name)),
+    move: (id, index) => core.calls.exec(api.tracks.move(id, index)),
     async setParam(id, name, value) {
       touch.moved({ type: "instrumentParam", track: id, param: name }, value);
-      core.patchProject((p) => {
+      core.copy.patchProject((p) => {
         const instrument = p.tracks.find((t) => t.id === id)?.instrument;
         if (instrument) instrument.params[name] = value;
       });
-      await core.exec(api.tracks.setParam(id, name, value));
+      await core.calls.exec(api.tracks.setParam(id, name, value));
     },
     async setMonitor(id, mode) {
-      core.patchProject((p) => {
+      core.copy.patchProject((p) => {
         const kind = p.graph.nodes.find((n) => n.kind.type === "audio" && n.kind.track === id)?.kind;
         if (kind?.type === "audio") kind.monitor = mode;
       });
-      await core.exec(api.tracks.setMonitor(id, mode));
+      await core.calls.exec(api.tracks.setMonitor(id, mode));
     },
     async setColor(id, color) {
-      core.patchProject((p) => {
+      core.copy.patchProject((p) => {
         const track = p.tracks.find((t) => t.id === id);
         if (track) track.color = color;
       });
-      await core.exec(api.tracks.setColor(id, color));
+      await core.calls.exec(api.tracks.setColor(id, color));
     },
     resize,
     async setHeight(id, height) {
       resize(id, height);
-      await core.exec(api.tracks.setHeight(id, height));
+      await core.calls.exec(api.tracks.setHeight(id, height));
     },
   };
 }

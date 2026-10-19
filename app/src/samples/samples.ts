@@ -5,7 +5,7 @@ import { sampleUsage } from "./sampleRules";
 import { t } from "../i18n";
 import type { Core } from "../core/core";
 
-export interface SamplesActions {
+export interface Samples {
   /** All project samples (empty if they could not be read). */
   samples(): Promise<SampleInfo[]>;
   /** Info on one sample (length, rate); `undefined` — no such sample. The list is cached until the project's samples change. */
@@ -23,14 +23,14 @@ export interface SamplesActions {
   removeSample(sample: SampleInfo): Promise<void>;
 }
 
-export function createSamplesActions(core: Core): SamplesActions {
+export function createSamples(core: Core): Samples {
   const { api } = core;
   // The sample list changes only together with `project.samples`, so that is how we know the cache is stale.
   let cache: { key: string; list: Promise<SampleInfo[] | undefined> } | null = null;
 
   const list = async () => {
-    const key = JSON.stringify(core.project.samples);
-    if (cache?.key !== key) cache = { key, list: core.run(api.samples.list()) };
+    const key = JSON.stringify(core.copy.project.samples);
+    if (cache?.key !== key) cache = { key, list: core.calls.run(api.samples.list()) };
     const current = cache;
     const result = await current.list;
     // A failed answer is not cached: the next call asks again.
@@ -38,7 +38,7 @@ export function createSamplesActions(core: Core): SamplesActions {
     return result;
   };
 
-  const importQuietly = (path: string) => core.run(api.samples.import(path));
+  const importQuietly = (path: string) => core.calls.run(api.samples.import(path));
 
   return {
     samples: async () => (await list()) ?? [],
@@ -55,7 +55,7 @@ export function createSamplesActions(core: Core): SamplesActions {
 
     async importSample(path) {
       const info = await importQuietly(path);
-      if (info) core.toast("info", t().samples.addedToProject);
+      if (info) core.notifications.toast("info", t().samples.addedToProject);
       return info;
     },
 
@@ -66,19 +66,19 @@ export function createSamplesActions(core: Core): SamplesActions {
         const info = await importQuietly(path);
         if (info) imported.push(info);
       }
-      if (imported.length) core.toast("info", t().samples.filesImported(imported.length));
+      if (imported.length) core.notifications.toast("info", t().samples.filesImported(imported.length));
       return imported;
     },
 
     async removeSample(sample) {
-      const { clips, samplers } = sampleUsage(core.project, sample.id);
+      const { clips, samplers } = sampleUsage(core.copy.project, sample.id);
       if (clips + samplers > 0) {
         const msg = t().samples;
         const parts = [clips > 0 ? msg.usageClips(clips) : "", samplers > 0 ? msg.usageSamplers(samplers) : ""].filter(Boolean);
         const ok = await core.dialogs.confirm(msg.confirmRemove(sample.name, parts.join(", ")), msg.removeTitle);
         if (!ok) return;
       }
-      if (await core.attempt(api.samples.remove(sample.id))) core.toast("info", t().samples.removed(sample.name));
+      if (await core.calls.attempt(api.samples.remove(sample.id))) core.notifications.toast("info", t().samples.removed(sample.name));
     },
   };
 }

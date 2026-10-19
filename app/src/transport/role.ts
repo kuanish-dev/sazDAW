@@ -1,16 +1,16 @@
 // The transport role: playback (`transport.ts`) and the song's tempo and meter (`tempo.ts`).
 import { defineRole, useRole } from "../core/roles";
-import { createTempoActions, type TempoActions } from "./tempo";
-import { createTransportActions, type TransportActions } from "./transport";
+import { createTempo, type Tempo } from "./tempo";
+import { createTransport, type Transport } from "./transport";
 
-export type TransportRole = TransportActions & {
+export type TransportRole = Transport & {
   /** Song tempo and meter: tempo points, meter changes. */
-  readonly tempo: TempoActions;
+  readonly tempo: Tempo;
 };
 
 export const transportRole = defineRole("transport", ({ core }): TransportRole => ({
-  ...createTransportActions(core),
-  tempo: createTempoActions(core),
+  ...createTransport(core),
+  tempo: createTempo(core),
 }));
 
 export const useTransport = () => useRole(transportRole);

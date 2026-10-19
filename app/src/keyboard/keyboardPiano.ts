@@ -1,7 +1,7 @@
 // Computer keyboard as a piano on the selected track: base octave and held notes (highlighted by the piano roll).
 // Works on any tab and in dialogs; does not interfere with text input or Cmd/Ctrl/Alt shortcuts.
 import { createSignal } from "solid-js";
-import type { LiveActions } from "./live";
+import type { LiveNotes } from "./live";
 import type { Id } from "../api/types";
 import { MAX_OCTAVE, MIN_OCTAVE, OCTAVE_DOWN, OCTAVE_UP, keyToPitch } from "./keyboard";
 import { clamp } from "../common/math";
@@ -18,7 +18,7 @@ export interface KeyboardPiano {
   install(): () => void;
 }
 
-export function createKeyboardPiano(deps: { selectedTrack: () => Id | null; live: LiveActions }): KeyboardPiano {
+export function createKeyboardPiano(deps: { selectedTrack: () => Id | null; live: LiveNotes }): KeyboardPiano {
   const [octave, setOctave] = createSignal(START_OCTAVE);
   const [pressedPitches, setPressedPitches] = createSignal<Set<number>>(new Set<number>());
 

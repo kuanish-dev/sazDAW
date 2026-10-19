@@ -5,9 +5,9 @@ import { t } from "../i18n";
 import type { Core } from "../core/core";
 import type { Views } from "../shell/views";
 import type { RecordingStatus } from "./recordingStatus";
-import type { NoteRecordActions } from "./noteRecord";
+import type { NoteRecord } from "./noteRecord";
 
-export interface AudioRecordActions {
+export interface AudioRecord {
   /** Arms or disarms recording on an audio track (an armed track opens its input: levels, "auto" monitoring). */
   setArmed(track: Id, armed: boolean): Promise<void>;
   /** Which input channels the track records and monitors. */
@@ -21,42 +21,42 @@ export interface AudioRecordActions {
   pressRecord(notesArmed: boolean): Promise<void>;
 }
 
-export function createAudioRecordActions(core: Core, views: Views, recording: Pick<RecordingStatus, "followRecording">, notes: Pick<NoteRecordActions, "setArmed">): AudioRecordActions {
+export function createAudioRecord(core: Core, views: Views, recording: Pick<RecordingStatus, "followRecording">, notes: Pick<NoteRecord, "setArmed">): AudioRecord {
   const { api } = core;
 
   /** Starts a take on all armed tracks from the current position (a stopped transport starts). */
   const start = async () => {
-    await core.attempt(api.audioRecord.start());
+    await core.calls.attempt(api.audioRecord.start());
     // Poll even after a refusal: if recording was already running, the banner must show it.
     recording.followRecording();
   };
 
   const stop = async () => {
     // Read dropouts before stopping: afterwards the recording state is reset.
-    const before = await core.run(api.audioRecord.status());
-    const clips = await core.run(api.audioRecord.stop());
+    const before = await core.calls.run(api.audioRecord.status());
+    const clips = await core.calls.run(api.audioRecord.stop());
     recording.followRecording();
     // A failed stop has already re-read the project (`run`), so the tracks that did record are shown.
     if (!clips) return;
     await views.showCreated({ clips: clips.map((c) => c.id) });
-    core.toast("info", t().tracks.recordingAdded(clips.length));
+    core.notifications.toast("info", t().tracks.recordingAdded(clips.length));
     if (before && before.droppedFrames > 0) {
-      core.toast("error", t().tracks.recordingDropped);
+      core.notifications.toast("error", t().tracks.recordingDropped);
     }
   };
 
   return {
     async setArmed(track, armed) {
-      await core.exec(api.audioRecord.setArmed(track, armed));
+      await core.calls.exec(api.audioRecord.setArmed(track, armed));
       recording.followRecording();
     },
     async setInput(track, input) {
-      await core.exec(api.audioRecord.setInput(track, input));
+      await core.calls.exec(api.audioRecord.setInput(track, input));
       recording.followRecording();
     },
     stop,
     async pressRecord(notesArmed) {
-      const status = await core.run(api.audioRecord.status());
+      const status = await core.calls.run(api.audioRecord.status());
       if (status?.recording) {
         await stop();
         if (notesArmed) await notes.setArmed(false);

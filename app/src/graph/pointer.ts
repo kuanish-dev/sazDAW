@@ -1,6 +1,6 @@
 // Mouse in the node editor: camera pan and zoom, moving cards, dragging a wire from an output to an input.
-// Holds the gesture and exposes handlers; the result goes to `GraphActions`, drafts are shown while the gesture is in progress.
-import type { GraphActions } from "./graph";
+// Holds the gesture and exposes handlers; the result goes to `ProcessingGraph`, drafts are shown while the gesture is in progress.
+import type { ProcessingGraph } from "./graph";
 import type { Graph, GraphNode, Id } from "../api/types";
 import { checkEdge } from "./graphRules";
 import { capture, isZoomWheel, localPoint } from "../common/pointer";
@@ -22,7 +22,7 @@ type Gesture =
   | { kind: "wire"; from: Id };
 
 export interface GraphPointerDeps {
-  graph: GraphActions;
+  graph: ProcessingGraph;
   data(): Graph;
   /** Nodes with position drafts applied. */
   nodes(): GraphNode[];

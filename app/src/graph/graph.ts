@@ -5,7 +5,7 @@ import { findNode, hasOutput, hasStrip, hasVolume, nextBusName } from "./graphRu
 import type { Core } from "../core/core";
 import type { ParamTouch } from "../automation/paramTouch";
 
-export interface GraphActions {
+export interface ProcessingGraph {
   /** New unconnected effect; returns the node id, or `undefined` on failure. */
   addEffect(effect: string, x: number, y: number): Promise<Id | undefined>;
   /** New bus "Bus N", already connected to the master. */
@@ -51,42 +51,42 @@ export interface GraphActions {
   routeOutput(from: Id, to: Id): Promise<void>;
 }
 
-export function createGraphActions(core: Core, touch: ParamTouch): GraphActions {
+export function createProcessingGraph(core: Core, touch: ParamTouch): ProcessingGraph {
   const { api } = core;
   /** Shows the value immediately without waiting for the backend (sliders, knobs, cards), then asks the backend. */
   const showThen = (id: Id, change: (node: GraphNode) => void, send: () => Promise<unknown>) => {
-    core.patchProject((p) => {
+    core.copy.patchProject((p) => {
       const node = p.graph.nodes.find((n) => n.id === id);
       if (node) change(node);
     });
-    return core.exec(send());
+    return core.calls.exec(send());
   };
   /** A control moved a parameter: live automation writing hears of it first, then the value shows and is sent. */
   const showMoved = (target: ParamTarget, value: number, id: Id, change: (node: GraphNode) => void, send: () => Promise<unknown>) => {
     touch.moved(target, value);
     return showThen(id, change, send);
   };
-  const moveNode: GraphActions["moveNode"] = (id, x, y) => showThen(id, (n) => Object.assign(n, { x, y }), () => api.graph.moveNode(id, x, y));
+  const moveNode: ProcessingGraph["moveNode"] = (id, x, y) => showThen(id, (n) => Object.assign(n, { x, y }), () => api.graph.moveNode(id, x, y));
 
   return {
-    addEffect: (effect, x, y) => core.run(api.graph.addEffect(effect, x, y)),
-    addBus: (x, y) => core.run(api.graph.addBus(nextBusName(core.project.graph), x, y)),
-    removeNode: (id) => core.exec(api.graph.removeNode(id)),
-    renameNode: (id, name) => core.exec(api.graph.renameNode(id, name)),
+    addEffect: (effect, x, y) => core.calls.run(api.graph.addEffect(effect, x, y)),
+    addBus: (x, y) => core.calls.run(api.graph.addBus(nextBusName(core.copy.project.graph), x, y)),
+    removeNode: (id) => core.calls.exec(api.graph.removeNode(id)),
+    renameNode: (id, name) => core.calls.exec(api.graph.renameNode(id, name)),
     moveNode,
     async arrange(positions) {
       for (const p of positions) await moveNode(p.id, p.x, p.y);
     },
     connect: (from, to, level, sidechain) => {
       // Connecting an existing pair again moves its level: that is a parameter move live writing may record.
-      if (core.project.graph.edges.some((e) => e.from === from && e.to === to && e.sidechain === sidechain)) {
+      if (core.copy.project.graph.edges.some((e) => e.from === from && e.to === to && e.sidechain === sidechain)) {
         touch.moved({ type: "edgeLevel", from, to, sidechain }, level);
       }
-      return core.attempt(api.graph.connect(from, to, level, sidechain));
+      return core.calls.attempt(api.graph.connect(from, to, level, sidechain));
     },
-    disconnect: (from, to, sidechain) => core.exec(api.graph.disconnect(from, to, sidechain)),
-    setEdgePreFader: (from, to, preFader) => core.exec(api.graph.setEdgePreFader(from, to, preFader)),
-    setSidechain: (effect, source) => core.exec(api.graph.setSidechain(effect, source)),
+    disconnect: (from, to, sidechain) => core.calls.exec(api.graph.disconnect(from, to, sidechain)),
+    setEdgePreFader: (from, to, preFader) => core.calls.exec(api.graph.setEdgePreFader(from, to, preFader)),
+    setSidechain: (effect, source) => core.calls.exec(api.graph.setSidechain(effect, source)),
     setVolume: (id, volume) => showMoved({ type: "nodeVolume", node: id }, volume, id, ({ kind }) => {
       if (hasVolume(kind)) kind.volume = volume;
     }, () => api.graph.setVolume(id, volume)),
@@ -114,20 +114,20 @@ export function createGraphActions(core: Core, touch: ParamTouch): GraphActions 
     setEffectParam: (id, name, value) => showMoved({ type: "effectParam", node: id, param: name }, value, id, ({ kind }) => {
       if (kind.type === "effect") kind.params[name] = value;
     }, () => api.graph.setEffectParam(id, name, value)),
-    setEffectBypass: (id, bypass) => core.exec(api.graph.setEffectBypass(id, bypass)),
+    setEffectBypass: (id, bypass) => core.calls.exec(api.graph.setEffectBypass(id, bypass)),
     insertEffectAt(node, effect, x, y) {
-      const kind = findNode(core.project.graph, node)?.kind;
+      const kind = findNode(core.copy.project.graph, node)?.kind;
       if (!kind) return Promise.resolve(undefined);
-      return core.run(hasOutput(kind) ? api.graph.insertEffect(node, effect, x, y) : api.graph.insertEffectBefore(node, effect, x, y));
+      return core.calls.run(hasOutput(kind) ? api.graph.insertEffect(node, effect, x, y) : api.graph.insertEffectBefore(node, effect, x, y));
     },
-    removeEffectKeepPath: (id) => core.exec(api.graph.removeEffectKeepPath(id)),
+    removeEffectKeepPath: (id) => core.calls.exec(api.graph.removeEffectKeepPath(id)),
     async routeOutput(from, to) {
       // Copies, not references: the project is re-read after the first call.
-      const post = core.project.graph.edges.filter((e) => e.from === from && !e.sidechain && !e.preFader).map((e) => ({ ...e }));
+      const post = core.copy.project.graph.edges.filter((e) => e.from === from && !e.sidechain && !e.preFader).map((e) => ({ ...e }));
       const sends = post.slice(1).filter((e) => e.to !== to);
-      if (!(await core.attempt(api.graph.setOutput(from, to)))) return;
+      if (!(await core.calls.attempt(api.graph.setOutput(from, to)))) return;
       for (const send of sends) {
-        if (!(await core.attempt(api.graph.connect(from, send.to, send.level, false)))) return;
+        if (!(await core.calls.attempt(api.graph.connect(from, send.to, send.level, false)))) return;
       }
     },
   };

@@ -3,17 +3,17 @@
 import { defineRole, useRole } from "../core/roles";
 import { samplesRole } from "../samples/role";
 import { shellRole } from "../shell/role";
-import { createSoundBrowserActions, type SoundBrowserActions } from "./library";
-import { createSoundPlacementActions, type SoundPlacementActions } from "./soundPlacement";
+import { createSoundLibrary, type SoundLibrary } from "./library";
+import { createSoundPlacement, type SoundPlacement } from "./soundPlacement";
 
 export interface SoundsRole {
-  readonly browser: SoundBrowserActions;
-  readonly placement: SoundPlacementActions;
+  readonly browser: SoundLibrary;
+  readonly placement: SoundPlacement;
 }
 
 export const soundsRole = defineRole("sounds", ({ core, use }): SoundsRole => ({
-  browser: createSoundBrowserActions(core),
-  placement: createSoundPlacementActions(core, use(shellRole), use(samplesRole)),
+  browser: createSoundLibrary(core),
+  placement: createSoundPlacement(core, use(shellRole), use(samplesRole)),
 }));
 
 export const useSounds = () => useRole(soundsRole);

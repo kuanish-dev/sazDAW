@@ -7,7 +7,7 @@ import { type JSX, createComponent, createContext, getOwner, runWithOwner, useCo
 import type { ToastReads } from "./notifications";
 import type { PlaybackReads } from "./playback";
 import type { ProjectReads } from "./projectSync";
-import type { Core, CoreReads } from "./core";
+import type { Core } from "./core";
 
 /** What a role is made from: the shared core and the other roles it asks for. */
 export interface RoleDeps {
@@ -25,10 +25,10 @@ export function defineRole<T>(name: string, create: (deps: RoleDeps) => T): Role
   return { name, create };
 }
 
-/** The window's roles and what the UI reads of the core. */
+/** The window's roles, and the core they are made from (for the hooks of what the UI reads of it). */
 export interface Roles {
   use<T>(role: Role<T>): T;
-  readonly reads: CoreReads;
+  readonly core: Core;
 }
 
 /**
@@ -36,7 +36,7 @@ export interface Roles {
  * component that asked first: its effects and cleanups live as long as the window. Two roles that need each other are
  * a mistake in their definitions and stop with both names.
  */
-export function createRoles(core: Core, reads: CoreReads): Roles {
+export function createRoles(core: Core): Roles {
   const owner = getOwner();
   const made = new Map<Role<unknown>, unknown>();
   const making: Role<unknown>[] = [];
@@ -54,7 +54,7 @@ export function createRoles(core: Core, reads: CoreReads): Roles {
       making.pop();
     }
   };
-  return { use, reads };
+  return { use, core };
 }
 
 const RolesContext = createContext<Roles>();
@@ -78,13 +78,13 @@ function roles(): Roles {
 export const useRole = <T,>(role: Role<T>): T => roles().use(role);
 
 /** The project copy as the UI reads it: the project, its status, the catalog, whether one is open. */
-export const useProjectCopy = (): ProjectReads => roles().reads;
+export const useProjectCopy = (): ProjectReads => roles().core.copy;
 
 /** The playback tick and the positions for drawing. */
-export const usePlayback = (): PlaybackReads => roles().reads;
+export const usePlayback = (): PlaybackReads => roles().core.playback;
 
 /** The notifications in the window corner. */
-export const useToasts = (): ToastReads => roles().reads;
+export const useToasts = (): ToastReads => roles().core.notifications;
 
 /** The label of a long operation (opening a project); `null` — none. */
-export const useBusy = (): (() => string | null) => roles().reads.busy;
+export const useBusy = (): (() => string | null) => roles().core.calls.busy;

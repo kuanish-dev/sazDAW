@@ -5,7 +5,7 @@ import type { SignatureChange, TempoChange, TimeSignature } from "../api/types";
 import { withSignatureAt, withSignatureFrom, withTempoAt, withoutSignature } from "../common/tempoMap";
 import type { Core } from "../core/core";
 
-export interface TempoActions {
+export interface Tempo {
   /** Tempo of the point in effect at `tick` (the transport BPM field uses the playhead, project settings use 0). */
   setTempoAt(tick: number, bpm: number): Promise<void>;
   /** The time signature in effect at `tick` becomes `signature`. */
@@ -15,16 +15,16 @@ export interface TempoActions {
   removeSignature(index: number): Promise<void>;
 }
 
-export function createTempoActions(core: Core): TempoActions {
+export function createTempo(core: Core): Tempo {
   const { api } = core;
-  const map = () => core.project.tempoMap;
+  const map = () => core.copy.project.tempoMap;
   const tempos = (changes: TempoChange[]) => {
-    core.patchProject((p) => { p.tempoMap.tempos = changes; });
-    return core.exec(api.tempo.setChanges(changes));
+    core.copy.patchProject((p) => { p.tempoMap.tempos = changes; });
+    return core.calls.exec(api.tempo.setChanges(changes));
   };
   const signatures = (changes: SignatureChange[]) => {
-    core.patchProject((p) => { p.tempoMap.signatures = changes; });
-    return core.exec(api.tempo.setSignatureChanges(changes));
+    core.copy.patchProject((p) => { p.tempoMap.signatures = changes; });
+    return core.calls.exec(api.tempo.setSignatureChanges(changes));
   };
   return {
     setTempoAt: (tick, bpm) => tempos(withTempoAt(map(), tick, bpm)),

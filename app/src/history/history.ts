@@ -3,7 +3,7 @@
 import type { HistorySteps } from "../api/types";
 import type { Core } from "../core/core";
 
-export interface HistoryActions {
+export interface EditHistory {
   undo(): Promise<void>;
   redo(): Promise<void>;
   /** The undo history to show: done steps oldest first, undone ones in redo order; `undefined` after a failure (shown,
@@ -14,7 +14,7 @@ export interface HistoryActions {
   travel(count: number): Promise<void>;
 }
 
-export function createHistoryActions(core: Core): HistoryActions {
+export function createEditHistory(core: Core): EditHistory {
   const { api } = core;
   // One step at a time, as the undo/redo buttons do: every step stays an ordinary undo or redo for the backend.
   const walk = async (count: number) => {
@@ -24,12 +24,12 @@ export function createHistoryActions(core: Core): HistoryActions {
     }
   };
   return {
-    undo: () => core.exec(api.history.undo()),
-    redo: () => core.exec(api.history.redo()),
+    undo: () => core.calls.exec(api.history.undo()),
+    redo: () => core.calls.exec(api.history.redo()),
     steps: () => api.history.list().catch((error: unknown) => {
-      core.showFailure(error);
+      core.notifications.showFailure(error);
       return undefined;
     }),
-    travel: (count) => core.exec(walk(count)),
+    travel: (count) => core.calls.exec(walk(count)),
   };
 }

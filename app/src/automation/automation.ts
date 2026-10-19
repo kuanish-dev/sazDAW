@@ -8,7 +8,7 @@ import type { Selection } from "../selection/selection";
 import type { Views } from "../shell/views";
 import type { ParamTouch } from "./paramTouch";
 
-export interface AutomationActions {
+export interface Automation {
   /** Selects the lane row of `target` on the Tracks tab, creating the lane if there is none yet. */
   showFor(target: ParamTarget): Promise<void>;
   /** Selects lane row `lane` and, optionally, its clip `clip` (its pattern opens in the clip panel); `null` clears. */
@@ -33,7 +33,7 @@ export interface AutomationActions {
   releaseTouches(): Promise<void>;
 }
 
-export function createAutomationActions(core: Core, selection: Selection, views: Views, touch: ParamTouch): AutomationActions {
+export function createAutomation(core: Core, selection: Selection, views: Views, touch: ParamTouch): Automation {
   const { api } = core;
   let clipboard: PointClip | null = null;
   /**
@@ -41,44 +41,44 @@ export function createAutomationActions(core: Core, selection: Selection, views:
    * at its old place for a frame (the gesture draft is gone, the new project has not arrived yet).
    */
   const show = (lane: Id, clip: Id, change: (found: AutomationClip) => void) =>
-    core.patchProject((p) => {
+    core.copy.patchProject((p) => {
       const found = p.automation.find((l) => l.id === lane)?.clips.find((c) => c.id === clip);
       if (found) change(found);
     });
   return {
     async showFor(target) {
-      const id = laneOfTarget(core.project, target)?.id ?? (await core.run(api.automation.addLane(target)));
+      const id = laneOfTarget(core.copy.project, target)?.id ?? (await core.calls.run(api.automation.addLane(target)));
       if (id === undefined) return;
       selection.selectAutomation({ lane: id, clip: null });
       views.showTab("tracks");
     },
     select: (lane, clip = null) => selection.selectAutomation(lane === null ? null : { lane, clip }),
-    removeLane: (id) => core.exec(api.automation.removeLane(id)),
+    removeLane: (id) => core.calls.exec(api.automation.removeLane(id)),
     async addClip(lane, startTick, lengthTicks) {
-      const clip = await core.run(api.automation.addClip(lane, startTick, lengthTicks));
+      const clip = await core.calls.run(api.automation.addClip(lane, startTick, lengthTicks));
       if (clip !== undefined) selection.selectAutomation({ lane, clip });
     },
     editClip(lane, clip, edit) {
       show(lane, clip, (found) => Object.assign(found, edit));
-      return core.exec(api.automation.editClip(lane, clip, edit));
+      return core.calls.exec(api.automation.editClip(lane, clip, edit));
     },
     async duplicateClip(lane, clip) {
-      const copy = await core.run(api.automation.duplicateClip(lane, clip));
+      const copy = await core.calls.run(api.automation.duplicateClip(lane, clip));
       if (copy !== undefined) selection.selectAutomation({ lane, clip: copy });
     },
-    removeClip: (lane, clip) => core.exec(api.automation.removeClip(lane, clip)),
+    removeClip: (lane, clip) => core.calls.exec(api.automation.removeClip(lane, clip)),
     setPoints(lane, clip, points) {
       show(lane, clip, (found) => {
         found.points = points;
       });
-      return core.exec(api.automation.setPoints(lane, clip, points));
+      return core.calls.exec(api.automation.setPoints(lane, clip, points));
     },
-    drawShape: (lane, clip, shape) => core.exec(api.automation.drawShape(lane, clip, shape)),
+    drawShape: (lane, clip, shape) => core.calls.exec(api.automation.drawShape(lane, clip, shape)),
     copyPoints(points, selected) {
       clipboard = copySelected(points, selected) ?? clipboard;
     },
     pastedPoints: (points, at) => (clipboard ? pasteAt(points, clipboard, at) : null),
-    setWriteMode: (mode) => core.exec(api.automation.setWriteMode(mode)),
+    setWriteMode: (mode) => core.calls.exec(api.automation.setWriteMode(mode)),
     releaseTouches: () => touch.releaseAll(),
   };
 }

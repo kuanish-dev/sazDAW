@@ -10,8 +10,8 @@ import { recordingRole } from "./recording/role";
 import { settingsRole } from "./settings/role";
 
 export function startApp(rpc: RpcClient, dialogs: SystemDialogs, shell: AppShell): Roles {
-  const { core, reads, start } = createCore(rpc, dialogs, shell);
-  const roles = createRoles(core, reads);
+  const { core, start } = createCore(rpc, dialogs, shell);
+  const roles = createRoles(core);
   void startup(roles, start);
   return roles;
 }

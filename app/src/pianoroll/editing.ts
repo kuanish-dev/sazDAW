@@ -1,6 +1,6 @@
 // Editing the selected notes of the piano roll: copy and paste (the clipboard lives in `notes.ts`), duplicate,
 // quantize to grid, arrow nudging, delete, and the panel's hotkeys. Each action is one undo step.
-import type { NotesActions } from "./notes";
+import type { Notes } from "./notes";
 import type { Id, NewNote, Note } from "../api/types";
 import { copyNotes, duplicateAt, moveNotes, pasteNotes, type NoteChange } from "./noteSelection";
 import type { ShortcutHelp } from "../common/shortcuts";
@@ -40,7 +40,7 @@ export const PIANO_ROLL_KEYS_HELP: readonly ShortcutHelp[] = NOTE_KEYS.map(({ ke
 }));
 
 export interface NoteEditingDeps {
-  notes: NotesActions;
+  notes: Notes;
   /** The clip being edited; `null` if no clip is selected. */
   target(): Id | null;
   noteList(): Note[];

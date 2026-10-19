@@ -2,19 +2,19 @@
 // (`sampleEditor.ts`) and auditioning a sound without changing the project (`preview.ts`).
 import { defineRole, useRole } from "../core/roles";
 import { shellRole } from "../shell/role";
-import { createPreviewActions, type PreviewActions } from "./preview";
-import { createSampleEditorActions, type SampleEditorActions } from "./sampleEditor";
-import { createSamplesActions, type SamplesActions } from "./samples";
+import { createPreview, type Preview } from "./preview";
+import { createSampleEditor, type SampleEditor } from "./sampleEditor";
+import { createSamples, type Samples } from "./samples";
 
-export type SamplesRole = SamplesActions & {
-  readonly editor: SampleEditorActions;
-  readonly preview: PreviewActions;
+export type SamplesRole = Samples & {
+  readonly editor: SampleEditor;
+  readonly preview: Preview;
 };
 
 export const samplesRole = defineRole("samples", ({ core, use }): SamplesRole => ({
-  ...createSamplesActions(core),
-  editor: createSampleEditorActions(core, use(shellRole)),
-  preview: createPreviewActions(core),
+  ...createSamples(core),
+  editor: createSampleEditor(core, use(shellRole)),
+  preview: createPreview(core),
 }));
 
 export const useSamples = () => useRole(samplesRole);

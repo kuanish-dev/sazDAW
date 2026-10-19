@@ -3,7 +3,7 @@
 // Each handler returns `true` if it owns the event (then the clip pointer doesn't get it).
 import { createSignal } from "solid-js";
 import type { Id, Marker, TempoMap } from "../api/types";
-import type { MarkersActions } from "./markers";
+import type { Markers } from "./markers";
 import { barStart, snapNearestInBars } from "../common/tempoMap";
 import { BAR_GRID } from "../common/time";
 import { capture, localPoint } from "../common/pointer";
@@ -27,7 +27,7 @@ export function createMarkerPointer(deps: {
   pxPerTick: () => number;
   /** Tempo map: markers snap to the starts of its bars. */
   tempoMap: () => TempoMap;
-  actions: MarkersActions;
+  actions: Markers;
   seek: (tick: number) => void;
 }) {
   /** Move draft: the marker and its new position while dragging. */

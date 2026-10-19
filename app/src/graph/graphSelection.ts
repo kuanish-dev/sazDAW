@@ -1,6 +1,6 @@
 // What is selected in the node editor (a node or an edge) and how to remove it.
 import { createSignal } from "solid-js";
-import type { GraphActions } from "./graph";
+import type { ProcessingGraph } from "./graph";
 import type { GraphEdge, GraphNode, Id } from "../api/types";
 
 export const sameEdge = (a: GraphEdge, b: GraphEdge) => a.from === b.from && a.to === b.to && a.sidechain === b.sidechain;
@@ -8,7 +8,7 @@ export const sameEdge = (a: GraphEdge, b: GraphEdge) => a.from === b.from && a.t
 /** Only effects and buses can be removed (sources go away with their track, the master is permanent). */
 export const isRemovable = (node: GraphNode | null) => node?.kind.type === "effect" || node?.kind.type === "bus";
 
-export function createGraphSelection(deps: { graph: GraphActions; nodes(): GraphNode[]; edges(): GraphEdge[] }) {
+export function createGraphSelection(deps: { graph: ProcessingGraph; nodes(): GraphNode[]; edges(): GraphEdge[] }) {
   const [nodeId, setNodeId] = createSignal<Id | null>(null);
   const [edgeKey, setEdgeKey] = createSignal<GraphEdge | null>(null);
 

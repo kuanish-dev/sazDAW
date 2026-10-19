@@ -12,7 +12,7 @@ import { homeDir } from "../files/paths";
 
 const WAV_EXT = ".wav";
 
-export interface SampleEditorActions {
+export interface SampleEditor {
   waveform(sample: Id, from: number, to: number, buckets: number): Promise<Waveform | undefined>;
   setMarkers(sample: Id, markers: number[]): Promise<void>;
   /** A sampler track from a region of the sample (the created track gets selected). */
@@ -23,19 +23,19 @@ export interface SampleEditorActions {
   saveRegion(sample: Id, region: Selection, defaultName: string): Promise<void>;
 }
 
-export function createSampleEditorActions(core: Core, views: Views): SampleEditorActions {
+export function createSampleEditor(core: Core, views: Views): SampleEditor {
   const { api } = core;
   return {
-    waveform: (sample, from, to, buckets) => core.run(api.samples.waveform(sample, from, to, buckets)),
-    setMarkers: (sample, markers) => core.exec(api.samples.setMarkers(sample, markers)),
+    waveform: (sample, from, to, buckets) => core.calls.run(api.samples.waveform(sample, from, to, buckets)),
+    setMarkers: (sample, markers) => core.calls.exec(api.samples.setMarkers(sample, markers)),
 
     async extractSelection(spec, region, name) {
-      if (await addTracks(core, views, [regionTrack(spec, name, region)])) core.toast("info", t().samples.trackAdded(name));
+      if (await addTracks(core, views, [regionTrack(spec, name, region)])) core.notifications.toast("info", t().samples.trackAdded(name));
     },
 
     async extractSlices(spec, markers, baseName) {
       const tracks = segments(markers, spec.totalFrames).map((region, i) => regionTrack(spec, `${baseName} ${i + 1}`, region));
-      if (await addTracks(core, views, tracks)) core.toast("info", t().samples.slicesCreated(tracks.length));
+      if (await addTracks(core, views, tracks)) core.notifications.toast("info", t().samples.slicesCreated(tracks.length));
     },
 
     async saveRegion(sample, region, defaultName) {
@@ -46,7 +46,7 @@ export function createSampleEditorActions(core: Core, views: Views): SampleEdito
       });
       if (!path) return;
       const target = withExtension(path, WAV_EXT);
-      if (await core.attempt(api.samples.exportRegion(sample, region.from, region.to, target))) core.toast("info", t().samples.saved(basename(target)));
+      if (await core.calls.attempt(api.samples.exportRegion(sample, region.from, region.to, target))) core.notifications.toast("info", t().samples.saved(basename(target)));
     },
   };
 }

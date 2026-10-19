@@ -2,18 +2,18 @@
 // the visualizer, the live meter, the mono check (`master.ts`).
 import { defineRole, useRole } from "../core/roles";
 import { createLevels, createReductions, type Levels, type Reductions } from "./levels";
-import { createMasterActions, type MasterActions } from "./master";
+import { createMaster, type Master } from "./master";
 
 export interface MixerRole {
   readonly levels: Levels;
   readonly reductions: Reductions;
-  readonly master: MasterActions;
+  readonly master: Master;
 }
 
 export const mixerRole = defineRole("mixer", ({ core }): MixerRole => ({
-  levels: createLevels(core.tick),
-  reductions: createReductions(core.tick),
-  master: createMasterActions(core),
+  levels: createLevels(core.playback.tick),
+  reductions: createReductions(core.playback.tick),
+  master: createMaster(core),
 }));
 
 export const useMixer = () => useRole(mixerRole);

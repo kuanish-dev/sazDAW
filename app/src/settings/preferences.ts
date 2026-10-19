@@ -33,16 +33,16 @@ export function createPreferences(core: Core): AppPreferences {
   const update = async (change: (current: Preferences) => Preferences) => {
     const previous = current();
     show(change(previous));
-    const stored = await core.run(api.preferences.set(current()));
+    const stored = await core.calls.run(api.preferences.set(current()));
     show(stored ?? previous);
-    if (current().language !== previous.language) await core.run(core.refreshCatalog());
+    if (current().language !== previous.language) await core.calls.run(core.copy.refreshCatalog());
   };
 
   return {
     current,
     show,
     async load() {
-      const stored = await core.run(api.preferences.get());
+      const stored = await core.calls.run(api.preferences.get());
       if (stored) show(stored);
     },
     update,

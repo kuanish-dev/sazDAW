@@ -10,7 +10,7 @@ export interface MidiConnection {
   track: Id;
 }
 
-export interface MidiInputActions {
+export interface MidiInput {
   /** Input device names; failure — a toast and an empty list. */
   devices(): Promise<string[]>;
   /** What is connected in this run; `null` — nothing. */
@@ -21,23 +21,23 @@ export interface MidiInputActions {
   disconnect(): Promise<void>;
 }
 
-export function createMidiInputActions(core: Core): MidiInputActions {
+export function createMidiInput(core: Core): MidiInput {
   const { api } = core;
   const [connection, setConnection] = createSignal<MidiConnection | null>(null);
   return {
-    devices: async () => (await core.run(api.midi.devices())) ?? [],
+    devices: async () => (await core.calls.run(api.midi.devices())) ?? [],
     connection,
     async connect(device, track) {
-      if (!(await core.attempt(api.midi.connect(device, track)))) return;
+      if (!(await core.calls.attempt(api.midi.connect(device, track)))) return;
       setConnection({ device, track });
-      core.toast("info", t().settings.midi.connectedToast(device));
+      core.notifications.toast("info", t().settings.midi.connectedToast(device));
     },
     async setTarget(track) {
       const current = connection();
-      if (current && (await core.attempt(api.midi.setTarget(track)))) setConnection({ ...current, track });
+      if (current && (await core.calls.attempt(api.midi.setTarget(track)))) setConnection({ ...current, track });
     },
     async disconnect() {
-      if (await core.attempt(api.midi.disconnect())) setConnection(null);
+      if (await core.calls.attempt(api.midi.disconnect())) setConnection(null);
     },
   };
 }

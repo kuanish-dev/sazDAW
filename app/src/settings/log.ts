@@ -2,14 +2,14 @@
 import type { LogEntry } from "../api/types";
 import type { Core } from "../core/core";
 
-export interface LogActions {
+export interface ErrorLog {
   /** Latest entries, newest last; an empty list if reading fails. */
   recent(limit: number): Promise<LogEntry[]>;
   /** Path to the log file (so it can be found on disk). */
   file(): Promise<string | null>;
 }
 
-export function createLogActions(core: Core): LogActions {
+export function createErrorLog(core: Core): ErrorLog {
   const { api } = core;
   return {
     // The log is read from disk: a read failure is not written to the log (that would loop), only to the console.

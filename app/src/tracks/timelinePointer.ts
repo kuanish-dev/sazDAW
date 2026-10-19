@@ -3,7 +3,7 @@
 // above the rows has its own pointers (`rulerPointer`, `tempoPointer`, `markerPointer`).
 import type { Clip, Id, TempoMap, Track } from "../api/types";
 import { laneOf, type Lanes } from "./trackRows";
-import type { ClipsActions } from "./clips";
+import type { Clips } from "./clips";
 import { clipsInArea, groupStart, moveGroup, toggleId, unionIds } from "./clipSelection";
 import { draggedGain, hitClip, overlapsOthers, resizePlacement, trimStartAt, trimmedClip, type ClipHit } from "./clipRules";
 import { fadeAt, fadeLengthAt, type FadeEdge } from "./fades";
@@ -57,7 +57,7 @@ export interface TimelinePointerDeps {
   pxPerTick: () => number;
   /** Where every row is (`tracks/rowLayout.ts`). */
   layout: () => RowLayout;
-  actions: ClipsActions;
+  actions: Clips;
   /** Clip selection; `track` is a track to select too (`null` means the track of the last selected clip). */
   select: (clips: Id[], track: Id | null) => void;
   setDraft: (draft: ClipDraft | null) => void;

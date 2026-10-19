@@ -15,15 +15,15 @@ export function createParamTouch(core: Core): ParamTouch {
   let touched = false;
   return {
     moved(target, value) {
-      const tick = core.tick();
+      const tick = core.playback.tick();
       if (tick.automationWrite === "off" || tick.state !== "playing") return;
       touched = true;
-      void core.exec(core.api.automation.touch(target, value));
+      void core.calls.exec(core.api.automation.touch(target, value));
     },
     async releaseAll() {
       if (!touched) return;
       touched = false;
-      await core.exec(core.api.automation.releaseAll());
+      await core.calls.exec(core.api.automation.releaseAll());
     },
   };
 }

@@ -7,7 +7,7 @@
 import { codeLabel, type ShortcutHelp } from "../common/shortcuts";
 import { t, type Messages } from "../i18n";
 import type { FilesRole } from "../files/role";
-import type { HistoryActions } from "../history/history";
+import type { EditHistory } from "../history/history";
 import { type ClipKeyRoles, handleClipKey } from "../tracks/clipKeys";
 import type { TransportRole } from "../transport/role";
 import type { Views } from "./views";
@@ -15,7 +15,7 @@ import type { Views } from "./views";
 /** The roles the window keys ask: the clip keys' and the transport, history, files and what the window shows. */
 export type WindowKeyRoles = ClipKeyRoles & {
   readonly transport: TransportRole;
-  readonly history: HistoryActions;
+  readonly history: EditHistory;
   readonly files: FilesRole;
   readonly shell: Views;
 };

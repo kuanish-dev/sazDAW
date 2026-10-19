@@ -3,29 +3,29 @@
 import { automationRole } from "../automation/role";
 import { defineRole, useRole } from "../core/roles";
 import { shellRole } from "../shell/role";
-import { type BounceActions, createBounceActions } from "./bounce";
-import { type ClipsActions, createClipsActions } from "./clips";
-import { createFoldersActions, type FoldersActions } from "./folders";
-import { createMarkersActions, type MarkersActions } from "./markers";
-import { createTracksActions, type TracksActions } from "./tracks";
+import { type Bounce, createBounce } from "./bounce";
+import { type Clips, createClips } from "./clips";
+import { createFolders, type Folders } from "./folders";
+import { createMarkers, type Markers } from "./markers";
+import { createTracks, type Tracks } from "./tracks";
 
-export type TracksRole = TracksActions & {
-  readonly clips: ClipsActions;
-  readonly folders: FoldersActions;
+export type TracksRole = Tracks & {
+  readonly clips: Clips;
+  readonly folders: Folders;
   /** Song structure: section markers. */
-  readonly markers: MarkersActions;
+  readonly markers: Markers;
   /** Render a track to audio: "Bounce to audio", "Freeze", "Unfreeze". */
-  readonly bounce: BounceActions;
+  readonly bounce: Bounce;
 };
 
 export const tracksRole = defineRole("tracks", ({ core, use }): TracksRole => {
   const shell = use(shellRole);
   return {
-    ...createTracksActions(core, shell, use(automationRole).touch),
-    clips: createClipsActions(core, shell),
-    folders: createFoldersActions(core),
-    markers: createMarkersActions(core),
-    bounce: createBounceActions(core, shell),
+    ...createTracks(core, shell, use(automationRole).touch),
+    clips: createClips(core, shell),
+    folders: createFolders(core),
+    markers: createMarkers(core),
+    bounce: createBounce(core, shell),
   };
 });
 

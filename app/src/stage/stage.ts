@@ -8,7 +8,7 @@ import { t } from "../i18n";
 import type { Core } from "../core/core";
 import type { ParamTouch } from "../automation/paramTouch";
 
-export interface StageActions {
+export interface Stage {
   /** Puts a channel (a track's source or a bus) on the stage or moves it there; a drag calls it on every move. */
   place(node: Id, spot: Spot): void;
   /** Every channel off the stage comes onto it at once, in an arc in front of the listener: one undo step. */
@@ -39,14 +39,14 @@ function latestWins<K, V>(send: (key: K, value: V) => Promise<void>): (key: K, v
   };
 }
 
-export function createStageActions(core: Core, touch: ParamTouch): StageActions {
+export function createStage(core: Core, touch: ParamTouch): Stage {
   const { api } = core;
-  const sendPlace = latestWins<Id, Spot>((node, { pan, depth, height }) => core.exec(api.stage.place(node, pan, { depth, height })));
-  const sendRoom = latestWins<"room", Room>((_, room) => core.exec(api.stage.setRoom(room)));
+  const sendPlace = latestWins<Id, Spot>((node, { pan, depth, height }) => core.calls.exec(api.stage.place(node, pan, { depth, height })));
+  const sendRoom = latestWins<"room", Room>((_, room) => core.calls.exec(api.stage.setRoom(room)));
 
   return {
     place(node, spot) {
-      const kind = findNode(core.project.graph, node)?.kind;
+      const kind = findNode(core.copy.project.graph, node)?.kind;
       if (!kind || !hasStrip(kind)) return;
       // A move of a channel already on the stage may be written as automation (its lanes exist only while it stands there).
       if (kind.stage) {
@@ -57,7 +57,7 @@ export function createStageActions(core: Core, touch: ParamTouch): StageActions 
         ];
         for (const [target, value] of moves) touch.moved(target, value);
       }
-      core.patchProject((p) => {
+      core.copy.patchProject((p) => {
         const channel = findNode(p.graph, node)?.kind;
         if (!channel || !hasStrip(channel)) return;
         channel.pan = spot.pan;
@@ -66,20 +66,20 @@ export function createStageActions(core: Core, touch: ParamTouch): StageActions 
       sendPlace(node, spot);
     },
     async placeAll() {
-      const off = stageChannels(core.project).filter((channel) => !channel.spot);
+      const off = stageChannels(core.copy.project).filter((channel) => !channel.spot);
       if (off.length === 0) return;
-      const mark = await core.run(api.history.checkpoint());
+      const mark = await core.calls.run(api.history.checkpoint());
       if (mark === undefined) return;
       const spots = ensembleSpots(off.length);
       for (const [index, channel] of off.entries()) {
         const spot = spots[index];
-        if (!spot || !(await core.attempt(api.stage.place(channel.node, spot.pan, { depth: spot.depth, height: spot.height })))) break;
+        if (!spot || !(await core.calls.attempt(api.stage.place(channel.node, spot.pan, { depth: spot.depth, height: spot.height })))) break;
       }
-      await core.exec(api.history.squash(mark, t().stage.placeAllStep));
+      await core.calls.exec(api.history.squash(mark, t().stage.placeAllStep));
     },
-    takeOff: (node) => core.exec(api.stage.takeOff(node)),
+    takeOff: (node) => core.calls.exec(api.stage.takeOff(node)),
     setRoom(room) {
-      core.patchProject((p) => {
+      core.copy.patchProject((p) => {
         p.room = room;
       });
       sendRoom("room", room);

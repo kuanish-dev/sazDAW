@@ -26,7 +26,7 @@ These rules matter more than convenience and speed. The map of the code is `ARCH
 
 9. **Ask it to do the work, don't do it for it.** An entity holds a reference to another (a service, the core, an action) and asks it to do the work: that's normal, the way departments of a company talk to each other. What's bad is walking "into someone else's office" and changing its state behind its back: touching its fields, locks, internal structures, writing to its storage directly. Only the owner changes its state.
    - An entity's internals (fields, locks, internal state) are hidden by a module/scope so the compiler keeps others out of the office (example: the core in `daw-project/src/service/`).
-   - The interface (UI) does not change shared session state itself: instant display of a slider value is done by the role (`core.patchProject`), not by the component.
+   - The interface (UI) does not change shared session state itself: instant display of a slider value is done by the role (`core.copy.patchProject`), not by the component.
 
 10. **No backward compatibility while active development is ongoing.** Project formats, APIs and contracts change without migrations or "transitional" layers; old project files may stop opening. We don't spend code or time on backward compatibility until the owner says development has stabilised.
 

@@ -2,8 +2,8 @@
 // automation writing.
 import { automationRole } from "../automation/role";
 import { defineRole, useRole } from "../core/roles";
-import { createGraphActions } from "./graph";
+import { createProcessingGraph } from "./graph";
 
-export const graphRole = defineRole("graph", ({ core, use }) => createGraphActions(core, use(automationRole).touch));
+export const graphRole = defineRole("graph", ({ core, use }) => createProcessingGraph(core, use(automationRole).touch));
 
 export const useGraph = () => useRole(graphRole);

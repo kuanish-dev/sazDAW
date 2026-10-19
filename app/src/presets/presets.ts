@@ -5,7 +5,7 @@ import { t } from "../i18n";
 import type { Core } from "../core/core";
 import { saveUnderName } from "../files/namedSave";
 
-export interface PresetsActions {
+export interface Presets {
   /** Preset names of a kind; on error, an empty list and a notification. */
   list(kind: string): Promise<string[]>;
   /** The target's parameters (and plugin state) as a preset of its kind; a taken name asks before replacing. */
@@ -15,9 +15,9 @@ export interface PresetsActions {
   remove(kind: string, name: string): Promise<boolean>;
 }
 
-export function createPresetsActions(core: Core): PresetsActions {
+export function createPresets(core: Core): Presets {
   const { api, dialogs } = core;
-  const list = async (kind: string) => (await core.run(api.presets.list(kind))) ?? [];
+  const list = async (kind: string) => (await core.calls.run(api.presets.list(kind))) ?? [];
 
   return {
     list,
@@ -29,10 +29,10 @@ export function createPresetsActions(core: Core): PresetsActions {
         save: (trimmed) => api.presets.save(target, trimmed),
       });
     },
-    apply: (target, name) => core.exec(api.presets.apply(target, name)),
+    apply: (target, name) => core.calls.exec(api.presets.apply(target, name)),
     async remove(kind, name) {
       if (!(await dialogs.confirm(t().presets.presetRemove(name), t().presets.presetTitle))) return false;
-      return core.attempt(api.presets.remove(kind, name));
+      return core.calls.attempt(api.presets.remove(kind, name));
     },
   };
 }

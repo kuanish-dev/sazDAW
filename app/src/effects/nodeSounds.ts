@@ -75,7 +75,7 @@ export function createNodeSounds(core: Core): NodeSounds {
 
   const read = async () => {
     const nodes = wanted();
-    const windows = await core.run(core.api.audio.nodeWindows(nodes, nodes.flatMap((node) => kept.get(node)?.cursor ?? [])));
+    const windows = await core.calls.run(core.api.audio.nodeWindows(nodes, nodes.flatMap((node) => kept.get(node)?.cursor ?? [])));
     if (!poller.running()) return;
     if (windows === undefined) {
       stop();

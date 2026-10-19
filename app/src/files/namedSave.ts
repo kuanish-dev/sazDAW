@@ -19,12 +19,12 @@ export interface NamedSave {
 export async function saveUnderName(core: Core, name: string, how: NamedSave): Promise<boolean> {
   const problem = presetNameProblem(name);
   if (problem) {
-    core.toast("error", how.problem(problem));
+    core.notifications.toast("error", how.problem(problem));
     return false;
   }
   const trimmed = name.trim();
   if ((await how.taken()).includes(trimmed) && !(await core.dialogs.confirm(how.exists(trimmed), how.title))) return false;
-  const saved = await core.attempt(how.save(trimmed));
-  if (saved) core.toast("info", how.saved(trimmed));
+  const saved = await core.calls.attempt(how.save(trimmed));
+  if (saved) core.notifications.toast("info", how.saved(trimmed));
   return saved;
 }

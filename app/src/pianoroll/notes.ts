@@ -16,7 +16,7 @@ import { t } from "../i18n";
 import type { Core } from "../core/core";
 import { homeDir } from "../files/paths";
 
-export interface NotesActions {
+export interface Notes {
   /** Step input: add or remove the step's notes in the clip at pitch `pitch` (defaults to the track's pitch). */
   setStep(clip: Id, step: number, want: "add" | "remove", pitch?: number): Promise<void>;
 
@@ -65,38 +65,38 @@ export interface NotesActions {
   importInto(clip: Id): Promise<number | undefined>;
 }
 
-export function createNotesActions(core: Core): NotesActions {
+export function createNotes(core: Core): Notes {
   const { api } = core;
   // A signal, not a plain variable: the Paste button's enabled state depends on it.
   const [clipboard, setClipboard] = createSignal<NoteClipboard | null>(null);
-  const trackOfClip = (clip: Id) => trackById(core.project, clipById(core.project, clip)?.track ?? null);
+  const trackOfClip = (clip: Id) => trackById(core.copy.project, clipById(core.copy.project, clip)?.track ?? null);
   /**
    * Shows an edit of the clip's notes at once: otherwise a dropped note or a drawn lane is drawn at its old place for a
    * frame (the gesture draft is gone, the new project has not arrived yet).
    */
   const show = (clip: Id, change: (content: NoteContent) => void) =>
-    core.patchProject((p) => {
+    core.copy.patchProject((p) => {
       const content = p.clips.find((c) => c.id === clip)?.content;
       if (content?.type === "notes") change(content);
     });
 
   return {
     async setStep(clipId, step, want, pitch) {
-      const clip = clipById(core.project, clipId);
+      const clip = clipById(core.copy.project, clipId);
       const track = trackOfClip(clipId);
       if (clip?.content.type !== "notes" || !track) return;
       const height = pitch ?? track.defaultPitch;
       const existing = notesAtStep(clipNotes(clip), step, height);
       if (want === "remove") {
-        if (existing.length > 0) await core.exec(api.notes.removeMany(clip.id, existing.map((n) => n.id)));
+        if (existing.length > 0) await core.calls.exec(api.notes.removeMany(clip.id, existing.map((n) => n.id)));
       } else if (existing.length === 0) {
-        await core.exec(api.notes.add(clip.id, { pitch: height, startTick: step * STEP_TICKS, lengthTicks: STEP_TICKS, velocity: DEFAULT_VELOCITY }));
+        await core.calls.exec(api.notes.add(clip.id, { pitch: height, startTick: step * STEP_TICKS, lengthTicks: STEP_TICKS, velocity: DEFAULT_VELOCITY }));
       }
     },
 
-    addNote: (clip, note) => core.run(api.notes.add(clip, note)),
-    removeNote: (clip, id) => core.exec(api.notes.remove(clip, id)),
-    addNotes: (clip, notes) => core.run(api.notes.addMany(clip, notes)),
+    addNote: (clip, note) => core.calls.run(api.notes.add(clip, note)),
+    removeNote: (clip, id) => core.calls.exec(api.notes.remove(clip, id)),
+    addNotes: (clip, notes) => core.calls.run(api.notes.addMany(clip, notes)),
     updateNotes(clip, changes) {
       show(clip, (content) => {
         for (const { id, note } of changes) {
@@ -104,23 +104,23 @@ export function createNotesActions(core: Core): NotesActions {
           if (found) Object.assign(found, note);
         }
       });
-      return core.run(api.notes.updateMany(clip, changes));
+      return core.calls.run(api.notes.updateMany(clip, changes));
     },
-    removeNotes: (clip, ids) => core.exec(api.notes.removeMany(clip, ids)),
-    clear: (clip) => core.exec(api.notes.clear(clip)),
-    setLoopTicks: (clip, loopTicks) => core.exec(api.notes.setLoopTicks(clip, loopTicks)),
+    removeNotes: (clip, ids) => core.calls.exec(api.notes.removeMany(clip, ids)),
+    clear: (clip) => core.calls.exec(api.notes.clear(clip)),
+    setLoopTicks: (clip, loopTicks) => core.calls.exec(api.notes.setLoopTicks(clip, loopTicks)),
 
-    quantize: (clip, ids, grid, strength = 1, ends = false) => core.run(api.notes.quantize(clip, ids, grid, strength, ends)),
-    humanize: (clip, ids, timingTicks, velocity) => core.run(api.notes.humanize(clip, ids, timingTicks, velocity)),
-    transpose: (clip, ids, semitones) => core.run(api.notes.transpose(clip, ids, semitones)),
-    fitToScale: (clip, ids, root, scale) => core.run(api.notes.fitToScale(clip, ids, root, scale)),
-    legato: (clip, ids) => core.run(api.notes.legato(clip, ids)),
-    groove: (clip, ids, template, amount) => core.run(api.notes.groove(clip, ids, template, amount)),
-    grooveFromClip: (clip, ids, sourceClip, amount) => core.run(api.notes.grooveFromClip(clip, ids, sourceClip, amount)),
-    vary: (clip, ids, variation) => core.run(api.notes.vary(clip, ids, variation)),
+    quantize: (clip, ids, grid, strength = 1, ends = false) => core.calls.run(api.notes.quantize(clip, ids, grid, strength, ends)),
+    humanize: (clip, ids, timingTicks, velocity) => core.calls.run(api.notes.humanize(clip, ids, timingTicks, velocity)),
+    transpose: (clip, ids, semitones) => core.calls.run(api.notes.transpose(clip, ids, semitones)),
+    fitToScale: (clip, ids, root, scale) => core.calls.run(api.notes.fitToScale(clip, ids, root, scale)),
+    legato: (clip, ids) => core.calls.run(api.notes.legato(clip, ids)),
+    groove: (clip, ids, template, amount) => core.calls.run(api.notes.groove(clip, ids, template, amount)),
+    grooveFromClip: (clip, ids, sourceClip, amount) => core.calls.run(api.notes.grooveFromClip(clip, ids, sourceClip, amount)),
+    vary: (clip, ids, variation) => core.calls.run(api.notes.vary(clip, ids, variation)),
     async varyToNewClip(clip, ids, variation) {
-      const created = await core.run(api.notes.varyToNewClip(clip, ids, variation));
-      if (created) core.toast("info", t().pianoRoll.variationToNewClip);
+      const created = await core.calls.run(api.notes.varyToNewClip(clip, ids, variation));
+      if (created) core.notifications.toast("info", t().pianoRoll.variationToNewClip);
       return created;
     },
     setControllerLane(clip, kind, points) {
@@ -128,19 +128,19 @@ export function createNotesActions(core: Core): NotesActions {
         const others = (content.controllers ?? []).filter((lane) => !sameKind(lane.kind, kind));
         content.controllers = points.length === 0 ? others : [...others, { kind, points }];
       });
-      return core.exec(api.notes.setControllerLane(clip, kind, points));
+      return core.calls.exec(api.notes.setControllerLane(clip, kind, points));
     },
 
     copy(notes) {
       const copied = copyNotes(notes);
       if (!copied) return;
       setClipboard(copied);
-      core.toast("info", t().pianoRoll.notesCopied(notes.length));
+      core.notifications.toast("info", t().pianoRoll.notesCopied(notes.length));
     },
     canPaste: () => clipboard() !== null,
     async paste(clip, atTick) {
       const copied = clipboard();
-      return copied ? core.run(api.notes.addMany(clip, pasteNotes(copied, atTick))) : undefined;
+      return copied ? core.calls.run(api.notes.addMany(clip, pasteNotes(copied, atTick))) : undefined;
     },
 
     async exportClip(clipId) {
@@ -148,15 +148,15 @@ export function createNotesActions(core: Core): NotesActions {
       const path = await core.dialogs.saveFile({
         title: t().pianoRoll.exportMidiTitle, filters: [MIDI_FILTER], defaultPath: joinPath(await homeDir(api), `${name}.mid`),
       });
-      if (path && (await core.attempt(api.midi.exportClip(clipId, path)))) core.toast("info", t().pianoRoll.midiWritten);
+      if (path && (await core.calls.attempt(api.midi.exportClip(clipId, path)))) core.notifications.toast("info", t().pianoRoll.midiWritten);
     },
     async importInto(clipId) {
       const track = trackOfClip(clipId);
       if (!track) return undefined;
       const path = await core.dialogs.openFile({ title: t().pianoRoll.importMidiTitle(track.name), filters: [MIDI_FILTER], defaultPath: await homeDir(api) });
       if (!path) return undefined;
-      const count = await core.run(api.midi.importInto(clipId, path));
-      if (count !== undefined) core.toast("info", t().pianoRoll.notesImported(count));
+      const count = await core.calls.run(api.midi.importInto(clipId, path));
+      if (count !== undefined) core.notifications.toast("info", t().pianoRoll.notesImported(count));
       return count;
     },
   };

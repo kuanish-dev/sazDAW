@@ -12,7 +12,7 @@ export interface AudioSettingsForm {
   recordLatency: string;
 }
 
-export interface AudioActions {
+export interface AudioSetup {
   devices(): Promise<AudioDevices | undefined>;
   settings(): Promise<AudioSettings | undefined>;
   status(): Promise<AudioStatus | undefined>;
@@ -27,16 +27,16 @@ export interface AudioActions {
   inputLevel(): Promise<InputLevel | undefined>;
 }
 
-export function createAudioActions(core: Core): AudioActions {
+export function createAudioSetup(core: Core): AudioSetup {
   const { api } = core;
   return {
-    devices: () => core.run(api.audio.devices()),
-    settings: () => core.run(api.audio.settings()),
-    status: () => core.run(api.audio.status()),
+    devices: () => core.calls.run(api.audio.devices()),
+    settings: () => core.calls.run(api.audio.settings()),
+    status: () => core.calls.run(api.audio.status()),
     async apply(form) {
       const recordLatencyMs = parseRecordLatency(form.recordLatency);
       if (recordLatencyMs === undefined) {
-        core.toast("error", t().settings.audio.errorRecordLatency(MAX_RECORD_LATENCY_MS));
+        core.notifications.toast("error", t().settings.audio.errorRecordLatency(MAX_RECORD_LATENCY_MS));
         return null;
       }
       const settings: AudioSettings = {
@@ -45,12 +45,12 @@ export function createAudioActions(core: Core): AudioActions {
         bufferFrames: parseBufferFrames(form.buffer),
         recordLatencyMs,
       };
-      const status = await core.run(api.audio.apply(settings));
-      if (!status) return (await core.run(api.audio.status())) ?? null;
-      core.toast("info", t().settings.audio.switched(status.outputName ?? t().settings.audio.defaultDeviceName));
+      const status = await core.calls.run(api.audio.apply(settings));
+      if (!status) return (await core.calls.run(api.audio.status())) ?? null;
+      core.notifications.toast("info", t().settings.audio.switched(status.outputName ?? t().settings.audio.defaultDeviceName));
       return status;
     },
-    watchInput: (on) => core.exec(api.audio.watchInput(on)),
-    inputLevel: () => core.run(api.audio.inputLevel()),
+    watchInput: (on) => core.calls.exec(api.audio.watchInput(on)),
+    inputLevel: () => core.calls.run(api.audio.inputLevel()),
   };
 }

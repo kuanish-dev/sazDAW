@@ -3,14 +3,14 @@
 import { defineRole, useRole } from "../core/roles";
 import { selectionRole } from "../selection/role";
 import { createKeyboardPiano, type KeyboardPiano } from "./keyboardPiano";
-import { createLiveActions, type LiveActions } from "./live";
+import { createLiveNotes, type LiveNotes } from "./live";
 
 export type KeyboardRole = KeyboardPiano & {
-  readonly live: LiveActions;
+  readonly live: LiveNotes;
 };
 
 export const keyboardRole = defineRole("keyboard", ({ core, use }): KeyboardRole => {
-  const live = createLiveActions(core);
+  const live = createLiveNotes(core);
   return { ...createKeyboardPiano({ selectedTrack: use(selectionRole).track, live }), live };
 });
 

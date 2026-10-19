@@ -4,7 +4,7 @@ import type { FolderEdit, Id } from "../api/types";
 import { nextFolderName } from "./trackRows";
 import type { Core } from "../core/core";
 
-export interface FoldersActions {
+export interface Folders {
   /** New folder from tracks (named "Folder N"): they are placed consecutively at the topmost one's position. */
   create(tracks: Id[]): Promise<void>;
   /** Name, collapsed state, color; collapsing is shown immediately. */
@@ -24,42 +24,42 @@ export interface FoldersActions {
   setSolo(id: Id, on: boolean): Promise<void>;
 }
 
-export function createFoldersActions(core: Core): FoldersActions {
+export function createFolders(core: Core): Folders {
   const { api } = core;
 
   /** Takes a track out of its folder (if it is the last track the folder is removed, since the backend rejects empty folders). */
   const leave = async (track: Id, folder: Id): Promise<boolean> => {
-    const rest = core.project.tracks.filter((t) => t.folder === folder && t.id !== track).map((t) => t.id);
-    return core.attempt(rest.length === 0 ? api.folders.remove(folder) : api.folders.setTracks(folder, rest));
+    const rest = core.copy.project.tracks.filter((t) => t.folder === folder && t.id !== track).map((t) => t.id);
+    return core.calls.attempt(rest.length === 0 ? api.folders.remove(folder) : api.folders.setTracks(folder, rest));
   };
 
   return {
-    create: (tracks) => core.exec(api.folders.create(nextFolderName(core.project.folders), tracks)),
+    create: (tracks) => core.calls.exec(api.folders.create(nextFolderName(core.copy.project.folders), tracks)),
     async edit(id, edit) {
       if (edit.collapsed !== undefined) {
-        core.patchProject((p) => {
+        core.copy.patchProject((p) => {
           const folder = p.folders.find((f) => f.id === id);
           if (folder) folder.collapsed = edit.collapsed!;
         });
       }
-      await core.exec(api.folders.edit(id, edit));
+      await core.calls.exec(api.folders.edit(id, edit));
     },
-    remove: (id) => core.exec(api.folders.remove(id)),
+    remove: (id) => core.calls.exec(api.folders.remove(id)),
     async place(track, folder, index, members) {
-      if (folder !== null) return core.exec(api.folders.setTracks(folder, members));
-      const current = core.project.tracks.find((t) => t.id === track)?.folder ?? null;
+      if (folder !== null) return core.calls.exec(api.folders.setTracks(folder, members));
+      const current = core.copy.project.tracks.find((t) => t.id === track)?.folder ?? null;
       if (current !== null && !(await leave(track, current))) return;
-      await core.exec(api.tracks.move(track, index));
+      await core.calls.exec(api.tracks.move(track, index));
     },
     async moveInto(folder, track) {
-      const members = core.project.tracks.filter((t) => t.folder === folder && t.id !== track).map((t) => t.id);
-      await core.exec(api.folders.setTracks(folder, [...members, track]));
+      const members = core.copy.project.tracks.filter((t) => t.folder === folder && t.id !== track).map((t) => t.id);
+      await core.calls.exec(api.folders.setTracks(folder, [...members, track]));
     },
     async takeOut(track) {
-      const folder = core.project.tracks.find((t) => t.id === track)?.folder;
+      const folder = core.copy.project.tracks.find((t) => t.id === track)?.folder;
       if (folder != null) await leave(track, folder);
     },
-    setMute: (id, on) => core.exec(api.folders.setMute(id, on)),
-    setSolo: (id, on) => core.exec(api.folders.setSolo(id, on)),
+    setMute: (id, on) => core.calls.exec(api.folders.setMute(id, on)),
+    setSolo: (id, on) => core.calls.exec(api.folders.setSolo(id, on)),
   };
 }

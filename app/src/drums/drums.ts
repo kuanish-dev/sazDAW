@@ -4,7 +4,7 @@ import { t } from "../i18n";
 import type { Core } from "../core/core";
 import type { Views } from "../shell/views";
 
-export interface DrumsActions {
+export interface Drums {
   /** All library patterns (empty if they could not be read). */
   patterns(): Promise<DrumPattern[]>;
   /** Builds the part and selects its first track; `undefined` on failure (the reason is shown as a notification). */
@@ -14,20 +14,20 @@ export interface DrumsActions {
   stopPreview(): Promise<void>;
 }
 
-export function createDrumsActions(core: Core, views: Views): DrumsActions {
+export function createDrums(core: Core, views: Views): Drums {
   const { api } = core;
   return {
     async patterns() {
-      return (await core.run(api.patterns.list())) ?? [];
+      return (await core.calls.run(api.patterns.list())) ?? [];
     },
-    preview: (request) => core.attempt(api.drums.preview(request)),
-    stopPreview: () => core.exec(api.drums.stopPreview()),
+    preview: (request) => core.calls.attempt(api.drums.preview(request)),
+    stopPreview: () => core.calls.exec(api.drums.stopPreview()),
     async build(request) {
-      const report = await core.run(api.drums.build(request));
+      const report = await core.calls.run(api.drums.build(request));
       if (!report) return undefined;
       // No new track to show: the project change event re-reads the project by itself.
       if (report.tracks[0] !== undefined) await views.showCreated({ track: report.tracks[0] });
-      core.toast("info", t().drums.built(report.bars, report.createdTracks));
+      core.notifications.toast("info", t().drums.built(report.bars, report.createdTracks));
       return report;
     },
   };

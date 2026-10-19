@@ -3,7 +3,7 @@
 // never onto another clip of the lane); double-click on empty space adds a one-bar clip; right-click deletes a clip.
 // Every handler returns whether the press was on a lane row: the rest goes to `timelinePointer`.
 import type { AutomationClip, AutomationLane, Id, TempoMap } from "../api/types";
-import type { AutomationActions } from "../automation/automation";
+import type { Automation } from "../automation/automation";
 import { freeSpanAt, overlapsAutoClips } from "../automation/automationRules";
 import { hitSpan, minClipLength } from "./clipRules";
 import { type RowLayout, rowAt } from "./rowLayout";
@@ -27,7 +27,7 @@ export interface LanePointerDeps {
   tempoMap: () => TempoMap;
   pxPerTick: () => number;
   layout: () => RowLayout;
-  actions: AutomationActions;
+  actions: Automation;
   draft: () => LaneDraft | null;
   setDraft: (draft: LaneDraft | null) => void;
 }
