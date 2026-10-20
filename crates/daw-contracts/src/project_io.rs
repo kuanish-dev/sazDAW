@@ -16,8 +16,8 @@ pub trait ProjectIo: Send + Sync {
     fn save(&self, path: &Path) -> Result<(), ContractError>;
     /// Opens a project; the undo history is cleared. Missing sample files do not block it, see `take_warnings`.
     fn load(&self, path: &Path) -> Result<(), ContractError>;
-    /// Creates a new empty project and saves it to `project_file` (the folder is created). An existing file is
-    /// `ErrorKind::Invalid`.
+    /// Creates a new empty project and saves it to `project_file`, the `.dawproj` file itself (not its folder); the
+    /// file's folder is created, the project name is the file stem. An existing file is `ErrorKind::Invalid`.
     fn create(&self, project_file: &Path) -> Result<(), ContractError>;
     /// Loads the contents from `file`, but the project stays bound to its previous file and is marked modified
     /// (restoring from an autosave).

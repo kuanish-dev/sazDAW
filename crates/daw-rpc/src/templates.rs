@@ -28,7 +28,10 @@ pub(crate) fn register(table: &mut RpcTable) {
         |c, p: Name| c.templates.save(&p.name),
     );
     table.add("templates.remove", "Removes a project template by name.", |c, p: Name| c.templates.remove(&p.name));
-    table.add("project.createFromTemplate", "Creates a project folder at a path from a template and opens it.", |c, p: Create| {
-        c.templates.create_project(&p.template, &p.path)
-    });
+    table.add(
+        "project.createFromTemplate",
+        "Creates a new project from a template and opens it. `path` is the project FILE, not a folder, as in `project.create`: \
+         `<projects folder>/<Name>/<Name>.dawproj`; missing folders are created, the file name becomes the project name.",
+        |c, p: Create| c.templates.create_project(&p.template, &p.path),
+    );
 }
