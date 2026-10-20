@@ -1,15 +1,17 @@
 //! `LevelMeter` (`MixAnalysis`): "measure how the project sounds". Each target (a track: its path to the output, as in
 //! "Bounce to audio", `track::isolate`; a bus: everything feeding it, `stems::stem_graph`; or the master: the whole mix)
 //! is rendered by the same offline engine as the export and measured while rendering (`meter.rs`), without files.
+//! The balance (`balance.rs`) measures each track as the mix minus the mix without it.
 
+mod balance;
 pub(crate) mod meter;
 
 use std::sync::Arc;
 
 use daw_contracts::codes::export;
 use daw_contracts::{
-    ContractError, DEFAULT_RESOLUTION_BARS, LevelReport, LevelRequest, LevelTargets, MASTER, MAX_ANALYSIS_SECONDS, MAX_RESOLUTION_BARS,
-    MixAnalysis, NodeId, NodeKind, ParamTarget, Project, Section, TargetLevels, TempoMap,
+    BalanceReport, ContractError, DEFAULT_RESOLUTION_BARS, LevelReport, LevelRequest, LevelTargets, MASTER, MAX_ANALYSIS_SECONDS,
+    MAX_RESOLUTION_BARS, MixAnalysis, NodeId, NodeKind, ParamTarget, Project, Section, TargetLevels, TempoMap,
 };
 
 use crate::{CHUNK_FRAMES, OfflineExporter, stems, track};
@@ -24,24 +26,29 @@ impl LevelMeter {
         Self { renderer }
     }
 
-    /// Plays `project` from `from` and measures the sound in sections ending at frames `ends`.
-    fn measure(&self, project: &Project, from: u32, ends: &[u64]) -> Result<Measured, ContractError> {
+    /// Plays `project` from tick `from` for `frames` frames and hands each rendered chunk (interleaved stereo) to `sink`.
+    fn render(&self, project: &Project, from: u32, frames: u64, mut sink: impl FnMut(&[f32])) -> Result<(), ContractError> {
         let mut engine = self.renderer.load_engine(project, ANALYSIS_SAMPLE_RATE)?;
         engine.transport.seek(u64::from(from));
         engine.transport.play();
-        let total = ends.last().copied().unwrap_or(0);
-        let mut meter = Meter::new(ends.to_vec());
         let mut buffer = vec![0.0f32; CHUNK_FRAMES * 2];
         let mut done = 0u64;
-        while done < total {
-            let frames = (total - done).min(CHUNK_FRAMES as u64) as usize;
-            let chunk = &mut buffer[..frames * 2];
+        while done < frames {
+            let count = (frames - done).min(CHUNK_FRAMES as u64) as usize;
+            let chunk = &mut buffer[..count * 2];
             engine.renderer.render(chunk);
             // What the engine released (finished voices) is freed here, as during export.
             engine.dsp.collect_garbage();
-            meter.push(chunk);
-            done += frames as u64;
+            sink(chunk);
+            done += count as u64;
         }
+        Ok(())
+    }
+
+    /// Plays `project` from `from` and measures the sound in sections ending at frames `ends`.
+    fn measure(&self, project: &Project, from: u32, ends: &[u64]) -> Result<Measured, ContractError> {
+        let mut meter = Meter::new(ends.to_vec());
+        self.render(project, from, ends.last().copied().unwrap_or(0), |chunk| meter.push(chunk))?;
         Ok(meter.finish())
     }
 }
@@ -69,6 +76,11 @@ impl MixAnalysis for LevelMeter {
             });
         }
         Ok(LevelReport { from_tick: from, to_tick: to, sections, targets })
+    }
+
+    fn balance(&self, project: &Project, from_tick: Option<u32>, to_tick: Option<u32>) -> Result<BalanceReport, ContractError> {
+        let (from, to) = range(project, from_tick, to_tick)?;
+        self.balance_of(project, from, to)
     }
 }
 

@@ -5,7 +5,8 @@
 - **`ProjectTracks`** — tracks and their instruments (track order is display only; everything is tied to ids).
 - **`ProjectTakes`** (`TakeControl`) — takes of an audio clip; rules in `take_rules.rs`.
 - **`ProjectTempo`** (`TempoControl`) — the tempo map, see [tempo-map](../../docs/features/tempo-map.md).
-- **`ProjectClips`** — clips on the timeline and the loop; batch edits are one undo step checked against the resulting state. Shared rules in `clip_rules.rs`, tempo fitting and pitch in `warp_rules.rs`.
+- **`ProjectKey`** (`KeyControl`) — the song's key (`song_key.rs`), see [step-lines](../../docs/features/step-lines.md).
+- **`ProjectClips`** — clips on the timeline and the loop; batch edits are one undo step checked against the resulting state; a clip from a melodic step line (`add_step_clip`). Shared rules in `clip_rules.rs`, tempo fitting and pitch in `warp_rules.rs`.
 - **`ProjectNotes`** — a clip's notes; content rules in `note_rules.rs` (shared with `ProjectClips`); musical edits in `note_transforms.rs`, `groove.rs`, `variation.rs`, see [note-edits](../../docs/features/note-edits.md).
 - **`ProjectNoteEffects`** — a track's MIDI effects before the instrument (`note_effects.rs`).
 - **`ProjectMarkers`** (`MarkerControl`) — section markers. **`ProjectFolders`** (`FolderControl`) — track folders; rules in `folder_rules.rs`.
@@ -23,7 +24,7 @@ Shared lookups and small model edits are pure functions in `ops.rs`.
 
 Depends on: contracts.
 
-Map of the whole code: [ARCHITECTURE.md](../../ARCHITECTURE.md). Cross-layer features it takes part in: [audio-clip-editing](../../docs/features/audio-clip-editing.md), [automation](../../docs/features/automation.md), [bounce](../../docs/features/bounce.md), [channel-utility](../../docs/features/channel-utility.md), [cue](../../docs/features/cue.md), [markers-colors-folders](../../docs/features/markers-colors-folders.md), [midi-controllers](../../docs/features/midi-controllers.md), [mix-check](../../docs/features/mix-check.md), [note-edits](../../docs/features/note-edits.md), [recording](../../docs/features/recording.md), [sends](../../docs/features/sends.md), [sidechain](../../docs/features/sidechain.md), [song-loop](../../docs/features/song-loop.md), [tempo-map](../../docs/features/tempo-map.md), [virtual-stage](../../docs/features/virtual-stage.md), [warping](../../docs/features/warping.md).
+Map of the whole code: [ARCHITECTURE.md](../../ARCHITECTURE.md). Cross-layer features it takes part in: [audio-clip-editing](../../docs/features/audio-clip-editing.md), [automation](../../docs/features/automation.md), [bounce](../../docs/features/bounce.md), [channel-utility](../../docs/features/channel-utility.md), [cue](../../docs/features/cue.md), [markers-colors-folders](../../docs/features/markers-colors-folders.md), [midi-controllers](../../docs/features/midi-controllers.md), [mix-check](../../docs/features/mix-check.md), [note-edits](../../docs/features/note-edits.md), [recording](../../docs/features/recording.md), [sends](../../docs/features/sends.md), [sidechain](../../docs/features/sidechain.md), [song-loop](../../docs/features/song-loop.md), [step-lines](../../docs/features/step-lines.md), [tempo-map](../../docs/features/tempo-map.md), [virtual-stage](../../docs/features/virtual-stage.md), [warping](../../docs/features/warping.md).
 
 ## Project core (`src/service/`)
 

@@ -21,6 +21,7 @@ mod clips;
 mod feed;
 mod folders;
 mod graph;
+mod key;
 mod live;
 mod log;
 mod markers;
@@ -95,6 +96,7 @@ impl RpcTable {
         for register in [
             transport::register,
             tempo::register,
+            key::register,
             project::register,
             record::register,
             catalog::register,

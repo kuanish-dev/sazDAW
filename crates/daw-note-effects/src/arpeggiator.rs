@@ -23,6 +23,7 @@ pub const PARAMS: [ParamInfo; 5] = [
         default: DEFAULT_RATE,
         kind: ParamKind::Choice,
         choices: &[L10n::same("1/4"), L10n::same("1/8"), L10n::same("1/8T"), L10n::same("1/16"), L10n::same("1/16T"), L10n::same("1/32")],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "mode",
@@ -38,6 +39,7 @@ pub const PARAMS: [ParamInfo; 5] = [
             L10n { en: "Random", ru: "Случайно" },
             L10n { en: "As played", ru: "Как нажаты" },
         ],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "octaves",
@@ -47,6 +49,7 @@ pub const PARAMS: [ParamInfo; 5] = [
         default: 1.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "gate",
@@ -56,6 +59,7 @@ pub const PARAMS: [ParamInfo; 5] = [
         default: 50.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "swing",
@@ -65,6 +69,7 @@ pub const PARAMS: [ParamInfo; 5] = [
         default: 0.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
 ];
 

@@ -15,8 +15,18 @@ const PARAMS: [ParamInfo; 7] = [
         default: -18.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
-    ParamInfo { name: "ratio", label: L10n::same("Ratio"), min: 1.0, max: 20.0, default: 4.0, kind: ParamKind::Number, choices: &[] },
+    ParamInfo {
+        name: "ratio",
+        label: L10n::same("Ratio"),
+        min: 1.0,
+        max: 20.0,
+        default: 4.0,
+        kind: ParamKind::Number,
+        choices: &[],
+        about: L10n::EMPTY,
+    },
     ParamInfo {
         name: "attack",
         label: L10n { en: "Attack, ms", ru: "Attack, мс" },
@@ -25,6 +35,7 @@ const PARAMS: [ParamInfo; 7] = [
         default: 10.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "release",
@@ -34,6 +45,7 @@ const PARAMS: [ParamInfo; 7] = [
         default: 120.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "knee",
@@ -43,6 +55,7 @@ const PARAMS: [ParamInfo; 7] = [
         default: 6.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "makeup",
@@ -52,6 +65,7 @@ const PARAMS: [ParamInfo; 7] = [
         default: 0.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "sidechain",
@@ -61,6 +75,7 @@ const PARAMS: [ParamInfo; 7] = [
         default: 0.0,
         kind: ParamKind::Switch,
         choices: &[],
+        about: L10n::EMPTY,
     },
 ];
 

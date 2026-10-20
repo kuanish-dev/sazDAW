@@ -41,7 +41,9 @@ pub mod project_changes;
 pub mod project_io;
 pub mod record;
 pub mod sample;
+pub mod song_key;
 pub mod stage;
+pub mod step_line;
 pub mod summary;
 pub mod sync;
 pub mod takes;
@@ -54,8 +56,8 @@ pub mod warp;
 pub mod workspace;
 
 pub use analysis::{
-    DEFAULT_RESOLUTION_BARS, Finding, Level, LevelReport, LevelRequest, LevelTargets, MAX_ANALYSIS_SECONDS, MAX_RESOLUTION_BARS,
-    MixAnalysis, MixCheck, SILENCE_DB, Section, Severity, TargetLevels,
+    BalanceReport, DEFAULT_RESOLUTION_BARS, Finding, Level, LevelReport, LevelRequest, LevelTargets, LoudnessLevels, MAX_ANALYSIS_SECONDS,
+    MAX_RESOLUTION_BARS, MixAnalysis, MixCheck, SILENCE_DB, Section, Severity, TargetLevels, TrackBalance,
 };
 pub use app::Controls;
 pub use audio::{
@@ -127,7 +129,9 @@ pub use sample::{
     LibraryEntry, MAX_REGIONS, Region, SampleCatalog, SampleData, SampleDecoder, SampleEditor, SampleInfo, SamplePreview, SampleStore,
     SampleWriter, Waveform,
 };
+pub use song_key::KeyControl;
 pub use stage::{Listening, MAX_ON_STAGE, Room, StageControl, StagePlace};
+pub use step_line::{NewStepClip, SLIDE_OVERLAP_TICKS, StepNotes};
 pub use summary::{BusSummary, EffectSummary, LaneSummary, ProjectSummary, SectionSummary, SharedEffectSummary, Summary, TrackSummary};
 pub use takes::{COMP_CROSSFADE_SECONDS, CompSegment, MAX_COMP_SEGMENTS, TakeControl, TakeSpan};
 pub use tempo::TempoControl;

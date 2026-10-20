@@ -22,6 +22,7 @@ const PARAMS: [ParamInfo; 4] = [
         default: 6.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "type",
@@ -31,6 +32,7 @@ const PARAMS: [ParamInfo; 4] = [
         default: 0.0,
         kind: ParamKind::Choice,
         choices: &TYPES,
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "output",
@@ -40,6 +42,7 @@ const PARAMS: [ParamInfo; 4] = [
         default: 0.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "mix",
@@ -49,6 +52,7 @@ const PARAMS: [ParamInfo; 4] = [
         default: 1.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
 ];
 

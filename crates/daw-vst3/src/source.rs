@@ -42,6 +42,7 @@ fn param_infos(info: &PluginInfo) -> Vec<ParamInfo> {
                 ParamShape::Choice => ParamKind::Choice,
             },
             choices: leak_list(&p.choices),
+            about: L10n::EMPTY,
         })
         .collect()
 }

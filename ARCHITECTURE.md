@@ -90,6 +90,7 @@ Cross-layer features (`docs/features/`):
 | Warping audio clips to tempo, pitch, crossfades | [warping.md](docs/features/warping.md) |
 | Audio clip editing: fades, gain, trim, normalize, reverse | [audio-clip-editing.md](docs/features/audio-clip-editing.md) |
 | Musical note edits, the controller lane | [note-edits.md](docs/features/note-edits.md) |
+| Melodic step lines (a melody as steps) and the song key | [step-lines.md](docs/features/step-lines.md) |
 | MIDI controllers: pitch bend, CC, aftertouch, MIDI learn | [midi-controllers.md](docs/features/midi-controllers.md) |
 | Automation: editing and live writing | [automation.md](docs/features/automation.md) |
 | Sends: pre/post-fader, connection level | [sends.md](docs/features/sends.md) |
@@ -102,7 +103,7 @@ Cross-layer features (`docs/features/`):
 | Master visualizer: spectrum and oscilloscope | [master-visualizer.md](docs/features/master-visualizer.md) |
 | Audio export | [audio-export.md](docs/features/audio-export.md) |
 | Rendering a track to audio (bounce, freeze) | [bounce.md](docs/features/bounce.md) |
-| Checking the result by ear: levels and mix check | [mix-check.md](docs/features/mix-check.md) |
+| Checking the result by ear: levels, track balance and mix check | [mix-check.md](docs/features/mix-check.md) |
 | Project templates and presets | [templates-and-presets.md](docs/features/templates-and-presets.md) |
 | User and app preferences | [preferences.md](docs/features/preferences.md) |
 | Sounds: the project folder, the sound browser, dragging a sound | [sounds.md](docs/features/sounds.md) |

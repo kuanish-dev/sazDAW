@@ -6,7 +6,7 @@ use std::sync::Arc;
 use crate::{
     AppLog, AudioDevices, AudioRecordControl, AutomationControl, AutomationWriter, AutosaveControl, ChordPartControl, ChordPartPreview,
     ClipControl, ClipProcessing, DemoProject, DrumPartControl, DrumPartPreview, EffectCatalog, EngineStats, Exporter, FolderControl,
-    GraphControl, HistoryControl, InstrumentCatalog, LiveNoteSink, MarkerControl, MasterMeter, MetronomeControl, MidiFileIo,
+    GraphControl, HistoryControl, InstrumentCatalog, KeyControl, LiveNoteSink, MarkerControl, MasterMeter, MetronomeControl, MidiFileIo,
     MidiInputControl, MidiMappingControl, MixAnalysis, MixCheck, MonoCheck, NodeScope, NoteControl, NoteEffectCatalog, NoteEffectControl,
     PatternLibrary, PluginCrashGuard, PluginEditors, PluginScanner, PreferencesStore, Presets, ProjectClear, ProjectIo, ProjectSounds,
     ProjectStorage, ProjectSummary, ProjectTemplates, ProjectView, RecentProjects, RecordControl, SampleCatalog, SampleEditor,
@@ -19,6 +19,8 @@ pub struct Controls {
     pub transport: Arc<dyn TransportControl>,
     /// Song tempo and time signature (the project's tempo map; edits are undoable).
     pub tempo: Arc<dyn TempoControl>,
+    /// The song's key (scale degrees of step lines count in it).
+    pub key: Arc<dyn KeyControl>,
     pub metronome: Arc<dyn MetronomeControl>,
     pub tracks: Arc<dyn TrackControl>,
     pub clips: Arc<dyn ClipControl>,

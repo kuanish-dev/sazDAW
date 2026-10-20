@@ -5,7 +5,7 @@ use std::f64::consts::{FRAC_PI_2, PI};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use crate::{Clip, ClipId, ContractError, NewNote, PPQ, SampleId, TrackId, WarpEdit};
+use crate::{Clip, ClipId, ContractError, NewNote, NewStepClip, PPQ, SampleId, TrackId, WarpEdit};
 
 /// Maximum number of clips in a project.
 pub const MAX_CLIPS: usize = 4096;
@@ -125,6 +125,12 @@ pub trait ClipControl: Send + Sync {
     /// all or nothing: an error in any clip (the place is taken, including by another clip of the same list, or a bad
     /// note) creates none. Returns the clips in `clips` order; an empty list does nothing.
     fn add_note_clips(&self, clips: Vec<NewNoteClip>) -> Result<Vec<Clip>, ContractError>;
+    /// A note clip written as a melodic step line (`step_line`): the line becomes notes (`NewStepClip::notes`, scale
+    /// degrees in the project key `Project::key`) and the clip is made as by `add_note_clip` with `loop_ticks` = the
+    /// line's length, so a longer clip repeats the line; without `length_ticks` the clip is one pass. One undo step,
+    /// all or nothing. Errors: the line's (`NewStepClip::notes`), then those of `add_note_clip` (a line whose length
+    /// is not a multiple of `STEP_TICKS` is `notes::LOOP_LENGTH_OUT_OF_RANGE`).
+    fn add_step_clip(&self, clip: NewStepClip) -> Result<Clip, ContractError>;
     /// An audio clip covering the whole sample: its length in ticks comes from the sound length and the CURRENT tempo
     /// (later tempo changes do not stretch the clip). A sample missing from the project is `samples::NOT_FOUND`.
     fn add_audio_clip(&self, track: TrackId, start_tick: u32, sample: SampleId) -> Result<Clip, ContractError>;

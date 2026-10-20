@@ -20,5 +20,6 @@ mod note_transforms;
 mod project;
 mod settings;
 mod stage;
+mod steps;
 mod tempo;
 mod warp;

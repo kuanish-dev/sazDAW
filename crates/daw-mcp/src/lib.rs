@@ -31,11 +31,14 @@ const SUPPORTED_PROTOCOLS: [&str; 3] = ["2024-11-05", "2025-03-26", "2025-06-18"
 
 const INSTRUCTIONS: &str = "This is a DAW (a program for making music). The tools are its methods. Start with `project_summary` (a short \
 overview: sections, tracks with instruments, mixer, effects and where they play) and `catalog_get` (which instruments and \
-effects can be created); `project_get` is the whole project with every note and parameter: read it only for the details you \
+effects can be created; `about` of a built-in instrument and of each of its params says what it does to the sound: what velocity \
+and note length change, how a param is scaled — read it instead of guessing); `project_get` is the whole project with every note and parameter: read it only for the details you \
 need. Time is always in TICKS: 960 per quarter note, a 4/4 bar = 3840, a sixteenth = 240. Tracks, clips, notes, graph nodes and \
 samples are numeric ids returned by the create methods, `project_summary` and `project_get`. Notes \
 live inside note clips; their time is counted from the clip start. A clip with notes is created in one call: `clips_addNote` with `notes` \
-(and `loopTicks` if the pattern repeats); all clips of a section or part at once — `clips_addNoteMany` (one undo step). To start over — \
+(and `loopTicks` if the pattern repeats); all clips of a section or part at once — `clips_addNoteMany` (one undo step). A melody, bass \
+line or acid riff is shorter as a step line, like a step sequencer: `clips_addSteps` with `steps` such as \"F2 F3! - Eb3~ F3 _ C3 -\" \
+(note names or scale degrees of the song key set by `key_set`; `!` accent, `~` slide, `-` rest, `_` hold). To start over — \
 `project_clear`. Drums are easiest to build from ready patterns: `patterns_list`, then `drums_build` (groove, fill, groove…); listen \
 before building with `drums_preview`. Chords — `chords_build`: a strum (`chords_strums`: \"four\", \"six\", \"eight\") \
 and one or two chord symbols per bar ([[\"C\"], [\"G\"], [\"Am\", \"F\"]]) on a track or a new \"guitar\", \"electric_guitar\", \
@@ -50,7 +53,9 @@ Fewer calls: an effect takes its params at creation (`graph_insertEffect`, `grap
 `params`), and a param is automated in one call with `automation_addDrawnClip` (lane, clip and shape or points at once). \
 You cannot hear the sound, so check your work with numbers: after building or changing a track, call `analysis_check` and fix the \
 findings (silent or quiet tracks, master overload, mute/solo, params at their minimum) BEFORE reporting that it is done; levels of \
-tracks, buses and the master per bar — `analysis_levels`.";
+tracks, buses and the master per bar — `analysis_levels`. To set the volume balance between tracks, call `analysis_balance`: each \
+track's sound in the mix (the mix minus the mix without it), its loudness and `relativeLu` against the whole mix; move the faders with \
+`graph_setVolume` (volume × 10^(dB/20)) and measure again.";
 
 /// An MCP tool: name, description and input schema; `method` is the RPC method it calls.
 struct Tool {

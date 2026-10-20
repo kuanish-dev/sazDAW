@@ -127,11 +127,18 @@ fn ids(effects: &[EffectSummary]) -> Vec<NodeId> {
 }
 
 #[test]
+fn the_summary_names_the_song_key() {
+    let key = ScaleKey { root: 5, scale: Scale::Minor };
+    assert_eq!(Summarizer.summarize(&Project { key: Some(key), ..Project::empty() }).key, Some(key));
+}
+
+#[test]
 fn an_empty_project_has_only_the_master() {
     let summary = Summarizer.summarize(&Project::empty());
     assert_eq!((summary.end_tick, summary.bars), (0, 0));
     assert_eq!(summary.bpm, TempoMap::default().base_tempo());
     assert!(!summary.tempo_changes);
+    assert_eq!(summary.key, None);
     assert!(summary.sections.is_empty() && summary.tracks.is_empty() && summary.buses.is_empty());
     assert!(summary.shared_effects.is_empty() && summary.automation.is_empty());
     assert!((summary.master_volume - DEFAULT_VOLUME).abs() < 1e-6);

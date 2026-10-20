@@ -9,8 +9,8 @@ use daw_contracts::{
 };
 use daw_project::{
     Dependencies, MidiMappingDeps, ProjectAutomation, ProjectCleaner, ProjectClipProcessing, ProjectClips, ProjectFiles, ProjectFolders,
-    ProjectGraph, ProjectMarkers, ProjectMidiMappings, ProjectNoteEffects, ProjectNotes, ProjectPluginStates, ProjectSampleCatalog,
-    ProjectSampleEditor, ProjectService, ProjectStage, ProjectTakes, ProjectTempo, ProjectTracks,
+    ProjectGraph, ProjectKey, ProjectMarkers, ProjectMidiMappings, ProjectNoteEffects, ProjectNotes, ProjectPluginStates,
+    ProjectSampleCatalog, ProjectSampleEditor, ProjectService, ProjectStage, ProjectTakes, ProjectTempo, ProjectTracks,
 };
 use daw_samples::WavWriter;
 
@@ -46,6 +46,8 @@ pub(super) struct ProjectParts {
     pub folders: Arc<ProjectFolders>,
     /// The song tempo map (tempo and meter with their changes).
     pub tempo: Arc<ProjectTempo>,
+    /// The song's key.
+    pub key: Arc<ProjectKey>,
     pub graph: Arc<ProjectGraph>,
     /// The virtual stage: where each channel stands in the shared room.
     pub stage: Arc<ProjectStage>,
@@ -122,6 +124,7 @@ pub(super) fn build(
         takes: Arc::new(ProjectTakes::new(service.clone())),
         notes: Arc::new(ProjectNotes::new(service.clone())),
         note_effects: Arc::new(ProjectNoteEffects::new(service.clone(), note_effects)),
+        key: Arc::new(ProjectKey::new(service.clone())),
         markers: Arc::new(ProjectMarkers::new(service.clone())),
         folders: Arc::new(ProjectFolders::new(service.clone())),
         tempo,

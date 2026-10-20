@@ -29,6 +29,27 @@ pub(crate) fn register(table: &mut RpcTable) {
         |c, p: LevelRequest| c.analysis.levels(&c.view.snapshot(), &p),
     );
     table.add_flushing(
+        "analysis.balance",
+        "How loud each track is IN THE MIX, for setting the volume balance between tracks. A track's sound in the mix is the \
+         whole mix minus the mix without its clips (offline renders, no files), measured at the master output after the \
+         fader: it keeps what the other tracks do to it — a compressor keyed by the kick ducks it, a gate another track \
+         opens lets it through, the master's compressor and limiter react to the whole mix — and it follows the track's \
+         fader. Returns `mix` { loudnessLufs (BS.1770 integrated), maxShortTermLufs (the loudest 3 s), truePeakDb } for the \
+         whole mix; `floorLufs`, how much two renders of the same mix differ (null: not at all; a plugin that sounds \
+         different each time raises it, and a track within about 10 LU of it is not measured reliably); and `tracks`: \
+         { track, name, node, volume, muted, keysOnly, silent, loudnessLufs, maxShortTermLufs, truePeakDb, relativeLu } \
+         where relativeLu = the track's loudness in the mix minus the mix's (0 = as loud as the whole mix). Equal parts of \
+         a mix of N tracks sit near −10·log10(N) LU (8 tracks ≈ −9); the lead part is louder than that, background parts \
+         quieter. To make a track X dB louder, multiply its `volume` by 10^(X/20) (+6 dB ≈ ×2, −6 dB ≈ ×0.5) with \
+         `graph.setVolume` on its `node` (the fader goes up to 1.5 ≈ +3.5 dB: past that, turn the others down), then \
+         measure again: a compressor after the fader moves the result less than the fader. A track with `keysOnly` reaches \
+         the master only by keying a sidechain: its numbers are what it opens or ducks, not a level to set with its fader. \
+         Solo is ignored; a muted track is measured as if it played (`muted` tells it is muted now); a track that adds \
+         nothing (no clips, volume 0, only a muted bus) is `silent` with null levels. Range `fromTick`…`toTick` as in \
+         analysis.levels; one render of the whole mix per track with clips, plus two.",
+        |c, p: Range| c.analysis.balance(&c.view.snapshot(), p.from_tick, p.to_tick),
+    );
+    table.add_flushing(
         "analysis.check",
         "Checks the mix before calling it done: returns findings { severity: error|warning|info, code, message, \
          track?, node?, lane?, ranges? (ticks) }, an empty list means all is well. Catches: tracks with clips that are silent or \

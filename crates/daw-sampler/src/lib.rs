@@ -15,6 +15,23 @@ const VOICES: usize = 16;
 /// How far pitch bend at the end of the wheel shifts the pitch, in semitones.
 const BEND_RANGE_SEMITONES: f32 = 2.0;
 
+/// What the sampler as a whole does with notes (`InstrumentFactory::about`); the parameters explain themselves in
+/// `PARAMS`.
+const ABOUT: L10n = L10n {
+    en: "Plays a sound from the project's sample library (the sample param) on notes, 16 voices. The root note plays the file at \
+         its own pitch; each semitone above or below plays it faster or slower, so pitch and length change together, like a \
+         record. Velocity (1-127) scales the loudness linearly: 64 is half as loud as 127. With one_shot on (the default) the \
+         whole region plays whatever the note length; off, the note's end fades it over release. Pitch bend is ±2 semitones, the \
+         sustain pedal (CC64) holds released notes. Without a sample it is silent.",
+    ru: "Играет звук из библиотеки сэмплов проекта (параметр sample) по нотам, 16 голосов. Корневая нота играет файл в его \
+         собственной высоте; каждый полутон выше или ниже играет его быстрее или медленнее, так что высота и длина меняются \
+         вместе, как у пластинки. Сила нажатия (velocity, 1-127) меняет громкость линейно: 64 вдвое тише, чем 127. При включённом \
+         one_shot (по умолчанию) область звучит целиком при любой длине ноты; при выключенном конец ноты гасит звук за release. \
+         Pitch bend — ±2 полутона, педаль сустейна (CC64) держит отпущенные ноты. Без сэмпла молчит.",
+};
+
+/// Each `about` says what the parameter does to the sound, for the AI that cannot hear it: a change to the playback in
+/// this file needs the same change in the text.
 const PARAMS: [ParamInfo; 10] = [
     ParamInfo {
         name: SAMPLER_SAMPLE_PARAM,
@@ -24,6 +41,12 @@ const PARAMS: [ParamInfo; 10] = [
         default: 0.0,
         kind: ParamKind::Sample,
         choices: &[],
+        about: L10n {
+            en: "Which sound plays: the id of a sample in the project library (samples.list, samples.import); 0 is none, and the \
+                 sampler is silent. Changing it recreates the instrument.",
+            ru: "Какой звук играет: id сэмпла из библиотеки проекта (samples.list, samples.import); 0 — никакого, сэмплер молчит. \
+                 Смена пересоздаёт инструмент.",
+        },
     },
     ParamInfo {
         name: "start",
@@ -33,6 +56,12 @@ const PARAMS: [ParamInfo; 10] = [
         default: 0.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n {
+            en: "Where playback starts, as a share of the file length: 0 is the beginning, 0.5 the middle. The region lies between \
+                 start and end in either order.",
+            ru: "Где начинается воспроизведение, доля длины файла: 0 — начало, 0,5 — середина. Область лежит между start и end в \
+                 любом порядке.",
+        },
     },
     ParamInfo {
         name: "end",
@@ -42,6 +71,10 @@ const PARAMS: [ParamInfo; 10] = [
         default: 1.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n {
+            en: "Where playback stops, as a share of the file length: 1 is the end of the file.",
+            ru: "Где заканчивается воспроизведение, доля длины файла: 1 — конец файла.",
+        },
     },
     ParamInfo {
         name: "reverse",
@@ -51,6 +84,10 @@ const PARAMS: [ParamInfo; 10] = [
         default: 0.0,
         kind: ParamKind::Switch,
         choices: &[],
+        about: L10n {
+            en: "On: plays the region backwards, from end to start.",
+            ru: "Вкл: играет область задом наперёд, от конца к началу.",
+        },
     },
     ParamInfo {
         name: SAMPLER_ROOT_PARAM,
@@ -60,6 +97,14 @@ const PARAMS: [ParamInfo; 10] = [
         default: 60.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n {
+            en: "The MIDI note that plays the sample at its recorded pitch and speed (60 = C4). A note 12 semitones higher plays \
+                 it twice as fast and an octave up, 12 lower at half speed and an octave down. Set it to the sample's own pitch so \
+                 notes play in tune.",
+            ru: "MIDI-нота, на которой сэмпл звучит с записанной высотой и скоростью (60 = C4). Нота на 12 полутонов выше играет \
+                 его вдвое быстрее и на октаву выше, на 12 ниже — вдвое медленнее и на октаву ниже. Поставьте сюда собственную \
+                 высоту сэмпла, чтобы ноты строили.",
+        },
     },
     ParamInfo {
         name: "gain",
@@ -69,6 +114,10 @@ const PARAMS: [ParamInfo; 10] = [
         default: 0.8,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n {
+            en: "Loudness, linear: 1 is the file's own level, 0.5 half (-6 dB), 1.5 the most (+3.5 dB).",
+            ru: "Громкость, линейно: 1 — уровень самого файла, 0,5 — вдвое тише (-6 дБ), 1,5 — максимум (+3,5 дБ).",
+        },
     },
     ParamInfo {
         name: "attack",
@@ -78,6 +127,12 @@ const PARAMS: [ParamInfo; 10] = [
         default: 0.002,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n {
+            en: "Seconds each note takes to fade in from silence (a straight line). Slightly above 0 avoids a click when the \
+                 region starts in the middle of a sound.",
+            ru: "За сколько секунд каждая нота нарастает из тишины (по прямой). Чуть больше 0 убирает щелчок, когда область \
+                 начинается посреди звука.",
+        },
     },
     ParamInfo {
         name: "release",
@@ -87,6 +142,12 @@ const PARAMS: [ParamInfo; 10] = [
         default: 0.08,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n {
+            en: "Seconds a note fades out after it ends (a straight line) while one_shot is off; also the fade when playback \
+                 stops.",
+            ru: "За сколько секунд нота затухает после конца (по прямой), когда one_shot выключен; так же звук затухает при \
+                 остановке.",
+        },
     },
     ParamInfo {
         name: "loop",
@@ -96,6 +157,14 @@ const PARAMS: [ParamInfo; 10] = [
         default: 0.0,
         kind: ParamKind::Switch,
         choices: &[],
+        about: L10n {
+            en: "On: the region repeats while the note is held, end joined to start without a gap (a sustained pad, a drone); the \
+                 note's end fades it over release. With one_shot on as well, a looped note never ends until playback stops, so \
+                 turn one_shot off with the loop.",
+            ru: "Вкл: область повторяется, пока нота удерживается, конец стыкуется с началом без паузы (тянущийся пэд, дрон); \
+                 конец ноты гасит звук за release. Если включён и one_shot, зацикленная нота не кончается до остановки \
+                 воспроизведения, поэтому вместе с зацикливанием выключайте one_shot.",
+        },
     },
     ParamInfo {
         name: "one_shot",
@@ -105,6 +174,12 @@ const PARAMS: [ParamInfo; 10] = [
         default: 1.0,
         kind: ParamKind::Switch,
         choices: &[],
+        about: L10n {
+            en: "On (the default): the note's end is ignored and the region always plays to its end (drum hits, one-shots). Off: \
+                 the note's end fades the sound over release, so note length matters.",
+            ru: "Вкл (по умолчанию): конец ноты не учитывается, область всегда звучит до конца (удары, ваншоты). Выкл: конец ноты \
+                 гасит звук за release, так что длина ноты важна.",
+        },
     },
 ];
 
@@ -368,6 +443,10 @@ impl InstrumentFactory for SamplerFactory {
 
     fn describe(&self) -> Vec<ParamInfo> {
         PARAMS.to_vec()
+    }
+
+    fn about(&self) -> L10n {
+        ABOUT
     }
 
     // A built-in instrument has no state of its own: everything is in the parameters.

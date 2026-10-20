@@ -146,6 +146,7 @@ pub(crate) fn build(config: &SessionConfig, devices: &Devices) -> Session {
         sounds: Arc::new(FolderSounds::new(project.files.clone(), sound_sources.clone())),
         transport,
         tempo: project.tempo,
+        key: project.key,
         metronome,
         tracks: project.tracks,
         clips: project.clips,

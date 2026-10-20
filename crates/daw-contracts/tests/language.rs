@@ -16,8 +16,9 @@ fn kind() -> KindInfo {
         default: 0.0,
         kind: ParamKind::Choice,
         choices: &RATES,
+        about: L10n::EMPTY,
     };
-    KindInfo { kind: "arp", label: L10n { en: "Arpeggiator", ru: "Арпеджиатор" }, params: vec![rate] }
+    KindInfo { kind: "arp", label: L10n { en: "Arpeggiator", ru: "Арпеджиатор" }, params: vec![rate], about: L10n::EMPTY }
 }
 
 // One test: the steps share the global language and must run in order.

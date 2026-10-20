@@ -4,7 +4,7 @@
 
 use serde::Serialize;
 
-use crate::{Bpm, LaneId, MarkerId, NodeId, ParamTarget, Project, Strip, TimeSignature, TrackId};
+use crate::{Bpm, LaneId, MarkerId, NodeId, ParamTarget, Project, ScaleKey, Strip, TimeSignature, TrackId};
 
 /// "Describe the project briefly". The project is passed in (RPC passes `ProjectView::snapshot`); nothing is rendered
 /// or changed, so it is cheap to call after every step. Never fails: every project has a summary. Sound levels are
@@ -23,6 +23,8 @@ pub struct Summary {
     pub bpm: Bpm,
     pub signature: TimeSignature,
     pub tempo_changes: bool,
+    /// The song's key (`KeyControl`), `None` when it is not set.
+    pub key: Option<ScaleKey>,
     /// The end of the last clip and the number of bars up to it (0 for an empty arrangement).
     pub end_tick: u32,
     pub bars: u32,

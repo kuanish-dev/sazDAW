@@ -16,8 +16,8 @@ pub trait ProjectIo: Send + Sync {
     fn save(&self, path: &Path) -> Result<(), ContractError>;
     /// Opens a project; the undo history is cleared. Missing sample files do not block it, see `take_warnings`.
     fn load(&self, path: &Path) -> Result<(), ContractError>;
-    /// Creates a new empty project and saves it to `project_file` (the folder is created). An existing file is
-    /// `ErrorKind::Invalid`.
+    /// Creates a new empty project and saves it to `project_file`, the `.dawproj` file itself (not its folder); the
+    /// file's folder is created, the project name is the file stem. An existing file is `ErrorKind::Invalid`.
     fn create(&self, project_file: &Path) -> Result<(), ContractError>;
     /// Loads the contents from `file`, but the project stays bound to its previous file and is marked modified
     /// (restoring from an autosave).
@@ -73,7 +73,7 @@ pub struct ClearOptions {
 /// Clearing the project. Job: remove all project contents while keeping the project itself (file, name, master).
 ///
 /// Contract: removes tracks (with instruments and plugin states), clips, buses, effects (on the master too),
-/// connections, automation, markers, folders and the loop; the master and its volume stay; tempo depends on
+/// connections, automation, markers, folders and the loop; the master and its volume and the song key stay; tempo depends on
 /// `keep_tempo`, samples on `remove_samples`. The project file and its binding do not change (the project becomes
 /// modified). Everything is **one undo step**: `undo` brings the whole project back. An empty project creates no undo
 /// step. There are no rule errors.

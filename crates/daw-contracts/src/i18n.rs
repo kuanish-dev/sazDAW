@@ -50,9 +50,17 @@ pub struct L10n {
 }
 
 impl L10n {
+    /// No text: an optional catalog text that a kind leaves out (`ParamInfo::about` of effects and plugins).
+    pub const EMPTY: L10n = L10n::same("");
+
     /// The same text in every language: names that are not translated (plugin parameters, "1/16", "Q").
     pub const fn same(text: &'static str) -> Self {
         Self { en: text, ru: text }
+    }
+
+    /// No text in either language (`EMPTY`): such an optional text is left out of JSON.
+    pub fn is_empty(&self) -> bool {
+        self.en.is_empty() && self.ru.is_empty()
     }
 
     /// The text in the current language.

@@ -7,9 +7,9 @@ use std::sync::{Arc, Mutex};
 use daw_contracts::codes::{clips, general, record};
 use daw_contracts::{
     AppLog, BAR_TICKS, Bpm, Clip, ClipContent, ClipControl, ClipEdit, ClipId, ContractError, ControllerKind, ControllerLane,
-    ControllerPoint, HistoryControl, HistoryMark, HistorySteps, LiveMessage, LogEntry, LogLevel, NewNote, NewNoteClip, Note, NoteContent,
-    NoteControl, NoteId, RecordControl, RecordSource, RecordedEvent, SampleId, SignatureChange, TempoChange, TempoControl, TempoMap,
-    TimeSignature, TrackId, TransportControl, TransportState,
+    ControllerPoint, HistoryControl, HistoryMark, HistorySteps, LiveMessage, LogEntry, LogLevel, NewNote, NewNoteClip, NewStepClip, Note,
+    NoteContent, NoteControl, NoteId, RecordControl, RecordSource, RecordedEvent, SampleId, SignatureChange, TempoChange, TempoControl,
+    TempoMap, TimeSignature, TrackId, TransportControl, TransportState,
 };
 
 use crate::Recorder;
@@ -91,6 +91,9 @@ impl ClipControl for FakeClips {
         Ok(created)
     }
     fn add_note_clips(&self, _: Vec<NewNoteClip>) -> Result<Vec<Clip>, ContractError> {
+        Err(unused())
+    }
+    fn add_step_clip(&self, _: NewStepClip) -> Result<Clip, ContractError> {
         Err(unused())
     }
     fn add_audio_clip(&self, _: TrackId, _: u32, _: SampleId) -> Result<Clip, ContractError> {

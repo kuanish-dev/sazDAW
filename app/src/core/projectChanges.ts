@@ -27,6 +27,7 @@ export function applyChanges(project: Project, changes: ProjectChanges): Project
     samples: applyList(project.samples, c.samples),
     markers: applyList(project.markers, c.markers),
     folders: applyList(project.folders, c.folders),
+    key: c.key === undefined ? project.key : c.key,
     midiMappings: c.midiMappings ?? project.midiMappings,
     nextId: c.nextId ?? project.nextId,
   };

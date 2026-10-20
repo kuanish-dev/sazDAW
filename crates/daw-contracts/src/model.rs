@@ -8,7 +8,9 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 
 use crate::codes::notes as codes;
-use crate::{CompSegment, ContractError, DEFAULT_VOLUME, FadeShape, Graph, MASTER, Node, NodeId, NodeKind, PPQ, Room, TempoMap, Warp};
+use crate::{
+    CompSegment, ContractError, DEFAULT_VOLUME, FadeShape, Graph, MASTER, Node, NodeId, NodeKind, PPQ, Room, ScaleKey, TempoMap, Warp,
+};
 
 pub type TrackId = u32;
 pub type ClipId = u32;
@@ -509,6 +511,8 @@ pub struct Project {
     /// Track folders (order does not matter: a folder's position is that of its tracks in `tracks`).
     #[serde(default)]
     pub folders: Vec<Folder>,
+    /// The song's key (`KeyControl`); `None` when it is not set.
+    pub key: Option<ScaleKey>,
     /// MIDI controller knobs mapped to parameters (MIDI learn, `MidiMappingControl`). Stored in the project rather than
     /// in preferences: the targets are this project's nodes, tracks and parameters (their ids mean something else
     /// elsewhere).
@@ -542,6 +546,7 @@ impl Project {
             samples: Vec::new(),
             markers: Vec::new(),
             folders: Vec::new(),
+            key: None,
             midi_mappings: Vec::new(),
             next_id: 1,
         }

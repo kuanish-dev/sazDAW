@@ -46,8 +46,18 @@ const PARAMS: [ParamInfo; 7] = [
         default: 350.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
-    ParamInfo { name: "feedback", label: L10n::same("Feedback"), min: 0.0, max: 0.95, default: 0.4, kind: ParamKind::Number, choices: &[] },
+    ParamInfo {
+        name: "feedback",
+        label: L10n::same("Feedback"),
+        min: 0.0,
+        max: 0.95,
+        default: 0.4,
+        kind: ParamKind::Number,
+        choices: &[],
+        about: L10n::EMPTY,
+    },
     ParamInfo {
         name: "mix",
         label: L10n { en: "Mix", ru: "Микс" },
@@ -56,6 +66,7 @@ const PARAMS: [ParamInfo; 7] = [
         default: 0.3,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "ping_pong",
@@ -65,6 +76,7 @@ const PARAMS: [ParamInfo; 7] = [
         default: 0.0,
         kind: ParamKind::Switch,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "sync",
@@ -74,6 +86,7 @@ const PARAMS: [ParamInfo; 7] = [
         default: 0.0,
         kind: ParamKind::Choice,
         choices: &SYNC,
+        about: L10n::EMPTY,
     },
     number("low_cut", L10n { en: "Echo low cut, Hz", ru: "Срез низов эха, Гц" }, LOW_CUT_OFF_HZ, 2_000.0, LOW_CUT_OFF_HZ),
     number("high_cut", L10n { en: "Echo high cut, Hz", ru: "Срез верхов эха, Гц" }, 1_000.0, HIGH_CUT_OFF_HZ, HIGH_CUT_OFF_HZ),

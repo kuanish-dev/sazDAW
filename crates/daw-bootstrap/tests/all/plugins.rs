@@ -12,7 +12,7 @@ use std::path::PathBuf;
 
 use daw_bootstrap::{SessionConfig, build_session, build_session_in};
 use daw_contracts::codes::plugins as codes;
-use daw_contracts::{Controls, Params, SYNTH_KIND, StreamConfig};
+use daw_contracts::{Controls, L10n, Params, SYNTH_KIND, StreamConfig};
 
 const DISTORTION: &str = "vst3:distortion";
 /// Where `scripts/build-test-plugins.sh` puts the fixture distortion.
@@ -43,6 +43,19 @@ fn the_builtin_synth_is_an_instrument_not_a_plugin() {
     assert_eq!(synth.label.get(), "Synth");
     assert_eq!(synth.params.len(), 30, "oscillators, unison, AHDSR, filter, pitch envelope, mono, LFO, gain");
     assert!(session.controls.plugins.installed().is_empty(), "nothing in the plugin list without a scan");
+}
+
+/// The AI composes over MCP without hearing the result: it learns what an instrument and each knob do from these texts.
+#[test]
+fn every_builtin_instrument_and_param_says_what_it_does_to_the_sound() {
+    let session = build_session(false);
+    let says = |text: L10n| !text.en.is_empty() && !text.ru.is_empty();
+    for kind in session.controls.instruments.kinds() {
+        assert!(says(kind.about), "instrument {} has no `about` in both languages", kind.kind);
+        for param in &kind.params {
+            assert!(says(param.about), "parameter {}.{} has no `about` in both languages", kind.kind, param.name);
+        }
+    }
 }
 
 #[test]

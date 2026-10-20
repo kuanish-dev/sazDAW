@@ -1,5 +1,5 @@
-//! The wire for the AI "build and check" work: `analysis.levels`, `analysis.check`, batch clips `clips.addNoteMany`
-//! and `project.clear` — JSON shape, one undo step, error codes.
+//! The wire for the AI "build and check" work: `analysis.levels`, `analysis.balance`, `analysis.check`, batch clips
+//! `clips.addNoteMany` and `project.clear` — JSON shape, one undo step, error codes.
 #![allow(
     clippy::unwrap_used,
     clippy::expect_used,
@@ -104,6 +104,36 @@ fn analysis_levels_and_check_answer_in_the_agreed_shape() {
     assert!(bad.is(codes::export::RANGE_BACKWARDS), "{bad}");
     let failed = call(&table, c, "analysis.check", json!({ "fromTick": BAR * 2, "toTick": BAR }));
     assert!(failed.as_array().unwrap().iter().any(|f| f["code"] == "renderFailed"), "{failed}");
+}
+
+#[test]
+fn analysis_balance_answers_per_track_in_the_agreed_shape() {
+    let session = build_session(false);
+    let (table, c) = (RpcTable::new(), &session.controls);
+    call(&table, c, "tempo.set", json!({ "bpm": 120 }));
+    let kick = call(&table, c, "tracks.add", json!({ "name": "Kick", "kind": "kick", "defaultPitch": 36 }));
+    let notes: Vec<Value> = (0..8).map(|beat| NOTE(36, beat * 960)).collect();
+    call(&table, c, "clips.addNote", json!({ "track": kick, "startTick": 0, "lengthTicks": BAR * 2, "notes": notes }));
+    let empty = call(&table, c, "tracks.add", json!({ "name": "Empty", "kind": "kick", "defaultPitch": 36 }));
+
+    let report = call(&table, c, "analysis.balance", json!({}));
+    assert_eq!((report["fromTick"].clone(), report["toTick"].clone()), (json!(0), json!(BAR * 2)));
+    assert!(report["mix"]["loudnessLufs"].is_number() && report["mix"]["truePeakDb"].is_number(), "{report}");
+    assert!(report["floorLufs"].is_null(), "built-in renders repeat exactly: {report}");
+    let tracks = report["tracks"].as_array().unwrap();
+    assert_eq!(tracks.len(), 2);
+    let row = &tracks[0];
+    assert_eq!((&row["track"], &row["name"], &row["silent"], &row["muted"]), (&kick, &json!("Kick"), &json!(false), &json!(false)));
+    assert_eq!(row["keysOnly"], json!(false));
+    for field in ["node", "volume", "loudnessLufs", "maxShortTermLufs", "truePeakDb", "relativeLu"] {
+        assert!(row[field].is_number(), "{field}: {row}");
+    }
+    assert!(row["relativeLu"].as_f64().unwrap().abs() < 0.2, "the only sounding track is the whole mix: {row}");
+    assert_eq!(tracks[1]["track"], empty);
+    assert_eq!((&tracks[1]["silent"], &tracks[1]["loudnessLufs"], &tracks[1]["relativeLu"]), (&json!(true), &Value::Null, &Value::Null));
+
+    let bad = table.call(c, "analysis.balance", json!({ "fromTick": BAR * 2, "toTick": BAR })).unwrap_err();
+    assert!(bad.is(codes::export::RANGE_BACKWARDS), "{bad}");
 }
 
 const MASTER_ID: u32 = 0;

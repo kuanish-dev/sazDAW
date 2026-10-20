@@ -89,6 +89,61 @@ pub struct LevelReport {
     pub targets: Vec<TargetLevels>,
 }
 
+/// Loudness of a sound over the whole range, measured as the export and the live master meter measure it (BS.1770 /
+/// EBU R128). Each value is `None` when nothing passed its gate.
+#[derive(Debug, Clone, Copy, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LoudnessLevels {
+    /// Integrated loudness, LUFS (gated at −70 LUFS and −10 LU): the number to balance by. `None` below the gate or
+    /// for a range shorter than 0.4 s.
+    pub loudness_lufs: Option<f32>,
+    /// The loudest 3 s (short-term loudness), LUFS: where a part that is quiet on average stands out. `None` below the
+    /// gate or for a range shorter than 3 s.
+    pub max_short_term_lufs: Option<f32>,
+    /// True peak (4× oversampled), dBTP. `None` below [`SILENCE_DB`].
+    pub true_peak_db: Option<f32>,
+}
+
+/// One track as it is heard in the mix (`MixAnalysis::balance`).
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TrackBalance {
+    pub track: TrackId,
+    pub name: String,
+    /// The track's source node: the fader to move (`GraphControl::set_volume`).
+    pub node: NodeId,
+    /// The fader, a linear gain (1 is 0 dB): the track's loudness follows it, 20·log10 of the change in dB, unless a
+    /// compressor after it reacts.
+    pub volume: f32,
+    /// The track is muted in the project; its numbers say how loud it is when it plays.
+    pub muted: bool,
+    /// The track reaches the master only by keying a sidechain: its numbers are what it opens or ducks, not a level its
+    /// fader sets.
+    pub keys_only: bool,
+    /// The track adds nothing to the mix in the range (no clips, volume 0, only a muted bus…); `levels` are all `None`
+    /// then.
+    pub silent: bool,
+    #[serde(flatten)]
+    pub levels: LoudnessLevels,
+    /// The track's integrated loudness in the mix minus the mix's, in LU: 0 is as loud as the whole mix, negative is
+    /// quieter.
+    pub relative_lu: Option<f32>,
+}
+
+/// How loud each track is in the mix.
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct BalanceReport {
+    pub from_tick: u32,
+    pub to_tick: u32,
+    /// The whole mix, measured the same way: the reference for `TrackBalance::relative_lu`.
+    pub mix: LoudnessLevels,
+    /// How much two renders of the same mix differ, LUFS; `None`: not at all, so every track is measured exactly. A
+    /// plugin that sounds different each time raises it, and a track within about 10 LU of it is not measured reliably.
+    pub floor_lufs: Option<f32>,
+    pub tracks: Vec<TrackBalance>,
+}
+
 /// The project's sound levels. Job: measure how the project sounds.
 ///
 /// Contract:
@@ -96,15 +151,31 @@ pub struct LevelReport {
 ///   is not locked during the calculation and live playback is not interrupted; nothing is written to disk;
 /// * range `[from_tick, to_tick)`: by default from 0 to the end of the last clip; rendering starts at `from_tick`, so
 ///   notes that started earlier are not heard in the range; the tail after `to_tick` is not included;
-/// * sections are `resolution_bars` bars each, counted from the start of the bar containing `from_tick` (the first
-///   and last are clipped to the range); bars follow the tempo map (`TempoMap::bar_tick`);
-/// * targets (`LevelTargets`): tracks in `project.tracks` order, buses in graph node order, the master as one target;
-/// * peak is sample peak (not true peak), RMS is over both channels, loudness is BS.1770 (no surround channel weights);
 /// * errors: an empty arrangement without `to_tick`, or `from_tick >= to_tick`, is `ErrorKind::Invalid`; a range
-///   longer than [`MAX_ANALYSIS_SECONDS`] or `resolution_bars` outside `1..=MAX_RESOLUTION_BARS` is `ErrorKind::Limit`;
-///   an instrument or effect that fails to be created gives the catalog's error.
+///   longer than [`MAX_ANALYSIS_SECONDS`] is `ErrorKind::Limit`; an instrument or effect that fails to be created gives
+///   the catalog's error.
 pub trait MixAnalysis: Send + Sync {
+    /// Levels of each target (`request.per`):
+    /// * sections are `resolution_bars` bars each, counted from the start of the bar containing `from_tick` (the first
+    ///   and last are clipped to the range); bars follow the tempo map (`TempoMap::bar_tick`);
+    /// * targets (`LevelTargets`): tracks in `project.tracks` order, buses in graph node order, the master as one target;
+    /// * peak is sample peak (not true peak), RMS is over both channels, loudness is BS.1770 (no surround channel
+    ///   weights);
+    /// * `resolution_bars` outside `1..=MAX_RESOLUTION_BARS` is `ErrorKind::Limit`.
     fn levels(&self, project: &Project, request: &LevelRequest) -> Result<LevelReport, ContractError>;
+
+    /// How loud each track is in the mix, for balancing their volumes:
+    /// * a track's sound in the mix is the mix minus the mix without its clips, measured at the master output, after
+    ///   the fader (balancing moves the fader, so the number must follow it); it keeps what the other tracks do to it:
+    ///   a sidechain they key ducks it or opens its gate, the master's dynamics react to the whole mix;
+    /// * the difference is exact when two renders of a project are equal sample for sample, as with the built-in
+    ///   instruments and effects; `floor_lufs` is how much two renders of the mix differ;
+    /// * solo is a listening aid and is ignored on every node; a muted track is measured as the mix with it playing
+    ///   minus the mix (`muted` reports it); every other mute stays, so a track that only feeds a muted bus is `silent`;
+    /// * `mix` is the whole project with solo off, measured the same way; `relative_lu` compares against it;
+    /// * tracks in `project.tracks` order; a track without clips in the range is `silent` without a render; the cost
+    ///   is one render of the whole mix per track with clips, plus two.
+    fn balance(&self, project: &Project, from_tick: Option<u32>, to_tick: Option<u32>) -> Result<BalanceReport, ContractError>;
 }
 
 /// How serious a finding is.

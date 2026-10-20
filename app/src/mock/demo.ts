@@ -17,7 +17,7 @@ export function emptyProject(): Project {
     tracks: [], clips: [], loopRegion: null,
     graph: { nodes: [{ id: MASTER_NODE, name: "Master", kind: { type: "master", volume: 0.8 }, x: 640, y: 160 }], edges: [] },
     room: { ...DEFAULT_ROOM },
-    automation: [], samples: [], markers: [], folders: [], nextId: 1,
+    automation: [], samples: [], markers: [], folders: [], key: null, nextId: 1,
   };
 }
 

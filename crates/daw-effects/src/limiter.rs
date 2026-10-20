@@ -15,6 +15,7 @@ const PARAMS: [ParamInfo; 3] = [
         default: -0.3,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "release",
@@ -24,6 +25,7 @@ const PARAMS: [ParamInfo; 3] = [
         default: 80.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "input",
@@ -33,6 +35,7 @@ const PARAMS: [ParamInfo; 3] = [
         default: 0.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
 ];
 

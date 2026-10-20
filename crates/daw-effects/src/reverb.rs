@@ -36,6 +36,7 @@ const PARAMS: [ParamInfo; 6] = [
         default: 0.6,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "damp",
@@ -45,6 +46,7 @@ const PARAMS: [ParamInfo; 6] = [
         default: 0.5,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "width",
@@ -54,6 +56,7 @@ const PARAMS: [ParamInfo; 6] = [
         default: 1.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "mix",
@@ -63,6 +66,7 @@ const PARAMS: [ParamInfo; 6] = [
         default: 0.25,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     number("predelay", L10n { en: "Pre-delay, ms", ru: "Предзадержка, мс" }, 0.0, MAX_PREDELAY_MS, 0.0),
     number("low_cut", L10n { en: "Low cut, Hz", ru: "Срез низа, Гц" }, LOW_CUT_OFF_HZ, 1_000.0, LOW_CUT_OFF_HZ),

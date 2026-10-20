@@ -25,5 +25,7 @@ Decisions:
 
 * **Envelope graph.** The parameter names `attack`/`hold`/`decay`/`sustain`/`release` are the convention `instruments/EnvelopeGraph.tsx` (`instruments/envelope.ts`) draws for any instrument; a new instrument gets the graph by naming its envelope the same way.
 * **Picture.** For kind `synth` the instrument window also shows `instruments/SynthGraph.tsx`: one cycle of the waveform and the filter response with its resonance peak; `instruments/synth.ts` mirrors the math of `osc.rs` and `filter.rs`, so a change to the sound there needs the same change in that file.
-* **Adding a parameter:** a line in `PARAMS`, an arm in `Synth::set_param` that writes `Settings`, the use in `engine.rs`; then the same line in the browser mock (`app/src/mock/catalog.ts`, label in `i18n` `catalog.params`) and the count in `daw-bootstrap/tests/all/plugins.rs`.
+* **Velocity** scales only the volume (linearly); it does not reach the filter, so there is no TB-303-style accent. `ABOUT` says so to the AI.
+* **Texts for the AI** (see "Sound texts for the AI" in [daw-contracts](../daw-contracts/CLAUDE.md)): `ABOUT` for the synth and each parameter's `about` in `PARAMS` describe the sound in `engine.rs`, `filter.rs`, `envelope.rs` and `lfo.rs` (scales, what velocity changes, when glide slides); a change to the sound there needs the same change in the text.
+* **Adding a parameter:** a line in `PARAMS` (with its `about`), an arm in `Synth::set_param` that writes `Settings`, the use in `engine.rs`; then the same line in the browser mock (`app/src/mock/catalog.ts`, label in `i18n` `catalog.params`) and the count in `daw-bootstrap/tests/all/plugins.rs`.
 * **A similar instrument:** the [add-instrument](../../.claude/skills/add-instrument/SKILL.md) recipe.

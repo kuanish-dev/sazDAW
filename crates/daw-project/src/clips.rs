@@ -5,8 +5,8 @@ use std::sync::Arc;
 
 use daw_contracts::codes::{clips, samples};
 use daw_contracts::{
-    Clip, ClipContent, ClipControl, ClipEdit, ClipId, ContractError, MAX_CLIP_TICK, MAX_CLIPS, NewNoteClip, NoteContent, Project, SampleId,
-    SampleStore, TrackId, tr,
+    Clip, ClipContent, ClipControl, ClipEdit, ClipId, ContractError, MAX_CLIP_TICK, MAX_CLIPS, NewNoteClip, NewStepClip, NoteContent,
+    Project, SampleId, SampleStore, TrackId, tr,
 };
 
 use crate::ProjectService;
@@ -94,6 +94,22 @@ impl ClipControl for ProjectClips {
         // One core edit gives one undo step and all-or-nothing: an error in any clip rolls back the whole edit.
         self.project.edit(&tr!("Add clips", "Добавить клипы"), |project| {
             clips.into_iter().map(|clip| place_note_clip(project, clip)).collect()
+        })
+    }
+
+    fn add_step_clip(&self, clip: NewStepClip) -> Result<Clip, ContractError> {
+        self.project.edit(&tr!("Add clip", "Добавить клип"), |project| {
+            // Read inside the edit, so the degrees are counted in the key the clip is made with.
+            let line = clip.notes(project.key)?;
+            let length_ticks = Some(clip.length_ticks.unwrap_or(line.loop_ticks));
+            let notes = NewNoteClip {
+                track: clip.track,
+                start_tick: clip.start_tick,
+                length_ticks,
+                notes: line.notes,
+                loop_ticks: Some(line.loop_ticks),
+            };
+            place_note_clip(project, notes)
         })
     }
 

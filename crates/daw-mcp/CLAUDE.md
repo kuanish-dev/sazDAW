@@ -4,6 +4,6 @@
 
 Depends on: contracts, rpc.
 
-Map of the whole code: [ARCHITECTURE.md](../../ARCHITECTURE.md). Cross-layer features it takes part in: [mix-check](../../docs/features/mix-check.md).
+Map of the whole code: [ARCHITECTURE.md](../../ARCHITECTURE.md). Cross-layer features it takes part in: [mix-check](../../docs/features/mix-check.md), [step-lines](../../docs/features/step-lines.md).
 
 The RPC self-description and the MCP server are described together in "AI interface" ([crates/daw-rpc/CLAUDE.md](../daw-rpc/CLAUDE.md)).

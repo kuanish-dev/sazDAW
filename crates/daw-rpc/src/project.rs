@@ -79,8 +79,14 @@ pub(crate) fn register(table: &mut RpcTable) {
     );
     table.add("project.status", "Returns a short status: file path, unsaved edits, whether undo is possible.", |c, ()| Ok(status(c)));
     table.add("project.new", "Creates a new empty project without a file.", |c, ()| Ok(c.project.new_project()));
-    table
-        .add_flushing("project.create", "Creates a project folder at a path and makes it current.", |c, p: Path| c.project.create(&p.path));
+    table.add_flushing(
+        "project.create",
+        "Creates a new empty project, saves it and makes it current. `path` is the project FILE, not a folder: \
+         `<projects folder>/<Name>/<Name>.dawproj`, each project in its own folder named like the file; the projects folder \
+         is `profile.projectsFolder` from `preferences.get`, or `<home>/Documents` when that is null (`library.home`). \
+         Missing folders are created. The file name without `.dawproj` becomes the project name. An existing file is an error.",
+        |c, p: Path| c.project.create(&p.path),
+    );
     table.add("project.load", "Opens the project at a path.", |c, p: Path| c.project.load(&p.path));
     table.add_flushing("project.save", "Saves the project to a path.", |c, p: Path| c.project.save(&p.path));
     table.add("project.recent", "Lists recent projects.", |c, ()| {

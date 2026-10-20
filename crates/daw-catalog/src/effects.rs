@@ -1,7 +1,7 @@
 //! Registry of effect kinds: finding an effect factory by its kind name.
 
 use daw_contracts::codes::graph;
-use daw_contracts::{ContractError, Effect, EffectCatalog, EffectFactory, EffectGroups, ErrorCode, KindInfo, Params, PluginState};
+use daw_contracts::{ContractError, Effect, EffectCatalog, EffectFactory, EffectGroups, ErrorCode, KindInfo, L10n, Params, PluginState};
 
 use crate::defaults_of;
 use crate::groups::{FactoryGroups, Kinded};
@@ -46,7 +46,8 @@ impl EffectGroups for EffectRegistry {
 impl EffectCatalog for EffectRegistry {
     fn kinds(&self) -> Vec<KindInfo> {
         // Hidden kinds (disabled plugins) are not offered, but `create` still finds them and explains the refusal.
-        self.groups.describe_all(|f| f.listed().then(|| KindInfo { kind: f.kind(), label: f.label(), params: f.describe() }))
+        self.groups
+            .describe_all(|f| f.listed().then(|| KindInfo { kind: f.kind(), label: f.label(), about: L10n::EMPTY, params: f.describe() }))
     }
 
     fn defaults(&self, kind: &str) -> Result<Params, ContractError> {

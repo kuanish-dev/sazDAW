@@ -12,7 +12,8 @@ import { applyChanges } from "./projectChanges";
 const EMPTY_PROJECT: Readonly<Project> = {
   name: "", tempoMap: { tempos: [{ tick: 0, bpm: 120, ramp: false }], signatures: [{ tick: 0, signature: { numerator: 4, denominator: 4 } }] },
   tracks: [], clips: [], loopRegion: null,
-  graph: { nodes: [], edges: [] }, room: { ...DEFAULT_ROOM }, automation: [], samples: [], markers: [], folders: [], nextId: 1,
+  graph: { nodes: [], edges: [] }, room: { ...DEFAULT_ROOM }, automation: [], samples: [], markers: [], folders: [], key: null,
+  nextId: 1,
 } as const;
 
 const EMPTY_STATUS: Readonly<Status> = { name: "", dirty: false, canUndo: false, canRedo: false, undoLabel: null, path: null, folder: null } as const;

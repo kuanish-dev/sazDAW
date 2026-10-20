@@ -133,7 +133,7 @@ export interface ControllerLane {
   points: ControllerPoint[];
 }
 
-/** Scale for `notes.fitToScale` and piano roll row highlighting. */
+/** Scale for `notes.fitToScale`, the song key and piano roll row highlighting. */
 export type Scale =
   | "major" | "minor" | "dorian" | "phrygian" | "lydian" | "mixolydian" | "harmonicMinor" | "pentatonicMajor" | "pentatonicMinor" | "chromatic";
 
@@ -337,6 +337,8 @@ export interface Project {
   markers: Marker[];
   /** Track folders (a folder's position is the position of its tracks in `tracks`). */
   folders: Folder[];
+  /** The song's key (`key.set`); `null` when it is not set. */
+  key: ScaleKey | null;
   /** MIDI controller knobs mapped to parameters (MIDI learn); absent means no mappings. */
   midiMappings?: MidiMapping[];
   nextId: number;
@@ -366,6 +368,8 @@ export interface ProjectChanges {
   samples?: ListChanges<SampleRef>;
   markers?: ListChanges<Marker>;
   folders?: ListChanges<Folder>;
+  /** `null`: the key was removed. */
+  key?: ScaleKey | null;
   midiMappings?: MidiMapping[];
   nextId?: number;
 }

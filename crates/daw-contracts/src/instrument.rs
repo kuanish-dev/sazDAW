@@ -83,6 +83,11 @@ pub struct ParamInfo {
     /// Option names of a `ParamKind::Choice` parameter, in order; empty for the others (and absent from JSON).
     #[serde(skip_serializing_if = "<[_]>::is_empty")]
     pub choices: &'static [L10n],
+    /// What the parameter does to the sound, in a sentence or two: its scale and what parts of the range sound like.
+    /// Written for someone who cannot hear the result (the AI reads it in `catalog.get`). Every built-in instrument
+    /// parameter has one; `L10n::EMPTY` (absent from JSON) where a kind has nothing to say (effects, plugins).
+    #[serde(skip_serializing_if = "L10n::is_empty")]
+    pub about: L10n,
 }
 
 impl ParamInfo {
@@ -98,6 +103,12 @@ pub trait InstrumentFactory: Send + Sync {
     fn kind(&self) -> &'static str;
     fn label(&self) -> L10n;
     fn describe(&self) -> Vec<ParamInfo>;
+    /// What the instrument sounds like and how it plays notes: what velocity changes, whether a note's length matters.
+    /// Written for someone who cannot hear it (the AI reads it in `catalog.get`); the parameters explain themselves in
+    /// `ParamInfo::about`. Built-in instruments all have one; plugins say nothing (`L10n::EMPTY`).
+    fn about(&self) -> L10n {
+        L10n::EMPTY
+    }
     /// A new instrument. `state` is the saved plugin state from the project (`InstrumentSpec::state`): it is applied
     /// before the parameters, and `params` are set on top. Kinds without their own state (built-ins) ignore it.
     fn create(&self, params: &Params, state: Option<&PluginState>) -> Result<Box<dyn Instrument>, ContractError>;
@@ -112,12 +123,15 @@ pub trait InstrumentFactory: Send + Sync {
     }
 }
 
-/// An instrument or effect kind from a catalog: name, label and parameters. Serialized fresh on every request, so a
-/// language change shows up on the next `kinds()` (nothing caches the label text).
+/// An instrument or effect kind from a catalog: name, label, what it sounds like and parameters. Serialized fresh on
+/// every request, so a language change shows up on the next `kinds()` (nothing caches the label text).
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct KindInfo {
     pub kind: &'static str,
     pub label: L10n,
+    /// See [`InstrumentFactory::about`]; `L10n::EMPTY` (absent from JSON) for effects and plugins.
+    #[serde(skip_serializing_if = "L10n::is_empty")]
+    pub about: L10n,
     pub params: Vec<ParamInfo>,
 }
 
@@ -145,7 +159,16 @@ mod tests {
     use super::*;
 
     fn info(kind: ParamKind, choices: &'static [L10n]) -> ParamInfo {
-        ParamInfo { name: "p1", label: L10n { en: "Wave", ru: "Волна" }, min: 0.0, max: 3.0, default: 2.0, kind, choices }
+        ParamInfo {
+            name: "p1",
+            label: L10n { en: "Wave", ru: "Волна" },
+            min: 0.0,
+            max: 3.0,
+            default: 2.0,
+            kind,
+            choices,
+            about: L10n::EMPTY,
+        }
     }
 
     const WAVES: [L10n; 4] = [L10n::same("Sine"), L10n::same("Triangle"), L10n::same("Saw"), L10n::same("Square")];
@@ -170,5 +193,18 @@ mod tests {
         assert_eq!(choice["choices"], serde_json::json!(["A", "B"]));
         let number = serde_json::to_value(info(ParamKind::Number, &[])).unwrap();
         assert!(number.get("choices").is_none(), "{number}");
+    }
+
+    #[test]
+    fn an_about_text_appears_in_json_only_when_there_is_one() {
+        let silent = serde_json::to_value(info(ParamKind::Number, &[])).unwrap();
+        assert!(silent.get("about").is_none(), "{silent}");
+        let about = L10n { en: "Brightness of the sound.", ru: "Яркость звука." };
+        let explained = serde_json::to_value(ParamInfo { about, ..info(ParamKind::Number, &[]) }).unwrap();
+        assert_eq!(explained["about"], "Brightness of the sound.");
+        let kind = KindInfo { kind: "k", label: L10n::same("K"), about, params: Vec::new() };
+        assert_eq!(serde_json::to_value(&kind).unwrap()["about"], "Brightness of the sound.");
+        let silent_kind = KindInfo { about: L10n::EMPTY, ..kind };
+        assert!(serde_json::to_value(&silent_kind).unwrap().get("about").is_none());
     }
 }

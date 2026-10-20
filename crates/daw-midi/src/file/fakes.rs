@@ -5,9 +5,9 @@ use std::sync::Mutex;
 use daw_contracts::codes::{clips, general};
 use daw_contracts::{
     BAR_TICKS, Bpm, Clip, ClipContent, ClipControl, ClipEdit, ClipId, ContractError, ControllerKind, ControllerLane, ControllerPoint,
-    HistoryControl, HistoryMark, HistorySteps, MAX_CLIP_LOOP_TICKS, NewNote, NewNoteClip, Note, NoteContent, NoteControl, NoteId,
-    Preferences, PreferencesStore, SampleId, SignatureChange, TempoChange, TempoControl, TempoMap, TimeSignature, Track, TrackControl,
-    TrackId,
+    HistoryControl, HistoryMark, HistorySteps, MAX_CLIP_LOOP_TICKS, NewNote, NewNoteClip, NewStepClip, Note, NoteContent, NoteControl,
+    NoteId, Preferences, PreferencesStore, SampleId, SignatureChange, TempoChange, TempoControl, TempoMap, TimeSignature, Track,
+    TrackControl, TrackId,
 };
 
 /// An in-memory project, enough for file I/O: tracks, clips and their notes.
@@ -76,6 +76,9 @@ impl ClipControl for Fake {
         unsupported()
     }
     fn add_note_clips(&self, _: Vec<NewNoteClip>) -> Result<Vec<Clip>, ContractError> {
+        unsupported()
+    }
+    fn add_step_clip(&self, _: NewStepClip) -> Result<Clip, ContractError> {
         unsupported()
     }
     fn add_audio_clip(&self, _: TrackId, _: u32, _: SampleId) -> Result<Clip, ContractError> {

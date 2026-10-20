@@ -22,6 +22,7 @@ pub(crate) const PARAMS: [ParamInfo; VALUES] = [
         default: LOW_CUT_OFF,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "low_gain",
@@ -31,6 +32,7 @@ pub(crate) const PARAMS: [ParamInfo; VALUES] = [
         default: 0.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "low_freq",
@@ -40,6 +42,7 @@ pub(crate) const PARAMS: [ParamInfo; VALUES] = [
         default: 100.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "mid_gain",
@@ -49,6 +52,7 @@ pub(crate) const PARAMS: [ParamInfo; VALUES] = [
         default: 0.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "mid_freq",
@@ -58,6 +62,7 @@ pub(crate) const PARAMS: [ParamInfo; VALUES] = [
         default: 1_000.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "mid_q",
@@ -67,6 +72,7 @@ pub(crate) const PARAMS: [ParamInfo; VALUES] = [
         default: 1.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "high_gain",
@@ -76,6 +82,7 @@ pub(crate) const PARAMS: [ParamInfo; VALUES] = [
         default: 0.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "high_freq",
@@ -85,6 +92,7 @@ pub(crate) const PARAMS: [ParamInfo; VALUES] = [
         default: 8_000.0,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
     ParamInfo {
         name: "high_cut",
@@ -94,6 +102,7 @@ pub(crate) const PARAMS: [ParamInfo; VALUES] = [
         default: HIGH_CUT_OFF,
         kind: ParamKind::Number,
         choices: &[],
+        about: L10n::EMPTY,
     },
 ];
 
