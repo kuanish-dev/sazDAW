@@ -11,6 +11,10 @@
 
 #[cfg(target_os = "macos")]
 mod mac;
+#[cfg_attr(
+    not(target_os = "macos"),
+    allow(dead_code, reason = "only the macOS key monitor presses keys; the layout and its tests stay on every system")
+)]
 mod piano;
 
 use std::sync::Arc;

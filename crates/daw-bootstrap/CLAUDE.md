@@ -1,6 +1,6 @@
 # `daw-bootstrap`
 
-**Session assembly**: the only place where implementations are chosen. `lib.rs` — `Session`, state folders, `build_session*`; wiring by area — `wiring/` (`catalogs.rs`, `project.rs`, `audio.rs`, `parts.rs`, `arrangement.rs`, the overall order and `Controls` — `mod.rs`); background services — `services.rs` (`start_autosave()` takes the interval from user preferences). Integration tests of the full session — `tests/all/` (one test program: `session.rs`, `render_*.rs`, `architecture.rs`…; shared helpers in `tests/common/`); tests with process-global state are separate programs (`tests/panic_log.rs`, `tests/language.rs`).
+**Session assembly**: the only place where implementations are chosen. `lib.rs` — `Session`, state folders, `build_session*`; wiring by area — `wiring/` (`catalogs.rs`, `project.rs`, `audio.rs`, `parts.rs`, `arrangement.rs`, the overall order and `Controls` — `mod.rs`); background services — `services.rs` (`start_autosave()` takes the interval from user preferences); session plugins — `plugins.rs` (the VST3 folders, the scan helper, the crash marker; the VST3 host runs only on macOS, so on other systems the folder list is empty and no helper is set: the scan finds nothing). Integration tests of the full session — `tests/all/` (one test program: `session.rs`, `render_*.rs`, `architecture.rs`…; shared helpers in `tests/common/`); tests with process-global state are separate programs (`tests/panic_log.rs`, `tests/language.rs`).
 
 Depends on: everything.
 

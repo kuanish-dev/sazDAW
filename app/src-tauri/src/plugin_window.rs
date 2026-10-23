@@ -107,7 +107,7 @@ impl PluginWindows {
                 return Err(error);
             }
         };
-        let attached = window.ns_view().map_err(window_failed).and_then(|view| self.editors.attach(session.id, NativeView(view.addr())));
+        let attached = native_view(&window).and_then(|view| self.editors.attach(session.id, view));
         if let Err(error) = attached {
             self.editors.close(session.id);
             let _ = window.destroy();
@@ -246,6 +246,18 @@ pub fn spawn_sync_timer(app: AppHandle, windows: Arc<PluginWindows>) {
             }
         }
     });
+}
+
+/// The window's native view the plugin interface is attached to: its `NSView`. Only macOS has a VST3 host (`daw-vst3`
+/// loads bundles only there), so on other systems no plugin window gets this far and the answer is `NO_PARENT_VIEW`.
+#[cfg(target_os = "macos")]
+fn native_view(window: &tauri::Window) -> Result<NativeView, ContractError> {
+    window.ns_view().map(|view| NativeView(view.addr())).map_err(window_failed)
+}
+
+#[cfg(not(target_os = "macos"))]
+fn native_view(_window: &tauri::Window) -> Result<NativeView, ContractError> {
+    Err(plugins::NO_PARENT_VIEW.err())
 }
 
 fn window_failed(error: impl std::fmt::Display) -> ContractError {

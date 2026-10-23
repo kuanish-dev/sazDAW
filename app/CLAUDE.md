@@ -55,6 +55,8 @@ Root files: `index.tsx` (start), `composition.ts` (the only place that picks the
 
 Rust side: `crates/daw-rpc` is the method table (no dependency on Tauri); `app/src-tauri` is a thin root (`src/main.rs`): audio output, autosave, the `rpc`, `rpc_binary` and `project_whole` commands, the `tick`/`project` event stream, plugin windows and the AI server.
 
+**Linux.** `src-tauri/tauri.linux.conf.json` is merged over `tauri.conf.json` when building on Linux: the bundles are `.deb` and `.AppImage` (macOS keeps `app`), and the license files ship as bundle resources (on macOS `scripts/make-dmg.sh` copies them into the `.app`). A plugin window needs the window's `NSView` (`plugin_window.rs: native_view`), so outside macOS it answers `NO_PARENT_VIEW`; it is never reached there, since the VST3 host finds no plugins. The release build is made by `.github/workflows/linux-build.yml`.
+
 ```bash
 export PATH="/opt/homebrew/opt/rustup/bin:$PATH"
 cd app && npm install

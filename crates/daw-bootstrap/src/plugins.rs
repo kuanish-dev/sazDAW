@@ -12,8 +12,12 @@ use daw_vst3::{HELPER_NAME, PluginDirectory, ProcessMarker, Vst3Plugins};
 use crate::SessionConfig;
 use crate::wiring::Devices;
 
-/// Where system VST3 plugins are looked for on macOS (`~` expands to the home folder). The only place of this list.
-const VST3_DIRS: [&str; 2] = ["/Library/Audio/Plug-Ins/VST3", "~/Library/Audio/Plug-Ins/VST3"];
+/// Where system VST3 plugins are looked for (`~` expands to the home folder). The only place of this list. The VST3 host
+/// runs only on macOS (`daw-vst3`), so on other systems the list is empty: the scan finds nothing and needs no helper.
+#[cfg(target_os = "macos")]
+const VST3_DIRS: &[&str] = &["/Library/Audio/Plug-Ins/VST3", "~/Library/Audio/Plug-Ins/VST3"];
+#[cfg(not(target_os = "macos"))]
+const VST3_DIRS: &[&str] = &[];
 
 /// The plugin crash marker: a file in the state folder that the next start reads. The only place of the file name.
 pub const GUARD_FILE: &str = "plugin-guard.bin";
@@ -74,7 +78,7 @@ pub(crate) fn scanner(
     let mut plugins = Vst3Plugins::new(dirs, effects.clone(), instruments.clone(), cache, log)
         .with_marker(deps.marker)
         .with_preferences(deps.preferences.clone());
-    if matches!(devices, Devices::System) {
+    if matches!(devices, Devices::System) && cfg!(target_os = "macos") {
         plugins = plugins.with_scan_helper(scan_helper());
     }
     plugins.load_cached();

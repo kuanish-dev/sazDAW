@@ -33,8 +33,11 @@ The map of the design is [ARCHITECTURE.md](ARCHITECTURE.md); each crate and fron
 
 ## Platform
 
-**macOS** only for now. The VST3 host (loading bundles, plugin windows) is implemented only for macOS; on other
-systems the code builds with stubs, but it is neither tested nor supported.
+**macOS** is the main platform. **Linux** gets a release build (`.deb` and `.AppImage`, x86_64, Ubuntu 22.04 or
+newer) from the "Linux build" workflow (`.github/workflows/linux-build.yml`): it runs on every push to `dev`, and the
+bundles are in the run's artifacts. On Linux third-party VST3 plugins are not available: the VST3 host (loading
+bundles, plugin windows, keys in a plugin window) is implemented only for macOS, so the plugin scan finds nothing. The
+rest of the app is the same code, but the Linux build is not tested by hand or by CI tests yet. Windows is not built.
 
 ## Requirements
 
@@ -77,6 +80,19 @@ scripts/make-dmg.sh               # target/release/bundle/SazDAW.dmg with the sc
 ```
 
 `make-dmg.sh` builds the image without Finder or AppleScript and checks the third-party license list before packaging.
+
+### Building for Linux
+
+The same command on Linux gives `target/release/bundle/deb/*.deb` and `target/release/bundle/appimage/*.AppImage`
+(`app/src-tauri/tauri.linux.conf.json`). It needs the WebKitGTK, ALSA and D-Bus development packages; on Ubuntu:
+
+```bash
+sudo apt-get install libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libasound2-dev libdbus-1-dev patchelf file build-essential
+```
+
+```bash
+cd app && npm ci && npx tauri build
+```
 
 ## Checks
 
