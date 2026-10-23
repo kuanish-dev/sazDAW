@@ -1,5 +1,3 @@
-// Backend errors of the mock: the same `{ code, params, message }` the real backend sends (`daw_contracts::ContractError`),
-// so the interface shows a mock failure exactly as a real one (translated by code, English from `message`).
 import { type BackendError, fillTemplate } from "../i18n/errors";
 
 /** English templates of the codes the mock uses, copied verbatim from `crates/daw-contracts/src/codes/*.rs`. */

@@ -1,4 +1,3 @@
-// Chord part actions: strum patterns, previewing and building a part. Either the whole part is built or the project is unchanged.
 import type { ChordPartReport, ChordPartRequest, StrumPattern } from "../api/types";
 import { t } from "../i18n";
 import type { Core } from "../core/core";

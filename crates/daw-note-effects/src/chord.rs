@@ -143,7 +143,6 @@ impl Chord {
         let count = if self.kind == IN_SCALE_TRIAD { 3 } else { 4 };
         let steps = self.scale.intervals();
         let class = (i32::from(pitch) - i32::from(self.root)).rem_euclid(12);
-        // Degree of the pressed note; a note outside the scale falls to the nearest degree below.
         let degree = steps.iter().rposition(|&s| i32::from(s) <= class).unwrap_or(0);
         let below = class - i32::from(steps[degree]);
         for (voice, slot) in result.iter_mut().take(count).enumerate() {

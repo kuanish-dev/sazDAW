@@ -1,4 +1,3 @@
-// Note audition: the note sounds on the clip's track while held (keys on the left or a dragged note).
 import type { LiveNotes } from "../keyboard/live";
 import type { Id } from "../api/types";
 import { LIVE_VELOCITY } from "../common/pitch";

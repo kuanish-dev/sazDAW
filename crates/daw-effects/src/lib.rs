@@ -123,7 +123,6 @@ impl<E: EffectKind> EffectFactory for Factory<E> {
         E::PARAMS.to_vec()
     }
 
-    // A built-in effect has no state of its own: everything is in the parameters.
     fn create(&self, params: &Params, _state: Option<&PluginState>) -> Result<Box<dyn Effect>, ContractError> {
         let mut effect = build::<E>(params.iter().map(|(name, value)| (name.as_str(), *value)));
         effect.start()?;

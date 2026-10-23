@@ -1,6 +1,3 @@
-// EQ graph: the frequency response of the built-in EQ (`crates/daw-effects/src/eq.rs`) on a log-frequency axis and what
-// dragging its band handles changes. The filters are the biquad mirror (`biquad.ts`); the band rules MIRROR `eq.rs` (a
-// cut at its extreme frequency is off): a change there must be repeated here.
 import type { ParamInfo, Params } from "../api/types";
 import { BUTTERWORTH_Q, type Coefficients, PASS, magnitudeDb, pass, peaking, shelf } from "./biquad";
 import type { ParamUpdate } from "../common/catalog";

@@ -59,7 +59,6 @@ fn loop_wrap_chases_the_value_at_the_loop_start() {
     rig.transport.play();
     rig.render(700 * FRAMES_PER_TICK);
     let bends: Vec<_> = rig.log().into_iter().filter(|e| e.starts_with("bend")).collect();
-    // Start at 100: −0.5 is held; at 200, 0.5; on the loop, a reset, the chase −0.5, then 0.5 again.
     let values: Vec<_> = bends.iter().map(|e| e.split('@').next().unwrap().to_string()).collect();
     assert_eq!(values[..5], ["bend=-0.5", "bend=0.5", "bend=0", "bend=-0.5", "bend=0.5"], "{bends:?}");
 }

@@ -18,7 +18,6 @@ pub fn start(controls: &Controls, windows: Arc<dyn PluginStateFlush>) -> Option<
     }
     let port = port_from_env();
     match HttpEndpoint::start(Arc::new(McpServer::new(controls.clone()).with_plugin_windows(windows)), port) {
-        // Success is not logged: this is an error log. The address is known in advance: `http://127.0.0.1:<port>/mcp`.
         Ok(endpoint) => Some(endpoint),
         Err(error) => {
             controls.log.record(LogEntry::warn("ai", format!("the AI server did not start on port {port}: {error}")));

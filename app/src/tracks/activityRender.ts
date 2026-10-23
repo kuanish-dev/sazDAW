@@ -1,7 +1,3 @@
-// Draws what is sounding right now on a transparent canvas laid over the timeline rows: notes under the playhead light up
-// in their clip's color and fade out over a sixteenth after they end, and every clip being played gets a glowing outline.
-// It is redrawn on every screen frame while playing (from `smoothPlayhead`), so it looks only at the clips under the
-// playhead and never touches the heavy rows canvas below it (`timelineRender.ts`).
 import { PPQ, type Clip, type Id } from "../api/types";
 import { clipEnd } from "./clipRules";
 import { type RowLayout, timelineHeight } from "./rowLayout";
@@ -51,7 +47,6 @@ function drawClipGlow(ctx: CanvasRenderingContext2D, view: ActivityView, clip: C
   ctx.roundRect(rect.x + 0.5, rect.y + 0.5, rect.w - 1, rect.h - 1, CLIP_RADIUS);
   ctx.stroke();
 
-  // Notes are compared in pixels: `notePreview` places them (with the clip's loop repeats) where the rows canvas drew them.
   const at = position * view.pxPerTick;
   const fade = AFTERGLOW_TICKS * view.pxPerTick;
   for (const note of notePreview(clip, rect, view.pxPerTick)) {

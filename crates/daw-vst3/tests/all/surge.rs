@@ -129,7 +129,6 @@ fn factory_describes_kind_label_and_parameters() {
 fn a_held_note_makes_sound_and_release_fades_out() {
     let Some(rig) = rig("sound") else { return };
     let mut synth = prepared(&*rig.factory);
-    // Warm-up: the synth needs a few blocks before a note sounds.
     render(&mut *synth, 4, BLOCK);
     synth.note_on(60, 1.0);
     let (peak, finite) = render(&mut *synth, 100, BLOCK);
@@ -138,7 +137,6 @@ fn a_held_note_makes_sound_and_release_fades_out() {
     assert!(peak > 0.001, "silence instead of a note: peak {peak}");
 
     synth.note_off(60);
-    // The init patch release is short but not zero: give it two seconds and look at the tail.
     render(&mut *synth, 400, BLOCK);
     let (tail, finite) = render(&mut *synth, 20, BLOCK);
     assert!(finite);
@@ -168,7 +166,6 @@ fn all_notes_off_silences_every_held_note_and_does_not_panic_when_idle() {
 fn render_adds_to_the_block_instead_of_overwriting_it() {
     let Some(rig) = rig("add") else { return };
     let mut synth = prepared(&*rig.factory);
-    // Without notes the plugin is silent, and a block with a constant value must stay as it was.
     let mut buffer = vec![0.25f32; BLOCK * 2];
     synth.render(&mut AudioBlock::new(&mut buffer, 2));
     assert!(buffer.iter().all(|v| (v - 0.25).abs() < 1e-3), "the block was overwritten");
@@ -197,7 +194,6 @@ fn twenty_instances_create_play_and_drop() {
         synth.note_on(60 + (round % 12) as u8, 1.0);
         let (_, finite) = render(&mut *synth, 10, BLOCK);
         assert!(finite, "instance {round}");
-        // A repeated prepare sets the plugin up again correctly.
         synth.prepare(StreamConfig { sample_rate: 44_100, channels: 2 });
         render(&mut *synth, 2, BLOCK);
     }

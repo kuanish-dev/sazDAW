@@ -1,4 +1,3 @@
-// A drum part from patterns: roles, drum labels, part length, choosing a drum's sound and the build request.
 import type { DrumPartRequest, DrumPattern, LaneAssignment, LaneTarget, PatternRole, PatternSlot, Project } from "../api/types";
 import { t } from "../i18n";
 

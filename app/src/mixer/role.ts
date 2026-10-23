@@ -1,5 +1,3 @@
-// The mixer role: the meters of every node and the effects' gain reduction (`levels.ts`), and the master — its window for
-// the visualizer, the live meter, the mono check (`master.ts`).
 import { defineRole, useRole } from "../core/roles";
 import { createLevels, createReductions, type Levels, type Reductions } from "./levels";
 import { createMaster, type Master } from "./master";

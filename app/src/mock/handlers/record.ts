@@ -1,4 +1,3 @@
-// Keyboard recording: live notes go into the track's clip under the cursor, lap by lap.
 import { BAR_TICKS } from "../../api/types";
 import { sourceOfTrack, upstream } from "../../graph/graphRules";
 import { fail } from "../errors";
@@ -14,7 +13,6 @@ export function recordHandlers(w: MockWorld): HandlerSet {
   h["record.setArmed"] = ({ armed }) => { w.armed = armed; if (!armed) closeTake(w); else if (capturing(w)) startTake(w); };
   h["record.setQuantize"] = ({ ticks }) => { if (ticks < 0 || ticks > BAR_TICKS) throw fail("RC-240", { ticks, max: BAR_TICKS }); w.recordQuantize = ticks; };
   h["live.noteOn"] = ({ track, pitch, velocity }) => {
-    // A meter spike on everything that hears this instrument (the source, buses and master downstream).
     const source = sourceOfTrack(w.project.graph, track);
     if (source) w.peaks.set(source.id, LIVE_NOTE_PEAK);
     for (const node of w.project.graph.nodes) {

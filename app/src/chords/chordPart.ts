@@ -1,5 +1,3 @@
-// Chord part, pure functions: chord symbols, a key's own chords (the palette), editing the progression bar by bar, the
-// track the part plays on and arrows for a strum grid. The backend reads the symbols (`Chord::parse`) and voices them.
 import type { ChordTarget, Id, Project } from "../api/types";
 import { BASS_GUITAR_KIND, ELECTRIC_GUITAR_KIND, GUITAR_KIND, UKULELE_KIND } from "../instruments/strings";
 

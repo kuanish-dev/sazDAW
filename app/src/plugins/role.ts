@@ -1,5 +1,3 @@
-// The plugins role: the installed third-party plugins and scanning for them (`plugins.ts`) and their native windows
-// (`pluginEditor.ts`).
 import { defineRole, useRole } from "../core/roles";
 import { settingsRole } from "../settings/role";
 import { createPluginEditor, type PluginEditor } from "./pluginEditor";

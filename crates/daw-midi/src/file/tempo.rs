@@ -44,7 +44,6 @@ pub(super) fn tempo_events(map: &TempoMap) -> Vec<(u32, MetaMessage<'static>)> {
         let power = signature.denominator().trailing_zeros() as u8;
         events.push((change.tick, MetaMessage::TimeSignature(signature.numerator(), power, 24, 8)));
     }
-    // The sort is stable: on the same tick the tempo goes before the signature.
     events.sort_by_key(|(tick, _)| *tick);
     events
 }

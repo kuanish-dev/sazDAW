@@ -1,5 +1,3 @@
-// Draws the piano roll controller lane on canvas: bar grid, a stepped line (each value holds until the next
-// point, the last one until the end of the content) and points. Only draws what it is given (`ControllerView`).
 import type { ControllerKind, ControllerPoint } from "../api/types";
 import { controllerRange, formatControllerValue, toFraction } from "./controllers";
 import { fitCanvas } from "../common/canvas";
@@ -47,7 +45,6 @@ function drawScale(ctx: CanvasRenderingContext2D, v: ControllerView, P: Palette)
 
 function drawLane(ctx: CanvasRenderingContext2D, v: ControllerView, P: Palette) {
   if (v.points.length === 0) return;
-  // Fill from the "rest" value: the middle for pitch bend, the bottom for everything else.
   const restY = controllerY(v.kind.type === "pitchBend" ? 0.5 : 0);
   const y = (p: ControllerPoint) => controllerY(toFraction(v.kind, p.value));
   const end = tickX(Math.max(v.contentTicks, v.points.at(-1)!.tick), v.pxPerTick);

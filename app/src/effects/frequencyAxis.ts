@@ -1,5 +1,3 @@
-// The log frequency axis of the EQ and filter graphs, 20 Hz–20 kHz, with its grid. The live spectrum is spread over the
-// same axis (`spectrum.ts`), so a curve, the grid and the spectrum behind them line up.
 import { clamp } from "../common/math";
 import type { PlotView } from "../common/plot";
 

@@ -58,7 +58,6 @@ fn main() {
         }
         return;
     }
-    // The server has its own state folder: it must not share autosaves and the recent list with the app window.
     let session = build_session_in(&SessionConfig::new(options.state_dir));
     install_panic_hook(session.controls.log.clone());
     let controls = session.controls.clone();
@@ -89,9 +88,8 @@ fn main() {
     for line in io::stdin().lock().lines().map_while(Result::ok) {
         let Some(reply) = server.handle_line(&line) else { continue };
         if writeln!(out, "{reply}").and_then(|()| out.flush()).is_err() {
-            break; // the client closed the output
+            break;
         }
     }
-    // A normal exit: the next start must not mistake it for a plugin crash.
     crash_guard.end_session();
 }

@@ -63,7 +63,6 @@ fn cycles_are_rejected_between_any_processors() {
     assert!(fails_with(g.check_edge(21, 20, false), codes::EDGE_MAKES_LOOP));
     g.edges.push(edge(30, 31));
     assert!(fails_with(g.check_edge(31, 30, false), codes::EDGE_MAKES_LOOP));
-    // Edges: 10 → 20 → 30 → 31 and 20 → 21. Bus → the effect before it is a loop; an effect on another branch is fine.
     assert!(fails_with(g.check_edge(30, 20, false), codes::EDGE_MAKES_LOOP), "bus → the effect before it");
     assert!(fails_with(g.check_edge(31, 20, false), codes::EDGE_MAKES_LOOP), "through two buses is a loop too");
     assert!(g.check_edge(31, 21, false).is_ok(), "21 does not lead to 31: no loop");
@@ -89,7 +88,6 @@ fn order_respects_edges_and_is_deterministic() {
 
 #[test]
 fn order_is_topological_when_buses_feed_effects() {
-    // 10 → 30 → 21 → 31 → 20 → master: bus → effect → bus → effect (limiter) → master.
     let mut g = sample();
     g.edges = vec![edge(10, 30), edge(30, 21), edge(21, 31), edge(31, 20), edge(20, MASTER)];
     let order = g.order();
@@ -142,17 +140,14 @@ fn strip_fields_sit_flat_in_the_node_json() {
 #[test]
 fn chain_follows_a_single_path_through_effects() {
     let mut g = sample();
-    // 10 → 20 → 30 → master: effect 20, output bus 30.
     let chain = g.chain(10);
     assert_eq!(chain, TrackChain { effects: vec![20], output: Some(30) });
     g.edges.push(edge(20, 21));
     g.edges.retain(|e| !(e.from == 20 && e.to == 30));
     g.edges.push(edge(21, 31));
     assert_eq!(g.chain(10), TrackChain { effects: vec![20, 21], output: Some(31) });
-    // Branching: the path is no longer a single line.
     g.edges.push(edge(21, 30));
     assert_eq!(g.chain(10), TrackChain { effects: vec![20, 21], output: None });
-    // A node without connections.
     assert_eq!(sample().chain(31), TrackChain::default());
 }
 
@@ -176,7 +171,6 @@ fn pre_fader_only_from_strips_and_sends_stay_out_of_chain() {
     assert!(g.check_pre_fader(MASTER).is_err(), "master");
     assert!(matches!(g.check_pre_fader(99), Err(e) if e.is(codes::NODE_NOT_FOUND)));
 
-    // A pre-fader send to bus 31 is a branch: the track chain still goes through effect 20.
     g.edges.push(Edge { pre_fader: true, ..edge(10, 31) });
     assert_eq!(g.chain(10), TrackChain { effects: vec![20], output: Some(30) });
 }
@@ -201,11 +195,9 @@ fn edge_level_target_json_names_the_edge_and_defaults_to_a_normal_one() {
 fn insert_path_ignores_sends_and_stops_at_a_shared_effect() {
     let mut g = sample();
     g.nodes.push(instrument(11));
-    // The send 10 → 31 is the second connection: the path follows the first, through insert 20 into bus 30.
     g.edges.push(edge(10, 31));
     assert_eq!(g.insert_path(10), TrackChain { effects: vec![20], output: Some(30) });
     assert_eq!(g.chain(10).output, None, "`chain` branches at a send, `insert_path` does not");
-    // Another track feeds effect 20: it is shared, so it is the output, not an insert.
     g.edges.push(edge(11, 20));
     assert_eq!(g.insert_path(10), TrackChain { effects: vec![], output: Some(20) });
     assert_eq!(g.insert_path(MASTER), TrackChain::default(), "the master has no path");

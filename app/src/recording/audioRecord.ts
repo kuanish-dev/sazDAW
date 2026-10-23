@@ -1,5 +1,3 @@
-// Audio recording from the input onto audio tracks: arming and track inputs, one take on all armed tracks at once,
-// the transport's shared record button. Backend errors ("no input", "place occupied") are shown as toasts.
 import type { Id, InputChannels } from "../api/types";
 import { t } from "../i18n";
 import type { Core } from "../core/core";
@@ -27,16 +25,13 @@ export function createAudioRecord(core: Core, views: Views, recording: Pick<Reco
   /** Starts a take on all armed tracks from the current position (a stopped transport starts). */
   const start = async () => {
     await core.calls.attempt(api.audioRecord.start());
-    // Poll even after a refusal: if recording was already running, the banner must show it.
     recording.followRecording();
   };
 
   const stop = async () => {
-    // Read dropouts before stopping: afterwards the recording state is reset.
     const before = await core.calls.run(api.audioRecord.status());
     const clips = await core.calls.run(api.audioRecord.stop());
     recording.followRecording();
-    // A failed stop has already re-read the project (`run`), so the tracks that did record are shown.
     if (!clips) return;
     await views.showCreated({ clips: clips.map((c) => c.id) });
     core.notifications.toast("info", t().tracks.recordingAdded(clips.length));

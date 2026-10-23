@@ -65,7 +65,6 @@ fn the_tick_reports_tempo_and_signature_at_the_playhead() {
     );
     assert_eq!(daw_rpc::tick(c)["tempo"], 100.0);
     call(&table, c, "transport.seek", json!({ "tick": 4000 }));
-    // Seeking is applied by the engine clock: without sound in the test session, one block moves the position by hand.
     session.renderer.render(&mut [0.0; 128]);
     let tick = daw_rpc::tick(&session.controls);
     assert_eq!(tick["tempo"], 150.0);

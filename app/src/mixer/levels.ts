@@ -1,6 +1,3 @@
-// Meter levels for all nodes (tracks, buses, master) and effect gain reduction: peaks from the `tick` stream with smooth decay,
-// a peak-hold tick and a clip light (`mixer/mixer.ts: stepMeter`).
-// One computation for the whole app, so meters in the timeline and the graph show the same thing.
 import { createEffect, on } from "solid-js";
 import { createStore } from "solid-js/store";
 import type { Id, Tick } from "../api/types";
@@ -14,15 +11,12 @@ const MAX_STEP_SECONDS = 0.2;
 export function createLevels(tick: () => Tick): Levels {
   const [levels, setLevels] = createStore<Levels>({});
   let last = performance.now();
-  // Runs on a new tick only (`on`): the body reads the store it writes, and every write puts new channel objects into
-  // it, so a tracked read would wake this effect again after each write — an endless loop that overflows the stack.
   createEffect(on(tick, ({ meters }) => {
     const now = performance.now();
     const dt = Math.min(MAX_STEP_SECONDS, (now - last) / 1000);
     last = now;
     for (const m of meters) {
       const prev = levels[m.node] ?? SILENT_LEVEL;
-      // Silence that was already silence: writing it to the store would only wake subscribers.
       if (isSilent(prev.l) && isSilent(prev.r) && m.left === 0 && m.right === 0) continue;
       setLevels(m.node, { l: stepMeter(prev.l, m.left, dt), r: stepMeter(prev.r, m.right, dt) });
     }
@@ -39,7 +33,6 @@ const REDUCTION_FALL_DB = 30;
 export function createReductions(tick: () => Tick): Reductions {
   const [reductions, setReductions] = createStore<Reductions>({});
   let last = performance.now();
-  // On a new tick only, like `createLevels`: the body reads the store it writes.
   createEffect(on(tick, (latest) => {
     const now = performance.now();
     const dt = Math.min(MAX_STEP_SECONDS, (now - last) / 1000);

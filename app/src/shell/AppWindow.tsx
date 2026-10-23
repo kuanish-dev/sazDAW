@@ -1,6 +1,3 @@
-// The window, laid out like VS Code: the transport strip on top, the activity bar on the left, the open tab's view, the
-// status bar at the bottom (with the hover hint), floating windows and toasts; the welcome screen until a project is open.
-// It also installs the window-wide listeners: keys, the computer keyboard piano, the release of live-written controls.
 import { type JSX, Show, onCleanup, onMount } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { t } from "../i18n";
@@ -66,7 +63,6 @@ export function AppWindow() {
           <ActivityBar />
           <main class="min-h-0 min-w-0 flex-1 overflow-auto bg-bg">
             <Show when={copy.ready()} fallback={null}>
-              {/* Keyed by the tab: the wrapper is created anew on a switch, so the new view eases in (`anim-view`). */}
               <Show when={shell.tab()} keyed>
                 {(tab) => <div class="anim-view h-full"><Dynamic component={VIEWS[tab]} /></div>}
               </Show>

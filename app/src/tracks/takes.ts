@@ -1,6 +1,3 @@
-// Audio clip takes as seen by the UI: the active one is `content.sample`, the list is `content.takes`
-// (a clip without takes has just its own sound), the comp of pieces is `content.comp`. The rules for editing takes and comps
-// live in the backend and the mock (`mock/takeRules.ts`).
 import type { ClipContent, CompSegment, Id, TempoMap } from "../api/types";
 import { snapNearestInBars } from "../common/tempoMap";
 

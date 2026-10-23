@@ -80,7 +80,7 @@ fn takes_through_rpc() {
     let track = call(&table, c, "tracks.add", json!({ "name": "Voice", "kind": null, "defaultPitch": 60 }));
     let clip = call(&table, c, "clips.addAudio", json!({ "track": track, "startTick": 0, "sample": one }));
     assert_eq!(clip["content"], json!({ "type": "audio", "sample": one }), "without takes the list is not written");
-    c.takes.add_take(clip["id"].as_u64().unwrap() as u32, two.as_u64().unwrap() as u32).unwrap(); // this is how recording adds it
+    c.takes.add_take(clip["id"].as_u64().unwrap() as u32, two.as_u64().unwrap() as u32).unwrap();
 
     let back = call(&table, c, "clips.setActiveTake", json!({ "id": clip["id"], "take": one }));
     assert_eq!(back["content"], json!({ "type": "audio", "sample": one, "takes": [one, two] }));
@@ -88,7 +88,6 @@ fn takes_through_rpc() {
     call(&table, c, "history.undo", Value::Null);
     assert_eq!(project(&table, c)["clips"][0]["content"]["sample"], two, "choosing a take is undone");
 
-    // Comp: a piece of the first take in the middle of the active second one, one undo step; invalid segments give a clear error.
     let comped = call(&table, c, "clips.chooseTakeRange", json!({ "id": clip["id"], "from": 480, "to": 960, "take": one }));
     assert_eq!(
         comped["content"]["comp"],

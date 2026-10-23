@@ -1,4 +1,3 @@
-// Backend communication contract. Implementations: `tauriRpc.ts` (app) and `mock/MockRpc.ts` (browser).
 import type { ProjectUpdate, Tick } from "./types";
 
 export interface RpcClient {

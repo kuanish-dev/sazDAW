@@ -1,6 +1,3 @@
-// Chord parts in the browser without Rust: the strums and a simplified build — the chord as a block from C3 on every
-// stroke, muted strokes short (the backend voices chords per instrument, strums the strings one by one, lets the bass
-// play roots and builds the part as one undo step).
 import type { ChordPartRequest, Id, NewNote, StrumPattern } from "../../api/types";
 import { BAR_TICKS } from "../../api/types";
 import { QUALITIES } from "../../chords/chordPart";
@@ -52,7 +49,6 @@ export function chordsHandlers(w: MockWorld, h: () => HandlerSet): HandlerSet {
   return {
     "chords.strums": (): StrumPattern[] =>
       Object.entries(STRUM_GRIDS).map(([id, grid]) => ({ id, grid, name: t().mockEdits.chords.strums[id as StrumId] })),
-    // The browser without Rust has no sound: preview plays nothing but answers like the backend.
     "chords.preview": () => null,
     "chords.stopPreview": () => null,
     "chords.build": ({ target, startBar = 0, strum, bars, repeat = 1, replace = false }: ChordPartRequest) => {

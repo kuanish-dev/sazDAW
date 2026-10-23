@@ -1,6 +1,3 @@
-// Periodic backend polling: one request at a time, stops when the caller asks. Shared by the audio recording state and,
-// as a watched poll (a backend capture polled while it is shown), by the input level check, the master visualizer and
-// the master meter.
 import { onCleanup } from "solid-js";
 
 export interface Poller {
@@ -75,7 +72,6 @@ export function createWatchedPoll<T>(capture: WatchedCapture<T>, intervalMs: num
   return {
     start() {
       if (poller.running()) return;
-      // Polling starts before the capture is asked to open: leaving at that moment still closes it.
       poller.start();
       void capture.watch?.(true);
     },

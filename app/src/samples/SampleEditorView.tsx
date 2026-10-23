@@ -1,5 +1,3 @@
-// The Samples tab: manually extracting sounds from a file onto new tracks. Assembly only: sound choice, selection,
-// cursor and preview; waveform — `sampleWave`, screen parts — `SampleList`, `SampleToolbar`, `WaveformCanvas`, `ExtractPanel`.
 import { Show, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import { MIDDLE_C } from "../common/pitch";
 import { zoomAt, type Selection } from "./waveform";
@@ -35,12 +33,10 @@ export function SampleEditorView() {
   const markers = () => sample()?.markers ?? [];
   const trackName = () => name().trim() || sample()?.name || "";
 
-  // The first sample is selected automatically if nothing is selected.
   createEffect(() => {
     if (selection.sample() === null || !sample()) selection.selectSample(project.samples[0]?.id ?? null);
   });
 
-  // On sample change the selection, cursor and preview belong to the previous file, so reset them.
   createEffect(on(() => sample()?.id, () => {
     setRegion(null);
     setCursor(null);
@@ -58,7 +54,6 @@ export function SampleEditorView() {
   };
   const togglePlay = () => (playing() ? void preview.stop() : void play());
 
-  // Space here means preview, not transport, wherever the focus is (one of the three key-ownership ways, `shell/globalKeys.ts`).
   onMount(() => onCleanup(claimSpace(togglePlay)));
 
   const saveMarkers = (next: number[]) => {

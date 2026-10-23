@@ -1,9 +1,6 @@
 @import "tailwindcss";
 
-/* Look: flat "VS Code Modern"-style surfaces — 1px hairline borders instead of cards and shadows, radius ≤ 4px,
-   13px UI font, compact controls. Dark is the default; the light theme and accent colors override the same variables below. */
 @theme {
-  /* Surfaces: `bg` — the editor area, `panel` — side bars, headers and status bar, `panel-2/3` — controls and their hover. */
   --color-bg: #1f1f1f;
   --color-panel: #181818;
   --color-panel-2: #313131;
@@ -11,21 +8,17 @@
   --color-line: #2b2b2b;
   --color-text: #cccccc;
   --color-muted: #9d9d9d;
-  /* Ghost hover (list rows, icon buttons) and the selected list row. */
   --color-hover: #2a2d2e;
   --color-select: color-mix(in srgb, var(--color-accent) 24%, transparent);
-  /* Inputs: background and border; the border turns `focus` on focus. */
   --color-field: #313131;
   --color-field-line: #3c3c3c;
   --color-accent: #0078d4;
   --color-accent-dim: #005a9e;
-  /* Text and icons on an accent background. */
   --color-on-accent: #ffffff;
   --color-focus: var(--color-accent);
   --color-ok: #4cd08a;
   --color-danger: #f14c4c;
   --color-blue: #3794ff;
-  /* What the AI made (its steps in the history panel): violet, apart from the accent and the status colors. */
   --color-ai: #b48cff;
   --canvas-bg: #1a1a1a;
   --canvas-bg-deep: #141414;
@@ -51,17 +44,14 @@
   --canvas-select-stroke: rgba(55, 148, 255, 0.9);
   --font-sans: -apple-system, BlinkMacSystemFont, "Segoe WPC", "Segoe UI", system-ui, Ubuntu, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  /* Compact type: VS Code's 13px UI font; `text-base` is only slightly larger. */
   --text-sm: 0.8125rem;
   --text-sm--line-height: 1.4;
   --text-base: 0.875rem;
   --text-base--line-height: 1.45;
-  /* Flat corners: nothing rounder than 4px (except `rounded-full`). */
   --radius-md: 4px;
   --radius-lg: 4px;
   --radius-xl: 4px;
   --radius-2xl: 4px;
-  /* Shadows only for floating widgets (menus, dialogs, toasts) — one soft VS Code-like shadow. */
   --shadow-md: var(--widget-shadow);
   --shadow-lg: var(--widget-shadow);
   --shadow-xl: var(--widget-shadow);
@@ -71,7 +61,6 @@
 :root {
   color-scheme: dark;
   --widget-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.36);
-  /* Chevron for `select.field` (one mid-grey that reads on both themes). */
   --select-chevron: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='M4.5 6.5 8 10l3.5-3.5' fill='none' stroke='%23999' stroke-width='1.2'/%3E%3C/svg%3E");
 }
 
@@ -79,14 +68,12 @@
   html, body, #root { height: 100%; }
   body { @apply bg-bg text-[13px] text-text font-sans antialiased select-none overflow-hidden; }
   input, select, button { outline: none; }
-  /* Keyboard focus is always visible: a 1px ring in the focus color, drawn inside so it never gets clipped. */
   :where(button, a, [role="slider"], [role="switch"], [role="radio"], [role="tab"], [role="menuitem"], input[type="checkbox"], input[type="radio"], input[type="range"]):focus-visible {
     outline: 1px solid var(--color-focus);
     outline-offset: -1px;
   }
   input[type="checkbox"], input[type="radio"], input[type="range"], progress { accent-color: var(--color-accent); }
   ::selection { background: color-mix(in srgb, var(--color-accent) 40%, transparent); }
-  /* Thin square scrollbars that brighten on hover, like VS Code. */
   ::-webkit-scrollbar { width: 10px; height: 10px; }
   ::-webkit-scrollbar-thumb { background: var(--scroll-thumb); }
   ::-webkit-scrollbar-thumb:hover { background: var(--scroll-thumb-hover); }
@@ -94,10 +81,7 @@
 }
 
 @layer components {
-  /* Buttons. `.btn` — secondary (the default), `.btn-primary` — the main action, `.btn-ghost` — toolbar button without
-     a background, `.btn-icon` — a square ghost button for a 16px icon; `.btn-on` — a pressed toggle (after the others, so it wins). */
   .btn { @apply inline-flex h-7 min-w-7 cursor-pointer items-center justify-center gap-1.5 rounded border border-transparent bg-panel-2 px-2.5 text-sm whitespace-nowrap text-text transition-[color,background-color,border-color,scale] duration-100 hover:bg-panel-3 disabled:cursor-default disabled:opacity-40 disabled:hover:bg-panel-2; }
-  /* A pressed button sinks a little, so a click is felt even when the result appears elsewhere. */
   .btn:active:not(:disabled) { scale: 0.95; }
   .btn-primary { @apply bg-accent text-on-accent hover:bg-accent hover:brightness-110 disabled:hover:bg-accent; }
   .btn-ghost { @apply bg-transparent hover:bg-hover disabled:hover:bg-transparent; }
@@ -106,43 +90,31 @@
   .field { @apply h-7 rounded border border-field-line bg-field px-2 text-sm text-text placeholder:text-muted focus:border-focus disabled:opacity-50; }
   select.field { appearance: none; padding-right: 1.5rem; background-image: var(--select-chevron); background-repeat: no-repeat; background-position: right 0.25rem center; }
   .panel { @apply rounded border border-line bg-panel; }
-  /* Edge-to-edge layout: inner panels touch, separated by hairlines from the container (`divide-*`). */
   .flush .panel { @apply rounded-none border-0; }
   .label { @apply text-[11px] font-semibold uppercase tracking-wide text-muted; }
-  /* VS Code-style section header: a small uppercase title on a 22px strip. */
   .section-header { @apply flex h-[22px] shrink-0 items-center gap-1 px-3 text-[11px] font-bold uppercase tracking-wide text-muted; }
-  /* Rows of menus and lists: flat, with the ghost hover. */
   .menu-item { @apply flex w-full items-center justify-between gap-4 rounded-sm px-2.5 py-1 text-left text-sm hover:bg-accent hover:text-on-accent; }
 
-  /* Entrances (keyframes in "Motion" below). In this layer, so a utility like `origin-center` still overrides the origin. */
   .anim-fade { animation: fade-in var(--motion-base) var(--ease-out) backwards; }
-  /* Menus and popovers grow from the corner they are anchored to (top left unless an `origin-*` utility says otherwise). */
   .anim-pop { transform-origin: top left; animation: pop-in var(--motion-fast) var(--ease-out) backwards; }
   .anim-toast { animation: slide-in-right var(--motion-slow) var(--ease-spring) backwards; }
   .anim-view { animation: rise-in var(--motion-base) var(--ease-out) backwards; }
-  /* Welcome screen blocks: a slower rise, staggered by an inline `animation-delay`. */
   .anim-rise { animation: rise-in 520ms var(--ease-out) backwards; }
-  /* A toggle that is not a `.btn-on` (the red Mute) pops the same way when it turns on. */
   .anim-toggle { animation: toggle-pop var(--motion-base) var(--ease-spring); }
-  /* Knobs glow in the accent color under the mouse and more while turned. */
   .knob { transition: filter var(--motion-fast) ease-out; }
   .knob:hover { filter: drop-shadow(0 0 2px color-mix(in srgb, var(--color-accent) 45%, transparent)); }
   .knob-active, .knob-active:hover { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--color-accent) 80%, transparent)); }
-  /* The playhead glows, so it reads as "live" over busy clips; on the ruler it has a cap pointing down. */
   .playhead { box-shadow: 0 0 6px 1px color-mix(in srgb, var(--color-accent) 70%, transparent); }
   .playhead-cap::before {
     content: ""; position: absolute; top: 0; left: -4px;
     border: 4.5px solid transparent; border-top: 6px solid var(--color-accent); border-bottom: 0;
   }
-  /* Beat pulse (transport): two copies of each keyframe, swapped on every beat, so the animation restarts even when the
-     same element stays lit (a one-beat bar, the Play button). */
   .beat-dot-a { animation: beat-dot-a 280ms var(--ease-out); }
   .beat-dot-b { animation: beat-dot-b 280ms var(--ease-out); }
   .beat-ring-a { animation: beat-ring-a 320ms ease-out; }
   .beat-ring-b { animation: beat-ring-b 320ms ease-out; }
 }
 
-/* Light theme ("Light Modern"): overrides the same variables (including the canvas palette). */
 :root[data-theme="light"] {
   color-scheme: light;
   --widget-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.16);
@@ -187,8 +159,6 @@
   --canvas-select-stroke: rgba(0, 95, 184, 0.9);
 }
 
-/* Accent color (Settings → Appearance): blue is the theme value above (VS Code blue); the others override the accent,
-   the text on it and the canvas colors derived from it. The light variant is a separate rule (higher specificity than the light theme). */
 :root[data-accent="orange"] { --color-accent: #ff9f43; --color-accent-dim: #b36b1f; --color-on-accent: #1f1f1f; --canvas-accent-soft: rgba(255, 159, 67, 0.2); --note-selected: #ffd29a; --wave-dim: #6b5a46; }
 :root[data-accent="green"] { --color-accent: #4cd08a; --color-accent-dim: #2a8a57; --color-on-accent: #1f1f1f; --canvas-accent-soft: rgba(76, 208, 138, 0.2); --note-selected: #b9f0d2; --wave-dim: #3f6450; }
 :root[data-accent="purple"] { --color-accent: #b48cff; --color-accent-dim: #7650c2; --color-on-accent: #1f1f1f; --canvas-accent-soft: rgba(180, 140, 255, 0.2); --note-selected: #e0d0ff; --wave-dim: #5a4a72; }
@@ -198,15 +168,9 @@
 :root[data-theme="light"][data-accent="purple"] { --color-accent: #8a5cf0; --color-accent-dim: #6538c4; --color-on-accent: #ffffff; --canvas-accent-soft: rgba(138, 92, 240, 0.22); --note-selected: #4a1fa8; --wave-dim: #c4b0ea; }
 :root[data-theme="light"][data-accent="red"] { --color-accent: #e0455d; --color-accent-dim: #b02a3f; --color-on-accent: #ffffff; --canvas-accent-soft: rgba(224, 69, 93, 0.22); --note-selected: #8f1426; --wave-dim: #e8aab4; }
 
-/* The sliding strip of the loading overlay (VS Code's progress bar). */
 @keyframes loading-bar { from { left: -33%; } to { left: 100%; } }
 .loading-bar { animation: loading-bar 1.4s ease-in-out infinite; }
 
-/* Motion: one short tempo for the whole app — pop-ups and views ease in, toggles and beats pulse (classes `.anim-*`,
-   `.beat-*` in the components layer above). Keyframes move `opacity`, `scale` and `translate`, never `transform`, so they
-   compose with an element's own inline transform (the dragged instrument window). Entrances fill `backwards` only: a
-   transform kept after the end (`forwards`) would make the element the containing block of its `fixed` children, and
-   menus inside it would open in the wrong place. */
 :root {
   --motion-fast: 120ms;
   --motion-base: 180ms;
@@ -224,8 +188,6 @@
 @keyframes beat-ring-a { from { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 55%, transparent); } }
 @keyframes beat-ring-b { from { box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-accent) 55%, transparent); } }
 
-/* The system's "reduce motion" setting: nothing slides or pulses; everything still shows, just without movement.
-   Canvas animations check the same setting in code (`common/motion.ts`). */
 @media (prefers-reduced-motion: reduce) {
   *, ::before, ::after {
     animation-duration: 0.01ms !important;

@@ -74,7 +74,6 @@ pub(crate) fn vary(group: &[Note], others: &[Note], variation: &Variation, seed:
         let draw: [f64; DRAWS_PER_NOTE] = std::array::from_fn(|_| random.unit());
         let Some(mut note) = board.kept[i] else { continue };
         let downbeat = note.start_tick.is_multiple_of(bar);
-        // A bar's anchor note is removed only by strong thinning, and no more than half of them.
         let remove = if downbeat { -variation.density - 0.5 } else { -variation.density };
         if draw[0] < remove {
             board.kept[i] = None;

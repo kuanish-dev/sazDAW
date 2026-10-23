@@ -1,6 +1,3 @@
-// Beat lights next to the position counter: one dot per beat of the bar, the first in the accent color. While playing the
-// current beat's dot flashes; paused, it stays lit; stopped, all are dim. A bar of more than `MAX_DOTS` beats shows a
-// single dot that flashes on every beat. `createBeat` is the beat clock the lights and the Play button pulse with.
 import { For, createMemo, type Accessor } from "solid-js";
 import { barPosition, signatureAt } from "../common/tempoMap";
 import { usePlayback, useProjectCopy } from "../core/roles";
@@ -25,7 +22,6 @@ export function createBeat(): Accessor<Beat | null> {
     const map = project.tempoMap;
     const { bar, beat } = barPosition(map, at);
     const beats = signatureAt(map, at).signature.numerator;
-    // Beats counted from the song start: consecutive beats always differ in parity, across bar lines too.
     return { beat: beat - 1, beats, flip: (bar * beats + beat) % 2 === 0 };
   }, null, { equals: (a, b) => a?.beat === b?.beat && a?.beats === b?.beats && a?.flip === b?.flip });
 }

@@ -17,7 +17,6 @@ fn fresh_dir() -> PathBuf {
     dir
 }
 
-// One test: the steps share the global language and must run in order.
 #[test]
 fn the_store_applies_the_language_on_open_and_on_a_successful_set() {
     let dir = fresh_dir();

@@ -95,7 +95,6 @@ impl Shape {
             Shape::Soft => x.tanh(),
             Shape::Hard => x.clamp(-1.0, 1.0),
             Shape::Fold => {
-                // A triangle fold: period 4, range [-1, 1]; loud input folds back instead of flattening.
                 let t = (x + 1.0).rem_euclid(4.0);
                 if t < 2.0 { t - 1.0 } else { 3.0 - t }
             }

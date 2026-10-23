@@ -106,7 +106,6 @@ mod tests {
         assert_eq!(*JsonState::<Sample>::open(&dir, "s.json", log.clone()).lock(), Sample { values: vec![1, 2] });
         assert!(log.recent(10).is_empty());
 
-        // A folder in place of the file: writing is impossible.
         let blocked = JsonState::<Sample>::open(&dir, "blocked", log.clone());
         fs::create_dir_all(dir.join("blocked")).unwrap();
         blocked.persist(&Sample::default());

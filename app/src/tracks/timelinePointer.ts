@@ -1,6 +1,3 @@
-// Mouse on the timeline: selection (click, Shift/Cmd, marquee), moving and copying a group, resizing and trimming the start,
-// audio clip fades and gain (handles on the clip, `timelineLayout`), the audio clip menu, splitting, erasing. The ruler strip
-// above the rows has its own pointers (`rulerPointer`, `tempoPointer`, `markerPointer`).
 import type { Clip, Id, TempoMap, Track } from "../api/types";
 import { laneOf, type Lanes } from "./trackRows";
 import type { Clips } from "./clips";
@@ -99,7 +96,6 @@ export function createTimelinePointer(deps: TimelinePointerDeps) {
       else drag = { mode: hit.zone === "trim" ? "trim" : "resize", clip: hit.clip };
       return;
     }
-    // Clicking an already selected clip keeps the group, otherwise it couldn't be dragged.
     const ids = additive ? toggleId(deps.selected(), id) : deps.selected().includes(id) ? deps.selected() : [id];
     deps.select(ids, hit.clip.track);
     if (!ids.includes(id)) return;
@@ -113,7 +109,6 @@ export function createTimelinePointer(deps: TimelinePointerDeps) {
     capture(deps.surface(), event);
     const hit = track ? hitClip(deps.clips(), track.id, tick, handleTicks()) : null;
     if (!track || !hit) {
-      // Empty space: marquee selection (with Shift it adds to the current selection).
       const additive = isAdditive(event);
       if (!additive) deps.select([], track?.id ?? null);
       drag = { mode: "marquee", x, y, base: additive ? deps.selected() : [], moved: false };
@@ -180,11 +175,9 @@ export function createTimelinePointer(deps: TimelinePointerDeps) {
       moveMarquee(drag, x, y);
     } else if (drag.mode === "move") {
       const tracks = deps.tracks();
-      // Snapping follows the lead clip (the one grabbed); the rest move by the same delta.
       const { lead } = drag;
       const deltaTick = snapped(tick - drag.grab) - lead.startTick;
       const copy = event.altKey;
-      // A copy stays on its original tracks: its rows don't shift.
       const deltaRows = copy ? 0 : clampRow(y, deps.layout()) - laneOf(tracks, lead.track);
       deps.setDraft({ placements: moveGroup(drag.group, tracks, deltaTick, deltaRows), copy });
     } else {
@@ -222,8 +215,6 @@ export function createTimelinePointer(deps: TimelinePointerDeps) {
     drag = null;
     deps.setMarquee(null);
     deps.setTip(null);
-    // The draft stays until the action is done: copies arrive only with the refreshed project, and without the
-    // draft their ghosts would blink out for a frame.
     try {
       await commit(finished, draft);
     } finally {

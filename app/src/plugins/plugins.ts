@@ -1,6 +1,3 @@
-// Installed plugins: the list, scanning for third-party ones (only the user starts it — plugins are not loaded at startup),
-// disabling a plugin and the question after a plugin crash in the previous session.
-// The last scan result is kept here too: the Plugins section shows it even after switching sections.
 import { createSignal } from "solid-js";
 import type { PluginList, ScanReport } from "../api/types";
 import { crashQuestion } from "./pluginRules";
@@ -30,7 +27,6 @@ export function createPlugins(core: Core, preferences: AppPreferences): Plugins 
   const setDisabled = async (kind: string, disabled: boolean) => {
     if (!(await core.calls.attempt(core.api.plugins.setDisabled(kind, disabled)))) return false;
     await core.calls.run(core.copy.refreshCatalog());
-    // The disabled list lives in preferences: without a fresh copy the next `preferences.set` would restore the old list.
     const stored = await core.calls.run(core.api.preferences.get());
     if (stored) preferences.show(stored);
     return true;
@@ -46,7 +42,6 @@ export function createPlugins(core: Core, preferences: AppPreferences): Plugins 
         if (!report) return;
         setLastScan(report);
         await core.calls.run(core.copy.refreshCatalog());
-        // The backend logs per-plugin failure reasons, and the Plugins section lists them.
         core.notifications.toast("info", t().settings.plugins.scanToast(report.effects, report.instruments));
       } finally {
         setScanning(false);

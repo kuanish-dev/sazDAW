@@ -1,6 +1,3 @@
-// Audio clip waveforms for the timeline and take lanes: each sample's envelope is requested once; a clip's columns
-// (for a comp, per segment from its own take) are computed on demand. One cache serves the whole Tracks page:
-// `TracksView` provides it (`ClipWavesContext`), so the timeline and the take lanes share what was requested.
 import { createContext, createSignal, useContext } from "solid-js";
 import type { Clip, Id, TempoMap } from "../api/types";
 import { bucketsFor, clipColumns, type SamplePeaks } from "./clipWave";
@@ -18,7 +15,6 @@ export function createClipWaves(samples: Pick<SamplesRole, "sampleInfo" | "edito
   const load = async (sample: Id) => {
     const info = await samples.sampleInfo(sample);
     const wave = info && (await samples.editor.waveform(sample, 0, info.frameCount, bucketsFor(info.frameCount, info.sampleRate)));
-    // Failed: allow requesting it again on the next draw.
     if (!wave) return requested.delete(sample);
     columns.clear();
     setPeaks(new Map(peaks()).set(sample, { frameCount: wave.frameCount, sampleRate: wave.sampleRate, peaks: wave.peaks }));
@@ -35,8 +31,6 @@ export function createClipWaves(samples: Pick<SamplesRole, "sampleInfo" | "edito
       return null;
     }
     const columnCount = Math.max(1, Math.round(width));
-    // A tempo-warped clip reads the sound at its original tempo, a regular one at the map's average tempo under it
-    // (columns are slightly uneven inside a clip with a tempo change; that doesn't matter for a picture).
     const soundTempo = clipTempo(clip, averageTempo(map, clip.startTick, clip.startTick + clip.lengthTicks));
     const key = `${columnCount}:${clip.offsetFrames}:${clip.lengthTicks}:${soundTempo}`;
     const slot = `${clip.id}:${take}`;

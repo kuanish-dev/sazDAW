@@ -58,7 +58,6 @@ impl Noise {
         x ^= x >> 17;
         x ^= x << 5;
         self.0 = x;
-        // The top 24 bits fit an f32 exactly.
         (x >> 8) as f32 / (1u32 << 23) as f32 - 1.0
     }
 }

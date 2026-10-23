@@ -1,4 +1,3 @@
-// Audio export: rendering the song (or a part of it) to a file, and where that file goes by default.
 import { FLAC_FILTER, MP3_FILTER, WAV_FILTER } from "../api/dialogs";
 import type { ExportFormat, ExportOptions, ExportResult } from "../api/types";
 import { loudnessSummary, pathForFormat } from "./exportAudio";

@@ -1,4 +1,3 @@
-// Song arrangement: pure marker rules — the neighbouring marker for jumps and the name of a new marker.
 import type { Marker } from "../api/types";
 import { t } from "../i18n";
 

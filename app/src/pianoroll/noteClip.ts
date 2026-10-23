@@ -1,7 +1,3 @@
-// Note clip: its content, the clip bar, the visible length in the editor (with a spare bar) and where the playhead is
-// inside looped content. A clip has its own even grid: a bar is the bar of the time signature in effect at the clip start
-// (`clipBarTicks`); signature changes mid-clip do not cut it. The backend computes it the same way
-// (`daw-project/src/note_rules.rs: fit_length`).
 import { MAX_CLIP_LOOP_TICKS, type Clip, type Note, type NoteContent, type TempoMap } from "../api/types";
 import { barLengthAt } from "../common/tempoMap";
 

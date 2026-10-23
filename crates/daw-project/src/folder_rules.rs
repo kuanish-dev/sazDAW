@@ -47,7 +47,6 @@ pub fn gather(project: &mut Project) {
     let known: HashSet<FolderId> = project.folders.iter().map(|f| f.id).collect();
     let mut tracks = std::mem::take(&mut project.tracks);
     for track in &mut tracks {
-        // A reference to a missing folder (say, from a hand-edited file) leaves the track outside folders.
         track.folder = track.folder.filter(|f| known.contains(f));
     }
     let mut done = HashSet::new();

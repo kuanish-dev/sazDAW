@@ -204,7 +204,6 @@ mod tests {
             }
             eq.process(block, None);
             if changed_at.is_some() {
-                // Give the designer thread time, as the audio callback's real-time pace would.
                 std::thread::sleep(Duration::from_millis(2));
             }
             assert!(started.elapsed() < Duration::from_secs(20), "the designer answers");

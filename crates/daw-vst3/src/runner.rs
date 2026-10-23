@@ -24,8 +24,6 @@ use crate::pending::PendingChanges;
 pub const MAX_FRAMES: usize = 8192;
 
 pub struct ProcessRunner {
-    // Buffers and pointer arrays must not move: `ProcessData` stores the addresses of their contents.
-    // `Vec`/`Box` keep data on the heap, so `ProcessRunner` itself may be moved.
     in_left: Vec<f32>,
     in_right: Vec<f32>,
     out_left: Vec<f32>,
@@ -159,7 +157,6 @@ impl ProcessRunner {
         channels: usize,
     ) -> bool {
         if channels == 0 {
-            // A block without channels: nowhere to add to, and what accumulated waits for a real block.
             return true;
         }
         let mut all_ok = true;
@@ -182,7 +179,6 @@ impl ProcessRunner {
         if frames == 0 {
             return true;
         }
-        // The plugin may accumulate into the output instead of overwriting it: start from a clean slate.
         self.out_left[..frames].fill(0.0);
         self.out_right[..frames].fill(0.0);
         if let Some(events) = &self.events {

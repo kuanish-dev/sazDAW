@@ -1,4 +1,3 @@
-// Sample editor: everything we do with one sound — waveform, slice markers, tracks from regions, saving a region to WAV.
 import { WAV_FILTER } from "../api/dialogs";
 import type { Id, Waveform } from "../api/types";
 import { basename, joinPath, withExtension } from "../common/format";

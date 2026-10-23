@@ -1,4 +1,3 @@
-// In-place rename: an input replaces the label; Enter or losing focus saves, Esc cancels.
 import { Show, type JSX } from "solid-js";
 import { t } from "../i18n";
 
@@ -27,7 +26,6 @@ export function InlineRename(props: {
         value={props.name}
         aria-label={t().controls.newName}
         ref={(el) => queueMicrotask(() => { el.focus(); el.select(); })}
-        // A press in the field is text input, not a drag or selection of what the field sits on.
         onPointerDown={(e) => e.stopPropagation()}
         onBlur={(e) => finish(e.currentTarget.value)}
         onKeyDown={(e) => {

@@ -1,5 +1,3 @@
-// Plucked strings (backend `daw-strings`): their kinds and where a new track's step input starts.
-
 export const GUITAR_KIND = "guitar";
 export const ELECTRIC_GUITAR_KIND = "electric_guitar";
 export const UKULELE_KIND = "ukulele";

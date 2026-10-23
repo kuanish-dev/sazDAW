@@ -1,4 +1,3 @@
-// Smooth playhead: the backend reports the position ~30 times per second; between ticks we extrapolate from the tempo.
 import { PPQ, type Tick } from "../api/types";
 
 /** Anchor point: the position reported by the backend and the moment (ms, `performance.now()`) we received it. */

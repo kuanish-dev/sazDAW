@@ -49,7 +49,6 @@ unsafe impl Send for Vst3Instrument {}
 impl Vst3Instrument {
     /// An instrument with initial parameter values from the project (sent to the plugin in the first block).
     pub fn new(mut instance: PluginInstance, name: String, log: Arc<dyn AppLog>, params: &Params) -> Result<Self, String> {
-        // Check the format right at creation: an instrument without a stereo f32 output cannot be used.
         instance.configure_instrument()?;
         let runner = ProcessRunner::new_instrument(instance.out_buses());
         let scales = instance.parameters().scales;
@@ -75,7 +74,6 @@ impl Vst3Instrument {
 
 impl Instrument for Vst3Instrument {
     fn prepare(&mut self, config: StreamConfig) {
-        // A repeated start restarts the plugin: it forgets the sounding notes, and so does the host.
         self.notes.reset();
         self.ready = self.instance.guarded(|instance| self.faults.start(instance, config.sample_rate));
         self.clock.start(f64::from(config.sample_rate));
@@ -112,14 +110,11 @@ impl Instrument for Vst3Instrument {
 
     fn render(&mut self, block: &mut AudioBlock) {
         if !self.ready {
-            // The plugin is not started: nobody needs what accumulated, the queues must not pile up.
             self.notes.clear_events();
             self.pending.clear();
             return;
         }
-        // A plugin refusal or bad numbers in its sound give silence; `BlockFaults` reports them to the log.
         let channels = block.channels();
-        // "Plugin is processing" mark, for the crash report on the next start.
         let ok = self.instance.guarded(|instance| {
             self.runner.render_add(
                 instance.processor(),

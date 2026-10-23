@@ -1,5 +1,3 @@
-// Notes of a note clip: add, edit, delete, replace, content length, musical edits of a note group
-// (rules in `pianoroll/noteTransforms.ts`, `groove.ts`, `variation.ts`, copies of the backend) and controller lanes. Each is one undo step.
 import {
   MAX_CLIP_LOOP_TICKS, type GrooveTemplate, type Id, type NewNote, type Note, type NoteContent, type Project, type ScaleKey, type Variation,
 } from "../../api/types";
@@ -78,7 +76,6 @@ export function notesHandlers(w: MockWorld): HandlerSet {
     checkLoopTicks(loopTicks);
     const target = w.clip(p, clip);
     setLoopTicks(contentOf(target), loopTicks);
-    // The phase cannot exceed the new length.
     target.offsetTicks %= loopTicks;
   });
 

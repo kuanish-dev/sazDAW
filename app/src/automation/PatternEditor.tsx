@@ -1,7 +1,3 @@
-// The pattern of the selected automation clip in the clip panel: one repeat (x from 0 to the clip's loop, stretched over
-// the panel width), the curve with its points (mouse gestures — `patternPointer.ts`), keys on the focused editor
-// (`PATTERN_KEYS`: Delete removes the selection, ⌘C/⌘V copy and paste at the playhead, ⌘A selects all, Esc deselects) and
-// typing a point's value on double-click. Every change goes to `actions.automation.setPoints` for this clip.
 import { Show, createEffect, createMemo, createSignal, on, onCleanup, onMount } from "solid-js";
 import type { AutoPoint, AutomationClip, AutomationLane } from "../api/types";
 import { pointSnap, targetRange } from "./automationRules";
@@ -77,7 +73,6 @@ export function PatternEditor(props: { lane: AutomationLane; clip: AutomationCli
     return at === null ? null : playheadInLoop(props.clip.startTick, props.clip.lengthTicks, loop(), at);
   };
 
-  // Another clip: the selection belonged to the previous one.
   createEffect(on(() => props.clip.id, () => setSelected(new Set<number>())));
 
   createEffect(() => {
@@ -141,7 +136,6 @@ export function PatternEditor(props: { lane: AutomationLane; clip: AutomationCli
 
   const onKey = (event: KeyboardEvent) => {
     const key = PATTERN_KEYS.find((k) => k.matches(event, event.metaKey || event.ctrlKey));
-    // Handled here: the timeline's clip keys must not act on it too.
     if (key && runners[key.action](lanePoints())) event.preventDefault();
   };
 

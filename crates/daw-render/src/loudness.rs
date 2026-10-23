@@ -171,7 +171,6 @@ impl Loudness {
             return None;
         }
         let relative = lufs(mean(&loud)) - RANGE_RELATIVE_GATE_LU;
-        // Not empty: the loudest window is never below the mean.
         let mut levels: Vec<f64> = loud.into_iter().map(lufs).filter(|&level| level > relative).collect();
         levels.sort_by(f64::total_cmp);
         let percentile = |p: f64| levels[((levels.len() - 1) as f64 * p).round() as usize];
@@ -199,7 +198,6 @@ impl TruePeak {
         let half = (TAPS / 2) as f64;
         let mut phases = [[0.0; TAPS]; OVERSAMPLING];
         for (p, phase) in phases.iter_mut().enumerate() {
-            // A point between samples `half` and `half - 1` back; the distance to sample `k` back is `k - half + fraction`.
             let fraction = p as f64 / OVERSAMPLING as f64;
             let weights: Vec<f64> = (0..TAPS)
                 .map(|k| {
@@ -209,7 +207,6 @@ impl TruePeak {
                     sinc * window
                 })
                 .collect();
-            // The weights sum to one, so a constant signal stays the same at every point.
             let sum: f64 = weights.iter().sum();
             for (tap, weight) in phase.iter_mut().zip(weights) {
                 *tap = (weight / sum) as f32;
@@ -307,7 +304,6 @@ pub(crate) mod tests {
         let mut song = sine(1000.0, -20.0, 10.0, true, true);
         song.extend(vec![0.0; 48_000 * 2 * 10]);
         song.extend(sine(1000.0, -60.0, 10.0, true, true));
-        // Blocks at the sound/silence boundary pass the gate and lower the result slightly: -20.1.
         let measured = loudness(&song).unwrap();
         assert!((measured + 20.0).abs() <= 0.2, "{measured}");
     }
@@ -355,7 +351,6 @@ pub(crate) mod tests {
         audio.extend(sine(1000.0, -30.0, 1.0, true, true));
         let meter = measured(&audio);
         assert!(close(meter.momentary(), -30.0), "{:?}", meter.momentary());
-        // Mean power of 2 s at -20 and 1 s at -30: 10·log10((2 + 0.1) / 3) ≈ -1.5 dB below -20.
         assert!(close(meter.short_term(), -21.5), "{:?}", meter.short_term());
 
         let short = measured(&sine(1000.0, -20.0, 2.0, true, true));

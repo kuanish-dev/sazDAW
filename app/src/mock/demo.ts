@@ -1,5 +1,3 @@
-// Mock backend projects: an empty one (as after "New project") and the starter beat (like `DemoBeat` in `daw-bootstrap`).
-// Names are in the language current at creation, as the real backend creates them.
 import type { Id, NewNote, Project } from "../api/types";
 import { BAR_TICKS, DEFAULT_ROOM, MASTER_NODE, STEP_TICKS } from "../api/types";
 import { sourceOfTrack } from "../graph/graphRules";
@@ -36,7 +34,6 @@ export function fillDemo(w: MockWorld, h: HandlerSet) {
   const addBus = (name: string, x: number, y: number): Id => h["graph.addBus"]!({ name, x, y }) as Id;
   const addEffect = (effect: string, x: number, y: number): Id => h["graph.addEffect"]!({ effect, x, y }) as Id;
   const connect = (from: Id, to: Id, level = 1) => h["graph.connect"]!({ from, to, level, sidechain: false });
-  // The beat is written in 4/4 (like `daw-demo`): a bar is the constant `BAR_TICKS`, not the map's bar.
   const fourBarClip = (track: Id, notes: NewNote[]) => h["clips.addNote"]!({ track, startTick: 0, lengthTicks: 4 * BAR_TICKS, notes });
 
   const names = t().mock.demo;
@@ -77,7 +74,6 @@ export function fillDemo(w: MockWorld, h: HandlerSet) {
   h["automation.editClip"]!({ lane, clip, loopTicks: 7680 });
   h["automation.setPoints"]!({ lane, clip, points: [{ tick: 0, value: 0.2 }, { tick: 7680, value: 0.9 }] });
 
-  // The built beat is the project's initial state: no edits, nothing to undo.
   w.undoStack = [];
   w.redoStack = [];
   w.dirty = false;

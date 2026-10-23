@@ -69,7 +69,6 @@ fn wrong_targets_and_sources_are_refused_without_changes() {
     assert!(matches!(rig.graph.set_sidechain(comp, Some(MASTER)), Err(e) if e.is(codes::graph::MASTER_HAS_NO_OUTPUT)));
     assert_eq!(rig.service.snapshot(), before, "errors change nothing");
 
-    // A bus fed by the compressor cannot key it: that would make a loop.
     let after = rig.graph.add_bus("After", 0.0, 0.0).unwrap();
     rig.graph.connect(comp, after, 1.0, false).unwrap();
     let before_loop = rig.service.snapshot();

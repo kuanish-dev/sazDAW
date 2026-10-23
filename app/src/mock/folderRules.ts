@@ -1,5 +1,3 @@
-// Track folder rules of the mock, like `daw-project/src/folder_rules.rs`: a folder's tracks stand together at the
-// topmost one, a folder without tracks does not survive.
 import type { Id, Project } from "../api/types";
 import { fail } from "./errors";
 

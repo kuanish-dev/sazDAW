@@ -121,7 +121,6 @@ fn collect_instance(events: &mut Vec<Event>, notes: &[Note], loop_ticks: i64, pl
     for note in notes {
         let note_length = i64::from(note.length_ticks);
         let first = (i64::from(note.start_tick) - phase).rem_euclid(length);
-        // The first pass whose note end is not before the window start.
         let earliest = from - offset - first - note_length;
         let mut pass = if earliest > 0 { (earliest + length - 1) / length } else { 0 };
         loop {
@@ -183,9 +182,7 @@ mod tests {
     #[test]
     fn clip_offset_length_and_phase() {
         let n = notes(&[(60, 0, 400)]);
-        // A clip from tick 1000, 300 long: the note is cut at the clip end.
         assert_eq!(collect(&n, 1000, 300, 0, 0, 5000), [(1000, true, 60), (1300, false, 60)]);
-        // With a phase shift of 100 the note would start "before" the clip: the first start is in the next pass.
         let events = collect(&n, 1000, 2000, 100, 0, 5000);
         assert_eq!(events.first(), Some(&(1860, true, 60)));
     }

@@ -21,7 +21,6 @@ pub(crate) fn write_atomic(path: &Path, bytes: &[u8], failed: ErrorCode) -> Resu
 
 /// Writes `value` as readable JSON atomically (see `write_atomic`).
 pub(crate) fn write_json(path: &Path, value: &impl serde::Serialize, failed: ErrorCode) -> Result<(), ContractError> {
-    // Our own types always serialize; a failure here is a programming error.
     let text = serde_json::to_string_pretty(value).map_err(|e| general::INTERNAL.with("details", e))?;
     write_atomic(path, text.as_bytes(), failed)
 }

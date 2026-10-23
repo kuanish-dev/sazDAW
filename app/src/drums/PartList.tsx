@@ -1,4 +1,3 @@
-// The ordered part in the "Drum part" dialog: pattern, repeat count, reordering and removing steps.
 import { For, Show } from "solid-js";
 import type { PatternSlot } from "../api/types";
 import { moveItem } from "./drumPart";

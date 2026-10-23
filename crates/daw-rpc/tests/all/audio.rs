@@ -25,7 +25,6 @@ fn audio_methods_report_devices_status_and_keep_the_choice_on_an_empty_host() {
         assert!(status.get(key).is_some(), "the status has no {key}: {status}");
     }
 
-    // The default choice is accepted and remembered; a missing device is refused and the choice stays.
     let defaults = json!({ "output": null, "input": null, "bufferFrames": null, "recordLatencyMs": null });
     assert_eq!(call(&table, c, "audio.apply", defaults.clone())["running"], false);
     let refused =
@@ -36,7 +35,6 @@ fn audio_methods_report_devices_status_and_keep_the_choice_on_an_empty_host() {
     call(&table, c, "audio.apply", latency.clone());
     assert_eq!(call(&table, c, "audio.settings", Value::Null), latency);
 
-    // Without devices the input cannot be opened but can be closed; the level is zero.
     assert!(table.call(c, "audio.watchInput", json!({ "on": true })).is_err());
     assert_eq!(call(&table, c, "audio.watchInput", json!({ "on": false })), Value::Null);
     assert_eq!(call(&table, c, "audio.inputLevel", Value::Null), json!({ "left": 0.0, "right": 0.0 }));
@@ -106,7 +104,6 @@ fn node_windows_follow_the_nodes_read_and_the_reader_cursors() {
         }
     }
 
-    // With nothing rendered since, a cursor at the window's end gets no frames.
     let seen = json!([{ "node": 0, "watch": windows[0]["watch"], "end": windows[0]["end"] }]);
     let next = call(&table, c, "audio.nodeWindows", json!({ "nodes": [0, 5], "seen": seen }));
     assert_eq!((&next[0]["input"], &next[0]["output"]), (&json!([]), &json!([])));
@@ -138,7 +135,6 @@ fn audio_record_on_an_empty_host_fails_cleanly_and_reports_idle() {
     let status = call(&table, c, "audioRecord.status", Value::Null);
     assert_eq!(status["tracks"], json!([{ "track": track, "armed": true, "input": "left", "left": 0.0, "right": 0.0 }]));
 
-    // No project file: start refuses instead of staying silent.
     let error = table.call(c, "audioRecord.start", Value::Null).unwrap_err();
     assert!(error.is(codes::audio::PROJECT_NOT_SAVED), "{error}");
     assert!(table.call(c, "audioRecord.stop", Value::Null).is_err(), "nothing to stop");

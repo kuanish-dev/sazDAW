@@ -85,15 +85,12 @@ impl OfflineExporter {
         renderer.prepare(StreamConfig { sample_rate, ..StreamConfig::DEFAULT });
 
         for track in &project.tracks {
-            // Audio tracks have no instrument: their source node plays their clips. A frozen instrument is silent:
-            // the track's audio copy plays its sound.
             let Some(spec) = track.sounding_instrument() else {
                 continue;
             };
             let instrument = self.instruments.create(&spec.kind, &spec.params, spec.state.as_deref())?;
             engine.dsp.send(DspCommand::AddInstrument { track: track.id, instrument })?;
         }
-        // MIDI effects use the same chains as live playback, so the export sounds as heard.
         for track in project.tracks.iter().filter(|t| !t.note_effects.is_empty()) {
             let chain = track
                 .note_effects

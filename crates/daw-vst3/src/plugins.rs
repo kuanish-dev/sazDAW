@@ -159,7 +159,6 @@ impl Vst3Plugins {
         let result = serde_json::to_string_pretty(&CacheDocument { plugins: plugins.to_vec() })
             .map_err(|error| general::INTERNAL.with("details", format!("could not encode the plugin list: {error}")))
             .and_then(|text| self.cache.save(&text));
-        // Without the cache plugins are available until the app closes, so the scan is not failed, but the failure is not hidden.
         if let Err(error) = result {
             journal::error(&*self.log, format!("could not remember the plugin list: {error}"));
         }
@@ -215,7 +214,6 @@ impl PluginScanner for Vst3Plugins {
             list.retain(|k| k != kind);
         }
         store.set(preferences)?;
-        // The catalog is rebuilt: a disabled plugin hides, an enabled one is offered again (bundles are not reloaded).
         self.publish(&self.listing());
         Ok(())
     }

@@ -68,7 +68,6 @@ mod tests {
         let dir = temp_dir("assets-adopt");
         let source = dir.join("kick.wav");
         fs::write(&source, b"AAAA").unwrap();
-        // Non-ASCII folder names on purpose.
         let project = dir.join("Трек").join("Трек.dawproj");
 
         let first = FsAssets.adopt(&project, &source).unwrap();

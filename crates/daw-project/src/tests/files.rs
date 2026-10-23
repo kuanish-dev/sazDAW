@@ -47,7 +47,6 @@ fn loading_reports_missing_sample_files_as_warnings() {
 #[test]
 fn creating_a_project_names_it_after_the_file_and_remembers_it() {
     let rig = Rig::new();
-    // A Cyrillic name on purpose: the project name follows a Unicode file name.
     let file = Path::new("/music/Бит/Бит.dawproj");
     rig.files.create(file).unwrap();
     assert_eq!(rig.files.project_name(), "Бит");

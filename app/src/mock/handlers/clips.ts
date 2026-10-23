@@ -1,5 +1,3 @@
-// Timeline clips: note and audio clips, position, split, trim, duplicate, loop region, audio clip takes and comping,
-// normalize and reverse (`ClipProcessing`; the mock has no audio, so normalize assumes a fixed peak).
 import type { Clip, ClipContent, CompSegment, Id, Project } from "../../api/types";
 import { sampleLengthTicks } from "../../tracks/dropSample";
 import { barLengthAt } from "../../common/tempoMap";
@@ -31,10 +29,8 @@ export function clipsHandlers(w: MockWorld): HandlerSet {
     return clip;
   };
 
-  // Like "empty clip → notes.replace → notes.setLoopTicks", but as one undo step and all or nothing.
   h["clips.addNote"] = ({ track, startTick, lengthTicks, notes, loopTicks }) => w.edit(t().mockEdits.history.addClip, (p) => {
     if (loopTicks != null) checkLoopTicks(loopTicks);
-    // The bar follows the time signature at the clip position: it is both the content length and the default clip length.
     const bar = barLengthAt(p.tempoMap, startTick);
     const content = emptyNotes();
     replaceNotes(content, notes ?? []);
@@ -70,7 +66,6 @@ export function clipsHandlers(w: MockWorld): HandlerSet {
     right.lengthTicks = end - tick;
     right.fadeInTicks = 0;
     if (right.content.type === "notes") {
-      // The right half continues the loop phase where the left one ended.
       right.offsetTicks = (original.offsetTicks + leftLength) % right.content.loopTicks;
     } else {
       const info = w.sampleInfos().find((s) => s.id === (original.content as { sample: Id }).sample);
@@ -139,7 +134,6 @@ export function clipsHandlers(w: MockWorld): HandlerSet {
 
   h["clips.setActiveTake"] = ({ id, take }: { id: Id; take: Id }) => {
     const clip = w.clip(w.project, id);
-    // Already active and without a comp: no undo step, as in the backend.
     if (clip.content.type === "audio" && clip.content.sample === take && !clip.content.comp) return clip;
     return w.edit(t().mockEdits.history.selectTake, (p) => {
       const target = w.clip(p, id);

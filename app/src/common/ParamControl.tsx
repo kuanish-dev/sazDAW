@@ -1,5 +1,3 @@
-// A catalog parameter's control by its kind: knob, switch, choice or project sample picker.
-// With `target`, right-click assigns a MIDI controller knob (not for the sample picker: it isn't a continuous value).
 import { For, type JSX, Match, Show, Switch } from "solid-js";
 import type { ParamInfo, ParamTarget } from "../api/types";
 import { t } from "../i18n";

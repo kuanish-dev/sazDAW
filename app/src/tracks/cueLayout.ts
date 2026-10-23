@@ -1,5 +1,3 @@
-// Geometry of the cue (start position) flag on the timeline ruler: a small downward triangle at the bottom of the bar ruler,
-// centered on the cue tick. Shared by drawing (`rulerRender.ts`) and mouse (`rulerPointer.ts`), like `markerLayout.ts`.
 import { RULER_HEIGHT } from "./timelineLayout";
 
 export const CUE_HALF_WIDTH = 5;

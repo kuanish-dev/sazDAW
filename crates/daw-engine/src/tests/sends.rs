@@ -70,7 +70,6 @@ fn edge_level_automation_changes_the_send_over_time() {
     assert!(at(100) < at(480) && at(480) < at(900), "the send level rises");
     assert!((at(480) - 0.25).abs() < 0.03, "about 0.5 · 0.5 in the middle");
 
-    // Without automation, the project level again (1.0).
     rig.project.automation.clear();
     rig.publish();
     rig.render(1_000);

@@ -1,5 +1,3 @@
-// Every channel that can stand on the stage (tracks in mixer order, then buses): on the stage — select it, take it
-// off; off the stage — place it, or drag it into the room.
 import { For, Show } from "solid-js";
 import type { Id } from "../api/types";
 import type { StageChannel } from "./stageRules";

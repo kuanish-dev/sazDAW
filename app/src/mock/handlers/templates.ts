@@ -1,5 +1,3 @@
-// Project templates (`templates.*`, `project.createFromTemplate`) in mock memory: the project structure without clips,
-// automation, loop, markers and samples (the mock does not tell sampler sounds apart, so it drops them all).
 import type { Project } from "../../api/types";
 import { fail } from "../errors";
 import type { MockWorld } from "../world";

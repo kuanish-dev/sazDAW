@@ -1,5 +1,3 @@
-// Activity bar: the narrow icon column on the left (as in VS Code) that switches the main view; Settings sits at the
-// bottom. The active view has an accent bar on its left edge; the name shows as a tooltip on hover and keyboard focus.
 import { For, type JSX } from "solid-js";
 import { t } from "../i18n";
 import { IconGear, IconGraph, IconMixer, IconStage, IconTracks, IconWave, type IconProps } from "../common/icons";
@@ -25,7 +23,6 @@ function ActivityButton(props: { tab: Tab; icon: (p: IconProps) => JSX.Element }
       aria-label={name()} aria-current={active() ? "page" : undefined}
       onClick={() => shell.showTab(props.tab)}
     >
-      {/* The accent bar grows from the middle when the view becomes active. */}
       <span class="absolute inset-y-0 left-0 w-0.5 bg-accent transition-[scale] duration-200 ease-out" classList={{ "scale-y-100": active(), "scale-y-0": !active() }} />
       <props.icon size={24} />
       <span class="anim-fade pointer-events-none absolute left-full top-1/2 z-50 ml-1 hidden -translate-y-1/2 whitespace-nowrap rounded border border-field-line bg-panel px-2 py-0.5 text-xs text-text shadow-md group-hover:block group-focus-visible:block">

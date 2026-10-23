@@ -1,4 +1,3 @@
-// Russian interface dictionary: the same shape as `en.ts` (typed `Messages` — a missing key fails to compile).
 import type { Messages } from "./en";
 import { plural } from "./plural";
 

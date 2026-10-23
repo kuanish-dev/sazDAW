@@ -1,6 +1,3 @@
-// The master as the mixer page watches it: the latest window of its sound for the visualizer, the live master meter
-// and the mono check. The window and the meter have no on/off: reading them keeps the backend capturing
-// (`CAPTURE_LEASE_SECONDS`).
 import type { MasterReading, MasterWindow } from "../api/types";
 import type { Core } from "../core/core";
 

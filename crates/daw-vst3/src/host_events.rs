@@ -29,7 +29,6 @@ fn to_vst3(event: &NoteEvent) -> Event {
             Event__type0 { noteOff: NoteOffEvent { channel: 0, pitch: i16::from(pitch), velocity: 0.0, noteId: id, tuning: 0.0 } },
         ),
     };
-    // All events are "from the start of the block" (offset 0), bus 0.
     Event { busIndex: 0, sampleOffset: 0, ppqPosition: 0.0, flags: 0, r#type: kind as u16, __field0: body }
 }
 
@@ -54,7 +53,6 @@ impl IEventListTrait for EventList {
     }
 
     unsafe fn addEvent(&self, _e: *mut Event) -> tresult {
-        // The input list is read-only for the plugin.
         kResultFalse
     }
 }

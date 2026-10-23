@@ -1,8 +1,3 @@
-// Mixer strips from the processing graph: which nodes to show as strips (tracks in order, buses, master), which effects
-// are a strip's inserts, where its main output goes and which edges are sends. The graph is free-form, so this is a
-// display convention: the main path is the node's first regular post-fader edge (track creation, `setOutput` and
-// effect insertion all keep edges in order), other regular edges are sends. A pre-fader edge is
-// always a send: inserting an effect or changing the output leaves it on the node.
 import { type Graph, type GraphEdge, type GraphNode, type Id, MASTER_NODE, type Project } from "../api/types";
 import { checkEdge, findNode, hasStrip, incoming, nodeLabel, outgoing, sourceOfTrack } from "../graph/graphRules";
 
@@ -53,7 +48,6 @@ export function stripModel(graph: Graph, id: Id): StripModel | undefined {
   const inserts: GraphNode[] = [];
   const sends: GraphEdge[] = [];
   let tail = id;
-  // Bounded by the node count: the graph is acyclic, but the counter guards against hanging on bad data.
   for (let i = 0; i < graph.nodes.length; i++) {
     const next = insertAfter(graph, tail);
     if (!next) break;

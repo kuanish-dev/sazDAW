@@ -84,7 +84,6 @@ mod tests {
     fn every_shape_stays_within_one_and_repeats_each_cycle() {
         for shape in LfoShape::ALL.into_iter().filter(|s| *s != LfoShape::Random) {
             let mut lfo = Lfo::new();
-            // 1/64 of a cycle is exact in binary, so both cycles sample the same phases.
             let first: Vec<f32> = (0..64).map(|_| lfo.advance(shape, 1.0 / 64.0)).collect();
             let second: Vec<f32> = (0..64).map(|_| lfo.advance(shape, 1.0 / 64.0)).collect();
             assert!(first.iter().all(|v| v.abs() <= 1.0), "{shape:?}");

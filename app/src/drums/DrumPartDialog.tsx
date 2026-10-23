@@ -1,5 +1,3 @@
-// "Drum part": picking ready-made patterns (grooves, fills, breaks…) and building a rhythm from them on the timeline.
-// This file assembles the dialog: part, start, replace and request; patterns are `PatternBrowser`, order `PartList`, sounds `DrumKitPicker`.
 import { Show, createMemo, createSignal, onMount } from "solid-js";
 import type { DrumPattern, PatternSlot } from "../api/types";
 import { drumRequest, lanesOf, totalBars } from "./drumPart";

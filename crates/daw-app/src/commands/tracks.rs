@@ -24,7 +24,6 @@ pub(super) fn run(controls: &Controls, command: &str, words: &Words) -> bool {
             let graph = controls.graph.graph();
             for (index, track) in controls.tracks.tracks().iter().enumerate() {
                 let kind = track.instrument.as_ref().map_or("audio", |i| i.kind.as_str());
-                // The sound path on one line: the track effects and where it goes.
                 let path = graph.source_of(track.id).map(|source| {
                     let chain = graph.chain(source.id);
                     let mut names: Vec<String> = chain.effects.iter().filter_map(|id| graph.node(*id).map(|n| n.name.clone())).collect();

@@ -1,5 +1,3 @@
-// The two place sections of the sound browser: "Project" (the source of all sounds, also the drop target for files from
-// packs) and "Packs" (linked external folders for preview only; ✕ removes the link, files on disk are not touched).
 import { For, createSignal } from "solid-js";
 import type { SampleSource } from "../tracks/dropSample";
 import { t } from "../i18n";

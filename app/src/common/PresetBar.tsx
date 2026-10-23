@@ -1,5 +1,3 @@
-// Preset row above instrument or effect parameters: the kind's preset list (picking one applies it), "Save…"
-// (the name is typed right here) and "✕" (delete the selected one). Shared by the instrument window and `EffectPanel`.
 import { For, Show, createResource, createSignal } from "solid-js";
 import type { EditorTarget } from "../api/types";
 import { t } from "../i18n";

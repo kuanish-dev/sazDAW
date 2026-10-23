@@ -1,5 +1,3 @@
-// The channel utility controls of a strip (polarity, width, mono, fine time alignment): neutral values, ranges, units.
-// The engine side is `daw-engine/src/mixer/utility.rs`; the delay in samples is rounded the same way it rounds.
 import { MAX_CHANNEL_DELAY_MS, MAX_WIDTH, type Polarity, type Strip } from "../api/types";
 import { t } from "../i18n";
 import { clamp } from "../common/math";

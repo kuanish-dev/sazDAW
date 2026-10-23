@@ -1,4 +1,3 @@
-// `SystemDialogs` for the browser without Tauri: the path is typed into the standard prompt window.
 import type { SystemDialogs } from "../api/dialogs";
 import { t } from "../i18n";
 

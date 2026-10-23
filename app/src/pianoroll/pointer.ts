@@ -1,5 +1,3 @@
-// Mouse on the piano roll grid: creating, moving and resizing notes, marquee selection, key audition, right click.
-// Holds the gesture and note "drafts" while dragging; the result goes to `Notes` (via `commitDrafts`).
 import type { Notes } from "./notes";
 import { STEP_TICKS, type Id, type NewNote, type Note } from "../api/types";
 import { fitNote, hitTest, stripId } from "./noteFit";

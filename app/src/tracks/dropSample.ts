@@ -1,4 +1,3 @@
-// Dropping a sample onto the timeline with the mouse: pure functions for where the clip lands and where a new track goes.
 import type { Clip, Id, TempoMap, Track } from "../api/types";
 import { canPlace } from "./clipRules";
 import { tickAfterFrames } from "../common/tempoMap";

@@ -1,6 +1,3 @@
-// Timeline clip shortcuts: delete, select, copy and paste — as a table that the help is built from too. With an
-// automation clip selected, Delete, ⌘D and Esc act on it instead.
-// Arrows (move by a grid step) are not handled here: the grid lives in the timeline panel, not in a role.
 import type { Id } from "../api/types";
 import type { ShortcutHelp } from "../common/shortcuts";
 import { t, type Messages } from "../i18n";

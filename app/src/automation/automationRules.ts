@@ -1,4 +1,3 @@
-// Parameter automation: targets (do they exist, labels, ranges), lanes and their clips, curve points and their snapping.
 import {
   MAX_WIDTH, PPQ, type AutoPoint, type AutomationClip, type AutomationLane, type Catalog, type Id, type ParamTarget, type Project,
 } from "../api/types";

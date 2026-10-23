@@ -40,13 +40,10 @@ impl JsonStorage {
 impl ProjectStorage for JsonStorage {
     fn save(&self, path: &Path, project: &Project) -> Result<(), ContractError> {
         let layout = ProjectLayout::from_file(path);
-        // A project folder always has `samples/`: the sound browser looks into it even while it is empty.
         let samples = layout.samples_dir();
         fs::create_dir_all(&samples).map_err(|e| codes::FOLDER_NOT_CREATED.with("path", samples.display()).with("details", e))?;
         let mut stored = project.clone();
         for sample in &mut stored.samples {
-            // Samples are usually in the project folder already (the import brings them); the rest are gathered here. If one
-            // is not copied, the project is still saved with a link to the original file (or the work would be lost), and the failure is logged.
             let bundled = assets::bundle(&layout, &sample.path, sample.id).unwrap_or_else(|error| {
                 let message = format!(
                     "sample \"{}\" was not copied into the project folder, the link to the original file stays: {error}",
@@ -113,7 +110,6 @@ mod tests {
         storage().save(&path, &project).unwrap();
         assert!(!path.with_extension("tmp").exists(), "the temporary file is gone");
         assert_eq!(storage().load(&path).unwrap(), project);
-        // A project folder always has `samples/`, and autosave does not create project folders.
         assert!(dir.join("Track/samples").is_dir());
         storage().save_quick(&dir.join("Track/autosave/autosave.dawproj"), &project).unwrap();
         assert!(!dir.join("Track/autosave/samples").exists());
@@ -138,7 +134,6 @@ mod tests {
         let loaded = storage().load(&path).unwrap();
         assert_eq!(loaded.samples[0].path, dir.join("samples/kick.wav"));
 
-        // Saving again is idempotent.
         storage().save(&path, &loaded).unwrap();
         assert_eq!(storage().load(&path).unwrap().samples[0].path, dir.join("samples/kick.wav"));
         fs::remove_dir_all(dir).ok();

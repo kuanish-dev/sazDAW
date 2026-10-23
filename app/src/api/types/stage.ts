@@ -1,5 +1,3 @@
-// The virtual stage (`StageControl`): where a mixer channel stands in the shared room, and the room itself.
-
 /** Where a channel stands on the stage besides its left/right, which is the strip's `pan` (−1 left wall … 1 right wall).
  *  The listener stands in the middle of the room facing ahead: all three coordinates are 0 at their head. */
 export interface StagePlace {

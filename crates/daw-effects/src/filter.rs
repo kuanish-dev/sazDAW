@@ -74,7 +74,6 @@ struct Coefficients {
 
 impl Coefficients {
     fn new(sample_rate: f32, cutoff: f32, q: f32) -> Self {
-        // Above 0.45 of the sample rate tan goes to infinity: the cutoff is inaudible there anyway, so it is clamped.
         let g = (PI * cutoff.min(sample_rate * 0.45) / sample_rate).tan();
         let k = 1.0 / q;
         let a1 = 1.0 / (1.0 + g * (g + k));
@@ -169,7 +168,6 @@ impl Effect for Filter {
 
     fn process(&mut self, interleaved: &mut [f32], _sidechain: Option<&[f32]>) {
         for frame in interleaved.chunks_exact_mut(2) {
-            // tan is expensive: coefficients are recomputed only while the cutoff or Q is still moving to its target.
             if !(self.log_cutoff.is_settled() && self.q.is_settled()) {
                 self.update_coefficients();
             }

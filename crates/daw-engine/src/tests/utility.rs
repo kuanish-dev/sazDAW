@@ -48,7 +48,6 @@ fn width_scales_the_side_and_mono_sums_both_sides() {
     rig.publish();
     rig.transport.play();
     let out = rig.render(1_000);
-    // Mid 0.25, side 0.25 doubled.
     assert!(near(Rig::left(&out, 500), 0.75) && near(Rig::right(&out, 500), -0.25), "{out:?}");
 
     utility(&mut rig, bus, |strip| strip.mono = true);
@@ -144,7 +143,6 @@ fn a_new_delay_crossfades_from_the_old_one() {
     utility(&mut rig, node, |strip| strip.delay_ms = 2.0);
     rig.publish();
     let out = rig.render(4_096);
-    // The ramp rises 1/48 000 a frame; jumping 2 ms back at once would step 0.002.
     assert!(largest_step(&out) < 1e-4, "no jump: {}", largest_step(&out));
 }
 

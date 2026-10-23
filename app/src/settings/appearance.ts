@@ -1,7 +1,3 @@
-// Look and language from preferences: theme (including "system", which follows the OS live), accent color,
-// interface scale, track row height, hint bar and interface language. Theme and accent are `data-theme`/`data-accent`
-// attributes on the page root (colors in `index.css`), scale goes through the window shell (`AppShell.setZoom`),
-// language through `i18n.setLanguage`.
 import { createEffect, createMemo, createSignal, on, onCleanup, type Accessor } from "solid-js";
 import type { AppShell } from "../api/shell";
 import type { AccentColor, Preferences } from "../api/types";
@@ -37,7 +33,6 @@ export function applyCachedLook() {
     const saved = localStorage.getItem(CACHE_KEY);
     if (saved) look = { ...look, ...(JSON.parse(saved) as Partial<Look>) };
   } catch (error) {
-    // The cache is only a convenience: without it the OS theme is shown until preferences arrive. Still logged.
     console.error("appearance: look cache unavailable", error);
   }
   applyLook(look);
@@ -62,7 +57,6 @@ export interface Appearance {
 export function createAppearance(preferences: Accessor<Preferences>, shell: AppShell): Appearance {
   const appearance = () => preferences().appearance;
 
-  // "System" follows the OS live, without a restart.
   const [light, setLight] = createSignal(systemLight());
   if (typeof matchMedia === "function") {
     const query = matchMedia(LIGHT_QUERY);
@@ -80,7 +74,6 @@ export function createAppearance(preferences: Accessor<Preferences>, shell: AppS
   });
 
   createEffect(on(() => appearance().uiScale, (scale) => {
-    // The window keeping its old scale is no reason to break the interface, but it goes to the log.
     shell.setZoom(scale).catch((error) => console.error("setZoom", error));
   }));
 

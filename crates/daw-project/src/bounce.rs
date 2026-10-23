@@ -101,10 +101,6 @@ impl ProjectBounce {
         let graph = parts.graph.graph();
         let source = graph.source_of(original.id).ok_or_else(|| tracks::NO_SOURCE_NODE.with("id", original.id))?.id;
         let copy_node = graph.source_of(copy).ok_or_else(|| tracks::NO_SOURCE_NODE.with("id", copy))?.id;
-        // The track's volume and pan are already in the sound (the source fader comes before the inserts), and so is its
-        // place on the stage with its share of the room: the copy plays at unity, off the stage. So are its polarity,
-        // width and a later time alignment; an earlier one is not (a render cannot play ahead of time), so the copy
-        // keeps that lead.
         parts.graph.set_volume(copy_node, 1.0)?;
         let lead = graph.node(source).and_then(|node| node.kind.strip()).map_or(0.0, |strip| strip.delay_ms.min(0.0));
         if lead < 0.0 {

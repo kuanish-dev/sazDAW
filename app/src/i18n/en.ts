@@ -1,5 +1,3 @@
-// English interface dictionary — the source of truth for keys: `ru.ts` must repeat the same shape (otherwise tsc fails).
-// A value is a string or a function (parameters and plurals via `plural`). Sections follow interface areas.
 import { plural } from "./plural";
 
 export const en = {

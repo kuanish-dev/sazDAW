@@ -21,7 +21,6 @@ pub struct FileLog {
 
 impl FileLog {
     pub fn open(dir: &Path) -> Self {
-        // If the folder is not created, writing in `record` fails too and says so on stderr: the log has nowhere else to write.
         let _ = fs::create_dir_all(dir);
         Self { dir: dir.to_path_buf(), lock: Mutex::new(()) }
     }
@@ -70,7 +69,6 @@ impl AppLog for FileLog {
         if fs::metadata(self.path()).is_ok_and(|m| m.len() > MAX_BYTES) {
             self.rotate();
         }
-        // The log must not bring the app down: a write error is only shown on the console.
         let written = OpenOptions::new().create(true).append(true).open(self.path()).and_then(|mut file: File| writeln!(file, "{line}"));
         if let Err(error) = written {
             eprintln!("could not write the error log: {error}");
@@ -127,7 +125,6 @@ mod tests {
     fn long_fields_are_clipped_and_garbage_lines_are_ignored() {
         let dir = temp_dir("log-clip");
         let log = FileLog::open(&dir);
-        // A multi-byte character: clipping counts characters, not bytes.
         log.record(entry(&"я".repeat(MAX_FIELD_CHARS * 2)));
         fs::write(dir.join(FILE_NAME), format!("not json\n{}\n", fs::read_to_string(dir.join(FILE_NAME)).unwrap())).unwrap();
         let all = log.recent(10);

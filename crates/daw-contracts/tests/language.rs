@@ -21,7 +21,6 @@ fn kind() -> KindInfo {
     KindInfo { kind: "arp", label: L10n { en: "Arpeggiator", ru: "Арпеджиатор" }, params: vec![rate], about: L10n::EMPTY }
 }
 
-// One test: the steps share the global language and must run in order.
 #[test]
 fn texts_follow_the_current_language() {
     assert_eq!(i18n::current(), Language::En, "English until something sets another language");

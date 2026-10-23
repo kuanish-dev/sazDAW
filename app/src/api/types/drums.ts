@@ -1,4 +1,3 @@
-// Drum patterns and the request to build a drum part from them.
 import type { Id } from "./model";
 
 /** What the drum pattern is for in a song. */

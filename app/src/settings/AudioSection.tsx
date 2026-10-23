@@ -1,5 +1,3 @@
-// Settings → Audio: output and input devices, buffer size, recording latency and input level check.
-// Field validation and notifications are done by the `audio.apply` action; the section only gathers the form and shows status.
 import { For, Show, createSignal, onMount } from "solid-js";
 import { createStore } from "solid-js/store";
 import type { AudioSettingsForm } from "./audio";
@@ -50,8 +48,6 @@ export function AudioSection() {
     if (current) setStatus(current);
   });
 
-  // The input is open only during the check (and closes when leaving the section): a polling failure, already shown as
-  // a toast, ends the check too.
   const levelCheck = createWatchedPoll({
     watch: audio.watchInput, read: audio.inputLevel, show: setLevel, onStop: () => setLevel(null),
   }, LEVEL_POLL_MS);

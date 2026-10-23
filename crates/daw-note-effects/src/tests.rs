@@ -199,11 +199,9 @@ fn inversion_and_spread_move_lower_notes_up_an_octave() {
 
 #[test]
 fn in_scale_chords_stack_every_other_degree() {
-    // C major: on E an E minor, on D a D minor seventh; C sharp falls to C.
     assert_eq!(chord(&[("type", 9.0)], 64), [64, 67, 71]);
     assert_eq!(chord(&[("type", 10.0)], 62), [62, 65, 69, 72]);
     assert_eq!(chord(&[("type", 9.0)], 61), [60, 64, 67]);
-    // A minor (root A = 9): on C a C major.
     assert_eq!(chord(&[("type", 9.0), ("scale", 1.0), ("root", 9.0)], 60), [60, 64, 67]);
 }
 
@@ -212,7 +210,6 @@ fn chord_release_lets_go_of_what_was_played_even_after_a_parameter_change() {
     let mut chord = effect("chord", &[]);
     let mut out = NoteBuffer::new();
     chord.process(&[NoteEvent::on(0, 60, 1.0), NoteEvent::on(0, 64, 1.0)], &timing(true, 0.0), &mut out);
-    // E is shared by both chords (C major and E major): it is pressed once.
     assert_eq!(out.events().iter().filter(|e| e.pitch == 64 && e.is_on()).count(), 1);
     chord.set_param("type", 1.0);
     let mut out = NoteBuffer::new();
@@ -281,11 +278,9 @@ fn rate_choices_set_the_repeat_length() {
 
 #[test]
 fn a_press_between_grid_lines_sounds_at_once_and_does_not_flam_on_the_next_step() {
-    // Half a step before the grid line: hit at the press, and again on the line.
     let mut chain = [effect("repeat", &[("rate", 3.0)])];
     let out = run(&mut chain, true, &[(SIXTEENTH / 2, 42, 0.8)], 2 * SIXTEENTH + 1);
     assert_eq!(ons(&out), [(SIXTEENTH / 2, 42), (SIXTEENTH, 42), (2 * SIXTEENTH, 42)]);
-    // A third of a step before it (a humanized note): the line is skipped, the roll goes on from the next one.
     let mut chain = [effect("repeat", &[("rate", 3.0)])];
     let out = run(&mut chain, true, &[(2 * SIXTEENTH / 3, 42, 0.8)], 2 * SIXTEENTH + 1);
     assert_eq!(ons(&out), [(2 * SIXTEENTH / 3, 42), (2 * SIXTEENTH, 42)]);

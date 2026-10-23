@@ -50,8 +50,9 @@ internals are hidden by a module or scope so the compiler itself keeps others ou
 ### Simple, not "flexible"
 
 The most obvious solution beats a universal one. No abstractions "for the future". Short functions, clear names,
-comments only about "why". Every crate and every frontend area has a short description of its role at the top of the
-file. The code must be understandable without its author.
+no plain comments: a "why" goes into a doc comment (`///`, `//!`, `/** */`) or the folder's `CLAUDE.md`; the only plain
+ones are `// SAFETY: …` and tool directives. Every crate and Rust module describes its role in its `//!` doc at the top,
+every frontend area in its folder's `CLAUDE.md`. The code must be understandable without its author.
 
 ### Errors never disappear silently
 

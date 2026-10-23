@@ -20,7 +20,6 @@ fn slicing_by_hand_placed_markers_makes_one_track_per_piece() {
     let markers = controls.samples.samples()[0].markers.clone();
     assert_eq!(markers, [5, 22_050], "markers are sorted and without duplicates");
 
-    // Spans between the markers and the file edges → tracks.
     let mut bounds = vec![0u64];
     bounds.extend(&markers);
     bounds.push(sample.frame_count as u64);
@@ -32,7 +31,6 @@ fn slicing_by_hand_placed_markers_makes_one_track_per_piece() {
     let ids = controls.tracks.add_tracks(tracks).unwrap();
     assert_eq!(ids.len(), 3);
 
-    // The second slice (5…22050) holds the first tone, the third one the second.
     for id in &ids[1..] {
         let clip = note_clip(&controls, *id, 0, 1);
         controls.notes.add_note(clip.id, NewNote { pitch: 60, start_tick: 0, length_ticks: 960, velocity: 127 }).unwrap();
@@ -63,7 +61,6 @@ fn preview_plays_a_region_and_reports_position_without_touching_the_transport() 
     assert_eq!(controls.preview.position(), None);
     assert!(peak(&render(&mut session, 512)) < 1e-6);
 
-    // A looped preview plays longer than the region itself.
     controls.preview.play(sample.id, 22_050, 23_050, true).unwrap();
     render(&mut session, 48_000);
     assert!(controls.preview.position().is_some());

@@ -1,7 +1,3 @@
-// Plugins: none before the first scan; the scan "finds" a made-up VST3 effect and instrument, one broken plugin
-// and one that crashes while loading (to try the button, the scan report, the effect list and the "+ Track" menu);
-// disabled plugins are hidden from the catalog, as in the backend. A plugin's native window exists only in the app:
-// in the browser the button shows a clear error.
 import type { KindInfo, PluginCrash, PluginInfo } from "../../api/types";
 import { t } from "../../i18n";
 import { fail } from "../errors";
@@ -47,7 +43,6 @@ const pretendCrash = (): PluginCrash | null =>
 
 export function pluginsHandlers(w: MockWorld): HandlerSet {
   const h: HandlerSet = {};
-  // As in the backend: no third-party plugins before the first scan; disabled ones stay in the list but not in the catalog.
   let scanned = false;
   let crash = pretendCrash();
   const found = () => (scanned ? FOUND : []);
@@ -57,7 +52,6 @@ export function pluginsHandlers(w: MockWorld): HandlerSet {
     w.plugins = { effects: offered("effect"), instruments: offered("instrument") };
   };
   h["plugins.scan"] = () => {
-    // A repeated scan replaces the previous plugin set entirely.
     scanned = true;
     syncCatalog();
     return { found: FOUND.length, effects: 1, instruments: 1, failed: failedScans() };
@@ -77,7 +71,6 @@ export function pluginsHandlers(w: MockWorld): HandlerSet {
     syncCatalog();
     return null;
   };
-  // The browser cannot host plugin windows: the closest backend failure is a window that did not open.
   h["pluginEditor.open"] = () => {
     throw fail("PL-401", { details: "plugin windows exist only in the desktop app" });
   };

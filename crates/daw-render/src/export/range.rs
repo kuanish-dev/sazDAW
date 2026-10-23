@@ -18,7 +18,6 @@ pub(crate) struct Span {
 
 pub(crate) fn span(project: &Project, request: &ExportRequest) -> Result<Span, ContractError> {
     let (from, to) = ticks(project, request.range)?;
-    // The length follows the tempo map (changes and ramps); the engine plays by the same map from the snapshot.
     let body = project.tempo_map.frames_between(f64::from(from), f64::from(to), request.sample_rate).ceil() as u64;
     let tail = (check_tail(request.tail_seconds)? * f64::from(request.sample_rate)) as u64;
     let frames = body + tail;
@@ -98,7 +97,6 @@ mod tests {
     fn length_follows_the_tempo_and_adds_the_tail() {
         let mut project = Project::empty();
         project.clips.push(clip(1, 0, 960));
-        // 960 ticks = one beat = 0.5 s at 120 BPM.
         project.tempo_map = TempoMap::constant(Bpm::new(120.0).unwrap(), TimeSignature::FOUR_FOUR);
         assert_eq!(frames(&project, &request(48_000, 0.0)), 24_000);
         project.tempo_map = TempoMap::constant(Bpm::new(60.0).unwrap(), TimeSignature::FOUR_FOUR);
@@ -112,7 +110,6 @@ mod tests {
     fn length_follows_a_tempo_ramp() {
         let mut project = Project::empty();
         project.clips.push(clip(1, 0, 3840));
-        // 60 → 120 BPM ramped over a bar: 4·ln2 ≈ 2.7726 s.
         let changes = vec![
             TempoChange { tick: 0, bpm: Bpm::new(60.0).unwrap(), ramp: false },
             TempoChange { tick: 3840, bpm: Bpm::new(120.0).unwrap(), ramp: true },
@@ -127,7 +124,6 @@ mod tests {
         let mut project = Project::empty();
         assert!(matches!(span(&project, &request(48_000, 0.0)), Err(e) if e.is(export::NOTHING_TO_EXPORT)));
         project.clips.push(clip(1, 0, 960));
-        // 8,000,000 ticks at 120 BPM is over an hour.
         let too_long = ExportRequest { range: ExportRange::Ticks { from_tick: 0, to_tick: 8_000_000 }, ..request(48_000, 0.0) };
         assert!(matches!(span(&project, &too_long), Err(e) if e.is(export::EXPORT_TOO_LONG)));
     }
@@ -137,7 +133,6 @@ mod tests {
         let mut project = Project::empty();
         project.clips.push(clip(1, 0, 960));
         assert!(span(&project, &request(48_000, MAX_TAIL_SECONDS)).is_ok());
-        // A huge tail used to overflow the frame count instead of being refused.
         for tail in [-1.0, MAX_TAIL_SECONDS + 1.0, 1e30, f32::NAN] {
             assert!(matches!(span(&project, &request(48_000, tail)), Err(e) if e.is(export::TAIL_OUT_OF_RANGE)), "{tail}");
         }

@@ -39,7 +39,6 @@ impl SamplePreview for Previewer {
     }
 
     fn stop(&self) {
-        // The engine may have stopped together with the app: then there is nothing to stop, and that is not a failure.
         let _ = self.dsp.send(DspCommand::PreviewStop);
     }
 

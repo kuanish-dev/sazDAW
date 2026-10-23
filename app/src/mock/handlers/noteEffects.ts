@@ -1,4 +1,3 @@
-// Track MIDI effects in the mock: the chain in the model with the backend's checks and error codes (the mock processes no sound).
 import type { Id, NoteEffectSpec, Params, Project } from "../../api/types";
 import { t } from "../../i18n";
 import { fitParam, paramsFor } from "../catalog";
@@ -26,7 +25,6 @@ export function noteEffectsHandlers(w: MockWorld): HandlerSet {
 
   h["noteEffects.add"] = ({ track, kind, params }: { track: Id; kind: string; params?: Params }) => {
     const values = paramsFor(kindOf(kind), params ?? {}, "NT-121");
-    // A failure inside `edit` changes nothing: the edit runs on a project copy.
     return w.edit(t().mockEdits.history.addMidiEffect, (p) => {
       const chain = chainOf(p, track);
       if (chain.length >= MAX_NOTE_EFFECTS) throw fail("NT-230", { max: MAX_NOTE_EFFECTS });

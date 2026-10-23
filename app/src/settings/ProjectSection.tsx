@@ -1,6 +1,3 @@
-// Settings → Project: name and path of the open project, tempo, time signature, metronome, note recording snap and a summary.
-// Tempo and signature here are the song start (points at tick 0; changes along the song live on the timeline tempo lane);
-// metronome and note recording snap are the same actions as in the top bar.
 import { For, Show, createMemo } from "solid-js";
 import { projectStats } from "./projectStats";
 import { MAX_NUMERATOR, MAX_TEMPO, MIN_TEMPO, RECORD_SNAPS, SIGNATURE_DENOMINATORS, formatDuration } from "../common/time";

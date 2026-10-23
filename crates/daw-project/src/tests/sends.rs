@@ -36,7 +36,6 @@ fn new_edges_are_post_fader_and_the_toggle_is_one_undo_step() {
     assert!(rig.service.undo());
     assert!(rig.service.undo());
     assert!(!edge(&rig, src, bus).pre_fader, "switching is one undo step");
-    // A bus can send pre-fader too.
     rig.graph.set_edge_pre_fader(bus, MASTER, true).unwrap();
     assert!(edge(&rig, bus, MASTER).pre_fader);
 }

@@ -1,8 +1,3 @@
-// The transient shaper's graph (`effects/TransientGraph.tsx`): what its settings do to a model hit, and the live
-// sound as envelopes going in and coming out. The model MIRRORS `crates/daw-effects/src/transient.rs`: the same
-// followers and times run on the envelope of a hit (silence, an instant rise, an exponential fall), the gain
-// `attack·transient + sustain·tail` capped at ±18 dB and smoothed: a change there must be repeated here. The envelope
-// stands for the peak of the sound; the effect's mean square of a sine reads √2 lower, which changes no ratio.
 import { type PlotView, type Point, dbY, linePath, toDb } from "../common/plot";
 
 const PEAK_RELEASE_MS = 250;

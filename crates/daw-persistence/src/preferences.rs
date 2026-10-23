@@ -112,7 +112,6 @@ mod tests {
     #[test]
     fn a_failed_write_is_an_error_and_keeps_the_previous_value() {
         let dir = temp_dir("preferences-blocked");
-        // A folder in place of the file: writing is impossible.
         fs::create_dir_all(dir.join(FILE_NAME)).unwrap();
         let (store, _) = open(&dir);
         let mut prefs = Preferences::default();

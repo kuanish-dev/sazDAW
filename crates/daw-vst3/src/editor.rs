@@ -31,7 +31,6 @@ pub enum OpenError {
 }
 
 pub struct Editor {
-    // Field order = drop order: the view first, then the plugin instance, then our objects that it holds.
     view: ComPtr<IPlugView>,
     attached: bool,
     instance: PluginInstance,
@@ -177,7 +176,6 @@ impl Editor {
             bridge.flush(now);
             bridge.pull()?
         };
-        // The lock is released: the controller might call the handler meanwhile, and it takes the same lock.
         if let Some(controller) = self.instance.controller() {
             for (id, value) in changes {
                 // SAFETY: a plain controller call without pointers.

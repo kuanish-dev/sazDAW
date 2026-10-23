@@ -1,6 +1,3 @@
-// Tempo map: the same time math as `daw-contracts/src/tempo_map.rs` (ticks ↔ seconds and frames with tempo ramps,
-// ticks ↔ bars by time signature changes) and pure point edits for the actions.
-// A ramp is tempo linear in ticks; time inside it is the integral of 1/tempo, i.e. a logarithm.
 import { PPQ, type SignatureChange, type TempoChange, type TempoMap, type TimeSignature } from "../api/types";
 import { BAR_GRID, barTicks, snapDown, type BarPosition } from "./time";
 
@@ -184,8 +181,6 @@ export function gridLines(map: TempoMap, from: number, to: number): GridLine[] {
   }
   return lines;
 }
-
-// Point edits: pure "map → new lists" functions; the results are sent by `tempo.setChanges` / `tempo.setSignatureChanges`.
 
 /** The tempo of the point in effect at `tick` (the last one not after it) becomes `bpm`. */
 export function withTempoAt(map: TempoMap, tick: number, bpm: number): TempoChange[] {

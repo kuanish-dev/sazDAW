@@ -10,7 +10,6 @@ use crate::common::*;
 
 #[test]
 fn plugins_scan_reports_found_and_failed_in_the_agreed_shape() {
-    // The test session: the scanner is empty and doesn't depend on the plugins on the machine.
     let session = build_session(false);
     let (table, c) = (RpcTable::new(), &session.controls);
     assert_eq!(call(&table, c, "plugins.scan", Value::Null), json!({ "found": 0, "effects": 0, "instruments": 0, "failed": [] }));
@@ -35,7 +34,6 @@ fn saving_and_rendering_methods_let_the_plugin_windows_hand_over_their_state_fir
     table.set_plugin_windows(windows.clone());
     call(&table, c, "project.get", Value::Null);
     assert_eq!(windows.0.load(Ordering::SeqCst), 0, "reading the project does not disturb the windows");
-    // The windows are asked before the method runs, so even a save refused by the rules asked them.
     assert!(table.call(c, "templates.save", json!({ "name": "" })).is_err());
     assert_eq!(windows.0.load(Ordering::SeqCst), 1);
 }
@@ -209,7 +207,6 @@ fn rpc_describe_lists_every_method_with_description_and_parameter_schema() {
     let (table, c) = (RpcTable::new(), &session.controls);
     let catalog = call(&table, c, "rpc.describe", Value::Null);
     let methods = catalog.as_array().unwrap();
-    // All registered methods except `rpc.describe` itself, which builds this catalog.
     assert_eq!(methods.len(), table.methods().len() - 1);
     let add = methods.iter().find(|m| m["name"] == "tracks.add").unwrap();
     assert!(add["description"].as_str().unwrap().contains("track"));

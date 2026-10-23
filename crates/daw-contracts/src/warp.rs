@@ -243,8 +243,6 @@ mod tests {
 
     #[test]
     fn plain_clip_counts_frames_by_the_map_from_its_start() {
-        // 120 BPM until bar 2, then 60: a clip from tick 1920 gets 1920 ticks at 0.5 s per beat, then a second per
-        // beat.
         let changes = vec![
             crate::TempoChange { tick: 0, bpm: Bpm::new(120.0).unwrap(), ramp: false },
             crate::TempoChange { tick: 3840, bpm: Bpm::new(60.0).unwrap(), ramp: false },
@@ -261,7 +259,6 @@ mod tests {
 
     #[test]
     fn tempo_change_inside_a_warped_clip_gives_a_curve() {
-        // 120 BPM until bar 2, then 60: source beats (120 BPM) run twice as slow after the change.
         let changes = vec![
             crate::TempoChange { tick: 0, bpm: Bpm::new(120.0).unwrap(), ramp: false },
             crate::TempoChange { tick: 3840, bpm: Bpm::new(60.0).unwrap(), ramp: false },
@@ -278,11 +275,9 @@ mod tests {
         ];
         assert_eq!(job.curve(), Some(&anchors[..]));
         assert!((job.stretch() - 1.5).abs() < 1e-9 && job.start_frame(&clip) == 0.0);
-        // A clip entirely before the change gets a single stretch, as before.
         clip.length_ticks = 3840;
         let constant = ProcessJob::for_clip(&clip, 7, &map, 48_000);
         assert_eq!(constant, None, "120 → 120: no processing needed");
-        // A ramp: anchors inside it are no further apart than the step.
         let ramp = map
             .with_tempos(vec![
                 crate::TempoChange { tick: 0, bpm: Bpm::new(120.0).unwrap(), ramp: false },
@@ -302,7 +297,6 @@ mod tests {
     #[test]
     fn warped_clip_counts_frames_by_its_own_tempo() {
         let tempo = &TempoMap::constant(Bpm::new(120.0).unwrap(), crate::TimeSignature::FOUR_FOUR);
-        // A beat at 60 BPM is one second: 960 ticks = 48 000 frames regardless of the project tempo.
         let warped = audio_clip(Some(Warp { source_bpm: 60.0 }), 0.0);
         assert!((warped.ticks_to_source_frames(960.0, tempo, 48_000) - 48_000.0).abs() < 1e-6);
         let plain = audio_clip(None, 0.0);

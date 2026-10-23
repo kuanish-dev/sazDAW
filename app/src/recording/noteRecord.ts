@@ -1,5 +1,3 @@
-// Note recording (a MIDI or the computer keyboard into note clips while the transport plays): arming and the grid the
-// recorded notes snap to. The transport's shared "● Record" button is `AudioRecord.pressRecord`, which asks this.
 import type { Core } from "../core/core";
 
 export interface NoteRecord {

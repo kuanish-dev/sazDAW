@@ -1,6 +1,3 @@
-// Panel right of the graph canvas: settings of the selected node — effect parameters, fader, pan, M/S and the channel
-// utility of a source or bus, name and outgoing connections, "+ Effect" after a source or bus and "+ Effect on master"
-// (`GraphView` does the insert).
 import { For, Match, Show, Switch } from "solid-js";
 import type { GraphNode } from "../api/types";
 import { kindChoices } from "../common/catalog";

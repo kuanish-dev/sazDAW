@@ -66,7 +66,6 @@ fn learning_assigns_the_next_cc_and_the_knob_then_moves_the_parameter() {
     assert!(!midi.control_change(3, 21, 0), "another channel is not mapped");
     assert!(!midi.control_change(2, 22, 0), "another CC goes to the instrument");
 
-    // A knob turn is one undo step together with neighbouring moves, like a slider; the mapping is its own step.
     assert!(rig.service.undo());
     assert_eq!(volume(&rig, node), DEFAULT_VOLUME);
     assert_eq!(midi.mappings().len(), 1);

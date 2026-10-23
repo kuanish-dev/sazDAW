@@ -145,7 +145,6 @@ impl Effect for Compressor {
     }
 
     fn process(&mut self, interleaved: &mut [f32], sidechain: Option<&[f32]>) {
-        // A key shorter than the buffer (should not happen): past its end the signal itself drives the compression, no panic.
         let mut key = sidechain.filter(|_| self.use_sidechain).map(|key| key.chunks_exact(2));
         let makeup = db_to_gain(self.makeup);
         for frame in interleaved.chunks_exact_mut(2) {
@@ -181,7 +180,6 @@ mod tests {
         c.reset();
         c.process(&mut loud, None);
         let after = rms(&loud[24_000..]);
-        // 0.9 ≈ -0.9 dBFS peak → ~21 dB over the threshold, at 8:1 the reduction is ≈ 18 dB.
         assert!(after < before * 0.3, "{before} → {after}");
     }
 
@@ -194,7 +192,6 @@ mod tests {
         c.process(&mut ducked, Some(&key));
         assert!(rms(&ducked[12_000..]) < rms(&input[12_000..]) * 0.2);
 
-        // A quiet key leaves the signal alone.
         c.reset();
         let silent_key = vec![0.0; input.len()];
         let mut passed = input.clone();

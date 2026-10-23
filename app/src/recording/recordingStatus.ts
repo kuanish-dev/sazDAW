@@ -1,6 +1,3 @@
-// Audio recording state for the UI (audio track headers, banner): arming and track inputs, levels, take progress.
-// Polling starts on `followRecording()` (after any recording action and at startup) and stops itself when no take is running
-// and no track is armed: then the input is closed and levels do not change. The last state stays visible.
 import { createSignal } from "solid-js";
 import type { AudioRecordStatus, Id, TrackRecordState } from "../api/types";
 import { createPoller } from "../core/poller";

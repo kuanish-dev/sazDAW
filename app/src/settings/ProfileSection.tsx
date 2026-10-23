@@ -1,4 +1,3 @@
-// Settings → Profile: author name, default projects folder, opening the last project and autosave.
 import { For, Show } from "solid-js";
 import type { ProfilePreferences } from "../api/types";
 import { AUTOSAVE_CHOICES, autosaveLabel } from "./preferenceRules";

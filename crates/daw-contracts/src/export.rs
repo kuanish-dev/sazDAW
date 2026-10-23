@@ -14,7 +14,6 @@ pub const MAX_TAIL_SECONDS: f32 = 30.0;
 /// The one tail rule of export and bounce: `0..=MAX_TAIL_SECONDS` seconds, as `f64` for frame math; outside it (or NaN)
 /// is `export::TAIL_OUT_OF_RANGE`.
 pub fn check_tail(tail_seconds: f32) -> Result<f64, ContractError> {
-    // NaN fails the range check too.
     if !(0.0..=MAX_TAIL_SECONDS).contains(&tail_seconds) {
         return Err(export::TAIL_OUT_OF_RANGE.with("seconds", tail_seconds).with("max", MAX_TAIL_SECONDS));
     }

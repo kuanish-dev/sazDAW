@@ -1,6 +1,3 @@
-// The look every clip on the timeline shares — note, audio and automation clips: a translucent tinted body clipped to
-// rounded corners, a solid title strip with the name, the clip's own content inside, and an outline (the selection's is
-// thicker and in ink). Content stays readable and the grid shows through.
 import type { Palette } from "../common/theme";
 import type { PixelRect } from "./timelineLayout";
 

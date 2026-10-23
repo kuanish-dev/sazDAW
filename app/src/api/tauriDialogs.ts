@@ -1,4 +1,3 @@
-// `SystemDialogs` implementation for the app: native macOS dialogs via the Tauri plugin.
 import { confirm, open, save } from "@tauri-apps/plugin-dialog";
 import type { ConfirmButtons, SystemDialogs } from "./dialogs";
 

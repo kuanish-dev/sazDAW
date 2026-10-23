@@ -27,7 +27,6 @@ const HAT16: &str = "xoxo xoxo xoxo xoxo";
 const OFFBEAT_OPEN: &str = "..X. ..X. ..X. ..X.";
 
 pub const PATTERNS: &[Def] = &[
-    // ---------- ROCK AND PUNK ----------
     Def {
         id: "rock_basic",
         name: L10n { en: "Rock: basic", ru: "Рок: базовый" },
@@ -128,7 +127,6 @@ pub const PATTERNS: &[Def] = &[
         },
         lanes: &[("kick", "X... .... ..x. ...."), ("rim", BACKBEAT), ("ride", "x.x. x.x. x.x. x.x.")],
     },
-    // ---------- DANCE ----------
     Def {
         id: "house_four",
         name: L10n { en: "House: four on the floor", ru: "Хаус: четыре в пол" },
@@ -195,7 +193,6 @@ pub const PATTERNS: &[Def] = &[
         },
         lanes: &[("kick", "X... .... ..X. ...."), ("snare", BACKBEAT), ("hat", "x.xx .x.x x.xx .x.x")],
     },
-    // ---------- HIP-HOP, TRAP ----------
     Def {
         id: "boom_bap",
         name: L10n { en: "Hip-hop: boom bap", ru: "Хип-хоп: бум-бэп" },
@@ -293,7 +290,6 @@ pub const PATTERNS: &[Def] = &[
         },
         lanes: &[("kick", FLOOR), ("snare", "...X ..X. ...X ..X."), ("hat", HAT8)],
     },
-    // ---------- DRUM AND BASS, BREAKBEATS, FUNK ----------
     Def {
         id: "dnb_two_step",
         name: L10n { en: "Drum and bass: two-step", ru: "Драм-н-бейс: двухшаговый" },
@@ -362,7 +358,6 @@ pub const PATTERNS: &[Def] = &[
             ("hat", "xoxo xoxo xoxo xoxo | xoxo xoxo xoxo xxxo"),
         ],
     },
-    // ---------- WORLD GENRES AND HEAVY MUSIC ----------
     Def {
         id: "reggae_one_drop",
         name: L10n { en: "Reggae: one drop", ru: "Регги: ван-дроп" },
@@ -411,7 +406,6 @@ pub const PATTERNS: &[Def] = &[
         },
         lanes: &[("kick", "X.X. X.X. X.X. X.X."), ("snare", ".X.X .X.X .X.X .X.X"), ("hat", "x.x. x.x. x.x. x.x.")],
     },
-    // ---------- FILLS (the last bar of a phrase) ----------
     Def {
         id: "fill_snare_roll",
         name: L10n { en: "Fill: snare roll", ru: "Перебивка: ролл на снейре" },
@@ -603,7 +597,6 @@ pub const PATTERNS: &[Def] = &[
             ("hat", "x.x. x.x. x.x. ...."),
         ],
     },
-    // ---------- BREAKS (stops) ----------
     Def {
         id: "break_stop",
         name: L10n { en: "Break: stop", ru: "Брейк: остановка" },
@@ -676,7 +669,6 @@ pub const PATTERNS: &[Def] = &[
         },
         lanes: &[("clap", "x... x... x.x. xxxx")],
     },
-    // ---------- INTROS ----------
     Def {
         id: "intro_hat_count",
         name: L10n { en: "Intro: hi-hat count-in", ru: "Вступление: счёт хэтом" },
@@ -737,7 +729,6 @@ pub const PATTERNS: &[Def] = &[
         },
         lanes: &[("snare", "o.o. o.o. o.o. o.o. | oooo xxxx xxxx XXXX"), ("kick", "X... .... .... .... | X... .... X... ....")],
     },
-    // ---------- ENDINGS ----------
     Def {
         id: "ending_crash_stop",
         name: L10n { en: "Ending: final hit", ru: "Концовка: финальный удар" },

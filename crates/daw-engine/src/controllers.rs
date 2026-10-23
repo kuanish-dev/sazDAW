@@ -72,7 +72,6 @@ impl ControllerSchedule {
     }
 
     fn push(&mut self, event: ControllerEvent) {
-        // On overflow the extra points of the segment are lost (as with notes): no allocating in the audio thread.
         if self.events.len() < MAX_EVENTS {
             self.events.push(event);
         }
@@ -187,7 +186,6 @@ mod tests {
 
     #[test]
     fn chase_respects_phase_and_ignores_positions_outside_the_clip() {
-        // Phase 400: point 500 sounds at clip tick 100, point 100 at tick 660.
         let s = snapshot(2000, 1000, 400, 960, &[(100, 0.25), (500, 0.75)]);
         assert_eq!(collect(&s, 2300, 2301, true), [(2300, 0.75)]);
         assert_eq!(collect(&s, 2700, 2701, true), [(2700, 0.25)]);

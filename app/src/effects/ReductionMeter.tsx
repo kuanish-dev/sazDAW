@@ -1,4 +1,3 @@
-// Gain reduction meter of a compressor, gate or limiter: a bar growing from the left with the value in dB.
 import { REDUCTION_SCALE_DB, reductionFraction } from "./dynamicsCurves";
 import { t } from "../i18n";
 

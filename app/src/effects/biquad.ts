@@ -1,6 +1,3 @@
-// The biquad filters of the built-in effects for their graphs: the coefficients by the RBJ Audio EQ Cookbook and the
-// response at a frequency. MIRRORS `crates/daw-effects/src/biquad.rs`: a change there must be repeated here.
-
 /** Sample rate for drawing: the response near the top of the band differs slightly at other rates. */
 export const DRAW_RATE = 48_000;
 /** Butterworth Q: the flattest passband (`BUTTERWORTH_Q`), also the Q of a Linkwitz–Riley split's halves and all-pass. */

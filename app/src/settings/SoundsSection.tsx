@@ -1,4 +1,3 @@
-// Settings → Sounds & packs: linked folders to take sounds from (the sound browser shows them under Packs too).
 import { For, createSignal, onMount } from "solid-js";
 import { t } from "../i18n";
 import { SectionTitle, SettingGroup } from "./SettingRow";

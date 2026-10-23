@@ -1,5 +1,3 @@
-// Typed wrappers over backend methods. Groups match the RPC namespaces (`samples.*`, `history.*`…),
-// so the group name tells you which method goes over the wire.
 import type { BackendError } from "../i18n/errors";
 import type { RpcClient } from "./rpc";
 import { decodeMasterWindow, decodeNodeWindows } from "./wire";
@@ -166,7 +164,6 @@ export function createApi(rpc: RpcClient) {
       updateMany: (clip: Id, changes: { id: Id; note: NewNote }[]) => call<Note[]>("notes.updateMany", { clip, changes }),
       removeMany: (clip: Id, ids: Id[]) => call("notes.removeMany", { clip, ids }),
       setLoopTicks: (clip: Id, loopTicks: number) => call("notes.setLoopTicks", { clip, loopTicks }),
-      // Musical edits on a group of notes: `ids` selects the notes (absent = all notes in the clip); one undo step; returns the group's notes after the edit.
       /** Pulls starts (and, with `ends`, ends) toward a grid of `grid` ticks by `strength` 0…1. */
       quantize: (clip: Id, ids: Id[] | undefined, grid: number, strength: number, ends: boolean) =>
         call<Note[]>("notes.quantize", { clip, ids, grid, strength, ends }),
@@ -179,7 +176,6 @@ export function createApi(rpc: RpcClient) {
       fitToScale: (clip: Id, ids: Id[] | undefined, root: number, scale: Scale) => call<Note[]>("notes.fitToScale", { clip, ids, root, scale }),
       /** Extends each note to the start of the next note in the group; the last ones are unchanged. */
       legato: (clip: Id, ids: Id[] | undefined) => call<Note[]>("notes.legato", { clip, ids }),
-      // Groove and variation edit the notes (they are not playback settings): undo restores the original.
       /** Template groove: each note is shifted and re-weighted by its nearest sixteenth; `amount` 0…1 is how much. */
       groove: (clip: Id, ids: Id[] | undefined, template: GrooveTemplate, amount: number) =>
         call<Note[]>("notes.groove", { clip, ids, template, amount }),

@@ -1,8 +1,3 @@
-// Transport strip at the top of the window (compact, like VS Code's title bar): project menu, playback (the Play button pulses
-// on every beat), position with beat lights (`BeatLights.tsx`), tempo
-// and time signature, the song loop, metronome, recording, the audio-recording badge, the mono-check badge,
-// and undo/redo with the history panel (`HistoryPanel.tsx`). The theme lives in Settings → Appearance. Engine load,
-// latency and the audio format live in the status bar (`shell/StatusBar.tsx`).
 import { createMemo, createSignal, For, Show } from "solid-js";
 import { barPosition, secondsAt } from "../common/tempoMap";
 import { MAX_NUMERATOR, MAX_TEMPO, MIN_TEMPO, RECORD_SNAPS, SIGNATURE_DENOMINATORS, formatBarPosition, formatDuration, formatSeconds } from "../common/time";
@@ -62,7 +57,6 @@ export function TransportBar() {
 const { tempo } = transport;
 const { noteRecord } = recording;
 
-  // Bar and time follow the tempo map (tempo and signature changes); the tempo and signature fields show the playhead's.
   const position = createMemo(() => formatBarPosition(barPosition(project.tempoMap, tick().positionTicks)));
   const seconds = createMemo(() => formatSeconds(secondsAt(project.tempoMap, tick().positionTicks)));
   const here = () => tick().positionTicks;

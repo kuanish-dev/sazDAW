@@ -1,4 +1,3 @@
-// Track MIDI effects: a short label of the active chain for the track header ("ARP", "CH", "RPT", "ARP·CH").
 import type { NoteEffectSpec } from "../api/types";
 
 /** Labels of built-in kinds; an unknown kind uses its first three letters. */

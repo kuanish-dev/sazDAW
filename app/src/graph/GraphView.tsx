@@ -1,6 +1,3 @@
-// Node editor (Graph tab). This only wires things together: camera, position drafts, wire, selection and whether the
-// signal path view is open; geometry is in `graphLayout`, mouse in `pointer`, selection in `graphSelection`, canvas in
-// `GraphCanvas`, panels in their own components (`Inspector`, `SignalPath`).
 import { Show, createMemo, createSignal } from "solid-js";
 import type { Id } from "../api/types";
 import { GraphCanvas } from "./GraphCanvas";

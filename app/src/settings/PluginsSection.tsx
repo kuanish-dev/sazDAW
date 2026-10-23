@@ -1,4 +1,3 @@
-// Settings → Plugins: VST3 search folders, the installed table (filter by text and type, disabling a plugin), scanning and its result.
 import { For, Show, createSignal, onMount } from "solid-js";
 import type { PluginList, PluginType } from "../api/types";
 import { filterPlugins } from "../plugins/pluginRules";

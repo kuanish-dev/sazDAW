@@ -1,5 +1,3 @@
-// File paths and number labels: file name, folder, joining, extension, new project file.
-
 export function basename(path: string): string {
   const parts = path.split("/");
   return parts[parts.length - 1] ?? path;

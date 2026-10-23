@@ -36,7 +36,6 @@ fn source_faders_set_volume_pan_mute_and_solo() {
         assert!(matches!(rig.graph.set_volume(node, f32::NAN), Err(e) if e.is(codes::graph::VOLUME_NOT_A_NUMBER)));
         assert!(matches!(rig.graph.set_pan(node, f32::INFINITY), Err(e) if e.is(codes::graph::PAN_NOT_A_NUMBER)));
     }
-    // Sources cannot be removed from the graph, but their fader has automation.
     assert!(matches!(rig.graph.remove_node(source(&rig, track)), Err(e) if e.is(codes::graph::NOT_REMOVABLE)));
     rig.automation.add_lane(ParamTarget::NodeVolume { node: source(&rig, track) }).unwrap();
     rig.automation.add_lane(ParamTarget::NodePan { node: source(&rig, audio) }).unwrap();
@@ -208,7 +207,6 @@ fn insert_effect_builds_a_chain_the_ui_can_show() {
     let graph = rig.graph.graph();
     assert_eq!(graph.chain(src), TrackChain { effects: vec![fx1, fx2], output: Some(MASTER) });
 
-    // Inserting in the middle of the chain.
     let mid = rig.graph.insert_effect(fx1, "eq", &Params::new(), 0.0, 0.0).unwrap();
     assert_eq!(rig.graph.graph().chain(src).effects, [fx1, mid, fx2]);
 }
@@ -230,7 +228,6 @@ fn insert_effect_validates_and_leaves_sidechains_untouched() {
     );
     assert_eq!(graph.chain(kick_node).effects, [fx]);
 
-    // Inserting after an effect with a sidechain output: regular edges move, the sidechain stays.
     rig.graph.connect(fx, comp, 0.4, true).unwrap();
     let after = rig.graph.insert_effect(fx, "eq", &Params::new(), 0.0, 0.0).unwrap();
     let graph = rig.graph.graph();
@@ -283,7 +280,6 @@ fn remove_effect_keep_path_multiplies_levels_and_drops_sidechain_inputs() {
     let level = |from, to| graph.edges.iter().find(|e| e.from == from && e.to == to && !e.sidechain).map(|e| e.level);
     assert_eq!(level(a_node, bus), Some(0.25), "0.5 × 0.5");
     assert_eq!(level(b_node, bus), Some(0.5));
-    // B already had a direct path to the master: parallel paths add up, but not above MAX_LEVEL.
     assert_eq!(level(b_node, MASTER), Some(MAX_LEVEL));
     assert_eq!(level(side, bus), Some(0.5));
     assert!(graph.edges.iter().all(|e| e.from != fx && e.to != fx), "the effect and all its edges are gone");
@@ -295,7 +291,6 @@ fn set_output_switches_the_single_output() {
     let (rig, src, fx1, fx2) = chain_rig();
     let bus = rig.graph.add_bus("Group", 0.0, 0.0).unwrap();
 
-    // The track "output" is the chain output: switch the last effect.
     rig.graph.set_output(fx2, bus).unwrap();
     let graph = rig.graph.graph();
     assert_eq!(graph.chain(src), TrackChain { effects: vec![fx1, fx2], output: Some(bus) });
@@ -305,7 +300,6 @@ fn set_output_switches_the_single_output() {
     rig.graph.set_output(fx2, MASTER).unwrap();
     assert_eq!(rig.graph.graph().chain(src).output, Some(MASTER));
 
-    // A source without effects; branching collapses into one output at level 1.0.
     let track = rig.tracks.add_track("Other", Some("synth"), 60).unwrap();
     let other = source(&rig, track);
     rig.graph.connect(other, bus, 0.4, false).unwrap();

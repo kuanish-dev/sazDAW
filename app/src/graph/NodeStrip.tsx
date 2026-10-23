@@ -1,5 +1,3 @@
-// Contents of a card with a mixer strip — source, bus or master: instrument caption, fader, meter,
-// dB and (for a source) M/S buttons.
 import { Show } from "solid-js";
 import type { GraphNode } from "../api/types";
 import { instrumentInfo } from "../common/catalog";

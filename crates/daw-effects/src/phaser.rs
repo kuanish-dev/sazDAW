@@ -100,7 +100,6 @@ impl Effect for Phaser {
             "high" => self.high_octaves.set(value.log2()),
             "stages" => {
                 let stages = STAGES[value as usize];
-                // Stages coming in start from silence, not from what they held when they last played.
                 for channel in &mut self.state {
                     for stage in &mut channel[self.stages.min(stages)..stages] {
                         *stage = [0.0; 2];
@@ -133,7 +132,6 @@ impl Effect for Phaser {
             let feedback = self.feedback.next(self.smoothing);
             let mix = self.mix.next(self.smoothing);
             for (c, sample) in frame.iter_mut().enumerate() {
-                // 0 at the low end, 1 at the high end; the right channel `spread` later.
                 let sweep = 0.5 - 0.5 * (TAU * (self.phase + c as f32 * self.spread)).cos();
                 let a = coefficient((low + sweep * (high - low)).exp2(), self.sample_rate);
                 let mut x = *sample + feedback * self.last[c];

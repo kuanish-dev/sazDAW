@@ -1,5 +1,3 @@
-// What the timeline shows while a sound is dragged: the clip "ghost" (placed by `timelineDrop.ghostAt`) and the
-// "+ Instrument" and "+ Ready block" zones under the last track — where it's dropped decides what the sound becomes.
 import { Show, createSignal } from "solid-js";
 import type { NewTrackKind, SampleSource } from "./dropSample";
 import { t } from "../i18n";

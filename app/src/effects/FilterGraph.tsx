@@ -1,7 +1,3 @@
-// Filter graph: the response curve (20 Hz–20 kHz, +24…−36 dB) over the live spectrum of the node's output
-// (`LiveSpectrum`), with one handle at the cutoff. Dragging it sets the cutoff, and for low- and high-pass also the
-// resonance (the height of the peak); the wheel over it sets the resonance, double-click resets both; every change goes
-// through `onChange` like a knob. The math is in `effects/filterCurve`.
 import { For, Show, createMemo } from "solid-js";
 import type { Id, ParamInfo, Params } from "../api/types";
 import {
@@ -29,7 +25,6 @@ export function FilterGraph(props: { node: Id; infos: ParamInfo[]; values: Param
   const onMove = (event: PointerEvent) => {
     const s = settings();
     if (event.buttons !== 1 || !dragging || !s) return;
-    // The SVG stretches to the panel width: convert the screen point into its viewBox units.
     const rect = svg.getBoundingClientRect();
     const point = localPoint(svg, event);
     for (const update of dragFilterHandle(s, (point.x / rect.width) * VIEW.width, (point.y / rect.height) * VIEW.height, VIEW)) {

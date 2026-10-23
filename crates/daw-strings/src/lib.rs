@@ -69,8 +69,6 @@ const KINDS: [Kind; 4] = [
             ),
         },
     },
-    // No hollow body: a magnetic pickup's resonance (a bright peak near 3 kHz) and a little low end; picked nearer the
-    // bridge and with a longer sustain than the acoustic. Clean by default: Drive turns it into crunch and fuzz.
     Kind {
         id: ELECTRIC_GUITAR_KIND,
         label: L10n { en: "Electric guitar", ru: "Электрогитара" },
@@ -104,7 +102,6 @@ const KINDS: [Kind; 4] = [
             ),
         },
     },
-    // An electric bass has no hollow body: its "body" is the pickup and cabinet, a low and a mid bump.
     Kind {
         id: BASS_GUITAR_KIND,
         label: L10n { en: "Bass guitar", ru: "Бас-гитара" },
@@ -232,7 +229,6 @@ impl Strings {
         for (name, value) in params {
             strings.set_param(name, *value);
         }
-        // A new instrument starts at its values, not gliding from zero.
         strings.jump();
         strings
     }
@@ -320,7 +316,6 @@ impl InstrumentFactory for StringsFactory {
         self.kind.about
     }
 
-    // A built-in instrument has no state of its own: everything is in the parameters.
     fn create(&self, params: &Params, _state: Option<&PluginState>) -> Result<Box<dyn Instrument>, ContractError> {
         Ok(Box::new(Strings::new(&self.kind, params)))
     }

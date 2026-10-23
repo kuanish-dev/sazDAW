@@ -1,5 +1,3 @@
-// Draws signature flags on the bar ruler. Geometry is in `tempoLayout.ts`; kept apart from the grid (`timelineRender.ts`)
-// and markers (`markerRender.ts`).
 import type { TempoMap } from "../api/types";
 import { inWindow, type ScrollWindow } from "../common/scrollWindow";
 import type { Palette } from "../common/theme";

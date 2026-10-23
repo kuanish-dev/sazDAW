@@ -26,7 +26,6 @@ fn note_clip_content_json_shape() {
     assert_eq!(content["autoLength"], true);
     assert_eq!(project["loopRegion"], Value::Null);
 
-    // A returned clip serializes the same way as in project.get.
     assert_eq!(clip["content"]["type"], "notes");
     assert_eq!(clip["track"], track);
 }
@@ -133,12 +132,10 @@ fn errors_carry_their_codes() {
     assert!(table.call(c, "tracks.add", json!({ "name": "x", "kind": "nope", "defaultPitch": 60 })).is_err());
     assert!(table.call(c, "notes.remove", json!({ "clip": 99, "id": 1 })).is_err());
 
-    // A note clip on an audio track is refused with its own code.
     let audio = call(&table, c, "tracks.add", json!({ "name": "Audio", "kind": null, "defaultPitch": 60 }));
     let on_audio = table.call(c, "clips.addNote", json!({ "track": audio, "startTick": 0, "lengthTicks": null })).unwrap_err();
     assert!(on_audio.is(codes::clips::NOTE_CLIP_NEEDS_INSTRUMENT_TRACK), "{on_audio}");
 
-    // Note clips on one track don't overlap.
     let track = add_synth(&table, c);
     add_clip(&table, c, &track);
     let overlap = table.call(c, "clips.addNote", json!({ "track": track, "startTick": 100, "lengthTicks": null })).unwrap_err();
@@ -202,7 +199,6 @@ fn clips_add_note_creates_a_clip_with_notes_and_loop_in_one_undo_step() {
     assert_eq!(content["notes"].as_array().unwrap().len(), 2);
     assert_eq!(content["notes"][1]["startTick"], 480);
 
-    // Neither notes nor length: an empty one-bar clip, as before; the fields can be omitted entirely.
     let empty = call(&table, c, "clips.addNote", json!({ "track": track, "startTick": 7680 }));
     assert_eq!((empty["lengthTicks"].as_u64(), empty["content"]["notes"].as_array().map(Vec::len)), (Some(3840), Some(0)));
 

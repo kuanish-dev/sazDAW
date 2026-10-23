@@ -1,5 +1,3 @@
-// Live note recording into the track's clip under the cursor: a recording lap is the clip length, a new lap replaces
-// the previous ones (as in `daw-recorder`). No clip under the cursor creates a one-bar clip.
 import type { Clip, Id, Project } from "../api/types";
 import { overlapsOthers } from "../tracks/clipRules";
 import { clamp } from "../common/math";

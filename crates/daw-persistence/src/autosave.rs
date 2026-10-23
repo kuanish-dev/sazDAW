@@ -116,7 +116,6 @@ impl Autosaver {
                             Err(_) => {}
                         }
                     } else {
-                        // The project is saved: the old autosave is no longer needed.
                         autosave.discard();
                     }
                 }
@@ -153,10 +152,8 @@ impl Drop for Autosaver {
             signal.notify_all();
         }
         if let Some(handle) = self.handle.take() {
-            // A panic of the autosave thread is already in the log (the shared panic handler).
             let _ = handle.join();
         }
-        // Exit without losing work: a clean project needs no autosave, unsaved edits stay in it.
         if !self.autosave.project.is_dirty() {
             self.autosave.discard();
         }
@@ -304,7 +301,6 @@ mod tests {
     fn the_interval_is_read_live_and_zero_turns_autosave_off() {
         let project = fake("live");
         let control = autosave(&project);
-        // 0 means off, otherwise milliseconds.
         let every = Arc::new(AtomicUsize::new(0));
         let source = every.clone();
         let interval: AutosaveInterval =
@@ -370,7 +366,6 @@ mod tests {
         control.discard();
         assert!(log.recent(10).is_empty(), "no file means nothing to delete");
 
-        // A non-empty folder in place of the file: it cannot be deleted as a file.
         let file = ProjectLayout::from_file(&project.file).autosave_file();
         std::fs::create_dir_all(file.join("inside")).unwrap();
         control.discard();

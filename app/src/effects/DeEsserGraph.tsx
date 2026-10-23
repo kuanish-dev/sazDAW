@@ -1,9 +1,3 @@
-// De-esser graph: on the frequency axis (20 Hz–20 kHz) over the live spectrum of the node's output (`LiveSpectrum`),
-// the band it listens to (shaded), the response at its full range (dashed: as deep as it goes) and the response it
-// makes now from the engine's gain reduction (bright: a dip at the band in split-band mode, the whole line down in
-// wideband, the band alone while listening); under it the gain reduction meter. Dragging the band's handle sets its
-// frequency, double-click resets it; the change goes through `onChange` like a knob. The math is
-// `effects/deEsserCurve.ts`.
 import { For, Show, createMemo } from "solid-js";
 import type { Id, ParamInfo, Params } from "../api/types";
 import { DE_ESSER_GRID_DB, bandAreaPath, deEsserPath, deEsserSettings, deEsserY, dragDeEsser } from "./deEsserCurve";
@@ -24,7 +18,6 @@ export function DeEsserGraph(props: { node: Id; infos: ParamInfo[]; values: Para
   const onMove = (event: PointerEvent) => {
     const s = settings();
     if (event.buttons !== 1 || !dragging || !s) return;
-    // The SVG stretches to the panel width: convert the screen point into its viewBox units.
     const update = dragDeEsser(s, (localPoint(svg, event).x / svg.getBoundingClientRect().width) * VIEW.width, VIEW);
     props.onChange(update.name, update.value);
   };

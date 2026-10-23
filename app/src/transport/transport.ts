@@ -1,6 +1,3 @@
-// Transport (always plays the timeline): play/pause/stop, position and cue, the loop region, the song loop and the
-// metronome. Errors are notifications.
-// Tempo and meter are project edits (`transport/tempo.ts`); undo/redo is `history/history.ts`.
 import type { Clip } from "../api/types";
 import type { Core } from "../core/core";
 

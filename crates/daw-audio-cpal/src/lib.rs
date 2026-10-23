@@ -93,11 +93,9 @@ impl CpalAudio {
 
 impl Drop for CpalAudio {
     fn drop(&mut self) {
-        // Closing `commands` ends the host loop; wait for it so the cpal streams are closed.
         let (closed, _) = channel();
         drop(std::mem::replace(&mut self.commands, closed));
         if let Some(thread) = lock(&self.thread).take() {
-            // A host-thread panic is already logged by the panic hook; here we only wait for the thread to end.
             let _ = thread.join();
         }
     }
@@ -143,7 +141,6 @@ impl AudioCapture for CpalAudio {
     }
 
     fn stop(&self) {
-        // If the host thread is gone, the input closed with it.
         let _ = self.ask(Command::CaptureStop);
     }
 

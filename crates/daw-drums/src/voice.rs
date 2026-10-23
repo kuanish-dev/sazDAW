@@ -125,7 +125,6 @@ impl Drum {
             DrumKind::Snare => self.noise() * decay(t, 0.06) * 0.5 + self.osc(190.0 * ratio) * decay(t, 0.05) * 0.4,
             DrumKind::Hat => self.hp_noise() * decay(t, 0.02) * 0.35,
             DrumKind::Clap => {
-                // Three quick claps in a row and a shared tail after the last.
                 let bursts: f32 = [0.0, 0.011, 0.022].iter().map(|&start| decay_from(t, start, 0.01)).sum();
                 self.hp_noise() * (bursts * 0.12 + decay_from(t, 0.022, 0.08) * 0.18)
             }
@@ -133,7 +132,6 @@ impl Drum {
             DrumKind::TomHigh => self.tom(t, 210.0),
             DrumKind::TomMid => self.tom(t, 150.0),
             DrumKind::TomLow => self.tom(t, 105.0),
-            // A sharp hit and a long hissing tail.
             DrumKind::Crash => self.hp_noise() * (decay(t, 0.04) * 0.25 + decay(t, 0.55) * 0.22),
             DrumKind::Ride => {
                 let hiss = self.hp_noise();
@@ -161,14 +159,12 @@ impl Instrument for Drum {
 
     fn note_off(&mut self, _note: u8) {}
 
-    // A hit ignores `note_off`, but stop, seek and loop wraps must not leave a cymbal ringing for seconds.
     fn all_notes_off(&mut self) {
         if self.age.is_some() && self.fade.is_none() {
             self.fade = Some(self.fade_frames());
         }
     }
 
-    // A hit plays to its end on its own: neither pitch bend nor the pedal applies to it.
     fn controller(&mut self, _kind: ControllerKind, _value: f32) {}
 
     fn set_param(&mut self, name: &str, value: f32) {

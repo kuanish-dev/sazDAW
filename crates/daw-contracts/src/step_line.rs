@@ -151,7 +151,6 @@ impl Line {
         let all_steps = note.steps.saturating_mul(self.step_ticks);
         let length = match (note.slide, next_note) {
             (false, _) => all_steps - self.step_ticks + self.gate_ticks,
-            // Every note sounds at least `gate_ticks`, so half of it always ends inside the next note.
             (true, true) => all_steps.saturating_add(SLIDE_OVERLAP_TICKS.min(self.gate_ticks / 2)),
             (true, false) => all_steps,
         };
@@ -254,12 +253,9 @@ mod tests {
 
     #[test]
     fn a_slide_overlaps_the_next_note_and_ties_the_same_pitch() {
-        // Into another pitch: the whole step plus a short overlap (at most half of the next note's gate).
         assert_eq!(notes("F2~ Ab2", None), [(41, 0, 240 + 60, VELOCITY_NORMAL), (44, 240, 120, VELOCITY_NORMAL)]);
-        // Into the same pitch: one note (a tie) whose end follows the last tied step: here it slides on into G2.
         assert_eq!(notes("F2~ F2~ _ G2 -", None), [(41, 0, 3 * 240 + 60, VELOCITY_NORMAL), (43, 720, 120, VELOCITY_NORMAL)]);
         assert_eq!(notes("F2~ F2!", None), [(41, 0, 240 + 120, VELOCITY_NORMAL)], "the tied step neither retriggers nor accents");
-        // Before a rest or at the end of the line: all its steps, no overlap.
         assert_eq!(
             notes("F2~ - F2 F2~", None),
             [(41, 0, 240, VELOCITY_NORMAL), (41, 480, 120, VELOCITY_NORMAL), (41, 720, 240, VELOCITY_NORMAL)]

@@ -1,6 +1,3 @@
-// Automation lane row left of the timeline (right under its track, or in the "Buses & master" block): the parameter's
-// name, a click selects the row, the trash button deletes the lane. A selected row scrolls itself into view (a lane
-// picked from a knob's menu may be far down the list).
 import { createEffect } from "solid-js";
 import type { AutomationLane } from "../api/types";
 import { targetLabel } from "../automation/automationRules";

@@ -1,5 +1,3 @@
-// "Places" for browsing sounds: the project folder and linked folders. The browser never goes above a place's root,
-// so the whole computer is not visible. "Project" is the source of all sounds, linked folders ("packs") are for preview only.
 import { createEffect, createSignal, on } from "solid-js";
 import type { LibraryEntry } from "../api/types";
 import { basename, joinPath, parentDir } from "../common/format";
@@ -35,7 +33,6 @@ export function createSoundPlaces() {
     if (await load(start)) setPlace(path);
   };
 
-  // The root is the project folder: when another project opens, the browser moves to its samples/.
   createEffect(on(root, (folder) => {
     if (folder) void openPlace(folder, joinPath(folder, "samples"));
   }));

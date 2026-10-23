@@ -1,5 +1,3 @@
-// The mock's side of the binary replies (`RpcClient.callBinary`): encodes the live sound windows in the format of
-// `crates/daw-rpc/src/binary.rs`, which `api/wire.ts` decodes. The mock builds the windows from plain arrays.
 import type { Id } from "../api/types";
 
 /** A node window as the mock builds it. */

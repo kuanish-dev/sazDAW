@@ -1,4 +1,3 @@
-// Audio settings: devices, buffer size, recording latency and the input level check.
 import type { AudioDevices, AudioSettings, AudioStatus, InputLevel } from "../api/types";
 import { MAX_RECORD_LATENCY_MS, parseBufferFrames, parseRecordLatency } from "./audioSettings";
 import { t } from "../i18n";

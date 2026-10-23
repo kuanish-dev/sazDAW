@@ -28,9 +28,7 @@ fn groove(template: GrooveTemplate, amount: f64) -> NoteTransform {
 fn each_template_moves_off_beat_notes_by_its_ticks_and_scales_velocity() {
     let (rig, track, _) = rig_with_clip();
     let cases = [
-        // Eighth swing 58 %: the eighth is 76.8 → 77 ticks later, the sixteenths between them half that (38).
         (GrooveTemplate::Swing { grid: SwingGrid::Eighth, percent: 58 }, [(0, 100), (278, 100), (557, 100), (758, 100)]),
-        // Sixteenth swing (MPC) 66 %: every second sixteenth is 76.8 → 77 ticks later.
         (GrooveTemplate::Swing { grid: SwingGrid::Sixteenth, percent: 66 }, [(0, 100), (317, 100), (480, 100), (797, 100)]),
         (GrooveTemplate::LaidBack { ticks: 20 }, [(0, 100), (260, 100), (500, 100), (740, 100)]),
         (GrooveTemplate::Pushed { ticks: 20 }, [(0, 100), (220, 100), (460, 100), (700, 100)]),
@@ -50,7 +48,6 @@ fn groove_repeats_every_beat_scales_with_amount_and_is_one_undo_step() {
     let clip = clip_with(&rig, track, BAR_TICKS, vec![note(60, 960 + 480, 100), note(62, 2 * 960 + 250, 100)]);
     let laid_back = GrooveTemplate::LaidBack { ticks: 40 };
     rig.notes.transform_notes(clip, None, groove(laid_back, 0.5)).unwrap();
-    // The one-beat template repeats; note 2170 is closest to sixteenth 2160, which is also "off the beat".
     assert_eq!(timing(&rig, clip), [(1460, 100), (2190, 100)]);
     assert!(rig.service.undo());
     assert_eq!(timing(&rig, clip), [(1440, 100), (2170, 100)], "one undo step");
@@ -77,7 +74,6 @@ fn groove_checks_parameters_and_keeps_notes_inside_the_content() {
     assert!(fails(groove(GrooveTemplate::LaidBack { ticks: 10 }, f64::NAN), codes::notes::GROOVE_AMOUNT_OUT_OF_RANGE));
     assert_eq!(rig.service.undo_label(), label, "errors record no undo steps");
 
-    // The last sixteenth of a manual length: "laid back" does not push the note out of the content.
     let edge = clip_with(&rig, track, 3 * BAR_TICKS, vec![note(60, BAR_TICKS - 240, 240)]);
     rig.notes.set_loop_ticks(edge, BAR_TICKS).unwrap();
     rig.notes.transform_notes(edge, None, groove(GrooveTemplate::LaidBack { ticks: 30 }, 1.0)).unwrap();
@@ -87,8 +83,6 @@ fn groove_checks_parameters_and_keeps_notes_inside_the_content() {
 #[test]
 fn groove_taken_from_a_swung_clip_reproduces_the_swing_on_a_straight_clip() {
     let (rig, track, _) = rig_with_clip();
-    // The source: two bars of sixteenths with 58 % swing (the second sixteenth of a pair 38 ticks later) and an accent on
-    // the beat.
     let swung: Vec<NewNote> = (0..32)
         .map(|i| {
             let shift = if i % 2 == 1 { 38 } else { 0 };
@@ -98,7 +92,6 @@ fn groove_taken_from_a_swung_clip_reproduces_the_swing_on_a_straight_clip() {
     let source = clip_with(&rig, track, 8 * BAR_TICKS, swung.clone());
     let straight = clip_with(&rig, track, 4 * BAR_TICKS, (0..16).map(|i| note(60, i * STEP_TICKS, 100)).collect());
     rig.notes.transform_notes(straight, None, NoteTransform::GrooveFromClip { source, amount: 1.0 }).unwrap();
-    // The source's average velocity is 97.5: the beat 120/97.5 → 123 %, the rest 90/97.5 → 92 %.
     for (after, model) in rig.notes.notes(straight).unwrap().iter().zip(&swung) {
         assert!(after.start_tick.abs_diff(model.start_tick) <= 1, "{} vs {}", after.start_tick, model.start_tick);
         assert_eq!(after.velocity, if model.velocity == 120 { 123 } else { 92 });
@@ -121,8 +114,6 @@ fn groove_from_clip_refuses_missing_audio_and_empty_sources() {
 
 #[test]
 fn groove_numbers_match_the_frontend_mock() {
-    // `app/src/pianoroll/groove.ts` (`applyGroove`, `templateTable`, `extractGroove`) gives the same numbers: the mock
-    // matches the backend.
     let (rig, track, _) = rig_with_clip();
     let notes = || {
         vec![
@@ -143,6 +134,5 @@ fn groove_numbers_match_the_frontend_mock() {
     let source = clip_with(&rig, track, 3 * BAR_TICKS, source.to_vec());
     let clip = clip_with(&rig, track, 4 * BAR_TICKS, sixteenths());
     rig.notes.transform_notes(clip, None, NoteTransform::GrooveFromClip { source, amount: 1.0 }).unwrap();
-    // The mock table: offsets [0, 30, 5, 35], velocities [126, 84, 116, 74] %.
     assert_eq!(timing(&rig, clip), [(0, 126), (270, 84), (485, 116), (755, 74)]);
 }

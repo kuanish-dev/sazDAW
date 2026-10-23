@@ -119,7 +119,6 @@ impl MidiFileIo for MidiFiles {
         let per_beat = ticks_per_beat(smf.header.timing)?;
         let track = smf.tracks.iter().find(|t| !extract_notes(t).is_empty()).ok_or_else(|| midi::FILE_HAS_NO_NOTES.err())?;
 
-        // The clip length stays; the content may grow only with auto length.
         let limit = if content.auto_length { MAX_CLIP_LOOP_TICKS } else { content.loop_ticks };
         let notes = imported_notes(&extract_notes(track), per_beat, limit);
         let lanes = imported_controllers(&extract_controllers(track), per_beat, limit);

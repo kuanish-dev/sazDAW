@@ -109,7 +109,6 @@ impl ProjectService {
             (Some(key), Some((last_key, at))) => key == last_key && at.elapsed().as_millis() < COALESCE_WINDOW_MS,
             _ => false,
         };
-        // Inside a group no separate undo steps are recorded: the group records one when it closes.
         if !coalesce && inner.group.is_none() {
             inner.history.record(label, before);
         }
@@ -167,7 +166,6 @@ impl ProjectService {
                 renamed.name = name;
                 write(&renamed)?;
                 inner.project = renamed;
-                // The name is part of the project everyone reads: a new revision tells them.
                 self.publish_snapshot(&mut inner);
             }
             _ => write(&inner.project)?,
@@ -179,7 +177,6 @@ impl ProjectService {
 
     /// Replaces the current project entirely (load, create, restore).
     pub(crate) fn install(&self, project: Project, path: Option<PathBuf>, dirty: bool) {
-        // Decoding is slow: the lock is not held, so the interface does not freeze while a project opens.
         let warnings = self.load_samples(&project);
         let mut inner = self.lock();
         inner.project = project;
@@ -190,7 +187,6 @@ impl ProjectService {
         inner.last_edit = None;
         inner.warnings = warnings;
         inner.dsp.forget_failures();
-        // A new project starts from the beginning and in silence; the old project's cue means nothing here.
         self.deps.transport.set_cue(None);
         self.deps.transport.stop();
         self.sync(&mut inner);

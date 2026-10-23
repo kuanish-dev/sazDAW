@@ -1,5 +1,3 @@
-// Audio track input in its header: record arm (red — armed, blinking — a take is running), input channel choice
-// (the chevron, or right-click on the arm button), input level and take time when armed, input monitor button "IN".
 import { createResource, createSignal, For, Show } from "solid-js";
 import type { Id, InputChannels, MonitorMode } from "../api/types";
 import { plainLevel } from "../mixer/mixer";

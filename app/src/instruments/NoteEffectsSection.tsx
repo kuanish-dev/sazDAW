@@ -1,5 +1,3 @@
-// The instrument window's "MIDI effects" section: the track's chain before the instrument (arpeggiator, chord) — add,
-// bypass, reorder, remove and each effect's parameters. Everything goes through the instruments role (`useInstruments().noteEffects`).
 import { For, Show } from "solid-js";
 import type { Id, NoteEffectSpec } from "../api/types";
 import { kindChoices, noteEffectInfo, paramValue } from "../common/catalog";

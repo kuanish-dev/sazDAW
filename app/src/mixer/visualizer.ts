@@ -1,7 +1,3 @@
-// Math for the master visualizer (`mixer/MasterVisualizer.tsx`): the spectrum of a short stretch of the master output
-// folded into log-spaced bands (every octave gets the same width, the way the ear hears), and where to start the
-// oscilloscope trace so it stands still instead of crawling. The effect pictures reuse the FFT (`spectrum.ts`) and the
-// trace start (`ShaperGraph`).
 import { clamp } from "../common/math";
 
 /** Band edges, Hz: below 30 Hz is felt rather than heard, above 16 kHz little music has energy. */
@@ -13,7 +9,6 @@ const FLOOR_DB = -72;
 /** In-place iterative radix-2 FFT; the length must be a power of two. */
 function fft(re: Float32Array, im: Float32Array) {
   const n = re.length;
-  // Bit-reversal permutation, so the butterflies below can work in place.
   for (let i = 1, j = 0; i < n; i++) {
     let bit = n >> 1;
     for (; j & bit; bit >>= 1) j ^= bit;
@@ -60,7 +55,6 @@ export function magnitudes(samples: Float32Array): Float32Array {
   for (let i = 0; i < n; i++) re[i] = samples[i]! * (0.5 - 0.5 * Math.cos((2 * Math.PI * i) / (n - 1)));
   fft(re, im);
   const out = new Float32Array(n / 2);
-  // The Hann window halves the amplitude and a real sine splits between two mirrored bins: ×4/n brings it back to 1.
   for (let k = 0; k < out.length; k++) out[k] = (Math.hypot(re[k]!, im[k]!) * 4) / n;
   return out;
 }
@@ -78,7 +72,6 @@ export function spectrumBands(bins: Float32Array, sampleRate: number, count: num
   const high = Math.min(HIGH_HZ, sampleRate / 2);
   const edge = (band: number) => LOW_HZ * (high / LOW_HZ) ** (band / count);
   return Array.from({ length: count }, (_, band) => {
-    // Low bands are narrower than one bin: they read the bin they fall into.
     const first = Math.min(bins.length - 1, Math.floor(edge(band) / binHz));
     const last = Math.min(bins.length - 1, Math.max(first, Math.ceil(edge(band + 1) / binHz) - 1));
     let peak = 0;

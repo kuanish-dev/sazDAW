@@ -124,7 +124,6 @@ fn extracted_regions_become_independent_playable_files() {
     assert_eq!(part.frame_count, 12_000, "the file holds only the cut part");
     assert_eq!(part.path, file.parent().unwrap().join("samples/Chunk.wav"));
     assert!(part.path.is_file());
-    // The cut sound is a separate file: the source can be deleted.
     fs::remove_file(song.path).unwrap();
     assert!(part.path.is_file());
     fs::remove_dir_all(root).ok();
@@ -142,7 +141,6 @@ fn audio_choice_is_read_from_the_state_dir_and_audio_does_not_start_by_itself() 
     std::fs::create_dir_all(root.join("state")).unwrap();
     std::fs::write(root.join("state/audio.json"), r#"{ "output": "Speakers", "bufferFrames": 256, "recordLatencyMs": 15.0 }"#).unwrap();
 
-    // A host without devices, as in `build_session`: the test needs no sound card.
     let session = build_headless_session_in(&SessionConfig::new(root.join("state")));
     assert_eq!(session.controls.audio.settings(), chosen);
     assert!(!session.controls.audio.status().running);

@@ -56,7 +56,6 @@ pub struct PluginInstance {
     out_buses: usize,
     /// Crash marker slot: while the plugin works inside `guarded`, after a crash it is clear the plugin is to blame. Plugin windows have none.
     mark: Option<GuardSlot>,
-    // Last: the bundle must outlive all pointers above.
     bundle: Arc<Bundle>,
 }
 
@@ -99,7 +98,6 @@ impl PluginInstance {
             mark: None,
             bundle,
         };
-        // On error `instance` is dropped, and `Drop` shuts down whatever had started.
         instance.initialize()?;
         Ok(instance)
     }
@@ -188,7 +186,6 @@ impl PluginInstance {
 
     /// `work` on the instance under the "plugin is processing" mark. No allocations or locks: fit for the audio thread.
     pub fn guarded<T>(&mut self, work: impl FnOnce(&mut Self) -> T) -> T {
-        // The slot is taken for the duration of the work: `work` gets the whole `&mut self`.
         let mark = self.mark.take();
         let inside = mark.as_ref().map(GuardSlot::enter);
         let result = work(self);
@@ -262,7 +259,6 @@ impl PluginInstance {
 
 impl Drop for PluginInstance {
     fn drop(&mut self) {
-        // The plugin may crash on shutdown too: that is its failure as well.
         let mark = self.mark.take();
         let _inside = mark.as_ref().map(GuardSlot::enter);
         self.stop();

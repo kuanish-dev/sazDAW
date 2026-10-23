@@ -1,6 +1,3 @@
-// Virtual stage actions: where each channel stands in the shared room, and the room. A drag is live: the place shows at
-// once (`patchProject`) and goes to the backend one call at a time per channel, the latest place winning, so the engine
-// hears the move as the hand makes it without a queue of stale places; the backend merges the drag into one undo step.
 import type { Id, ParamTarget, Room } from "../api/types";
 import { findNode, hasStrip } from "../graph/graphRules";
 import { ensembleSpots, type Spot, stageChannels } from "./stageRules";
@@ -48,7 +45,6 @@ export function createStage(core: Core, touch: ParamTouch): Stage {
     place(node, spot) {
       const kind = findNode(core.copy.project.graph, node)?.kind;
       if (!kind || !hasStrip(kind)) return;
-      // A move of a channel already on the stage may be written as automation (its lanes exist only while it stands there).
       if (kind.stage) {
         const moves: [ParamTarget, number][] = [
           [{ type: "nodePan", node }, spot.pan],

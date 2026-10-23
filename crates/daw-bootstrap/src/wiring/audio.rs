@@ -54,13 +54,11 @@ pub(super) fn build(
     assets: Arc<dyn AssetStore>,
     log: Arc<dyn AppLog>,
 ) -> Audio {
-    // Input monitoring: the engine gets the reading side of the host input (once, for the whole session).
     if let Some(input) = host.take_live_input()
         && let Err(error) = link.dsp.send(DspCommand::SetLiveInput { input })
     {
         log.record(LogEntry::new(LogLevel::Error, "audio", format!("the monitoring input was not passed to the engine: {error}")));
     }
-    // Audio input recording: the same sound host works as `AudioCapture`.
     let audio_record = Arc::new(AudioRecorder::new(AudioRecorderDeps {
         capture: host.clone(),
         devices: host.clone(),

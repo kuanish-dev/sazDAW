@@ -34,7 +34,6 @@ impl Monitor {
     /// `None` when AppKit did not enable the monitor (returned nil).
     pub fn new(player: Arc<KeyPlayer>) -> Option<Self> {
         let handler = RcBlock::new(move |event: NonNull<NSEvent>| -> *mut NSEvent {
-            // The monitor is called on the main thread; if somehow not, the key is left alone.
             let Some(main) = MainThreadMarker::new() else { return event.as_ptr() };
             // SAFETY: AppKit passes a live event for the duration of the call.
             let event_ref = unsafe { event.as_ref() };
@@ -43,7 +42,6 @@ impl Monitor {
             let chord = event_ref
                 .modifierFlags()
                 .intersects(NSEventModifierFlags::Command | NSEventModifierFlags::Control | NSEventModifierFlags::Option);
-            // `isARepeat` must not be asked of a key release (AppKit throws an exception), it may be asked of a press.
             let repeat = down && event_ref.isARepeat();
             let key = KeyPress { code: event_ref.keyCode(), down, repeat, chord };
             if player.press(window, key) { std::ptr::null_mut() } else { event.as_ptr() }

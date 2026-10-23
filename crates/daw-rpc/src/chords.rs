@@ -21,7 +21,6 @@ pub(crate) fn register(table: &mut RpcTable) {
          chords; `repeat` loops the progression.",
         |c, p: ChordPartRequest| c.chord_part.build(p),
     );
-    // Preview: the project doesn't change; it loops until `chords.stopPreview` is called.
     table.add(
         "chords.preview",
         "Previews a chord part in a loop without changing the project (same request as chords.build; up to 16 bars).",

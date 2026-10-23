@@ -1,4 +1,3 @@
-// List of the project's sounds on the left of the Samples tab: a click opens the sound in the editor.
 import { For } from "solid-js";
 import { t } from "../i18n";
 import { IconWave } from "../common/icons";

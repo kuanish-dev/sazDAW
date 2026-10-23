@@ -1,5 +1,3 @@
-// Warping an audio clip to the tempo and its pitch: pure rules shared by the clip panel, timeline waveform and mock.
-// They mirror the backend (`daw-contracts/src/warp.rs`, `daw-project/src/warp_rules.rs`).
 import { PPQ, type Clip, type TempoMap } from "../api/types";
 import { framesBetween, tickAfterFrames } from "../common/tempoMap";
 

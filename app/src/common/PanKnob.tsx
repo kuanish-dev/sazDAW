@@ -1,4 +1,3 @@
-// Pan knob of a node (a track source or a bus): −1 left, 0 center, 1 right.
 import type { Id } from "../api/types";
 import { formatPan } from "../mixer/mixer";
 import { t } from "../i18n";

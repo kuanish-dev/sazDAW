@@ -1,9 +1,3 @@
-// Filter graph (`effects/FilterGraph.tsx`): the response of the built-in filter on the log frequency axis and what
-// dragging its handle changes. The response MIRRORS the state variable filter of `crates/daw-effects/src/filter.rs`:
-// Simper's trapezoidal SVF is the analog low-, high- and band-pass prototype under the bilinear transform, so its
-// response at `f` is the prototype's at tan(π·f/rate) / tan(π·cutoff/rate) (the cutoff clamped at 0.45 of the rate,
-// k = 1/Q, the band-pass normalized to 0 dB at the cutoff), mixed with the dry sound by `mix`: a change there must be
-// repeated here.
 import type { ParamInfo, Params } from "../api/types";
 import { type ParamUpdate, namedParams } from "../common/catalog";
 import { FREQ_MAX_HZ, fractionToFreq, freqX } from "./frequencyAxis";
@@ -40,13 +34,11 @@ function filterResponseDb(s: FilterSettings, freq: number): number {
   const g = Math.tan((Math.PI * Math.min(s.cutoff, DRAW_RATE * 0.45)) / DRAW_RATE);
   const w = Math.tan((Math.PI * freq) / DRAW_RATE) / g;
   const k = 1 / s.resonance;
-  // The prototype at s = jw: denominator 1 − w² + j·k·w; numerators 1 (low), −w² (high), j·k·w (band).
   const [denRe, denIm] = [1 - w * w, k * w];
   const [numRe, numIm] = s.type === BAND_PASS ? [0, k * w] : s.type === 1 ? [-w * w, 0] : [1, 0];
   const den = denRe * denRe + denIm * denIm;
   const re = (numRe * denRe + numIm * denIm) / den;
   const im = (numIm * denRe - numRe * denIm) / den;
-  // The mix fades from the dry sound (1) to the filtered one: 1 + (H − 1)·mix.
   const [mixRe, mixIm] = [1 + (re - 1) * s.mix, im * s.mix];
   return 10 * Math.log10(Math.max(mixRe * mixRe + mixIm * mixIm, 1e-20));
 }

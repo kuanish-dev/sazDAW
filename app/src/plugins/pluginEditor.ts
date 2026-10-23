@@ -1,4 +1,3 @@
-// Native plugin windows (VST3). The app owns the window; this only asks to open it.
 import type { EditorTarget } from "../api/types";
 import type { Core } from "../core/core";
 

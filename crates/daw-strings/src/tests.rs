@@ -43,7 +43,6 @@ fn measured_frequency(samples: &[f32], expected: f32) -> f32 {
 
 #[test]
 fn notes_are_in_tune_across_the_range() {
-    // E2 (low guitar string), A2, A3, A4 and E5: the fractional allpass keeps short periods in tune too.
     for note in [40u8, 45, 57, 69, 76] {
         let expected = crate::engine::frequency(note);
         let sound = pluck(note, &DRY, seconds(0.5));
@@ -78,7 +77,6 @@ fn a_longer_ring_rings_longer() {
 
 #[test]
 fn a_brighter_tone_has_more_high_harmonics() {
-    // The share of energy in the sample-to-sample difference grows with the high harmonics.
     let bright = |tone| brightness(&pluck(45, &Settings { tone, ..DRY }, seconds(0.3))[seconds(0.05)..]);
     assert!(bright(1.0) > bright(0.0) * 1.5);
 }
@@ -91,7 +89,6 @@ fn brightness(sound: &[f32]) -> f32 {
 
 #[test]
 fn drive_flattens_the_peaks_but_keeps_the_loudness() {
-    // Peak over RMS: a clipped sound's peaks are flattened, so it falls as the drive grows.
     let crest = |sound: &[f32]| sound.iter().fold(0.0f32, |a, v| a.max(v.abs())) / rms(sound);
     let at = |drive| pluck(45, &Settings { drive, ..DRY }, seconds(0.3))[seconds(0.05)..].to_vec();
     let (clean, crunch, fuzz) = (at(0.0), at(0.3), at(0.8));
@@ -148,7 +145,6 @@ fn play(factory: &dyn InstrumentFactory, params: &Params, note: u8) -> Vec<f32> 
 #[test]
 fn every_kind_sounds_within_full_scale() {
     for factory in factories() {
-        // A note in the middle of each instrument's range: E3, G4 on the ukulele, A1 on the bass.
         let note = match factory.kind() {
             "ukulele" => 67,
             "bass_guitar" => 33,

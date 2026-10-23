@@ -1,8 +1,3 @@
-// Shaper graph of the distortion, saturator and tape. Left: the transfer curve (input sample → output sample, −1..1) with the
-// sound now traced over it as an X-Y scope (each frame's input against its output: a pure shaper draws its own curve,
-// the tone filter opens it into a loop). Right: the newest wave going in (dim) and coming out (bright), started at a
-// rising zero crossing so a steady note stands still. The curve follows the knobs at once; the trace and the waves come
-// from `listenToNode`, keep their last shape and fade out when the sound stops. The math is `effects/shaperCurve.ts`.
 import { For, createSignal } from "solid-js";
 import type { Id } from "../api/types";
 import { follow, recentPeak } from "./liveLevels";
@@ -56,7 +51,6 @@ export function ShaperGraph(props: { node: Id; transfer: Transfer }) {
             </>
           )}
         </For>
-        {/* 1:1 — the sound untouched. */}
         <line x1="0" y1={SQUARE.height} x2={SQUARE.width} y2="0" stroke="var(--color-muted)" stroke-width="1" stroke-dasharray="3 3" opacity="0.6" />
         <path d={transferPath(props.transfer, SQUARE)} fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linejoin="round" />
         <path d={trace().xy} fill="none" stroke="var(--canvas-ink)" stroke-width="1" stroke-linejoin="round" opacity={0.7 * opacity()} />

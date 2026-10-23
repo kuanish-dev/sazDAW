@@ -1,5 +1,3 @@
-// Note rules inside a note clip (as `daw-project::note_rules`): auto length, bounds checks, note replacement, manual length,
-// controller lanes. Shared by clip notes (`handlers/notes.ts`) and a new clip with notes (`handlers/clips.ts`).
 import type { Clip, ControllerKind, ControllerLane, ControllerPoint, NewNote, Note, NoteContent } from "../api/types";
 import { controllerRange, sameKind } from "../pianoroll/controllers";
 import { BAR_TICKS, MAX_CLIP_LOOP_TICKS, STEP_TICKS } from "../api/types";
@@ -15,7 +13,6 @@ export function contentOf(clip: Clip): NoteContent {
 /** Auto length follows the notes: up to the end of the last occupied bar of length `bar` (the bar at the clip start), at least one bar. */
 export function fitLength(content: NoteContent, bar: number) {
   if (!content.autoLength) return;
-  // A controller point at tick t occupies the content up to t + 1, as in the backend.
   const lastPoint = Math.max(0, ...(content.controllers ?? []).map((lane) => (lane.points.at(-1)?.tick ?? -1) + 1));
   const lastEnd = Math.max(lastPoint, ...content.notes.map((n) => n.startTick + n.lengthTicks));
   content.loopTicks = Math.min(MAX_CLIP_LOOP_TICKS, Math.max(1, Math.ceil(lastEnd / bar)) * bar);

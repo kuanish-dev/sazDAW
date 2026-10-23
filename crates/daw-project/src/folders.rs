@@ -102,7 +102,6 @@ impl FolderControl for ProjectFolders {
                 .copied()
                 .or_else(|| folder_rules::topmost(project, tracks))
                 .ok_or_else(|| markers::FOLDER_WITHOUT_TRACKS.err())?;
-            // Tracks not listed leave the folder and stay where they are.
             for track in project.tracks.iter_mut().filter(|t| t.folder == Some(id) && !tracks.contains(&t.id)) {
                 track.folder = None;
             }

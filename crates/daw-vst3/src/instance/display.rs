@@ -65,7 +65,6 @@ pub fn pick_curve(plugin: Vec<f64>, shown: &[Option<Shown>]) -> Curve {
     let rising = values.windows(2).all(|w| w[1] >= w[0]);
     let falling = values.windows(2).all(|w| w[1] <= w[0]);
     if (rising || falling) && values.first() != values.last() {
-        // A rounded text of a straight line (fractions in percent) is a straight line: without rounding steps.
         let (first, last) = (values[0], values[values.len() - 1]);
         let line: Vec<f64> = (0..values.len()).map(|i| first + (last - first) * i as f64 / (values.len() - 1) as f64).collect();
         let straight = shown.iter().zip(&line).all(|(s, &v)| within_rounding(s, v));

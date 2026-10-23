@@ -1,7 +1,3 @@
-// Live picture of the master output on the master strip: spectrum bars (30 Hz – 16 kHz, log-spaced) under an
-// oscilloscope line. While it is shown it polls the latest window about 30 times a second (`audio.masterWindow`): reading
-// keeps the engine capturing the master, so leaving the mixer stops the polling and, a few seconds later, the copying. The
-// math is `mixer/visualizer.ts`.
 import { createMemo, onMount } from "solid-js";
 import type { MasterWindow } from "../api/types";
 import { decayPeak } from "./mixer";
@@ -56,7 +52,6 @@ export function MasterVisualizer() {
     if (samples.length === 0) return;
     const span = Math.min(TRACE_SAMPLES, samples.length);
     const start = traceStart(samples, span);
-    // Two points per pixel: enough for a smooth line without walking every sample.
     const step = span / (WIDTH * 2);
     ctx.strokeStyle = P.ink;
     ctx.globalAlpha = 0.85;
@@ -73,7 +68,6 @@ export function MasterVisualizer() {
     ctx.lineWidth = 1;
   };
 
-  // Captured only while the mixer shows it; a polling failure (already shown as a toast) stops it.
   const capture = createWatchedPoll({ read: master.masterWindow, show: draw }, POLL_MS);
   onMount(() => {
     draw({ samples: new Float32Array(0), sampleRate: 0 });

@@ -64,7 +64,6 @@ struct Mix {
 impl DemoBeat {
     fn fill(&self) -> Result<(), ContractError> {
         self.tempo.set_tempo(Bpm::new(128.0)?)?;
-        // Tracks come first, so they lead the list and the graph, as for a user who started with them.
         let drums = DRUMS
             .iter()
             .map(|(name, kind, pitch, _)| self.tracks.add_track(name.get(), Some(kind), *pitch))

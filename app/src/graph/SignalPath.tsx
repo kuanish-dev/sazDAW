@@ -1,9 +1,3 @@
-// The signal path view under the graph canvas ("Signal path" in the toolbar): the way a node's sound goes, from where it
-// comes from to the master (`graph/signalPathRules.ts`), laid out left to right like the graph. Tracks, buses and the
-// master are small cards; every effect shows its live graph (`EffectGraph`), all of them hearing their nodes at once
-// (`effects/nodeSounds.ts` captures up to `MAX_WATCHED_NODES`). The path follows the selection, but a click on a node
-// already on it keeps the whole path (selecting the bus a track goes into must not cut the path at the bus), and it stays
-// while nothing is selected. A click on a card's header selects its node, so its settings open in the inspector.
 import { For, Show, createMemo } from "solid-js";
 import { type GraphNode, type Id, MAX_WATCHED_NODES } from "../api/types";
 import { nodeLabel } from "./graphRules";

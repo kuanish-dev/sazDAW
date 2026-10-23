@@ -1,6 +1,3 @@
-// The live band gains of the band-split effects (multiband compressor, dynamic EQ) as their graphs show them: the
-// engine's readings (`tick.bands`: per band the value farthest from 0 dB since the previous tick) held and let back
-// toward 0 dB calmly, like the gain reduction meter, so a short cut or boost stays visible for a moment.
 import type { BandGainsReading, Id } from "../api/types";
 
 /** How fast a shown band gain returns toward 0 dB, dB per second (the gain reduction meter's speed). */

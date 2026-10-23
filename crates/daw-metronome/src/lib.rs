@@ -88,13 +88,7 @@ impl AudioProcessor for Metronome {
         let ticks_per_beat = timing.time_signature.ticks_per_beat();
         let beats_per_bar = i64::from(timing.time_signature.numerator());
         let origin = timing.signature_start;
-        // A beat sounds from frame `BlockTiming::frame_at`, the same frame as the engine's notes, so the click matches
-        // a note on the beat. A segment takes the beats whose frame falls into it; a beat between the last frame of the
-        // previous segment and the start of this one (its `frame_at` there would be past the end) sounds here from
-        // frame 0, just like a note.
         let after_previous = timing.start_tick - timing.ticks_per_frame * (1.0 - 1e-6);
-        // Beats count from the signature start; there are no negative ticks: the engine with latency compensation
-        // gives the metronome the segments "before zero" (see `daw-engine`).
         let first_beat = (-origin / ticks_per_beat).ceil();
         let mut beat = (((after_previous - origin) / ticks_per_beat).floor() + 1.0).max(first_beat);
 
@@ -169,7 +163,6 @@ mod tests {
     const TICKS_PER_FRAME: f64 = 1920.0 / SR as f64;
 
     fn timing(start_tick: f64, playing: bool) -> BlockTiming {
-        // 120 BPM: 2 beats per second → 1920 ticks per second.
         BlockTiming {
             frames: 0,
             playing,
@@ -229,7 +222,6 @@ mod tests {
     #[test]
     fn click_starts_at_beat_position_inside_block() {
         let (_c, mut m) = prepared();
-        // The next beat is at tick 960, exactly 100 frames away.
         let start = 960.0 - 100.0 * TICKS_PER_FRAME;
         let out = render(m.as_mut(), &timing(start, true), 512);
         let frame = first_nonzero_frame(&out).expect("click expected");
@@ -244,7 +236,6 @@ mod tests {
         let timing = BlockTiming { frames: 512, ..timing(start, true) };
         let out = render(m.as_mut(), &timing, 512);
         assert_eq!(timing.frame_at(960.0), 101);
-        // The first click sample is sin(0) = 0; it becomes audible from the next frame.
         assert_eq!(first_nonzero_frame(&out), Some(102));
     }
 
@@ -266,12 +257,10 @@ mod tests {
         let mut start = 0.0;
         let mut samples = Vec::new();
         for _ in 0..200 {
-            // 200 blocks of 10 ms = 2 s = 4 beats at 120 BPM.
             let t = timing(start, true);
             samples.extend(render(m.as_mut(), &t, frames).chunks(2).map(|f| f[0]));
             start = BlockTiming { frames, ..t }.end_tick();
         }
-        // A click is a continuous stretch of sound; there is long silence between clicks.
         let mut clicks = 0;
         let mut silence = usize::MAX;
         for sample in samples {
@@ -295,7 +284,6 @@ mod tests {
 
     #[test]
     fn accents_follow_a_signature_change() {
-        // A 3/4 bar from tick 0 to 2880, then 4/4: accents on beats 0 and 3 (2880), then 4 beats later (6720).
         let three_four = BlockTiming { time_signature: TimeSignature::new(3, 4).unwrap(), ..timing(0.0, true) };
         let four_four = BlockTiming { signature_start: 2880.0, ..timing(2880.0, true) };
         let accents = |segment: BlockTiming, beats: &[f64]| -> Vec<bool> {

@@ -32,7 +32,6 @@ pub(crate) enum Style {
 
 pub(crate) fn style(kind: &str) -> Style {
     match kind {
-        // The electric guitar has the same strings and tuning: the same shapes.
         GUITAR_KIND | ELECTRIC_GUITAR_KIND => Style::Strings { tuning: &GUITAR, root_in_bass: true },
         UKULELE_KIND => Style::Strings { tuning: &UKULELE, root_in_bass: false },
         BASS_GUITAR_KIND => Style::Bass { lowest: BASS_LOWEST },

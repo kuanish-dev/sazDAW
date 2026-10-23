@@ -94,7 +94,6 @@ impl Clip {
         let segment = comp.get(index)?;
         let edge = |i: usize| comp.get(i).map_or(clip_end, |s| clip_start + f64::from(s.start_ticks).min(f64::from(self.length_ticks)));
         let (start, end) = (edge(index), edge(index + 1));
-        // Half of the transition at the boundary before segment `i` (between `i - 1` and `i`).
         let half = |i: usize| {
             if i == 0 || i >= comp.len() {
                 return 0.0;
@@ -155,7 +154,6 @@ mod tests {
         let map = TempoMap::constant(Bpm::new(120.0).unwrap(), TimeSignature::FOUR_FOUR);
         let clip = comped(vec![CompSegment { start_ticks: 0, take: 1 }, CompSegment { start_ticks: 1920, take: 2 }]);
         assert_eq!(clip.take_span_count(), 2);
-        // 10 ms at 120 BPM = 19.2 ticks, 9.6 on each side of the boundary at 960 + 1920.
         let first = clip.take_span(0, &map).unwrap();
         let second = clip.take_span(1, &map).unwrap();
         assert_eq!((first.take, first.start, first.fade_in), (1, 960.0, 0.0));

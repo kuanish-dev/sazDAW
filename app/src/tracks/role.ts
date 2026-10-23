@@ -1,5 +1,3 @@
-// The tracks role: the tracks themselves (`tracks.ts`) and the jobs around them on the timeline — clips, folders, markers
-// and rendering a track to audio.
 import { automationRole } from "../automation/role";
 import { defineRole, useRole } from "../core/roles";
 import { shellRole } from "../shell/role";

@@ -1,6 +1,3 @@
-// Draws the clips of one automation lane row on the timeline canvas: a tinted body and title strip in the automation
-// color, the curve as the engine plays it (`clipValueAt`: the pattern repeated over the clip) and thin lines at the
-// pattern repeats, like looped note clips. Only the visible part of each clip is sampled.
 import type { AutomationClip, AutomationLane } from "../api/types";
 import { autoClipEnd, valueToRatio, type Range } from "../automation/automationRules";
 import { clipValueAt } from "../automation/automationCurve";
@@ -42,7 +39,6 @@ function drawClip(ctx: CanvasRenderingContext2D, v: LaneRowView, clip: Automatio
     for (const tick of repeatTicks(clip.startTick, autoClipEnd(clip), clip.loopTicks)) {
       ctx.fillRect(tick * v.pxPerTick, y + CLIP_TITLE_PX, 1, h - CLIP_TITLE_PX);
     }
-    // The curve, sampled over the visible part of the clip.
     const top = y + CLIP_TITLE_PX + CURVE_PAD;
     const span = Math.max(1, h - CLIP_TITLE_PX - CURVE_PAD * 2);
     const from = Math.max(x, v.window.left);

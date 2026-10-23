@@ -39,7 +39,6 @@ impl StageControl for ProjectStage {
     fn place(&self, node: NodeId, pan: f32, place: StagePlace) -> Result<(), ContractError> {
         let pan = number(pan)?.clamp(-1.0, 1.0);
         let place = StagePlace { depth: number(place.depth)?, height: number(place.height)? }.clamped();
-        // One key per channel: the moves of a drag merge into one undo step.
         self.project.edit_keyed(&tr!("Move on stage", "Переместить на сцене"), Some(format!("stage:{node}")), |project| {
             let placed = on_stage(project);
             let strip = strip_mut(project, node)?;

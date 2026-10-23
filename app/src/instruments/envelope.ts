@@ -1,4 +1,3 @@
-// Volume envelope (ADSR and variants) for the graph: point layout and what dragging a handle changes.
 import type { ParamInfo } from "../api/types";
 import { clamp } from "../common/math";
 

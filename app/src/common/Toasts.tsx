@@ -1,4 +1,3 @@
-// Stack of notifications in the bottom-right corner; shows the toasts (`useToasts`), closes one via `dismissToast`.
 import { For } from "solid-js";
 import { t } from "../i18n";
 import { IconClose, IconError, IconInfo } from "./icons";

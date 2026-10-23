@@ -1,7 +1,3 @@
-// The dynamic EQ's graph (`effects/DynamicEqGraph.tsx`): its response with every band at its full gain (as far as it
-// can go) and with the bands where they are now (the engine's band gains), the band handles and what dragging them
-// changes. MIRRORS `crates/daw-effects/src/dynamic_eq.rs`: four peaking bands (the biquad mirror, `biquad.ts`) in a row,
-// each at its gain times how far it is engaged: a change there must be repeated here. The gain axis is the EQ's (±18 dB).
 import type { ParamInfo, Params } from "../api/types";
 import { magnitudeDb, peaking } from "./biquad";
 import type { ParamUpdate } from "../common/catalog";

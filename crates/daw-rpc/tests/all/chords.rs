@@ -16,7 +16,6 @@ fn strums_are_listed_and_a_chord_part_builds_on_a_new_guitar_track() {
     let strums = call(&table, c, "chords.strums", Value::Null);
     assert_eq!(strums[1], json!({ "id": "six", "name": "Six", "grid": "D.DU.UDU" }));
 
-    // Defaults: from bar zero, one pass, no replacing.
     let report = call(
         &table,
         c,

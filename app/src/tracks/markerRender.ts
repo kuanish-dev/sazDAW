@@ -1,6 +1,3 @@
-// Draws section markers: a named flag on the ruler (`drawMarkerFlags`, ruler canvas) and a thin start line through all
-// rows (`drawMarkerLines`, rows canvas). Kept apart from the grid and ruler so signature and tempo flags have their own
-// drawing functions.
 import type { Marker } from "../api/types";
 import { vline } from "../common/canvas";
 import { inWindow, type ScrollWindow } from "../common/scrollWindow";

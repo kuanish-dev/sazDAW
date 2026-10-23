@@ -18,7 +18,6 @@ fn session(arp: bool) -> Session {
     let session = start(false);
     let controls = &session.controls;
     controls.tempo.set_tempo(Bpm::new(120.0).unwrap()).unwrap();
-    // The tails after the bar are compared, not the song looping back to its start.
     controls.transport.set_song_loop(false);
     let track = add_synth_track(controls, "Synth");
     let clip = note_clip(controls, track, 0, 1).id;

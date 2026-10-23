@@ -134,7 +134,6 @@ fn quantize(note: Note, grid: u32, strength: f64, ends: bool, limit: u32) -> Not
     let line = nearest_line(start, grid);
     let new_start = toward(start, line, strength);
     let length = if ends {
-        // The end does not collapse onto the start: at least the line after the start.
         let end_line = nearest_line(end, grid).max(line + grid);
         toward(end, end_line, strength) - new_start
     } else {
@@ -171,7 +170,6 @@ fn humanize(group: &[Note], timing: u32, velocity: u8, seed: u32, limit: u32) ->
     group
         .iter()
         .map(|note| {
-            // Both numbers are always drawn, even with zero spread: one seed then gives the same shifts at any settings.
             let dt = random.offset(timing);
             let dv = random.offset(u32::from(velocity));
             let velocity = (i64::from(note.velocity) + dv).clamp(1, 127) as u8;
@@ -228,7 +226,6 @@ fn vary_notes(content: &mut NoteContent, positions: &[usize], variation: &Variat
         to_new(*note).validate(limit)?;
     }
     let created = create_notes(content, varied.added)?;
-    // Each group note's place in the content is taken by its new form; removed ones drop out.
     let mut changed = varied.kept.into_iter();
     let mut notes = Vec::with_capacity(others.len() + kept.len() + created.len());
     for (i, note) in content.notes.iter().enumerate() {

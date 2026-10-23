@@ -1,9 +1,3 @@
-// Dynamic EQ graph: on the EQ's axes (20 Hz–20 kHz, ±18 dB) over the live spectrum of the node's output
-// (`LiveSpectrum`), the response with every band at its full gain (dashed: as far as it can go) and the response with
-// the bands where they are now (bright), plus at each band a bar from 0 dB to its live gain, so a band moves with the
-// sound. Each band has a handle at its frequency and full gain: dragging sets both, the wheel sets its width (Q),
-// double-click resets the band; every change goes through `onChange` like a knob. The live gains are the engine's band
-// gains (`bandGains.ts`). The math is `effects/dynamicEqCurve.ts`.
 import { For, Index, Show, createMemo } from "solid-js";
 import type { Id, ParamInfo, Params } from "../api/types";
 import { type DynamicBand, bandHandle, dragBand, dynamicEqPath, dynamicEqSettings, fullGains, wheelBandQ } from "./dynamicEqCurve";
@@ -25,7 +19,6 @@ export function DynamicEqGraph(props: { node: Id; infos: ParamInfo[]; values: Pa
 
   const onMove = (index: number, band: DynamicBand, event: PointerEvent) => {
     if (event.buttons !== 1 || active !== index) return;
-    // The SVG stretches to the panel width: convert the screen point into its viewBox units.
     const rect = svg.getBoundingClientRect();
     const point = localPoint(svg, event);
     for (const update of dragBand(band, (point.x / rect.width) * VIEW.width, (point.y / rect.height) * VIEW.height, VIEW)) {
@@ -67,7 +60,6 @@ export function DynamicEqGraph(props: { node: Id; infos: ParamInfo[]; values: Pa
             </For>
             <path d={dynamicEqPath(b(), fullGains(b()), VIEW)} fill="none" stroke="var(--color-accent)" stroke-width="1.2" stroke-dasharray="4 3" opacity="0.6" />
             <path d={dynamicEqPath(b(), live(), VIEW)} fill="none" stroke="var(--color-accent)" stroke-width="2" stroke-linejoin="round" />
-            {/* `Index`, not `For`: band objects are rebuilt on every value change, and a recreated element would lose the pointer capture mid-drag. */}
             <Index each={b()}>
               {(band, index) => {
                 const point = () => bandHandle(band(), VIEW);

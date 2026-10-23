@@ -122,8 +122,6 @@ mod tests {
 
     #[test]
     fn stem_holds_only_the_bus_sound_not_the_dry_sound_of_what_also_plays_to_the_master() {
-        // Track 10 plays to the master and sends to bus 30 through compressor 21; track 14 keys the compressor's
-        // sidechain and also plays to the master.
         let graph = Graph {
             nodes: vec![
                 node(MASTER, NodeKind::Master { volume: 1.0 }),

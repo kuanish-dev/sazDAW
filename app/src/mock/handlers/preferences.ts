@@ -1,4 +1,3 @@
-// App preferences: kept in `MockWorld`, checked as the backend does (`Preferences::checked` after reading the JSON).
 import type { Preferences } from "../../api/types";
 import {
   ACCENT_CHOICES, AUTOSAVE_MAX_SECONDS, AUTOSAVE_MIN_SECONDS, AUTOSAVE_OFF, THEME_CHOICES, TRACK_ROW_HEIGHTS, UI_SCALE_MAX, UI_SCALE_MIN,
@@ -13,7 +12,6 @@ const MAX_AUTHOR_CHARS = 100;
 
 function check(p: Preferences) {
   const { appearance } = p;
-  // An unknown choice does not even parse in the backend.
   const unknown = [
     [isLanguage(p.language), p.language], [THEME_CHOICES.includes(appearance.theme), appearance.theme],
     [ACCENT_CHOICES.some((c) => c.value === appearance.accent), appearance.accent], [appearance.trackHeight in TRACK_ROW_HEIGHTS, appearance.trackHeight],
@@ -35,7 +33,6 @@ export function preferencesHandlers(w: MockWorld): HandlerSet {
   h["preferences.get"] = () => structuredClone(w.preferences);
   h["preferences.set"] = ({ preferences }: { preferences: Preferences }) => {
     check(preferences);
-    // Like the backend: author name trimmed, an empty folder means "not set".
     w.preferences = structuredClone({
       ...preferences,
       profile: { ...preferences.profile, author: preferences.profile.author.trim(), projectsFolder: preferences.profile.projectsFolder || null },

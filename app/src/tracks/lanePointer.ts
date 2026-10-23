@@ -1,7 +1,3 @@
-// Mouse on the automation lane rows of the timeline: a click selects a clip (its pattern opens in the clip panel) or,
-// on empty space, the lane row; dragging a clip moves it along its lane, its right edge resizes it (both on the grid,
-// never onto another clip of the lane); double-click on empty space adds a one-bar clip; right-click deletes a clip.
-// Every handler returns whether the press was on a lane row: the rest goes to `timelinePointer`.
 import type { AutomationClip, AutomationLane, Id, TempoMap } from "../api/types";
 import type { Automation } from "../automation/automation";
 import { freeSpanAt, overlapsAutoClips } from "../automation/automationRules";
@@ -80,7 +76,6 @@ export function createLanePointer(deps: LanePointerDeps) {
       const next = drag.mode === "move"
         ? { ...clip, startTick: Math.max(0, snapped(tick - drag.grab)) }
         : { ...clip, lengthTicks: Math.max(minClipLength(clip.startTick, deps.snap(), deps.tempoMap()), snapped(tick) - clip.startTick) };
-      // A clip never lands on another one of its lane: the draft stays where it last fit.
       if (!overlapsAutoClips(lane, next.startTick, next.lengthTicks, clip.id)) deps.setDraft({ lane: lane.id, clip: next });
       return true;
     },

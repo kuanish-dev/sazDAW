@@ -1,7 +1,3 @@
-// Chorus graph: the delay of the two voices over the last 2 seconds, the newest at the right edge — the left voice
-// bright, the right a quarter turn ahead — inside the band the depth sweeps around the base delay. The sweep scrolls as
-// the LFO turns and follows the knobs at once; the voices' dots and the band light up with the chorus's sound
-// (`listenToNode`) and fade out when it stops. The math is `effects/chorusSweep.ts`.
 import { For, Show, createMemo, createSignal } from "solid-js";
 import type { Id, ParamInfo, Params } from "../api/types";
 import { CHORUS_MAX_MS, type Voice, advancePhase, chorusSettings, delayY, sweepPath, voiceDelayMs } from "./chorusSweep";
@@ -50,7 +46,6 @@ export function ChorusGraph(props: { node: Id; infos: ParamInfo[]; values: Param
                 </>
               )}
             </For>
-            {/* The swing: from delay − depth to delay + depth, brighter while the chorus sounds. */}
             <rect
               x="0"
               y={delayY(VIEW, s().delay + s().depth)}

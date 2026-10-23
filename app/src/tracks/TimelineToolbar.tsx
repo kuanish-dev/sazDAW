@@ -1,5 +1,3 @@
-// Toolbar strip above the timeline: tools (icons), "+ Track", drum and chord parts, grid, loop, the live automation write mode and
-// the selected audio clip's properties.
 import { For, type JSX, Show, createSignal } from "solid-js";
 import { STEP_TICKS, type AutomationWriteMode } from "../api/types";
 import { kindChoices } from "../common/catalog";
@@ -70,7 +68,6 @@ const { clips } = tracks;
       {toolButton("split", <IconScissors />, tb().split, tb().splitHint)}
       {toolButton("erase", <IconEraser />, tb().erase, tb().eraseHint)}
       <ToolbarDivider />
-      {/* The new track's name and input pitch are decided by the `tracks.create` action. */}
       <PickSelect
         class="text-xs" placeholder={tb().addTrack} options={trackKinds()}
         onPick={(value) => void tracks.create(value === AUDIO_TRACK ? null : value)}

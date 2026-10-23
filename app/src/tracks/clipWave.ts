@@ -1,4 +1,3 @@
-// Audio clip waveform on the timeline: from the whole-sample envelope, one [min, max] pair per clip pixel.
 import { PPQ } from "../api/types";
 import { clamp } from "../common/math";
 

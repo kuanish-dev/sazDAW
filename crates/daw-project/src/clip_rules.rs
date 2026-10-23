@@ -38,7 +38,6 @@ fn check_track(project: &Project, track: TrackId) -> Result<(), ContractError> {
         if next_start == start || next_end <= end {
             return Err(clips::AUDIO_CLIP_INSIDE_ANOTHER.with("track", track));
         }
-        // Ends grow with starts (nothing is nested), so a third clip at one point is the one after next.
         if spans.get(i + 2).is_some_and(|&(third, _)| third < end) {
             return Err(clips::TOO_MANY_AUDIO_CLIPS_AT_ONCE.with("track", track));
         }
@@ -107,7 +106,6 @@ pub(crate) fn trim_start(clip: &Clip, start: u32, map: &TempoMap, sample_rate: u
             let frames_from =
                 |tick: u32| offset + clip.ticks_to_source_frames(f64::from(tick) - f64::from(clip.start_tick), map, sample_rate);
             if frames_from(start) < 0.0 {
-                // Nothing before the file start: the edge stops where the offset reaches zero.
                 let file_start = f64::from(clip.start_tick) + clip.source_frames_to_ticks(-offset, map, sample_rate);
                 start = file_start.ceil().max(0.0) as u32;
             }

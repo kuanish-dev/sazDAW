@@ -19,7 +19,6 @@ fn a_placed_channel_carries_its_place_in_the_project_json() {
     };
     assert!(kind(&table).get("stage").is_none(), "off the stage: no `stage` field");
 
-    // Behind the listener and a little below the ears.
     call(&table, c, "stage.place", json!({ "node": bus, "pan": 0.5, "depth": -0.75, "height": -0.25 }));
     let placed = kind(&table);
     assert_eq!(placed["pan"], 0.5);

@@ -1,5 +1,3 @@
-// Track MIDI effect actions (chain before the instrument): add, remove, reorder, parameter, bypass.
-// Parameter values and bypass show immediately (`patchProject`); a backend refusal is a notification.
 import type { Id, NoteEffectSpec, Project } from "../api/types";
 import type { Core } from "../core/core";
 

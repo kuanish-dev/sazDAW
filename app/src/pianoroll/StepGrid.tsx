@@ -1,5 +1,3 @@
-// Step view of a clip: a row for each pitch that has notes (plus the track's default pitch); for drums this is
-// a single beat row. A click toggles a one-step note, dragging paints along the same row.
 import { For, createMemo, onCleanup, onMount } from "solid-js";
 import type { Track } from "../api/types";
 import { clipBarTicks, clipNotes, ghostTicks, playheadInLoop, type NoteClip } from "./noteClip";
@@ -33,7 +31,6 @@ export function StepGrid(props: { clip: NoteClip; track: Track }) {
     return position === null ? null : activeStepOf(playheadInLoop(props.clip.startTick, props.clip.lengthTicks, props.clip.content.loopTicks, position), realSteps());
   };
 
-  // Drag painting: the mode is set by the first press and applies to the same row.
   let paint: { mode: "add" | "remove"; pitch: number } | null = null;
   onMount(() => {
     const stop = () => { paint = null; };

@@ -1,4 +1,3 @@
-// "What plays each drum": the built-in sound, your track, your sample or "don't play". The choice lives in the drums role (`kit`).
 import { For, Show } from "solid-js";
 import { AUTO_CHOICE, SKIP_CHOICE, effectiveChoice, laneLabel, sampleChoice, trackChoice } from "./drumPart";
 import { instrumentTracks } from "../tracks/trackRules";

@@ -1,4 +1,3 @@
-// A "loading" veil with a spinner during a long operation (`useBusy()`): blocks work while a project opens.
 import { Show } from "solid-js";
 
 export function LoadingOverlay(props: { text: string | null }) {

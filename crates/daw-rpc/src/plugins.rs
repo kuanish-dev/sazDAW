@@ -24,7 +24,6 @@ struct SetDisabled {
 }
 
 pub(crate) fn register(table: &mut RpcTable) {
-    // The answer `{ found, effects, instruments, failed: [{ path, reason }] }` is the `ScanReport` itself.
     table.add(
         "plugins.scan",
         "Finds the installed VST3 plugins (built-in instruments and effects are not plugins and need no scan).",

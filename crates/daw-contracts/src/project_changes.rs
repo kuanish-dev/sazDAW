@@ -89,7 +89,6 @@ fn apply_list<T: Clone>(items: &mut Vec<T>, changes: ListChanges<T>, id: fn(&T) 
 impl ProjectChanges {
     /// The whole project as changes: what a reader that has nothing gets.
     pub fn whole(project: &Project) -> Self {
-        // Every field by name: a new project field does not compile until it travels here (and in `between`, `apply`).
         let Project {
             name,
             tempo_map,

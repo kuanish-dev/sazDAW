@@ -1,5 +1,3 @@
-// Catalog of instrument and effect kinds (built-in and discovered VST3) with their parameter descriptions.
-
 /** number: a value in real units (the unit follows the comma in the label); switch: 0/1; sample: a sample id;
  *  choice: option index 0…n-1 into `choices`. */
 export type ParamKind = "number" | "switch" | "sample" | "choice";

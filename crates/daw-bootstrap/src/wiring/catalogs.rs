@@ -27,8 +27,6 @@ pub(super) fn build(config: &SessionConfig, devices: &Devices, samples: Arc<dyn 
     instruments.register_all(daw_strings::factories());
     let effects = Arc::new(EffectRegistry::new());
     effects.register_all(daw_effects::factories());
-    // Third-party plugins only in a real session and only from the previous scan cache: tests must not depend on what is
-    // installed on the machine, and startup must not load foreign code.
     let (plugins, directory) = plugins::scanner(config, devices, &effects, &instruments, deps);
     Catalogs { instruments, effects, note_effects: Arc::new(NoteEffects), plugins, directory }
 }

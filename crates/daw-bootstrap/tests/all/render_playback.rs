@@ -61,7 +61,6 @@ fn graph_effects_change_the_sound() {
 
     controls.transport.stop();
     render(&mut session, 100);
-    // A reverb between the instrument and the master: instrument → effect → master.
     let source = source_node(&controls, track);
     let fx = controls.graph.add_effect("reverb", &Params::new(), 220.0, 40.0).unwrap();
     controls.graph.disconnect(source, MASTER, false).unwrap();
@@ -71,7 +70,6 @@ fn graph_effects_change_the_sound() {
     controls.graph.set_effect_param(fx, "room", 0.9).unwrap();
     controls.transport.play();
     let wet = render(&mut session, 48_000);
-    // The note ends at 0.23 s; by 0.8 s the dry sound is silent, the reverb has a tail.
     assert!(rms(&dry[38_400..]) < 0.001);
     assert!(rms(&wet[38_400..]) > 0.002, "the reverb tail, rms = {}", rms(&wet[38_400..]));
 
@@ -101,7 +99,6 @@ fn sampler_plays_an_imported_file_at_the_requested_pitch() {
     let out = render(&mut session, 24_000);
     assert!(rms(&out) > 0.05, "the file sounds, rms = {}", rms(&out));
 
-    // An octave up the frequency doubles: count zero crossings.
     let crossings =
         |buffer: &[f32]| buffer.chunks(2).map(|f| f[0]).collect::<Vec<_>>().windows(2).filter(|w| w[0] <= 0.0 && w[1] > 0.0).count();
     let base = crossings(&out[2_000..20_000]);
@@ -126,7 +123,6 @@ fn loop_region_keeps_playing_past_the_end_of_clips_in_a_loop() {
     controls.clips.set_loop_region(Some((0, 3840))).unwrap();
     assert_eq!(controls.transport.loop_region(), Some((0, 3840)));
     controls.transport.play();
-    // Five seconds at 128 BPM is more than one bar; the position does not go past the loop end.
     render(&mut session, 5 * 48_000);
     assert!(controls.transport.position_ticks() < 3840);
     controls.transport.stop();
@@ -137,12 +133,10 @@ fn playing_to_the_song_end_jumps_back_to_the_start_and_plays_on() {
     let mut session = start(false);
     let controls = session.controls.clone();
     controls.tempo.set_tempo(Bpm::new(120.0).unwrap()).unwrap();
-    // One note at the start of a one-bar song: a bar at 120 BPM and 48 kHz is 96 000 frames.
     synth_track_with_note(&controls, note(60, 0, 960));
     controls.transport.play();
     let first = render(&mut session, 96_000);
     assert!(rms(&first[..24_000 * 2]) > 0.01, "the note plays");
-    // Past the song end the playhead is back in bar 1 and the note sounds again.
     let second = render(&mut session, 24_000);
     assert!(controls.transport.position_ticks() < 3840, "back at the start: {}", controls.transport.position_ticks());
     assert!(rms(&second) > 0.01, "playback goes on from bar 1: rms = {}", rms(&second));
@@ -158,7 +152,7 @@ fn live_notes_play_even_when_stopped() {
     let mut session = start(false);
     let controls = session.controls.clone();
     let track = add_synth_track(&controls, "Synth");
-    render(&mut session, 512); // the engine gets the instrument
+    render(&mut session, 512);
     controls.live_notes.note_on(track, 60, 1.0);
     assert!(rms(&render(&mut session, 4_800)) > 0.005);
     controls.live_notes.note_off(track, 60);
@@ -191,25 +185,21 @@ fn a_hand_picked_region_becomes_a_track_that_plays_only_that_sound() {
     let sample = controls.samples.import(&dir.join("tones.wav")).unwrap();
     assert_eq!(sample.frame_count, 44_100);
 
-    // The waveform shows the pause between the tones.
     let wave = controls.sample_editor.waveform(sample.id, 0, 44_100, 100).unwrap();
     assert_eq!(wave.peaks.len(), 100);
     assert!(wave.peaks[20].1 > 0.5, "the first tone has sound");
     assert!(wave.peaks[43].1 < 0.01, "the pause is quiet (bucket 43 ≈ 0.43 s)");
     assert!(wave.peaks[70].1 > 0.5, "the second tone has sound");
 
-    // A hand-picked region 0.5–0.9 s → a sampler track (in one undo step).
     let ids = controls.tracks.add_tracks(vec![sampler_track("High", sample.id, 0.5, 0.9)]).unwrap();
     let clip = note_clip(&controls, ids[0], 0, 1);
     controls.notes.add_note(clip.id, NewNote { pitch: 60, start_tick: 0, length_ticks: 960, velocity: 127 }).unwrap();
     controls.transport.play();
     let out = render(&mut session, 24_000);
-    // 0.4 s of sound = 18 000 frames at 48 kHz; an 880 Hz tone → ~350 zero crossings, not ~176 as for 440 Hz.
     let crossings = zero_crossings(&out[..18_000 * 2]);
     assert!((300..400).contains(&crossings), "the high tone: {crossings}");
     assert!(peak(&out[19_500 * 2..]) < 1e-3, "silence after the region (0.4 s of the file at 44.1 kHz = 19 200 frames at 48 kHz)");
 
-    // Steps: the note, the clip, then creating the track; tracks from a batch go with one undo.
     assert!(controls.history.undo());
     assert!(controls.history.undo());
     assert!(controls.history.undo(), "creating the track");

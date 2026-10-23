@@ -1,5 +1,3 @@
-// The song's tempo map (`tempo.*`): edits are undo steps; an invalid map is refused with the backend's codes
-// (as `TempoMap::new` in `daw-contracts/src/tempo_map.rs`).
 import type { SignatureChange, TempoChange, TempoMap } from "../../api/types";
 import { MAX_SIGNATURE_CHANGES, MAX_TEMPO_CHANGES, MAX_TICK } from "../../common/tempoMap";
 import { barTicks, MAX_NUMERATOR, MAX_TEMPO, MIN_TEMPO } from "../../common/time";
@@ -48,7 +46,6 @@ function replace(w: MockWorld, label: string, next: TempoMap) {
   for (const change of next.tempos) checkBpm(change.bpm);
   for (const change of next.signatures) checkSignature(change.signature);
   checkMap(next);
-  // As in the backend: the first point never ramps.
   const tempos = next.tempos.map((c, i) => ({ ...c, ramp: i > 0 && Boolean(c.ramp) }));
   w.edit(label, (p) => { p.tempoMap = { tempos, signatures: next.signatures }; });
 }
@@ -65,7 +62,6 @@ export function tempoHandlers(w: MockWorld): HandlerSet {
     const signatures = map().signatures.map((c, i) => (i === 0 ? { ...c, signature: { numerator, denominator } } : c));
     replace(w, t().mockEdits.history.changeSignature, { ...map(), signatures });
   };
-  // The browser has no files: the chosen "file" carries a map with two tempos and a signature change, so there is something to see.
   h["midi.importTempo"] = () => replace(w, t().mockEdits.history.changeTempoAndSignature, {
     tempos: [{ tick: 0, bpm: 120, ramp: false }, { tick: 15_360, bpm: 140, ramp: true }],
     signatures: [{ tick: 0, signature: { numerator: 4, denominator: 4 } }, { tick: 30_720, signature: { numerator: 7, denominator: 8 } }],

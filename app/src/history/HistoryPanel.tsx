@@ -1,7 +1,3 @@
-// Edit history (the clock button next to undo/redo): the project's undo history as a vertical timeline, newest on top.
-// The current point is marked "Now"; undone steps (redo brings them back) sit dimmed above it on a dashed rail; AI
-// requests (one squashed step labelled "AI: …") carry a spark. A click walks undo/redo to that step; the list is re-read
-// with the project status, i.e. after every project change.
 import { createEffect, createResource, createSignal, For, on, Show } from "solid-js";
 import type { HistorySteps } from "../api/types";
 import { t } from "../i18n";
@@ -43,7 +39,6 @@ export function HistoryButton() {
 function HistoryPanel(props: { onClose: () => void }) {
   const { status } = useProjectCopy();
   const history = useHistory();
-  // The status is a new object after every re-read of the project, so the list follows each change.
   const [steps] = createResource(status, () => history.steps());
   const rows = () => {
     const latest = steps.latest;
@@ -54,7 +49,6 @@ function HistoryPanel(props: { onClose: () => void }) {
   let list: HTMLDivElement | undefined;
 
   closeOnOutside(() => root, props.onClose);
-  // Keep the current point in sight: on opening and after every walk.
   createEffect(on(rows, () => queueMicrotask(() => list?.querySelector('[aria-current="step"]')?.scrollIntoView({ block: "nearest" }))));
 
   const go = async (offset: number) => {
@@ -102,8 +96,6 @@ function HistoryRow(props: { row: Row; top: boolean; hint: string; onPick: () =>
     if (label === null) return msg().start;
     return (ai() && label.slice(AI_PREFIX.length).trim()) || label;
   };
-  // The rail joins the dots: dashed through the undone steps, solid along the path the project took. A row's upper half
-  // belongs to the segment from the row above (undone when this row is current or undone), its lower half to the one below.
   const segment = (dashed: boolean) => (dashed ? "border-l border-dashed border-muted/60" : "border-l-2 border-accent/45");
 
   return (

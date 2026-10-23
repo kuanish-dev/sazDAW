@@ -163,7 +163,6 @@ fn low_cut_removes_lows_and_high_cut_removes_highs() {
         synth.note_on(note, 1.0);
         peak(&render(synth.as_mut(), 9_600)[4_800..])
     };
-    // A2 = 110 Hz, A6 = 1760 Hz.
     assert!(level(45, 1_000.0, 18_000.0) < level(45, 20.0, 18_000.0) * 0.3, "the low cut removes a low note");
     assert!(level(93, 1_000.0, 18_000.0) > level(93, 20.0, 18_000.0) * 0.7, "and keeps a high one");
     assert!(level(93, 20.0, 200.0) < level(93, 20.0, 18_000.0) * 0.3, "the high cut removes a high note");
@@ -194,7 +193,6 @@ fn out_of_range_values_are_clamped() {
     let mut synth = make(&[("high_cut", 1e9), ("gain", 1e9), ("waveform", 42.0), ("sustain", 7.0)]);
     synth.note_on(60, 1.0);
     let out = render(synth.as_mut(), 4_800);
-    // Waveform 42 is noise; through a filter open near the top it may overshoot a little (at most 1.31).
     assert!(out.iter().all(|v| v.is_finite() && v.abs() < 1.35));
 }
 
@@ -230,7 +228,6 @@ fn a_synced_lfo_takes_the_tempo_from_the_song() {
         ("lfo_sync", 3.0),
         ("lfo_volume", 100.0),
     ]);
-    // 120 BPM at 48 kHz, 1/4 sync: a beat is half a second, the square is on for the first quarter of a second.
     let tempo = Bpm::try_from(120.0).unwrap();
     let timing = BlockTiming {
         frames: SR,

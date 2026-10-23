@@ -121,7 +121,6 @@ impl McpServer {
     /// Handles one client message. `None` means no reply is needed (a notification).
     pub fn handle(&self, message: &Value) -> Option<Value> {
         let method = message.get("method").and_then(Value::as_str)?;
-        // No `id` means a notification (e.g. `notifications/initialized`): those must not be answered.
         let id = message.get("id")?;
         let params = message.get("params").cloned().unwrap_or(Value::Null);
         Some(match method {

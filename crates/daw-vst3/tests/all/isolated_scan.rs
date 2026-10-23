@@ -97,7 +97,6 @@ fn a_guarded_effect_leaves_no_mark_once_it_is_out_of_processing() {
     effect.prepare(StreamConfig { sample_rate: 48_000, channels: 2 });
     let mut block = vec![0.25_f32; 2 * 256];
     effect.process(&mut block, None);
-    // No normal exit (`end_session` not called) — as with a crash after processing.
     drop(guard);
 
     let next = Vst3CrashGuard::open(&guard_file, &NoRecent, &NoStorage, log);

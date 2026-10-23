@@ -1,4 +1,3 @@
-// What is selected in the node editor (a node or an edge) and how to remove it.
 import { createSignal } from "solid-js";
 import type { ProcessingGraph } from "./graph";
 import type { GraphEdge, GraphNode, Id } from "../api/types";

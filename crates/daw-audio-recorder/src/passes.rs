@@ -78,7 +78,6 @@ mod tests {
 
     #[test]
     fn the_first_pass_runs_from_the_take_start_to_the_loop_end() {
-        // A pre-roll from tick 0 into the loop [960, 1920), and a start in the middle of the loop.
         let pre_roll = passes(72_000, 0, Some((960, 1_920)), &map(), RATE);
         assert_eq!(pre_roll, [pass(0..48_000, 0, true), pass(48_000..72_000, 960, true)]);
         let mid = passes(36_000, 1_440, Some((960, 1_920)), &map(), RATE);
@@ -87,12 +86,10 @@ mod tests {
 
     #[test]
     fn passes_follow_the_tempo_map_and_do_not_drift() {
-        // 1 tick at 100 BPM is 30 frames: a one-tick loop is 30 frames, a hundred passes end exactly at 3000.
         let slow = TempoMap::constant(Bpm::new(100.0).unwrap(), TimeSignature::FOUR_FOUR);
         let many = passes(3_000, 0, Some((0, 1)), &slow, RATE);
         assert_eq!(many.len(), 100);
         assert!(many.iter().all(|p| p.frames.len() == 30 && p.reached_end));
-        // A loop across a tempo change: a beat at 120 BPM, then a beat at 60 BPM.
         let changing = TempoMap::constant(Bpm::new(120.0).unwrap(), TimeSignature::FOUR_FOUR)
             .with_tempos(vec![
                 TempoChange { tick: 0, bpm: Bpm::new(120.0).unwrap(), ramp: false },

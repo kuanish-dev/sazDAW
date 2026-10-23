@@ -1,7 +1,3 @@
-// Take lanes of an audio clip (comping): a thin waveform row per take, with the currently playing parts highlighted.
-// Dragging along a take's row makes that part of the clip play that take (ends snap to the timeline grid, Alt — no snap);
-// clicking the name selects the whole take (the comp is cleared); the close button removes the take from the clip, the sample stays in Samples.
-// All edits go through the tracks role's clips (`useTracks().clips`).
 import { For, Show, createSignal } from "solid-js";
 import type { Clip, Id } from "../api/types";
 import { compOf, draggedRange, takeRanges, takesOf } from "../tracks/takes";

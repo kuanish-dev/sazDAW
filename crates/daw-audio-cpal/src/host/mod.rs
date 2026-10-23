@@ -197,7 +197,7 @@ impl Host {
             result = self.open_output(None, None);
         }
         if let Err(error) = result {
-            self.renderer = None; // not started: `apply` must not open audio until the next start
+            self.renderer = None;
             return Err(error);
         }
         let status = self.shared.status();
@@ -236,7 +236,6 @@ impl Host {
         {
             return Err(codes::audio::INPUT_DEVICE_NOT_FOUND.with("name", name));
         }
-        // The system device with the system buffer has nothing to check: starting opens it anyway.
         if wanted.output.is_some() || wanted.buffer_frames.is_some() {
             let info = self.backend.probe_output(wanted.output.as_deref())?;
             buffer_request(wanted.buffer_frames, info.buffer_range)?;
@@ -247,7 +246,6 @@ impl Host {
     pub fn apply(&mut self, wanted: AudioSettings) -> Result<AudioStatus, ContractError> {
         self.check(&wanted)?;
         let previous = self.shared.settings();
-        // Changing the input would open a stream of another format mid-recording and spoil the take.
         if self.capturing && wanted.input != previous.input {
             return Err(codes::audio::INPUT_CHANGE_WHILE_RECORDING.err());
         }
@@ -258,7 +256,6 @@ impl Host {
             return Err(error);
         }
         if let Err(error) = self.store.save(&wanted) {
-            // The choice was not saved, so audio must not stay on it either: the contract is "error = nothing changed".
             if self.renderer.is_some() {
                 self.restore(&previous);
             }

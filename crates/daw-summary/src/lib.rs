@@ -217,7 +217,6 @@ fn shared_effects(graph: &Graph) -> Vec<SharedEffectSummary> {
 fn master_volume(graph: &Graph) -> f32 {
     match graph.node(MASTER).map(|node| &node.kind) {
         Some(NodeKind::Master { volume }) => *volume,
-        // Unreachable in a valid project: the master cannot be removed.
         _ => 0.0,
     }
 }

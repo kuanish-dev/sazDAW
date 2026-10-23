@@ -17,7 +17,6 @@ pub struct Bundle {
     /// Released by hand in `Drop` strictly before `bundleExit`.
     factory: ManuallyDrop<ComPtr<IPluginFactory>>,
     exit: Option<ExitFn>,
-    // The fields below are closed after `Drop::drop`: the library last.
     #[cfg(target_os = "macos")]
     _cf_bundle: core_foundation::bundle::CFBundle,
     _library: Library,
@@ -64,7 +63,6 @@ impl Bundle {
             return Err("bundleEntry refused".into());
         }
 
-        // From here on any error must call `bundleExit`, so the rest is a separate function.
         let factory = match Self::factory_from(&library) {
             Ok(factory) => factory,
             Err(error) => {

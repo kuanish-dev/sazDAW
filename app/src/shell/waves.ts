@@ -1,6 +1,3 @@
-// Drifting waveforms in the accent color, pinned at the edges like a vibrating string: the welcome screen's backdrop
-// (`WelcomeBackdrop.tsx`).
-
 /** Each wave: height (fraction of the box), cycles across the width, drift speed (radians per second), opacity, line width. */
 const WAVES = [
   { amp: 0.16, cycles: 1.3, speed: 0.35, alpha: 0.24, width: 2 },

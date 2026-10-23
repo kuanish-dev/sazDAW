@@ -54,7 +54,6 @@ fn a_json_rpc_post_is_answered_and_edits_the_shared_session() {
     assert_eq!((reply["id"].clone(), reply["result"]["isError"].clone()), (json!(1), json!(false)), "{body}");
     assert_eq!(controls.tracks.tracks().len(), 1, "this is the very session the window sees");
 
-    // A notification: 202 without a body. A localhost Host line is fine too.
     let note = json!({ "jsonrpc": "2.0", "method": "notifications/initialized" }).to_string();
     let (status, body) = raw(
         endpoint.port(),
@@ -73,16 +72,13 @@ fn requests_that_look_like_a_browser_or_a_foreign_host_are_refused_and_change_no
     let port = endpoint.port();
     let add = json!({ "jsonrpc": "2.0", "id": 1, "method": "tools/call", "params": { "name": "tracks_add", "arguments": { "name": "K", "kind": "kick", "defaultPitch": 36 } } });
 
-    // A browser page always adds Origin: this way a website cannot control the program.
     assert_eq!(post(port, "Origin: https://evil.example\r\n", &add).0, 403);
-    // A foreign host name (DNS rebinding).
     let body = add.to_string();
     let spoofed = format!(
         "POST /mcp HTTP/1.1\r\nHost: evil.example:{port}\r\nContent-Type: application/json\r\nContent-Length: {}\r\n\r\n{body}",
         body.len()
     );
     assert_eq!(raw(port, &spoofed).0, 403);
-    // Not JSON (this is how "simple" browser requests skip the preflight check).
     let plain =
         format!("POST /mcp HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nContent-Type: text/plain\r\nContent-Length: {}\r\n\r\n{body}", body.len());
     assert_eq!(raw(port, &plain).0, 415);

@@ -1,6 +1,3 @@
-// How a call to the backend runs: a failure becomes a notification and the whole project is asked for again (the
-// refused value may already be on screen, `patchProject`); a long operation shows the loading indicator (`busy`). Part of the
-// shared core (`core.ts`).
 import { createSignal } from "solid-js";
 import type { Notifications } from "./notifications";
 

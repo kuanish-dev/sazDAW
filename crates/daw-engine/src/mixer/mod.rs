@@ -442,7 +442,6 @@ impl GraphMixer {
             let tapped = self.edges[self.starts[index]..self.starts[index + 1]].iter().any(|e| e.pre_fader);
             let id = self.nodes[index].id;
             if index == self.master {
-                // Every channel on the stage that reaches the master has fed the room by now (processing order).
                 self.stage.render_room(&mut self.buffers[index][..len]);
             }
             tap.input(id, &self.buffers[index][..len]);
@@ -456,7 +455,6 @@ impl GraphMixer {
                     meters.report_bands(effect, node.id, self.effects.band_gains(effect));
                 }
             } else {
-                // The master is never muted; sources and buses are muted by their own mute and another node's solo.
                 let silent = node.role.strip().is_some_and(|(mute, _)| mute || (self.any_solo && !self.heard[index]));
                 if let Some(slot) = node.utility_slot {
                     self.utilities.process(slot, &mut self.buffers[index][..len], node.utility());

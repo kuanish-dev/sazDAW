@@ -1,4 +1,3 @@
-// The transport role: playback (`transport.ts`) and the song's tempo and meter (`tempo.ts`).
 import { defineRole, useRole } from "../core/roles";
 import { createTempo, type Tempo } from "./tempo";
 import { createTransport, type Transport } from "./transport";

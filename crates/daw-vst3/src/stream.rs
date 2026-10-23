@@ -74,7 +74,6 @@ impl MemoryStream {
 
 impl IBStreamTrait for MemoryStream {
     unsafe fn read(&self, buffer: *mut std::ffi::c_void, num_bytes: i32, num_bytes_read: *mut i32) -> tresult {
-        // A negative length is a plugin error.
         let Some(count) = usize::try_from(num_bytes).ok().filter(|_| !buffer.is_null()) else {
             return kInvalidArgument;
         };

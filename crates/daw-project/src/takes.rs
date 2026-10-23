@@ -29,7 +29,6 @@ impl TakeControl for ProjectTakes {
     }
 
     fn set_active_take(&self, clip: ClipId, take: SampleId) -> Result<Clip, ContractError> {
-        // An already active take leaves the project unchanged, so the core records no undo step.
         self.project.edit(&tr!("Choose take", "Выбрать дубль"), |project| {
             let target = ops::clip_mut(project, clip)?;
             take_rules::activate(&mut target.content, take)?;

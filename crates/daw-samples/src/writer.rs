@@ -52,11 +52,9 @@ mod tests {
         assert_eq!((decoded.sample_rate, decoded.channels, decoded.frame_count()), (44_100, 2, 1_000));
         let worst = original.frames.iter().zip(&decoded.frames).map(|(a, b)| (a - b).abs()).fold(0.0, f32::max);
         assert!(worst < 1e-5, "24 bits are almost lossless: {worst}");
-        // Missing folders (for example the project's `exports/`) are created.
         let nested = dir.join("exports/stems/out.wav");
         WavWriter.write(&nested, &original).unwrap();
         assert!(nested.is_file());
-        // A path that cannot be a folder (under a file) is an error.
         let under_file = WavWriter.write(&path.join("inside/out.wav"), &original);
         assert!(matches!(under_file, Err(e) if e.is(samples::WAV_WRITE_FAILED)));
         std::fs::remove_dir_all(dir).ok();

@@ -1,4 +1,3 @@
-// Which sounds the pattern drums play: the choice per drum, remembered between drum part builds in this run.
 import { createSignal } from "solid-js";
 import type { LaneChoice } from "./drumPart";
 

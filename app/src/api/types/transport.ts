@@ -1,5 +1,3 @@
-// High-frequency transport data (the `tick` stream): position, tempo, meters, gain reduction and band gains, record and
-// preview state, the monitoring modes (song loop, metronome, mono check).
 import type { AutomationWriteMode, Id, TimeSignature } from "./model";
 
 export type TransportState = "stopped" | "playing" | "paused";

@@ -1,9 +1,3 @@
-// Track header left of the timeline: reorder handle, name, instrument window or recording, delete and mixer strip.
-// Aligned with the timeline row, whose height is the track's own: the bottom edge resizes it (`trackResize.ts`); a row
-// too short for the mixer strip shows only the name line, with mute/solo in it. A sound dropped on an instrument track's
-// header becomes its instrument.
-// Right-click — the track menu (`TrackMenu.tsx`: color, folders, bounce). On the left — the track color stripe, and a glow of
-// the track color that pulses with the track's level while it sounds.
 import { Show, createSignal } from "solid-js";
 import type { Track } from "../api/types";
 import { isSource, sourceOfTrack } from "../graph/graphRules";

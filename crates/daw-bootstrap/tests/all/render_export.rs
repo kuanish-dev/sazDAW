@@ -54,7 +54,6 @@ fn normalization_hits_the_target_loudness() {
     assert!((report.peak_db.unwrap() - file_peak).abs() <= 0.2, "report {:?} ≈ file {file_peak}", report.peak_db);
     assert!(!dir.join("mix.wav.render-tmp").exists(), "the temporary file is removed");
 
-    // Without fitting the loudness is measured too: the tone is −20 dBFS.
     let plain = session.controls.exporter.export(&float_wav(dir.join("plain.wav")), &|_| {}).unwrap();
     let before = db(peak(&read_wav(&plain.files[0]).1));
     assert!((plain.loudness_lufs.unwrap() - before).abs() <= 0.5, "{:?} vs {before}", plain.loudness_lufs);
@@ -75,7 +74,6 @@ fn normalization_stops_at_the_true_peak_ceiling_and_reports_what_it_reached() {
     let lufs = report.loudness_lufs.unwrap();
     assert!((lufs + 1.0).abs() <= 0.3, "reached {lufs} LUFS instead of −0.5");
 
-    // Silence is not fitted: a clear refusal, not a file.
     let silent = ExportRequest { range: ExportRange::Ticks { from_tick: 3840 * 3, to_tick: 3840 * 4 }, ..request };
     assert!(matches!(session.controls.exporter.export(&silent, &|_| {}), Err(e) if e.is(codes::export::TOO_QUIET_TO_NORMALIZE)));
     assert!(!dir.join("mix.wav.render-tmp").exists());
@@ -87,8 +85,6 @@ fn a_range_and_the_loop_export_only_their_part_plus_the_tail() {
     let dir = temp_dir("export-range");
     let session = tone_session(&dir);
     let controls = &session.controls;
-    // The tone sounds for 4 s (a beat is 0.5 s). The span is beats 1 to 5 (2 s) plus a 0.5 s tail: the tone goes on after
-    // the span end, but must not be in the tail.
     let ranged = ExportRequest {
         range: ExportRange::Ticks { from_tick: 960, to_tick: 4800 },
         tail_seconds: 0.5,
@@ -98,7 +94,7 @@ fn a_range_and_the_loop_export_only_their_part_plus_the_tail() {
     assert_eq!(report.frames, u64::from(RATE) * 5 / 2);
     let (_, audio) = read_wav(&report.files[0]);
     assert_eq!(audio.len() as u64, report.frames * 2);
-    let second = RATE as usize * 2; // samples per stereo second
+    let second = RATE as usize * 2;
     assert!(rms(&audio[..second * 2]) > 0.03, "the span sounds from start to end");
     assert!(rms(&audio[second * 2 + 200..]) < 1e-4, "the clip does not sound in the tail: it is cut at the span end");
 

@@ -199,12 +199,12 @@ Each step is one commit or a few made straight on `dev`, with no feature branch 
   - daw-project: `lib.rs:10-13`;
   - frontend: `state/poller.ts:2`, `state/session.tsx:2`, the `ui/tracks/timelineLayout.ts` header and :174, `ui/common/trackColors.ts` ("row" vs index), `domain/clips.ts:8` (orphan comment);
   - comments: `daw-project/src/catalog.rs:48-54` (the "tests" comment is really production behaviour), `daw-rpc/src/log.rs:27`.
-- [low] Missing "why" comments:
+- [low] Missing "why" comments (obsolete since 2026-10-23: plain comments were removed; a "why" goes into a doc comment or a `CLAUDE.md`, CLAUDE.md rule 7):
   - the voicing numbers in `daw-strings/src/engine.rs:255` and the drum recipes in `daw-drums/src/voice.rs:108-131`;
   - `daw-vst3/src/runner.rs:41, 76`;
   - the key-ownership mechanism in `ui/samples/SampleEditorView.tsx:57-69`;
   - why `BackendError` lives in `i18n/errors`.
-- [low] Comments that tell history instead of "why":
+- [low] Comments that tell history instead of "why" (the plain ones are gone since 2026-10-23; doc comments still apply):
   - `daw-render/src/encode/pcm.rs:8`, test names "like before" / "old rounding", `stems.rs:136`;
   - `daw-rpc/tests/all/methods.rs:180`, `project.rs:175`;
   - `app/src-tauri/src/main.rs:132`;

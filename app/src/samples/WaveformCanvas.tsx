@@ -1,5 +1,3 @@
-// Sample waveform: wheel zoom, range selection by dragging, slice markers on the ruler.
-// The component only wires things up: `waveformRender` draws, `waveformPointer` handles the mouse; data and state belong to the parent.
 import { createEffect, createSignal, onCleanup, onMount } from "solid-js";
 import type { Waveform } from "../api/types";
 import type { Selection, View } from "./waveform";

@@ -1,6 +1,3 @@
-// Bouncing a track to audio (`tracks.bounce` / `tracks.freeze` / `tracks.unfreeze`): the mock renders no sound; it creates
-// a sample of the right length and an audio track below the original with one clip, all as one undo step like the backend.
-// Simplification: the copy always goes to the master (the real backend routes it where the track's chain went).
 import type { Id, Project } from "../../api/types";
 import { neutralUtility } from "../../mixer/channelUtility";
 import { hasStrip, sourceOfTrack } from "../../graph/graphRules";
@@ -41,7 +38,6 @@ export function bounceHandlers(w: MockWorld): HandlerSet {
       const copy = w.id(p);
       p.tracks.splice(p.tracks.findIndex((x) => x.id === id) + 1, 0, { id: copy, name, instrument: null, defaultPitch: original.defaultPitch });
       const source = sourceOfTrack(p.graph, id);
-      // As the backend: the sound holds the fader and the utility, except a lead (an earlier alignment), which the copy keeps.
       const lead = source && hasStrip(source.kind) ? Math.min(0, source.kind.delayMs) : 0;
       const copyKind = { type: "audio" as const, track: copy, volume: 1, pan: 0, mute: false, solo: false, ...neutralUtility(), delayMs: lead, monitor: "off" as const };
       addSource(p, name, copyKind, source?.x ?? 40, (source?.y ?? 40) + 30);

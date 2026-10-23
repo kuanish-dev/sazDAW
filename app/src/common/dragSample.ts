@@ -1,6 +1,3 @@
-// Dragging a sound from the sound browser onto the timeline (and onto "Project") with the mouse, using pointer events.
-// Not HTML5 drag&drop: in a Tauri window on macOS (WebKit) it does not start on `user-select: none` and depends on
-// the window itself intercepting drags; track reordering (`trackReorder`) already works on pointer events.
 import { createSignal, onCleanup } from "solid-js";
 import type { SampleSource } from "../tracks/dropSample";
 
@@ -83,7 +80,6 @@ export function startSampleDrag(event: PointerEvent, source: SampleSource, label
     if (!current()) return finish();
     const hit = targetAt(e.clientX, e.clientY);
     finish();
-    // A click after the drag would act as "listen": swallow it once.
     const swallow = (click: Event) => click.stopPropagation();
     window.addEventListener("click", swallow, { capture: true, once: true });
     setTimeout(() => window.removeEventListener("click", swallow, true), 0);

@@ -32,9 +32,7 @@ fn surge_instrument_opens_with_a_size_closes_and_reopens() {
     let session = world.editors.open(target).expect("the window is created");
     assert!(session.width >= 100 && session.height >= 100, "{session:?}");
     assert_eq!(session.title, "Surge XT");
-    // One target, one window.
     assert!(matches!(world.editors.open(target), Err(e) if e.is(plugins::EDITOR_ALREADY_OPEN)));
-    // Not attached to a window: the tick does not fail, no size was requested.
     assert_eq!(world.editors.sync(session.id).unwrap(), None);
     world.editors.close(session.id);
     world.editors.close(session.id);
@@ -67,10 +65,8 @@ fn project_values_are_pulled_on_sync_and_a_removed_target_ends_the_window() {
     let (kind, params) = &world.instruments[0];
     world.add_instrument_track(3, kind);
     let session = world.editors.open(EditorTarget::Instrument { track: 3 }).unwrap();
-    // A parameter changed outside (automation): the tick picks it up without errors.
     world.tracks.set_instrument_param(3, params[0], 0.42).unwrap();
     assert_eq!(world.editors.sync(session.id).unwrap(), None);
-    // The track was removed — time for the window to close.
     world.tracks.remove_track(3).unwrap();
     assert!(matches!(world.editors.sync(session.id), Err(e) if e.is(tracks::NOT_FOUND)));
     world.editors.close(session.id);
@@ -79,7 +75,6 @@ fn project_values_are_pulled_on_sync_and_a_removed_target_ends_the_window() {
 #[test]
 fn builtin_audio_track_and_unknown_targets_give_clear_errors() {
     let _one = serial();
-    // No plugins needed: target errors do not depend on what was found.
     let Some(world) = world("errors", &[]) else { return };
     world.add_effect_node(1, "reverb");
     world.add_instrument_track(2, "synth");
@@ -103,7 +98,6 @@ fn distortion_has_a_small_native_window_and_follows_the_project() {
     let session = match world.editors.open(EditorTarget::Effect { node: 2 }) {
         Ok(session) => session,
         Err(error) => {
-            // An old Distortion build without a window: the error must say so.
             assert!(error.is(plugins::NO_EDITOR), "{error}");
             return;
         }

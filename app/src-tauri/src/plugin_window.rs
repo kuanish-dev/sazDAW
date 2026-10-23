@@ -52,7 +52,6 @@ impl PluginWindows {
 
     /// Tauri has started: from now on `flush` can run on the main thread.
     pub fn bind(&self, app: AppHandle) {
-        // Bound once at setup; a second call has nothing new to give.
         let _ = self.app.set(app);
     }
 
@@ -64,7 +63,6 @@ impl PluginWindows {
     pub fn handle_open(self: &Arc<Self>, app: &AppHandle, params: Value) -> Result<Value, ContractError> {
         let result = self.request_open(app, params);
         if let Err(error) = &result {
-            // A refusal by the rules ("the plugin has no window") is not a fault, but the person and the owner should know.
             self.log.record(LogEntry::warn("rpc", format!("{OPEN_METHOD}: {} {error}", error.code().code)));
         }
         result.map(|()| Value::Null)
@@ -77,7 +75,6 @@ impl PluginWindows {
         let (sender, receiver) = mpsc::channel();
         let (windows, handle) = (Arc::clone(self), app.clone());
         app.run_on_main_thread(move || {
-            // The receiver may be gone (the app is closing): then there is nobody to answer.
             let _ = sender.send(windows.open_or_raise(&handle, target));
         })
         .map_err(window_failed)?;
@@ -93,7 +90,6 @@ impl PluginWindows {
                 window.show().map_err(window_failed)?;
                 return window.set_focus().map_err(window_failed);
             }
-            // The window vanished without a close event: forget the entry and open again.
             self.release(id);
         }
         let session = self.editors.open(target)?;
@@ -134,7 +130,6 @@ impl PluginWindows {
                 let size = (logical.width.round() as u32, (logical.height - TITLE_BAR_PAD).round().max(0.0) as u32);
                 self.apply_user_resize(id, size);
             }
-            // Close the plugin interface while the window is still alive: the plugin removes its view from the window's `NSView`.
             WindowEvent::CloseRequested { .. } | WindowEvent::Destroyed => self.release(id),
             _ => {}
         }
@@ -148,7 +143,6 @@ impl PluginWindows {
         {
             let mut windows = self.windows();
             let Some(window) = windows.values_mut().find(|w| w.id == id) else { return };
-            // The same size (e.g. the window grew at the plugin's request) need not be repeated to the plugin.
             if window.size == size || size.0 == 0 || size.1 == 0 {
                 return;
             }
@@ -175,13 +169,11 @@ impl PluginWindows {
                             open.size = wanted;
                         }
                         let _ = window.set_size(LogicalSize::new(f64::from(wanted.0), f64::from(wanted.1) + TITLE_BAR_PAD));
-                        // The window size was changed programmatically: tell the plugin ourselves (it will not repeat an event of the same size).
                         self.resize_plugin(id, wanted);
                     }
                 }
                 Ok(_) => {}
                 Err(error) => {
-                    // The target was removed from the project (a track or effect deleted): the window is no longer needed.
                     self.note_failure(&format!("plugin window closed: {error}"));
                     self.release(id);
                     if let Some(window) = app.get_window(&label) {
@@ -232,7 +224,6 @@ impl PluginStateFlush for PluginWindows {
         let editors = Arc::clone(&self.editors);
         let asked = app.run_on_main_thread(move || {
             editors.store_states();
-            // The receiver may be gone (the app is closing): then there is nothing to wait for.
             let _ = sender.send(());
         });
         if let Err(error) = asked.map_err(|e| e.to_string()).and_then(|()| receiver.recv().map_err(|e| e.to_string())) {
@@ -250,7 +241,6 @@ pub fn spawn_sync_timer(app: AppHandle, windows: Arc<PluginWindows>) {
                 continue;
             }
             let (timer_windows, handle) = (Arc::clone(&windows), app.clone());
-            // An error means the event loop has ended (the app is closing): the timer is no longer needed.
             if app.run_on_main_thread(move || timer_windows.tick(&handle)).is_err() {
                 return;
             }

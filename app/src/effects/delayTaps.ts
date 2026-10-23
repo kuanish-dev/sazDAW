@@ -1,8 +1,3 @@
-// Delay graph (`effects/DelayGraph.tsx`): when the echoes of one sound come and how loud, from the delay's params and
-// the tempo, and how the live input lights them up. MIRRORS `crates/daw-effects/src/delay.rs` (the `SYNC_QUARTERS`
-// lengths, the time from the tempo or from milliseconds within `MAX_SECONDS`, the feedback per repeat, the ping-pong
-// crossing that starts on the left) and `mix_over_dry` in `lib.rs`: a change there must be repeated here. The low and
-// high cut in the delay's loop change the echoes' tone, not their level in the passband, so the taps leave them out.
 import type { ParamInfo, Params } from "../api/types";
 import { namedParams } from "../common/catalog";
 import { clamp } from "../common/math";
@@ -48,7 +43,6 @@ export function delayTaps(infos: ParamInfo[], values: Params, tempo: number): De
   const step = clamp(seconds, 0.001, MAX_SECONDS);
   const pingPong = s.ping_pong >= 0.5;
   const taps: Tap[] = [];
-  // Echo n comes n steps later, quieter by the feedback n − 1 times; ping-pong crosses the lines, so it changes sides.
   for (let n = 1; n <= MAX_TAPS; n++) {
     const db = toDb(s.mix * s.feedback ** (n - 1));
     if (db < TAPS_FLOOR_DB) break;

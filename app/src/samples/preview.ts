@@ -1,4 +1,3 @@
-// Auditioning sound without changing the project: a sample region or a file on disk.
 import type { Id } from "../api/types";
 import type { Core } from "../core/core";
 

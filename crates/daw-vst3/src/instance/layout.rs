@@ -53,14 +53,12 @@ impl PluginInstance {
             return Err("the plugin has no audio output (it is not an instrument)".into());
         }
         self.require_f32()?;
-        // Ask for stereo on all buses: some plugins reject a layout whose bus count differs from theirs.
         let mut inputs = vec![SpeakerArr::kStereo; self.in_buses];
         let mut outputs = vec![SpeakerArr::kStereo; self.out_buses];
         // SAFETY: the vectors are local; the element counts are passed correctly.
         unsafe {
             self.processor.setBusArrangements(inputs.as_mut_ptr(), self.in_buses as i32, outputs.as_mut_ptr(), self.out_buses as i32)
         };
-        // The result matters more than the plugin's answer: check that the main output really is stereo.
         let mut arrangement: SpeakerArrangement = 0;
         // SAFETY: `arrangement` is a local variable for the plugin's answer.
         check(unsafe { self.processor.getBusArrangement(BusDirections_::kOutput as i32, 0, &raw mut arrangement) }, "getBusArrangement")?;

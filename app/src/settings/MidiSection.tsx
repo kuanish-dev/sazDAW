@@ -1,5 +1,3 @@
-// Settings → MIDI: keyboards (input devices), connecting to a track, switching the track and disconnecting; the list of
-// controller knobs mapped to parameters (MIDI learn; mapped by right-clicking a knob).
 import { For, Show, createSignal, onMount } from "solid-js";
 import type { Id } from "../api/types";
 import { targetLabel } from "../automation/automationRules";
@@ -39,7 +37,6 @@ export function MidiSection() {
 
   const chooseTrack = (id: Id) => {
     setTrack(id);
-    // An already connected keyboard plays the chosen track right away.
     if (midi.input.connection()) void midi.input.setTarget(id);
   };
 

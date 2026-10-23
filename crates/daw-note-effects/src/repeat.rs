@@ -145,7 +145,6 @@ impl Repeat {
         }
         if !playing && self.held.iter().all(|v| *v == 0.0) {
             let shift = -(event.frame as f64) * clock.tpf - clock.base;
-            // Notes still sounding keep their release frames.
             for off in self.sounding.iter_mut().flatten() {
                 *off += shift;
             }
@@ -184,7 +183,6 @@ impl NoteEffect for Repeat {
         let base = if timing.playing { timing.start_tick } else { self.free_tick };
         let mut clock = Clock { base, tpf: timing.ticks_per_frame, frames: timing.frames };
         if clock.tpf <= 0.0 {
-            // No time to repeat in: keys are only remembered, and a release still ends what sounds.
             for &event in input {
                 let key = usize::from(event.pitch & 0x7f);
                 self.held[key] = event.velocity;
@@ -199,7 +197,6 @@ impl NoteEffect for Repeat {
         loop {
             let step = k as f64 * self.step_ticks;
             let step_frame = (step < clock.end()).then(|| clock.frame(step));
-            // An input on a step's frame comes before that step: a press on the grid is the hit, not a double.
             if let Some(&event) = input.get(next).filter(|e| step_frame.is_none_or(|frame| e.frame <= frame)) {
                 next += 1;
                 self.take(event, timing.playing, &mut clock, &mut k, output);

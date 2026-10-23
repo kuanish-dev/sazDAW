@@ -1,7 +1,3 @@
-// The de-esser's graph (`effects/DeEsserGraph.tsx`): the band it listens to and the response it makes for a gain
-// reduction. MIRRORS `crates/daw-effects/src/de_esser.rs`: the 0-dB band-pass at Q 1 (`biquad.ts`); split-band takes
-// the reduction off the band only (`1 − (1 − g)·band`), wideband off everything (`g`), listen plays the band alone: a
-// change there must be repeated here.
 import type { ParamInfo, Params } from "../api/types";
 import { bandPass, complexDb, response } from "./biquad";
 import { type ParamUpdate, namedParams } from "../common/catalog";

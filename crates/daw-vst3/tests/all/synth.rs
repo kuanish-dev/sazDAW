@@ -79,7 +79,6 @@ fn saw_peak_with_cutoff(world: &crate::support::World, cutoff: f32) -> f32 {
     let mut synth = world.instrument_factories[0].create(&settings, None).expect("is created");
     synth.prepare(StreamConfig { sample_rate: RATE, channels: 2 });
     synth.note_on(60, 1.0);
-    // The cutoff is smoothed from the default: measure after smoothing and the attack are over.
     render(&mut *synth, 60);
     render(&mut *synth, 20)
 }
@@ -88,8 +87,6 @@ fn saw_peak_with_cutoff(world: &crate::support::World, cutoff: f32) -> f32 {
 fn synth_takes_values_in_plain_units() {
     let _one = serial();
     let Some(world) = world("synth-plain", &[SYNTH]) else { return };
-    // 40 Hz cuts note 60 (262 Hz) almost entirely, 18000 Hz lets it through. If the values were taken as
-    // normalized, both numbers would be clamped to 1.0 and the peaks would match.
     let (dark, bright) = (saw_peak_with_cutoff(&world, 40.0), saw_peak_with_cutoff(&world, 18_000.0));
     eprintln!("Synth: peak at cutoff 40 Hz {dark}, at 18000 Hz {bright}");
     assert!(bright > 0.01 && dark < bright * 0.5, "cutoff 40 Hz: {dark}, 18000 Hz: {bright}");

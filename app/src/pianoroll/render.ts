@@ -1,4 +1,3 @@
-// Draws the piano roll grid (with scale rows when highlighting is on) and the velocity lane on canvas. It only draws what it is given (`GridView`).
 import type { Note } from "../api/types";
 import { inScale, type ScaleChoice } from "./noteTransforms";
 import { HIGH_PITCH, LOW_PITCH, MAX_VELOCITY, isBlackKey, pitchName } from "../common/pitch";
@@ -79,7 +78,6 @@ export function drawTickGrid(ctx: CanvasRenderingContext2D, v: TickGrid, height:
   for (let tick = 0; tick <= v.viewLength; tick += v.lineStep) {
     vline(ctx, tickX(tick, v.pxPerTick), 0, height, tick % v.beatTicks === 0 ? P.beat : P.grid);
   }
-  // Bar lines go on top: the grid step (e.g. a 4/4 beat in a 7/8 bar) may not divide the bar evenly.
   for (let tick = 0; tick <= v.viewLength; tick += v.barTicks) vline(ctx, tickX(tick, v.pxPerTick), 0, height, P.bar);
 }
 
@@ -171,7 +169,6 @@ export function drawVelocity(canvas: HTMLCanvasElement, v: Pick<GridView, "width
     const top = velocityBarTop(n.velocity);
     ctx.fillStyle = v.selected.has(n.id) ? P.noteSelected : P.accent;
     ctx.fillRect(x, top, VELOCITY_BAR_WIDTH, velocityBarHeight(n.velocity));
-    // The bar's cap: an easy handle to drag.
     ctx.fillRect(x - 3, top - 2, 10, 4);
   }
 }

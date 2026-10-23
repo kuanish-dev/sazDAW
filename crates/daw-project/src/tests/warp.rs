@@ -30,8 +30,6 @@ fn warp_guesses_the_tempo_from_the_name_and_keeps_the_same_piece_of_sound() {
     assert_plays(&rig, &warped, &job);
     assert_eq!(*rig.processed.kept.lock().unwrap(), [job], "the cache needs only this: at 120 BPM a 60 BPM sound is half as long");
 
-    // The tempo changed: the length in ticks is the same, the sound stretches differently; with equal tempos no
-    // processing is needed.
     rig.tempo.set_tempo(Bpm::new(60.0).unwrap()).unwrap();
     rig.service.refresh_clip_audio();
     assert_eq!(rig.clips.clips()[0].length_ticks, 960);
@@ -74,7 +72,6 @@ fn explicit_tempo_and_turning_warp_off_recount_the_length() {
 
 #[test]
 fn a_name_without_tempo_and_an_odd_length_falls_back_to_the_project_tempo() {
-    // 1 second is a whole number of bars only at 240+ BPM: nothing to guess from.
     let (rig, _, clip) = rig_with_audio("/music/vocal.wav");
     let warped = rig.clips.edit_clip(clip.id, warp(None)).unwrap();
     assert_eq!(warped.warp, Some(Warp { source_bpm: 120.0 }));
@@ -141,11 +138,8 @@ fn audio_clips_may_overlap_by_their_edges_only() {
     assert!(rig.clips.edit_clip(second.id, inside).is_err(), "inside another");
     let around = ClipEdit { start_tick: Some(0), length_ticks: Some(5000), ..Default::default() };
     assert!(rig.clips.edit_clip(second.id, around).is_err(), "another inside");
-    // A third clip after the end of the first overlaps only the second: two at every point.
     let third = rig.clips.add_audio_clip(track, 3000, sample).unwrap();
     assert_eq!(third.crossfades(&rig.clips.clips()), (420, 0));
-    // A batch edit is checked on the result: the second may overlap the edges of both neighbours, but not cover the
-    // third entirely.
     let both_edges = ClipEdit { start_tick: Some(1000), length_ticks: Some(2500), ..Default::default() };
     rig.clips.edit_clips(vec![(second.id, both_edges)]).unwrap();
     let wide = ClipEdit { start_tick: Some(1000), length_ticks: Some(4500), ..Default::default() };
@@ -176,7 +170,6 @@ fn a_tempo_change_inside_a_warped_clip_asks_for_a_curve_and_moves_with_the_clip(
     assert_eq!(curved.curve().map(<[StretchAnchor]>::len), Some(3), "start, tempo change, end");
     assert_plays(&rig, &rig.clips.clips()[0], &curved);
     assert_eq!(rig.last_snapshot().clip_audio[&(clip.id, warped_sample(&clip))].start_frame, 0.0, "the curve starts at the clip start");
-    // A clip entirely after the tempo change is one stretch again (at tempo 90).
     rig.clips.edit_clip(clip.id, ClipEdit { start_tick: Some(960), ..Default::default() }).unwrap();
     let moved = job(&rig);
     assert!(moved.curve().is_none() && (moved.stretch() - 60.0 / 90.0).abs() < 1e-6);

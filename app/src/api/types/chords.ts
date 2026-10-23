@@ -1,4 +1,3 @@
-// Chord parts: strum patterns and the request to strum a chord progression on one track.
 import type { Id } from "./model";
 
 /** A strum: one 4/4 bar of eighth notes, `D` down, `U` up, `X` a muted down stroke ("chuck"), lower case softer, `.` nothing. */

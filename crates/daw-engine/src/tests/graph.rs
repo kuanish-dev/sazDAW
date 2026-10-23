@@ -15,7 +15,6 @@ fn bus_volume_pan_mute_and_solo() {
     let out = rig.render(2_000);
     assert!(near(Rig::left(&out, 1_000), 0.25), "bus volume 0.5");
 
-    // Pan left: the right channel fades out, the left one stays.
     rig.set_strip(bus2, 1.0, -1.0, false, false);
     rig.publish();
     rig.render(2_000);
@@ -23,14 +22,12 @@ fn bus_volume_pan_mute_and_solo() {
     assert!(near(Rig::left(&out, 1_000), 0.5));
     assert!(near(Rig::right(&out, 1_000), 0.0));
 
-    // Mute.
     rig.set_strip(bus2, 1.0, -1.0, true, false);
     rig.publish();
     rig.render(2_000);
     let out = rig.render(2_000);
     assert!(near(Rig::left(&out, 1_000), 0.0));
 
-    // Solo on another bus silences the others, even with mute off.
     rig.set_strip(bus2, 1.0, 0.0, false, false);
     rig.set_strip(bus3, 1.0, 0.0, false, true);
     rig.publish();
@@ -66,7 +63,6 @@ fn solo_on_a_group_bus_keeps_its_inputs_audible() {
     rig.transport.play();
     assert!(near(Rig::left(&rig.render(2_000), 1_000), 1.0), "both groups sound");
 
-    // Solo on the "drums" bus: its tracks and the path to the master are audible, the other group is silent.
     rig.set_strip(drums, 1.0, 0.0, false, true);
     rig.publish();
     rig.render(100);
@@ -107,7 +103,6 @@ fn solo_on_one_source_silences_the_other_sources_but_not_the_master() {
     rig.render(100);
     assert!(near(Rig::left(&rig.render(2_000), 1_000), 0.5), "only the solo track sounds");
 
-    // A solo bus also silences non-solo sources.
     rig.set_strip(a, 1.0, 0.0, false, false);
     let bus = rig.add_bus(1.0);
     rig.set_strip(bus, 1.0, 0.0, false, true);
@@ -130,7 +125,6 @@ fn a_muted_source_is_silent_but_its_instrument_keeps_advancing() {
     assert!(log.contains(&format!("on:60@{}", 100 * FRAMES_PER_TICK)), "the instrument got the notes: {log:?}");
     assert!(log.contains(&format!("off:60@{}", 300 * FRAMES_PER_TICK)), "{log:?}");
 
-    // Unmuting brings the sound back without a restart: the note of the next repeat is audible.
     rig.set_strip(node, 1.0, 0.0, false, false);
     rig.publish();
     rig.render(100);
@@ -211,7 +205,7 @@ fn edge_level_scales_the_signal() {
 fn a_node_without_a_path_to_master_is_silent() {
     let mut rig = Rig::new();
     let bus = rig.add_node(NodeKind::Bus { strip: Strip { volume: 1.0, pan: 0.0, mute: false, solo: false, ..Strip::default() } });
-    rig.add_track(10, bus); // the bus leads nowhere
+    rig.add_track(10, bus);
     rig.note(10, 60, 0, 960);
     rig.publish();
     rig.transport.play();
@@ -223,18 +217,16 @@ fn sidechain_edge_feeds_the_key_input_not_the_audio() {
     let mut rig = Rig::new();
     let fx = rig.add_fx(false, Box::new(DuckOrDouble));
     rig.connect(fx, MASTER, 1.0, false);
-    rig.add_track(11, fx); // the pad sounds all the time
+    rig.add_track(11, fx);
     let kick = rig.add_track(10, MASTER);
-    rig.connect(kick, fx, 1.0, true); // the kick drives the effect but does not enter its sound
+    rig.connect(kick, fx, 1.0, true);
     rig.note(10, 60, 960, 480);
     rig.note(11, 64, 0, 3000);
     rig.publish();
     rig.transport.play();
     let out = rig.render(960 * FRAMES_PER_TICK + 2_000);
 
-    // Before the kick the pad is doubled by the effect (0.5 → 1.0).
     assert!(near(Rig::left(&out, 5_000), 1.0));
-    // During the kick: the pad is ducked, only the kick itself remains (0.5).
     assert!(near(Rig::left(&out, 960 * FRAMES_PER_TICK + 1_000), 0.5));
 }
 
@@ -288,7 +280,6 @@ fn processing_follows_the_order_from_the_snapshot() {
     };
     let honest = build(false);
     assert!(near(honest, 1.0));
-    // The bus comes before the effect: the effect's contribution arrives after the bus is processed and misses this block.
     let swapped = build(true);
     assert!(near(swapped, 0.0), "{swapped}");
 }
@@ -305,9 +296,7 @@ fn missing_or_garbled_order_does_not_panic() {
         rig.transport.play();
         rig.render(2_000)
     };
-    // An empty order: nothing is processed, silence.
     assert!(build(|_, _| vec![]).iter().all(|v| *v == 0.0));
-    // Unknown ids are skipped, repeats do not double the sound.
     let out = build(|inst, bus| vec![999, inst, inst, bus, bus, MASTER, MASTER, 12345]);
     assert!(near(Rig::left(&out, 1_000), 0.5), "{}", Rig::left(&out, 1_000));
 }
@@ -317,7 +306,6 @@ fn engine_survives_more_nodes_and_edges_than_the_limits() {
     let mut rig = Rig::new();
     rig.add_track(10, MASTER);
     rig.note(10, 60, 0, 960);
-    // The engine ignores buses and connections beyond the limits.
     let mut previous = MASTER;
     for _ in 0..MAX_NODES + 40 {
         let id = rig.add_node(NodeKind::Bus { strip: Strip { volume: 1.0, pan: 0.0, mute: false, solo: false, ..Strip::default() } });

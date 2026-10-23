@@ -1,4 +1,3 @@
-// Menu of a signature flag on the ruler (`tempoPointer.ts` opens it): another signature from this bar, or remove the change.
 import { For, Show } from "solid-js";
 import type { TimeSignature } from "../api/types";
 import { barIndex } from "../common/tempoMap";

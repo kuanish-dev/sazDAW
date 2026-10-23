@@ -1,4 +1,3 @@
-// Number fields of the part dialogs (drum part, chord part): the bar a part starts at and repeat counts, as typed.
 import { clamp } from "./math";
 
 /** How many times a pattern or progression may repeat (the backend's limit). */

@@ -1,5 +1,3 @@
-// Project templates: list, "Save as template…" and delete. A new project from a template is created by `ProjectFiles`
-// (that is project file work). The name is checked before sending by the same rules as the backend (`namedSave.ts`).
 import { t } from "../i18n";
 import type { Core } from "../core/core";
 import { saveUnderName } from "./namedSave";

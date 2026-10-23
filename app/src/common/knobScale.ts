@@ -1,4 +1,3 @@
-// Parameter knob: position <-> value (linear or logarithmic), scale angles and arcs, snapping to the default.
 import type { ParamInfo } from "../api/types";
 import { clamp } from "./math";
 

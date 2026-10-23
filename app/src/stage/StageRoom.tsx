@@ -1,9 +1,3 @@
-// The room from above: the listener in the middle facing ahead (up), the line between their ears with the half of the
-// room behind them, the stage area, a metre grid and rings of equal distance (inside the first one a sound keeps its own
-// level, each next one is 6 dB quieter directly), and every channel on the stage as a dot. Dragging a dot moves it
-// left/right and ahead/behind; a higher dot floats above its shadow. An off-stage channel dragged in from the list lands
-// where it is dropped. Height: the wheel over a dot. On speakers the half behind is shaded: two speakers in front play
-// a place behind like its mirror ahead, only headphones put it behind.
 import { For, Show, createMemo } from "solid-js";
 import type { Id } from "../api/types";
 import { clamp } from "../common/math";
@@ -93,7 +87,6 @@ export function StageRoom(props: { scene: StageScene }) {
         </clipPath>
       </defs>
       <rect x={-halfWidth()} y={-halfDepth()} width={shape().width} height={shape().depth} fill="var(--canvas-bg)" stroke="var(--canvas-bar)" stroke-width={unit() * 0.25} />
-      {/* Behind the listener: on speakers it sounds like its mirror ahead. */}
       <Show when={speakers()}>
         <rect x={-halfWidth()} y="0" width={shape().width} height={halfDepth()} fill="var(--canvas-ink-soft)" fill-opacity="0.35" />
       </Show>
@@ -101,13 +94,11 @@ export function StageRoom(props: { scene: StageScene }) {
         <For each={columns()}>{(x) => <line x1={x} x2={x} y1={-halfDepth()} y2={halfDepth()} />}</For>
         <For each={rows()}>{(y) => <line x1={-halfWidth()} x2={halfWidth()} y1={y} y2={y} />}</For>
       </g>
-      {/* The stage: where a source can stand, all around the listener. */}
       <rect
         x={-(halfWidth() - WALL_GAP)} y={-(halfDepth() - WALL_GAP)} width={shape().width - 2 * WALL_GAP} height={shape().depth - 2 * WALL_GAP}
         fill="var(--color-accent)" fill-opacity="0.05" stroke="var(--color-accent)" stroke-opacity="0.25" stroke-width={unit() * 0.15}
         stroke-dasharray={`${unit()} ${unit()}`}
       />
-      {/* The line between the ears: ahead above it, behind below it. */}
       <line x1={-halfWidth()} x2={halfWidth()} y1="0" y2="0" stroke="var(--canvas-beat)" stroke-width={unit() * 0.15} stroke-dasharray={`${unit() * 1.2} ${unit() * 0.6}`} />
       <g class="pointer-events-none" font-size={String(unit() * 1.1)} fill="var(--color-muted)" text-anchor="middle">
         <text x="0" y={-halfDepth() + unit() * 1.6}>{t().stage.aheadWall}</text>

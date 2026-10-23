@@ -24,7 +24,6 @@ fn drum_patterns_are_listed_with_readable_grids_and_build_a_part() {
     assert_eq!(basic["lanes"][0], json!({ "lane": "kick", "grid": "X... .... X... ...." }));
     assert_eq!(basic["lanes"][1]["grid"], ".... X... .... X...");
 
-    // Default params: from bar zero, one repeat, no replacing.
     let report =
         call(&table, c, "drums.build", json!({ "slots": [{ "pattern": "rock_basic", "repeat": 2 }, { "pattern": "fill_snare_roll" }] }));
     assert_eq!(report["bars"], 3);

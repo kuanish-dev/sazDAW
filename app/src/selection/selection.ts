@@ -1,5 +1,3 @@
-// UI selection: the track (the keyboard piano plays on it), selected clips (note/audio, or one automation clip) and the
-// sample in the editor.
 import { createSignal } from "solid-js";
 import type { Id, Project } from "../api/types";
 import type { AutomationSelection } from "../automation/automationRules";
@@ -35,7 +33,6 @@ export function createSelection(project: Pick<Project, "clips">): Selection {
 
   const selectClips = (ids: Id[], withTrack?: Id) => {
     setClips(ids);
-    // One clip panel: note/audio clips and an automation clip are never selected together.
     setAutomation(null);
     const track = withTrack ?? project.clips.find((c) => c.id === ids[ids.length - 1])?.track;
     if (track !== undefined) setTrack(track);

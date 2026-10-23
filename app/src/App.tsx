@@ -1,5 +1,3 @@
-// The root component: starts the app (`start.ts`: the core, the roles, the startup order) and gives every component the
-// roles (`RolesProvider`); the window itself is `shell/AppWindow.tsx`.
 import type { SystemDialogs } from "./api/dialogs";
 import type { RpcClient } from "./api/rpc";
 import type { AppShell } from "./api/shell";

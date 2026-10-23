@@ -1,4 +1,3 @@
-// Project samples: who uses them (audio clips and sampler tracks).
 import type { Id, Project } from "../api/types";
 
 export interface SampleUsage {

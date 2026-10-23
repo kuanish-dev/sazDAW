@@ -26,7 +26,6 @@ pub fn shape_fn(shape: Shape, x: f32) -> f32 {
         Shape::Soft => x.tanh(),
         Shape::Hard => x.clamp(-1.0, 1.0),
         Shape::Fold => {
-            // Triangle fold: period 4, range [-1, 1].
             let t = (x + 1.0).rem_euclid(4.0);
             if t < 2.0 {
                 t - 1.0
@@ -223,9 +222,6 @@ impl Vst3Plugin for Distortion {
     const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] = &[Vst3SubCategory::Fx, Vst3SubCategory::Distortion];
 }
 
-// The warning comes from the foreign macro `vst3_com::vtable` inside `nih_export_vst3!` (an extra `;`
-// in an expression); it cannot be fixed in our code. The compiler ignores an attribute on the macro call itself,
-// so the call is wrapped in a module and the warning is silenced only there.
 #[allow(semicolon_in_expressions_from_non_local_macros, reason = "an extra `;` in the foreign vst3_com macro, not in our code")]
 mod vst3_export {
     use super::Distortion;
@@ -263,7 +259,6 @@ mod tests {
 
     #[test]
     fn hard_clip_limits() {
-        // Output 0 dB, mix 100%, filter settled.
         let y = run(0.9, Shape::Hard, 100.0, 12000.0, 1.0, 1.0, 5000);
         assert!(y <= 1.0 + 1e-5 && y > 0.99);
         let y = run(-0.9, Shape::Hard, 100.0, 12000.0, 1.0, 1.0, 5000);

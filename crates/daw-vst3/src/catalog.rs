@@ -89,7 +89,6 @@ impl CatalogEntry {
     ) -> Result<T, ContractError> {
         let name = self.source.info().name.clone();
         if self.disabled {
-            // An expected refusal: whoever created it shows and logs it (project warnings).
             return Err(plugins::DISABLED.with("name", name));
         }
         let slot = self.marker.claim(self.kind, &name);

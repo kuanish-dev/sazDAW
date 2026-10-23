@@ -147,8 +147,6 @@ fn vary_to_new_clip_puts_a_varied_copy_right_after_in_one_undo_step() {
 
 #[test]
 fn variation_numbers_match_the_frontend_mock() {
-    // `app/src/pianoroll/variation.ts: varyGroup` (mulberry32, the same order) gives the same numbers: the mock matches the
-    // backend.
     let (rig, clip) = clip_with(pattern());
     let changed = rig.notes.transform_notes(clip, None, NoteTransform::Vary(vary(42, 0.5, 0.6, 0.6, 0.5))).unwrap();
     let kept = [(48, 0, 240, 91), (51, 240, 480, 103), (58, 960, 240, 96), (55, 1440, 240, 78), (51, 1920, 240, 79), (51, 2400, 480, 93)];

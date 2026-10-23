@@ -1,5 +1,3 @@
-// Live automation writing as the other actions see it: a control moved a parameter (fader, knob, send, instrument
-// parameter). One tracker for the whole app; the backend writes the moves while the song plays (Touch/Latch).
 import type { ParamTarget } from "../api/types";
 import type { Core } from "../core/core";
 

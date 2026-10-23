@@ -1,5 +1,3 @@
-// "Project templates" dialog: save the current project's structure as a template, create a new project from a template,
-// delete a template. Opened from the project menu ("New from template…", "Save as template…") and the welcome screen.
 import { For, Show, createResource, createSignal } from "solid-js";
 import { t } from "../i18n";
 import { Modal } from "../common/Modal";

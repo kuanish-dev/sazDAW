@@ -18,7 +18,6 @@ impl SampleStore for MemoryStore {
 }
 
 fn ramp(len: usize) -> Arc<SampleData> {
-    // A ramp: the value grows linearly, which makes the playback speed easy to check.
     let frames = (0..len).map(|i| i as f32 / len as f32).collect();
     Arc::new(SampleData { sample_rate: 48_000, channels: 1, frames })
 }
@@ -59,7 +58,6 @@ fn octave_up_plays_twice_as_fast() {
     octave.note_on(72, 1.0);
     let a = render(normal.as_mut(), 1000);
     let b = render(octave.as_mut(), 1000);
-    // After 500 frames an octave up reaches the same place as the normal pitch after 1000 (allowing for the attack).
     let at = |buf: &[f32], frame: usize| buf[frame * 2];
     assert!((at(&b, 500) - at(&a, 999)).abs() < 0.02, "{} vs {}", at(&b, 500), at(&a, 999));
 }
@@ -101,11 +99,9 @@ fn left(buffer: &[f32], frame: usize) -> f32 {
 
 #[test]
 fn plays_only_the_selected_region() {
-    // A 0..1 ramp over 1000 frames; the region 0.5..0.75 gives values from 0.5 to 0.75 and silence after 250 frames.
     let mut s = make(&[("gain", 1.0), ("attack", 0.0005), ("start", 0.5), ("end", 0.75)], Some(ramp(1000)));
     s.note_on(60, 1.0);
     let out = render(s.as_mut(), 600);
-    // After 40 frames the attack (24 frames) is over: the value is ≈ 0.5 + 40/1000.
     assert!((left(&out, 40) - 0.54).abs() < 0.02, "region start: {}", left(&out, 40));
     assert!(left(&out, 240) > 0.7 && left(&out, 240) < 0.76, "region end: {}", left(&out, 240));
     assert!(out[270 * 2..].iter().all(|v| *v == 0.0), "silence after the region");
@@ -124,7 +120,6 @@ fn reverse_plays_the_region_backwards() {
 
 #[test]
 fn reversed_region_with_swapped_bounds_still_works() {
-    // start > end means the region between them.
     let mut s = make(&[("gain", 1.0), ("attack", 0.0005), ("start", 0.75), ("end", 0.5)], Some(ramp(1000)));
     s.note_on(60, 1.0);
     let out = render(s.as_mut(), 600);
@@ -137,7 +132,6 @@ fn loop_wraps_inside_the_region_only() {
     let mut s = make(&[("gain", 1.0), ("attack", 0.0005), ("loop", 1.0), ("start", 0.2), ("end", 0.3)], Some(ramp(1000)));
     s.note_on(60, 1.0);
     let out = render(s.as_mut(), 5000);
-    // The first frames are the attack ramp; after that the sound stays strictly inside the region 0.2..0.3.
     assert!(out.iter().skip(100).step_by(2).all(|v| *v > 0.15 && *v < 0.35), "the sound stays inside the region");
     assert!(left(&out, 4900) > 0.0, "keeps sounding");
 }
@@ -186,7 +180,6 @@ fn full_pitch_bend_up_plays_two_semitones_higher() {
     let a = render(bent.as_mut(), 1000);
     let b = render(higher.as_mut(), 1000);
     assert!((a[999 * 2] - b[999 * 2]).abs() < 1e-3, "{} vs {}", a[999 * 2], b[999 * 2]);
-    // The wheel centred gives the original speed.
     bent.controller(ControllerKind::PitchBend, 0.0);
     bent.all_notes_off();
 }

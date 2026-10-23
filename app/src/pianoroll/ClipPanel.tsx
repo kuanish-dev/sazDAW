@@ -1,7 +1,3 @@
-// Panel of the selected clip under the timeline: a note clip gets a header (track and length, "Loop clip", content length,
-// view switch) and one of the views (Piano roll or Steps); an audio clip gets its properties (`AudioClipPanel`); an
-// automation clip gets its pattern editor (`automation/AutomationClipPanel`).
-// This file knows what is selected and which view is shown; editing lives in the views themselves.
 import { Match, Show, Switch, createSignal } from "solid-js";
 import { MAX_CLIP_LOOP_TICKS, type TempoMap, type Track } from "../api/types";
 import { automationClipOf } from "../automation/automationRules";
@@ -73,7 +69,6 @@ export function ClipPanel(props: { snap: number }) {
   const audio = () => (selected()?.content.type === "audio" ? selected() : undefined);
   const autoClip = () => automationClipOf(project, selection.automation());
   const track = () => trackById(project, selected()?.track ?? null);
-  // Children read "sticky" values: when the clip is deleted they disappear instead of crashing on a stale value.
   const lastClip = sticky(clip);
   const lastTrack = sticky(track);
 

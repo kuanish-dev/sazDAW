@@ -88,7 +88,6 @@ fn loop_region_reaches_plugins_while_playing() {
 #[test]
 fn a_tempo_change_starts_a_new_segment_on_its_frame() {
     let mut rig = clocked_rig();
-    // 120 BPM (0.04 ticks per frame) up to tick 20 is 500 frames; then 60 BPM.
     let changes = vec![
         daw_contracts::TempoChange { tick: 0, bpm: Bpm::new(120.0).unwrap(), ramp: false },
         daw_contracts::TempoChange { tick: 20, bpm: Bpm::new(60.0).unwrap(), ramp: false },

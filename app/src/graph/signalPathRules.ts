@@ -1,7 +1,3 @@
-// The signal path through a node, for the path view on the Graph page (`graph/SignalPath.tsx`): where the node's
-// sound comes from, back while it has a single regular input, and where it goes, on along each node's main output (the
-// mixer's convention, `mixerStrips.ts: mainOutput`) to the master. Sends, sidechain keys and the other inputs of a
-// merging bus branch off this one way and are left out.
 import type { Graph, GraphNode, Id } from "../api/types";
 import { findNode, incoming } from "./graphRules";
 import { mainOutput } from "../mixer/mixerStrips";
@@ -12,7 +8,6 @@ export function signalPath(graph: Graph, id: Id): GraphNode[] {
   if (!start) return [];
   const path = [start];
   const seen = new Set([id]);
-  // Bounded by the node count: the graph is acyclic, but the guards keep bad data from hanging the view.
   let head = start;
   for (let i = 0; i < graph.nodes.length; i++) {
     const inputs = incoming(graph, head.id).filter((e) => !e.sidechain);

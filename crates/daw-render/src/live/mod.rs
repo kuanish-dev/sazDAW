@@ -60,7 +60,6 @@ impl LiveMeter {
     fn spawn_feeder(&self, watch: u64) {
         let weak: Weak<Inner> = Arc::downgrade(&self.inner);
         let spawned = thread::Builder::new().name("daw-master-meter".into()).spawn(move || {
-            // Only a weak reference between reads: the meter going away ends the thread.
             while let Some(inner) = weak.upgrade() {
                 let mut state = lock(&inner.state);
                 if state.watch != Some(watch) {
@@ -89,7 +88,6 @@ impl MasterMeter for LiveMeter {
         if state.watch.is_none() {
             return;
         }
-        // What played before the click belongs before the reset.
         state.feed(&*self.inner.tap, &*self.inner.log);
         if let Some(measurement) = &mut state.measurement {
             measurement.restart();
@@ -115,7 +113,6 @@ impl State {
     fn start(&mut self, tap: &dyn MasterTap) -> u64 {
         let watch = self.next_watch;
         *self = State { watch: Some(watch), next_watch: watch + 1, ..State::default() };
-        // Under the state lock: a reading never sees the measurement before the tap is open (or after it is closed).
         tap.open_tap(true);
         watch
     }
@@ -139,7 +136,6 @@ impl State {
             );
             log.record(LogEntry::warn("meter", message));
         }
-        // A new stream rate needs new filters: the measurement starts over.
         if self.measurement.as_ref().is_none_or(|m| m.sample_rate() != frames.sample_rate) {
             self.measurement = Some(Measurement::new(frames.sample_rate));
         }
@@ -150,8 +146,6 @@ impl State {
         let Some(measurement) = &mut self.measurement else { return };
         let count = (frames.samples.len() / 2) as u64;
         let end = frames.start + count;
-        // A restart mark not applied yet and already reached: the frames before it, the restart, the frames from it. A
-        // mark ahead (the song start still on its way through the latency compensation) waits for its frame.
         if let Some(at) = frames.restart.filter(|&at| self.restart != Some(at) && at <= end) {
             let split = 2 * (at.max(frames.start) - frames.start) as usize;
             measurement.push(&frames.samples[..split]);

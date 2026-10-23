@@ -37,7 +37,6 @@ impl IComponentHandlerTrait for EditHandler {
         let mut bridge = lock(&self.bridge);
         bridge.perform(id, value, Instant::now());
         if !bridge.knows(id) {
-            // A parameter the project does not know is kept only in the plugin state.
             lock(&self.state).changed(Instant::now());
         }
         kResultOk

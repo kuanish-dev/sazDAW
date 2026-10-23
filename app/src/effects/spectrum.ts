@@ -1,7 +1,3 @@
-// The live spectrum behind the EQ and filter curves (`effects/LiveSpectrum.tsx`, FabFilter Pro-Q style): a window of
-// the node's output → levels at points spread evenly over the graph's log-frequency axis → smoothed over time → a filled
-// SVG area in the graph's view. The FFT is the master visualizer's (`visualizer.ts: magnitudes`), the axis is the graphs'
-// own (`frequencyAxis.ts`), so the spectrum lines up with the curve and the frequency grid.
 import { fractionToFreq } from "./frequencyAxis";
 import { clamp } from "../common/math";
 import type { PlotView } from "../common/plot";

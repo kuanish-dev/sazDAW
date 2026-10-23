@@ -131,7 +131,6 @@ impl Backend for SystemBackend {
             config.buffer_size = BufferSize::Fixed(frames);
         }
         let stream_config = StreamConfig { sample_rate: config.sample_rate, channels: config.channels };
-        // Rate and channels may have changed with the device; the stream is not playing yet, so the lock is free.
         lock(&renderer).prepare(stream_config);
 
         let stream = device
@@ -148,7 +147,6 @@ impl Backend for SystemBackend {
         let supported = device.default_input_config().map_err(input_error)?;
         f32_only(supported.sample_format())?;
         let config = supported.config();
-        // The queue is built for the actual stream format: rate and channels are known only here.
         let (mut feed, source) = input_queue(tap, config.sample_rate, config.channels);
         let stream =
             device.build_input_stream(config, move |data: &[f32], _| feed.feed(data), fault_handler(faults), None).map_err(input_error)?;

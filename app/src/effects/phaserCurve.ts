@@ -1,9 +1,3 @@
-// Phaser graph (`effects/PhaserGraph.tsx`): the response of the dry sound mixed with the all-pass chain, per channel,
-// at the LFO's position now. MIRRORS `crates/daw-effects/src/phaser.rs` (first-order all-passes with the coefficient
-// `(tan(πf/fs) − 1) / (tan(πf/fs) + 1)`, 4/6/8/12 `stages`, every corner swept evenly in octaves between `low` and `high`
-// by a sine LFO at `rate` that starts at the low end, the right channel `spread` degrees later, `feedback` around the
-// chain, `mix`): a change there must be repeated here. The engine does not report its LFO phase, so the picture turns its
-// own at the same rate: right speed and range, not the engine's exact moment.
 import type { ParamInfo, Params } from "../api/types";
 import { namedParams } from "../common/catalog";
 import { FREQ_MAX_HZ, FREQ_MIN_HZ, freqX } from "./frequencyAxis";
@@ -49,10 +43,8 @@ export function phaserGain(s: PhaserSettings, corner: number, hz: number): numbe
   const t = Math.tan((Math.PI * Math.min(corner, 0.45 * SAMPLE_RATE)) / SAMPLE_RATE);
   const a = (t - 1) / (t + 1);
   const w = (2 * Math.PI * hz) / SAMPLE_RATE;
-  // One stage, (a + e^−jw) / (1 + a·e^−jw), has a level of 1 and the angle below; the chain turns `stages` times as far.
   const angle = stages * Math.atan2(-Math.sin(w) * (1 - a * a), 2 * a + Math.cos(w) * (1 + a * a));
   const [chainRe, chainIm] = [Math.cos(angle), Math.sin(angle)];
-  // With feedback: wet = chain / (1 − feedback · chain).
   const [qRe, qIm] = [1 - s.feedback * chainRe, -s.feedback * chainIm];
   const q = qRe * qRe + qIm * qIm;
   const [wetRe, wetIm] = [(chainRe * qRe + chainIm * qIm) / q, (chainIm * qRe - chainRe * qIm) / q];

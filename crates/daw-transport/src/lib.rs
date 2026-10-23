@@ -109,7 +109,6 @@ impl TransportControl for Control {
         if self.shared.state() != TransportState::Playing
             && let Some(cue) = self.cue()
         {
-            // The seek is stored before the state: the clock never plays a block from the old position.
             self.seek(cue);
         }
         self.shared.set_state(TransportState::Playing);
@@ -163,7 +162,6 @@ impl TransportControl for Control {
         if hold {
             holds.fetch_add(1, Ordering::AcqRel);
         } else {
-            // A release without a hold changes nothing: the count never wraps below zero.
             let _ = holds.try_update(Ordering::AcqRel, Ordering::Acquire, |n| n.checked_sub(1));
         }
     }
@@ -196,22 +194,17 @@ impl TransportClock for Clock {
         let playing = self.shared.state() == TransportState::Playing;
         let tempo = map.tempo_at(self.position);
         let signature = map.signature_at(self.position);
-        // The segment tempo for finding the bounds; the segment end itself is taken exactly from the map below.
         let estimate = tempo.ticks_per_frame(sample_rate);
-        // Slack for rounding errors: a position accumulated over segments may land a hair before a boundary.
         let frames_to = |tick: f64| ((tick - self.position) / estimate - 1e-6).ceil().max(1.0) as usize;
 
         let mut frames = max_frames;
-        // Inside a ramp the segment tempo is constant, so the segment is short (see `RAMP_SEGMENT_FRAMES`).
         if map.in_ramp(self.position) {
             frames = frames.min(RAMP_SEGMENT_FRAMES);
         }
-        // A segment ends at a map point: past it comes another tempo or signature.
         let change = map.next_change(self.position);
         if let Some(change) = change {
             frames = frames.min(frames_to(change));
         }
-        // ...and at the end of the loop or the song, to jump back on the exact frame.
         let mut wrap_to = None;
         let loop_region = self.shared.wrap_region().filter(|_| playing);
         if let Some((start, end)) = loop_region {
@@ -223,7 +216,6 @@ impl TransportClock for Clock {
         }
         let frames = frames.max(1);
         let end = map.tick_after_frames(self.position, frames as f64, sample_rate);
-        // A segment that ended at a map point ends exactly on it, so the next one starts with that point's tempo.
         let end = change.filter(|change| (end - change).abs() < SNAP_TICKS).unwrap_or(end);
         let ticks_per_frame = (end - self.position) / frames as f64;
 
@@ -393,7 +385,6 @@ mod tests {
         let map = constant(120.0);
         control.set_loop(Some((0, 960)));
         control.play();
-        // 960 ticks at 120 BPM and 48 kHz = 24000 frames.
         let first = clock.advance(30_000, SR, &map);
         assert_eq!(first.frames, 24_000);
         assert_eq!(first.start_tick, 0.0);
@@ -428,7 +419,6 @@ mod tests {
         assert_eq!(control.wrap_region(), Some((0, 3840)));
         control.seek(1920);
         control.play();
-        // From tick 1920 to the song end at 3840: 1920 ticks at 120 BPM and 48 kHz = 48,000 frames.
         let last = clock.advance(60_000, SR, &map);
         assert_eq!(last.frames, 48_000, "the segment ends on the song end");
         assert_eq!(last.loop_region, Some((0, 3840)), "plugins see the song as the cycle");
@@ -509,7 +499,6 @@ mod tests {
 
     #[test]
     fn a_tempo_change_starts_a_segment_at_its_frame() {
-        // 120 BPM for a bar (2 s = 96,000 frames), then 60 BPM.
         let tempo_map = map(&[(0, 120.0, false), (3840, 60.0, false)], &[(0, 4, 4)]);
         let (control, mut clock) = create_transport();
         control.play();
@@ -547,7 +536,6 @@ mod tests {
 
     #[test]
     fn segments_carry_the_signature_of_their_bar() {
-        // A 3/4 bar (2880 ticks), then 4/4.
         let tempo_map = map(&[(0, 120.0, false)], &[(0, 3, 4), (2880, 4, 4)]);
         let (control, mut clock) = create_transport();
         control.play();

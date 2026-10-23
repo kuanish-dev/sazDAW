@@ -128,7 +128,6 @@ impl RpcTable {
         ] {
             register(&mut table);
         }
-        // The method catalog is a method too: a client (human or AI) needs to know nothing in advance but its name.
         let catalog = serde_json::to_value(table.describe()).unwrap_or(Value::Null);
         table.add("rpc.describe", "Lists all methods with their descriptions and parameter schemas.", move |_, (): ()| Ok(catalog.clone()));
         table
@@ -165,8 +164,6 @@ impl RpcTable {
         P: DeserializeOwned + JsonSchema,
         R: Serialize,
     {
-        // The param schema is built from the struct itself, so a method cannot be added without one. Nested types are
-        // inlined (no `$ref`) so AI clients get one self-contained object.
         let generator =
             schemars::generate::SchemaSettings::draft2020_12().with(|settings| settings.inline_subschemas = true).into_generator();
         let mut schema = serde_json::to_value(generator.into_root_schema_for::<P>()).unwrap_or(Value::Null);
@@ -274,7 +271,6 @@ where
         error
     })?;
     handler(controls, params).inspect_err(|error| {
-        // System and internal failures are real breakage; the rest are refusals by the rules (worth knowing, not a fault).
         let level = if matches!(error.kind(), ErrorKind::System | ErrorKind::Internal) { LogLevel::Error } else { LogLevel::Warn };
         log_failure(controls.log.as_ref(), level, name, error, &shown);
     })

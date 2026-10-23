@@ -136,7 +136,6 @@ impl Engine {
 
     pub fn note_on(&mut self, note: u8, velocity: f32) {
         self.clock += 1;
-        // A free voice, otherwise the oldest one.
         let index = self
             .voices
             .iter()
@@ -220,7 +219,6 @@ impl Engine {
 
     /// One frame (mono; duplicating to channels is the caller's job).
     pub fn next_sample(&mut self, s: &Settings) -> f32 {
-        // Modulation raises the cutoff, but not above almost half the sample rate: the filter cuts nothing there anyway.
         let cutoff = (s.cutoff_hz * 2f32.powf(self.modulation * MODULATION_OCTAVES)).min(0.45 * self.sample_rate);
         let alpha = 1.0 - (-TAU * cutoff / self.sample_rate).exp();
         let mut mix = 0.0;
@@ -362,7 +360,6 @@ mod tests {
 
     #[test]
     fn modulation_wheel_opens_the_filter() {
-        // A sine at 880 Hz with a 100 Hz cutoff is almost inaudible; full modulation raises the cutoff to 1600 Hz.
         let s = Settings { cutoff_hz: 100.0, sustain: 1.0, ..open_sine() };
         let level = |modulation: f32| {
             let mut e = engine();

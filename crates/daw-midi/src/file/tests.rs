@@ -52,7 +52,6 @@ fn smpte_timing_is_rejected() {
 #[test]
 fn huge_file_ticks_saturate_instead_of_wrapping() {
     let per_beat = u64::from(PPQ);
-    // Wrapping would turn 2³² + 10 into 10 and put the note at the clip start.
     let huge = (1u64 << 32) + 10;
     assert_eq!(to_project_ticks(huge, per_beat), u32::MAX);
     assert_eq!(to_project_ticks(u64::MAX, 1), u32::MAX);
@@ -205,7 +204,6 @@ fn project_export_has_one_midi_track_per_instrument_track_with_notes() {
 fn project_export_unrolls_repeats_and_cuts_at_clip_end() {
     let fake = Arc::new(Fake::default());
     fake.track(1, "Bass", true);
-    // Content of one bar, clip of a bar and a half: the second repeat is cut in the middle.
     fake.note_clip(10, 1, BAR_TICKS, BAR_TICKS * 3 / 2, 0, BAR_TICKS);
     fake.set_notes(10, &[(36, 0, 480), (40, 3_000, 840)]);
     let path = temp_path("unroll");
@@ -230,7 +228,6 @@ fn project_export_respects_clip_offset() {
     files(&fake).export_project(&path).unwrap();
     let tracks = read_back(&path);
     std::fs::remove_file(&path).ok();
-    // Offset 960: the note at 960 plays at the clip start, the note at 0 at the start of the next repeat (2880).
     assert_eq!(tracks[1].1, [(36, 2_880, 100), (40, 0, 100)]);
 }
 
@@ -265,7 +262,6 @@ fn the_author_from_preferences_goes_into_the_copyright_event_of_both_exports() {
     assert_eq!(copyright(&clip).as_deref(), Some("Аня К."));
     assert_eq!(copyright(&project).as_deref(), Some("Аня К."));
 
-    // No author means no event; the setting is read on every export.
     preferences.0.lock().unwrap().profile.author = String::new();
     midi.export_clip(10, &clip).unwrap();
     assert_eq!(copyright(&clip), None);
@@ -367,11 +363,9 @@ fn controller_lanes_round_trip_through_a_file_in_one_undo_step() {
     fake.note_clip(10, 1, 0, BAR_TICKS, 0, BAR_TICKS);
     fake.note_clip(11, 1, BAR_TICKS, BAR_TICKS, 0, BAR_TICKS);
     fake.set_notes(10, &[(60, 0, 480)]);
-    // The wheel edges and center are exact; CC and pressure within 1/127.
     set_lane(&fake, 10, ControllerKind::PitchBend, &[(0, -1.0), (240, 0.0), (480, 1.0)]);
     set_lane(&fake, 10, ControllerKind::Cc { number: 64 }, &[(0, 1.0), (900, 0.0)]);
     set_lane(&fake, 10, ControllerKind::Aftertouch, &[(100, 64.0 / 127.0)]);
-    // A lane missing in the file goes away on import.
     set_lane(&fake, 11, ControllerKind::Cc { number: 1 }, &[(0, 0.5)]);
 
     let path = temp_path("controllers");

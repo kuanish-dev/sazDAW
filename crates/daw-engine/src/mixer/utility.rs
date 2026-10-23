@@ -139,7 +139,6 @@ impl ChannelUtilities {
         channel.applied = Some(target);
         let [left_line, right_line] = &mut channel.lines;
         if start == NEUTRAL && target == NEUTRAL {
-            // The lines still take the sound in, so a delay set later has history to play.
             for frame in buffer.chunks_exact(2) {
                 left_line.push(frame[0]);
                 right_line.push(frame[1]);

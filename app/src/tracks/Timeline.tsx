@@ -1,10 +1,3 @@
-// The track timeline: a canvas with the clips of all tracks (rows — tracks, folders and automation lanes,
-// `tracks/trackRows` — match the headers on the left) and the ruler strip above them. The ruler is a separate canvas rendered into `rulerHost`, a container that
-// `TracksView` keeps on screen while the page scrolls and scrolls sideways together with the rows. This is the assembly:
-// gesture drafts, playhead, cue and wheel zoom; drawing is `timelineRender` (rows), `activityRender` (what is sounding: lit notes
-// over the rows, redrawn every frame while playing) and `rulerRender` (ruler), the mouse is
-// `lanePointer` on automation lane rows, `timelinePointer` on the other rows and, on the ruler, `tempoPointer` (signature flags), `markerPointer` (marker
-// flags) and `rulerPointer` (cue, loop); sound drop — `timelineDrop`, the audio clip menu — `ClipMenu`.
 import { Show, createEffect, createMemo, createSignal } from "solid-js";
 import { Portal } from "solid-js/web";
 import type { Clip, Marker } from "../api/types";
@@ -181,7 +174,6 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
   const onWheel = (event: WheelEvent) => {
     if (!isZoomWheel(event)) return;
     event.preventDefault();
-    // The ruler and the rows share horizontal coordinates, so the rows surface measures for both.
     const tick = tickAtX(localPoint(surface, event).x, pxPerTick());
     props.state.setZoom(zoomByWheel(props.state.zoom(), event.deltaY));
     const rows = scroller();
@@ -205,7 +197,6 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
   let rulerPlayheadEl!: HTMLDivElement;
   createEffect(() => {
     const position = smoothPlayhead();
-    // Step in device pixels: on a high-density screen the playhead moves in steps finer than a CSS pixel.
     const ratio = window.devicePixelRatio || 1;
     const shift = position === null ? "" : `translateX(${Math.round(position * pxPerTick() * ratio) / ratio}px)`;
     for (const el of [playheadEl, rulerPlayheadEl]) {
@@ -248,7 +239,6 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
     drawTimeline(canvas, view);
   });
 
-  // The glow layer follows the playhead on every screen frame, but draws only the clips under it.
   createEffect(() => {
     const shown = shownWindow();
     activity.style.transform = `translateX(${shown.left}px)`;
@@ -278,8 +268,6 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
     });
   });
 
-  // A fragment, not a child of the rows surface: events bubble from a portal to where it stands, and the ruler's
-  // presses must not reach the rows' pointer.
   return (
     <>
       <Portal mount={props.rulerHost}>
@@ -294,7 +282,6 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
           <Show when={tempo.menu()} keyed>
             {(menu) => <TempoMenu menu={menu} onClose={tempo.closeMenu} />}
           </Show>
-          {/* A marker name is edited in a field right on its flag. */}
           <Show when={markers.renaming()} keyed>
             {(marker) => (
               <div class="absolute z-10" style={{ left: `${marker.tick * pxPerTick()}px`, top: `${MARKER_TOP - 2}px` }}>
@@ -315,7 +302,6 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
         onContextMenu={(e) => lanePointer.onContext(e) || pointer.onContext(e)} onWheel={onWheel}>
         <canvas ref={canvas} class="absolute left-0 top-0 block" />
         <canvas ref={activity} class="pointer-events-none absolute left-0 top-0 block" aria-hidden="true" />
-        {/* The canvas covers only the visible window; this block reserves the full height of the rows. */}
         <div style={{ height: `${timelineHeight(layout())}px` }} />
         <div ref={playheadEl} class="playhead pointer-events-none absolute left-0 top-0 h-full w-px will-change-transform" style={{ background: palette().ink, display: "none" }} />
         <Show when={tip()} keyed>
@@ -329,7 +315,6 @@ export function Timeline(props: { state: ToolbarState; rulerHost: HTMLElement })
           {(menu) => <ClipMenu menu={menu} onClose={() => setClipMenu(null)} />}
         </Show>
         <DropGhostView ghost={drop.ghost()} />
-        {/* While a sample is dragged, two zones under the last track — "instrument" and "ready block" — create a new track. */}
         <Show when={drop.active()}><DropZones onDrop={(source, kind) => void placement.dropAsNewTrack(source, kind)} /></Show>
       </div>
     </>

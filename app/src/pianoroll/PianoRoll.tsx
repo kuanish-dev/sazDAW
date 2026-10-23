@@ -1,7 +1,3 @@
-// Piano roll of the selected note clip. Assembly only: view state (grid, zoom, selection, drafts, scale); drawing —
-// `render`, mouse — `pointer` and `velocityPointer`, editing and keys — `editing`, musical edits — `NoteTools` (in the
-// toolbar), controller lanes — `ControllerLaneView`. Note times are relative to the clip start.
-// The panel handles keys itself while focused (`data-owns-keys`), so timeline clip keys do not affect it.
 import { createEffect, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { STEP_TICKS, type NewNote, type Note } from "../api/types";
 import { clipBarTicks, clipNotes, playheadInLoop, viewTicks, type NoteClip } from "./noteClip";
@@ -35,7 +31,6 @@ const { live } = keyboard;
   const [drafts, setDrafts] = createSignal<Record<number, NewNote>>({});
   const [selected, setSelected] = createSignal<Set<number>>(new Set());
   const [marquee, setMarquee] = createSignal<TickPitchRect | null>(null);
-  // Width of the vertical scrollbar: the velocity lane is narrowed by it so the columns line up.
   const [gutter, setGutter] = createSignal(0);
   const [scrollLeft, setScrollLeft] = createSignal(0);
   /** Scale for "Fit to scale" and row highlighting; highlighting is off until turned on. */
@@ -71,7 +66,6 @@ const { live } = keyboard;
   });
   const selectedNotes = createMemo(() => noteList().filter((n) => selected().has(n.id)));
 
-  // The selection does not survive a clip change or notes that disappeared.
   createEffect(() => {
     const ids = new Set(clipNotes(props.clip).map((n) => n.id));
     setSelected((current) => {
@@ -141,7 +135,6 @@ const { live } = keyboard;
     const center = list.length ? list.reduce((sum, n) => sum + n.pitch, 0) / list.length : props.defaultPitch;
     scroller.scrollTop = Math.max(0, rowY(center) - scroller.clientHeight / 2);
   };
-  // Layout is not ready at mount time, so wait a frame; again on clip change.
   let lastCentered: number | undefined;
   createEffect(() => {
     const id = props.clip.id;
@@ -181,7 +174,6 @@ const { live } = keyboard;
         }}
       />
 
-      {/* The grid scrolls both ways; the velocity lane follows the horizontal scroll. */}
       <div
         ref={scroller}
         class="min-h-0 flex-1 overflow-auto"

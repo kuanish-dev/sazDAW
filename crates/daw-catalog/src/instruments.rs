@@ -47,7 +47,6 @@ impl InstrumentGroups for InstrumentRegistry {
 
 impl InstrumentCatalog for InstrumentRegistry {
     fn kinds(&self) -> Vec<KindInfo> {
-        // Hidden kinds (disabled plugins) are not offered, but `create` still finds them and explains the refusal.
         self.groups
             .describe_all(|f| f.listed().then(|| KindInfo { kind: f.kind(), label: f.label(), about: f.about(), params: f.describe() }))
     }

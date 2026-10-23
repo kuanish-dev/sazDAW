@@ -1,8 +1,3 @@
-// Chorus graph (`effects/ChorusGraph.tsx`): how the delay of its two voices sweeps over time. MIRRORS
-// `crates/daw-effects/src/chorus.rs` (one sine LFO at `rate`, the right voice a quarter turn ahead of the left, each
-// voice's delay `delay ± depth`, the lines `MAX_DELAY_MS` long): a change there must be repeated here. The engine does
-// not report its LFO phase, so the picture turns its own LFO at the same rate: the sweeps have the right speed and range,
-// though not the engine's exact moment.
 import type { ParamInfo, Params } from "../api/types";
 import { namedParams } from "../common/catalog";
 import { clamp } from "../common/math";

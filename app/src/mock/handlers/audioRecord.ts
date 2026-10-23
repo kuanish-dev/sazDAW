@@ -1,7 +1,3 @@
-// Audio input recording in the browser without Rust: track arming and inputs, time from the clock, levels as a pseudo-sine
-// (while any track is armed or a take runs); on stop each armed track gets a "Recording …" sample and an audio clip
-// at the start position, or a new take of the clip the recording covered by half or lies within (one undo step). A take
-// that played around the loop region becomes one sample per pass, all takes of one clip on the loop (`loopPasses.ts`).
 import type { Clip, Id, InputChannels, TrackRecordState } from "../../api/types";
 import { clamp } from "../../common/math";
 import { secondsAt, tickAtSeconds } from "../../common/tempoMap";
@@ -71,7 +67,6 @@ export function audioRecordHandlers(w: MockWorld): HandlerSet {
 
   h["audioRecord.status"] = () => {
     const now = performance.now();
-    // The input is "open" while a track is armed or a take runs.
     const open = take !== null || [...arming.values()].some((s) => s.armed);
     const left = open ? 0.1 + 0.5 * Math.abs(Math.sin(now / 250)) : 0;
     const right = open ? 0.1 + 0.5 * Math.abs(Math.sin(now / 380 + 1)) : 0;

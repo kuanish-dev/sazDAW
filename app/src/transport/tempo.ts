@@ -1,6 +1,3 @@
-// Song tempo map actions: tempo and time signature at a point (transport bar, project settings) and time signature
-// changes on the ruler. Edits are computed by the pure
-// `common/tempoMap.ts`; only the intent arrives here. Each edit is one backend undo step; the value shows at once (`patchProject`).
 import type { SignatureChange, TempoChange, TimeSignature } from "../api/types";
 import { withSignatureAt, withSignatureFrom, withTempoAt, withoutSignature } from "../common/tempoMap";
 import type { Core } from "../core/core";

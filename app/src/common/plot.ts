@@ -1,5 +1,3 @@
-// Geometry shared by the small graphs of the effect panel (`effects/*Graph.tsx`): the size of a graph's SVG view,
-// levels in dB as heights, and SVG paths through points.
 import { clamp } from "./math";
 
 /** A graph's SVG view in its own units (the SVG stretches to the panel width). */

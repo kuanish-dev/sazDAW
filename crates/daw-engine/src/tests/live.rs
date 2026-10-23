@@ -32,7 +32,7 @@ fn live_notes_go_to_the_instrument_of_their_track() {
     assert_eq!(rig.count("on:64"), 1);
 
     rig.link.note_off(11, 64);
-    rig.link.note_on(99, 64, 1.0); // no such track: the note is silently lost
+    rig.link.note_on(99, 64, 1.0);
     rig.render(512);
     assert!(near(Rig::left(&rig.render(512), 100), 0.0));
 }
@@ -43,7 +43,7 @@ fn recorded_events_carry_the_track() {
     rig.add_track(10, MASTER);
     rig.add_track(11, MASTER);
     rig.publish();
-    rig.link.note_on(11, 64, 0.8); // recording is not armed and the transport is stopped: events do not pile up
+    rig.link.note_on(11, 64, 0.8);
     rig.render(512);
     assert_eq!(rig.link.drain(), [] as [daw_contracts::RecordedEvent; 0]);
 
@@ -73,7 +73,7 @@ fn live_notes_that_do_not_fit_the_queue_are_counted_as_losses() {
     rig.publish();
     assert_eq!(rig.link.losses(), EngineLosses::default());
     for _ in 0..600 {
-        rig.link.note_on(10, 60, 1.0); // the audio thread is not running: the queue (512) overflows
+        rig.link.note_on(10, 60, 1.0);
     }
     assert_eq!(rig.link.losses().live_notes, 88);
     rig.render(512);
@@ -88,7 +88,6 @@ fn recorded_events_that_do_not_fit_the_queue_are_counted_as_losses() {
     rig.publish();
     rig.link.set_armed(true);
     rig.transport.play();
-    // The recorder does not take the events: 9 × 512 arrive in the recording queue (4096).
     for _ in 0..9 {
         for _ in 0..512 {
             rig.link.note_on(10, 60, 1.0);

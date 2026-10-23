@@ -1,5 +1,3 @@
-// Mouse in the node editor: camera pan and zoom, moving cards, dragging a wire from an output to an input.
-// Holds the gesture and exposes handlers; the result goes to `ProcessingGraph`, drafts are shown while the gesture is in progress.
 import type { ProcessingGraph } from "./graph";
 import type { Graph, GraphNode, Id } from "../api/types";
 import { checkEdge } from "./graphRules";
@@ -90,7 +88,6 @@ export function createGraphPointer(deps: GraphPointerDeps) {
       gesture = null;
       if (done?.kind === "node" && done.moved) {
         const { x, y } = grabTo(event, done.grab);
-        // The draft stays until the backend answers so the card doesn't jump back.
         void deps.graph.moveNode(done.id, x, y).finally(() => deps.setDrafts({}));
       } else if (done?.kind === "wire") {
         const hit = hitInputPort(deps.nodes(), worldOf(event));
@@ -102,7 +99,6 @@ export function createGraphPointer(deps: GraphPointerDeps) {
     },
 
     onWheel(event: WheelEvent) {
-      // The wheel over a knob or fader turns it instead of panning the canvas.
       if (!isZoomWheel(event) && (event.target as HTMLElement).closest("[role=slider]")) return;
       event.preventDefault();
       const view = deps.view();

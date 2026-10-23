@@ -1,6 +1,3 @@
-// Track timeline geometry: pure functions without DOM or state (rows, clips, zoom, pixels ↔ ticks, audio clip fade
-// handles and the gain line). The clip edit rules a drag uses (trim, resize, gain) are `tracks/clipRules.ts`.
-// Rows differ in height (a track's own `Track.height`), so their geometry is `tracks/rowLayout.ts`.
 import { BAR_TICKS, type Clip } from "../api/types";
 import type { GroupPlacement } from "./clipSelection";
 import { songEnd } from "./clipRules";
@@ -25,7 +22,6 @@ const WHEEL_DELTA_LIMIT = 100;
 const CLIP_PADDING = 4;
 const MIN_CLIP_PX = 4;
 
-// Mini notes inside a note clip.
 /** Space at the top for the clip name, and at the bottom. */
 const PREVIEW_TOP = 18;
 const PREVIEW_VERTICAL_PAD = 20;
@@ -132,7 +128,6 @@ export function applyDraft(clips: Clip[], draft: ClipDraft | null): Clip[] {
   return [...clips, ...ghosts];
 }
 
-// Audio clip handles: fade handles sit on the top edge where each fade ends; the gain line runs across the clip.
 /** Half the size of a fade handle square, and how far from the gain line a press still grabs it (pixels). */
 export const FADE_HANDLE_PX = 4;
 const GAIN_GRAB_PX = 3;

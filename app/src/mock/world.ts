@@ -1,5 +1,3 @@
-// The backend's in-memory state: the project with undo history (the tempo map lives in it), transport, kinds catalog,
-// a file "system", recording. Method handlers (`handlers/`) read and change only it; it knows nothing about RPC.
 import type { AutomationWriteMode, Catalog, Id, Preferences, Project, SampleInfo, TransportState } from "../api/types";
 import { DEFAULT_PREFERENCES } from "../settings/preferenceRules";
 import { t } from "../i18n";
@@ -119,7 +117,6 @@ export class MockWorld {
     this.redoStack = [];
     this.dirty = dirty;
     this.path = path;
-    // As in the backend: the old project's cue means nothing in the new one.
     this.cue = null;
     this.touch();
   }
@@ -189,7 +186,6 @@ export class MockWorld {
     if (!entry) return false;
     to.push({ label: entry.label, project: JSON.stringify(this.project) });
     const next = JSON.parse(entry.project) as Project;
-    // Ids are never reused, even after undo.
     next.nextId = Math.max(next.nextId, this.project.nextId);
     this.project = next;
     this.touch();

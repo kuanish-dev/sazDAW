@@ -62,7 +62,6 @@ fn midi_learn_maps_the_next_cc_and_the_knob_moves_the_parameter() {
     call(&table, c, "midi.learn", json!({ "target": target }));
     assert_eq!(call(&table, c, "midi.mappings", Value::Null)["learning"], target);
 
-    // A knob was turned on the device (channel 1, CC 20): this is how MIDI input sees it.
     assert!(c.midi_mappings.control_change(0, 20, 0));
     let listed = call(&table, c, "midi.mappings", Value::Null);
     assert_eq!(listed["learning"], Value::Null);

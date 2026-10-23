@@ -1,6 +1,3 @@
-// Draws the ruler strip above the timeline rows on its own canvas: bar numbers and beat ticks, the loop,
-// signature flags (`tempoRender.ts`), marker flags (`markerRender.ts`) and the cue flag. The strip stays on screen while the
-// page scrolls (`TracksView`); like the rows canvas, it covers only the visible window (`window`).
 import { BAR_TICKS, type Marker, type TempoMap } from "../api/types";
 import { gridLines } from "../common/tempoMap";
 import { fitCanvas, vline } from "../common/canvas";

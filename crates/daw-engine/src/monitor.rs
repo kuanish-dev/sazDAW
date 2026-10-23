@@ -59,7 +59,6 @@ impl InputListener {
         let rate = input.sample_rate();
         table.report(self.targets.len() as u32, rate.unwrap_or(0));
         if self.targets.is_empty() || rate != Some(output_rate) {
-            // Nobody listens, so the input does not pile up: otherwise the first monitoring would sound late.
             input.skip(input.available());
             self.primed = false;
             return false;

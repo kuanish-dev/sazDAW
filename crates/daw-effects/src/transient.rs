@@ -215,7 +215,6 @@ mod tests {
 
     #[test]
     fn turning_the_knobs_does_not_click() {
-        // A steady tone after its start has settled: the knobs then have nothing to shape, so any step is a click.
         let input = sine(1_000.0, 0.3, SR as usize);
         let settled = SR as usize / 5 * 2;
         let mut shaper = build::<Transient>([]);

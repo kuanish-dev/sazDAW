@@ -1,4 +1,3 @@
-// Toolbar strip above the sample waveform: preview and loop, zoom, slice markers, file length and sample rate.
 import { formatTime } from "./waveform";
 import { t } from "../i18n";
 import { IconFit, IconFlag, IconLoop, IconPlay, IconStop, IconZoomIn, IconZoomOut } from "../common/icons";

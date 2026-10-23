@@ -1,4 +1,3 @@
-// Project tracks: lookup, kind (instrument or audio), name and step pitch of a new track.
 import type { Clip, Id, Project, Track } from "../api/types";
 import { GM_DRUM_PITCHES, MIDDLE_C } from "../common/pitch";
 import { STRING_PITCHES } from "../instruments/strings";

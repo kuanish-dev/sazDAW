@@ -98,7 +98,7 @@ mod tests {
     #[test]
     fn the_response_follows_the_eq_magnitude() {
         let mut values = flat();
-        values[3] = 12.0; // mid_gain at the default 1 kHz, Q 1
+        values[3] = 12.0;
         let len = 4_096;
         let mut designer = Designer::new(len);
         let response = designer.design(48_000.0, &values).to_vec();

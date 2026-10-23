@@ -1,4 +1,3 @@
-// Instrument and effect presets (`presets.*`) in mock memory: a kind's params under a name (the mock has no plugin state).
 import type { EditorTarget, Params, Project } from "../../api/types";
 import { MAX_PRESET_NAME_CHARS } from "../../presets/presetRules";
 import { t } from "../../i18n";

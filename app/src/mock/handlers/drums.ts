@@ -1,6 +1,3 @@
-// Drum patterns in the browser without Rust: a small set of the same shape `patterns.list` returns
-// (the real library is `crates/daw-patterns/src/data.rs`), and building a part with the same methods as the backend.
-// Pattern names and descriptions are backend-made labels, so they are taken in the current language on each request.
 import type { DrumPartRequest, DrumPattern, Id, LaneAssignment, LaneTarget, NewNote, PatternRole, PatternSlot } from "../../api/types";
 import { BAR_TICKS, STEP_TICKS } from "../../api/types";
 import { laneLabel } from "../../drums/drumPart";
@@ -121,10 +118,8 @@ export function drumsHandlers(w: MockWorld, h: () => HandlerSet): HandlerSet {
 
   return {
     "patterns.list": () => mockPatterns(),
-    // The browser without Rust has no sound: preview plays nothing but answers like the backend.
     "drums.preview": () => null,
     "drums.stopPreview": () => null,
-    // Simplified: the backend does everything as one undo step and checks for taken places up front.
     "drums.build": ({ startBar, slots, replace, lanes = [] }: DrumPartRequest) => {
       const placed = slots.map((slot) => ({ slot, def: PATTERN_DATA.find((p) => p.id === slot.pattern) }));
       const unknown = placed.find((p) => !p.def);
@@ -134,7 +129,6 @@ export function drumsHandlers(w: MockWorld, h: () => HandlerSet): HandlerSet {
       const resolve = createLaneResolver(lanes, createdTracks);
       const clips: Id[] = [];
       const tracks = new Set<Id>();
-      // The start is a bar of the tempo map (as `daw-patterns/src/plan.rs`); patterns keep their own 4/4 bars.
       let tick = barTick(w.project.tempoMap, startBar);
       for (const { slot, def } of placed) {
         const result = placeSlot(def!, slot, tick, startBar, replace, resolve);

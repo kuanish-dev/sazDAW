@@ -1,4 +1,3 @@
-// Song sections: section markers with the backend's checks and error codes (`MarkerControl`).
 import type { Id, Project } from "../../api/types";
 import { t } from "../../i18n";
 import { fail } from "../errors";

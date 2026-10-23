@@ -1,4 +1,3 @@
-// Node card on the graph canvas: header (move, rename), input/output/sidechain ports and content by node kind.
 import { Show, createSignal } from "solid-js";
 import type { GraphNode } from "../api/types";
 import { effectInfo } from "../common/catalog";

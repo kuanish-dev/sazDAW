@@ -1,6 +1,3 @@
-// Context menu of any parameter control (knob, fader, pan, switch): right-click for its automation lane — add it (a
-// timeline row) or select its row, remove it — and MIDI learn ("Assign MIDI controller" / "Remove assignment", with the CC number).
-// The automation and MIDI learn roles do all the work.
 import { type JSX, Show, createSignal } from "solid-js";
 import type { ParamTarget } from "../api/types";
 import { sameTarget, targetLabel } from "../automation/automationRules";

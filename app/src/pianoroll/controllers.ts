@@ -1,6 +1,3 @@
-// MIDI controller lanes of a note clip (pitch bend, CC, aftertouch): kinds and their labels, value limits and point
-// editing by drawing — the pencil stroke is shared with automation patterns. A point holds its value as a step until the
-// next one (that's how the engine plays them). Pure functions.
 import type { ControllerKind, ControllerLane, ControllerPoint, NoteContent } from "../api/types";
 import { t } from "../i18n";
 

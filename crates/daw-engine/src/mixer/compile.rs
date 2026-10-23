@@ -89,7 +89,6 @@ impl GraphMixer {
                 NodeKind::Effect { .. } => (1.0, 0.0),
                 kind => kind.strip().map_or((1.0, 0.0), |strip| (strip.volume, strip.pan)),
             };
-            // Only sources and buses have a channel utility; the other nodes get the neutral settings and never run it.
             let strip = spec.kind.strip();
             let utility = strip.copied().unwrap_or_default();
             let carried = self.scratch.carried(spec.id);
@@ -130,7 +129,6 @@ impl GraphMixer {
             if let (Some(from), Some(to)) = (self.index_of(edge.from), self.index_of(edge.to))
                 && from != to
             {
-                // "Pre-fader" exists only on a regular connection from a node with a fader (a project rule; this is a guard).
                 let pre_fader = edge.pre_fader && !edge.sidechain && self.nodes[from].role.strip().is_some();
                 self.scratch.resolved.push((from, EdgeRt::new(to, edge.level, edge.sidechain, pre_fader)));
             }
@@ -201,7 +199,6 @@ impl GraphMixer {
         let mut used = 0;
         for node in &mut self.nodes {
             node.meter = None;
-            // A meter on every node with a fader (tracks, buses) and on the master; effects do not show their own level.
             if (node.role.strip().is_some() || matches!(node.role, Role::Master)) && used < MAX_METERS {
                 node.meter = Some(used);
                 meters.set_node(used, node.id);
@@ -222,7 +219,6 @@ impl GraphMixer {
         for edge in self.edges.iter().filter(|e| !e.sidechain) {
             inputs[edge.to] = inputs[edge.to].saturating_add(1);
         }
-        // Reaching the master, computed backwards along the processing order (sidechain keys carry no sound onward).
         let reaches = &mut self.scratch.reaches_master;
         reaches.clear();
         reaches.resize(count, false);
@@ -274,7 +270,6 @@ impl GraphMixer {
         if !self.any_solo {
             return;
         }
-        // `down`: solo or downstream of solo; `up`: solo or upstream of solo — computed in processing order and back.
         let solo = |node: &NodeRt| node.role.strip().is_some_and(|(_, solo)| solo);
         self.heard.fill(false);
         for &index in &self.order {
@@ -287,7 +282,6 @@ impl GraphMixer {
                 }
             }
         }
-        // Upstream: a node is audible if it flows into a solo node. `seen` marks "leads to solo".
         let leads_to_solo = &mut self.scratch.seen;
         leads_to_solo.clear();
         leads_to_solo.resize(count, false);

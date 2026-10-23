@@ -1,4 +1,3 @@
-// Label with the sound's name next to the cursor while a sound is dragged (see `dragSample.ts`).
 import { Show } from "solid-js";
 import { draggedSample } from "./dragSample";
 import { IconNote } from "./icons";

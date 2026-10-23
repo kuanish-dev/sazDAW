@@ -1,6 +1,3 @@
-// App preferences: the interface's copy, which everyone reads, and everything done to it — read on startup and edited
-// with instant display, rolled back if the backend refuses. Only this role changes the copy, so the instant display and
-// the rollback live in one place.
 import { createSignal } from "solid-js";
 import type { Preferences } from "../api/types";
 import type { Core } from "../core/core";

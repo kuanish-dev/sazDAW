@@ -1,4 +1,3 @@
-// The presets role: instrument and effect presets — list, save, apply, delete (`presets.ts`).
 import { defineRole, useRole } from "../core/roles";
 import { createPresets } from "./presets";
 

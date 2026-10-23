@@ -149,7 +149,6 @@ impl ChordPartControl for ChordPartBuilder {
         let map = self.tempo.tempo_map();
         let plan = plan(&request, &*self.tracks, &*self.instruments, &map)?;
 
-        // Occupied space is checked before any edit: either a clear refusal or the clips get replaced.
         let end = plan.start_tick.saturating_add(plan.length_ticks());
         let replaced = plan.track.map(|track| overlapping(&self.clips.clips(), track, plan.start_tick, end)).unwrap_or_default();
         if !replaced.is_empty() && !request.replace {
@@ -162,7 +161,6 @@ impl ChordPartControl for ChordPartBuilder {
         self.history.begin_group(LABEL.get());
         let result = self.apply(plan, replaced);
         if result.is_err() {
-            // A failure halfway: bring the project back as it was so half a part is not left behind.
             self.history.cancel_group();
         } else {
             self.history.end_group();

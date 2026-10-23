@@ -52,8 +52,6 @@ impl Shared {
     fn work(&self, jobs: &Receiver<ProcessJob>) {
         while let Ok(job) = jobs.recv() {
             {
-                // Checked and forgotten under one lock: a `ready` in between would see the job still queued, not send
-                // it again, and the job would be lost.
                 let mut state = lock(&self.state);
                 if !state.wanted.contains(&job) {
                     state.queued.remove(&job);

@@ -176,7 +176,6 @@ impl Inner {
         let mut released = false;
         while !stop.load(Ordering::Relaxed) {
             thread::sleep(POLL_INTERVAL);
-            // Half a step of headroom: the input queue holds ~5 s, so one drain never outgrows it and no doubling happens.
             if data.capacity() - data.len() < step / 2 {
                 data.reserve_exact(step);
             }
@@ -190,7 +189,7 @@ impl Inner {
             if !released && data.len() >= self.deps.max_samples {
                 self.release(started_transport);
                 released = true;
-                lock(&self.progress).full = true; // the take waits for `stop`: the interface shows it
+                lock(&self.progress).full = true;
                 self.log(LogLevel::Error, "audio recording stopped at the length limit; the accumulated audio is saved on stop".into());
             }
         }
@@ -221,7 +220,6 @@ impl AudioRecordControl for AudioRecorder {
             return Err(audio::PROJECT_NOT_SAVED.err());
         }
         let started_transport = inner.deps.transport.state() != TransportState::Playing;
-        // Starting the transport jumps to the cue, so the take starts there.
         let cue = inner.deps.transport.cue().filter(|_| started_transport);
         let start_tick = u32::try_from(cue.unwrap_or_else(|| inner.deps.transport.position_ticks())).unwrap_or(u32::MAX);
         let to_tick = |tick: u64| u32::try_from(tick).unwrap_or(u32::MAX);
@@ -263,7 +261,6 @@ impl AudioRecordControl for AudioRecorder {
             *lock(&inner.progress) = Progress::default();
             return Err(audio::RECORD_THREAD_CRASHED.err());
         };
-        // Drain what has arrived, close the input, then drain the rest that came before closing.
         inner.deps.capture.drain(&mut captured.data);
         if !captured.released {
             inner.release(take.started_transport);
@@ -299,7 +296,6 @@ impl Drop for AudioRecorder {
     fn drop(&mut self) {
         if let Some(take) = lock(&self.running).take() {
             take.stop.store(true, Ordering::Relaxed);
-            // A thread panic is already logged by the panic hook; here we only wait for the thread to end.
             let _ = take.worker.join();
             self.inner.release(take.started_transport);
             self.inner.deps.transport.hold_song_loop(false);

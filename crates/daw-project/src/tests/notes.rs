@@ -38,7 +38,6 @@ fn set_loop_ticks_turns_auto_length_off_and_trims_notes() {
     assert_eq!(manual.loop_ticks, BAR_TICKS * 2);
     assert_eq!(manual.notes.len(), 1, "the note beyond the bound is removed");
 
-    // A manual length is a hard bound, and there is no more fitting.
     assert!(rig.notes.add_note(clip, note(60, BAR_TICKS * 2, 100)).is_err());
     rig.notes.add_note(clip, note(64, 0, 100)).unwrap();
     assert_eq!(loop_ticks(&rig, clip), BAR_TICKS * 2);
@@ -118,28 +117,23 @@ fn auto_length_grows_with_notes_and_shrinks_back_atomically() {
     let (rig, _, clip) = rig_with_clip();
     assert_eq!(length_of(&rig, clip), BAR_TICKS);
 
-    // A note in the third bar stretches the content to three bars (the clip itself does not change).
     let far = rig.notes.add_note(clip, note(60, BAR_TICKS * 2 + 100, 200)).unwrap();
     assert_eq!(length_of(&rig, clip), BAR_TICKS * 3);
     assert_eq!(rig.clips.clips()[0].length_ticks, BAR_TICKS);
-    // A note in the first bar changes nothing.
     let near = rig.notes.add_note(clip, note(62, 0, 240)).unwrap();
     assert_eq!(length_of(&rig, clip), BAR_TICKS * 3);
 
-    // A note crossing a bar line takes the next bar too.
     let crossing = rig.notes.add_note(clip, note(64, BAR_TICKS * 3 - 100, 400)).unwrap();
     assert_eq!(length_of(&rig, clip), BAR_TICKS * 4);
     rig.notes.remove_note(clip, crossing.id).unwrap();
     assert_eq!(length_of(&rig, clip), BAR_TICKS * 3);
 
-    // Moving the far note closer shrinks the content; removing all of them shrinks it to one bar.
     rig.notes.update_note(clip, far.id, note(60, BAR_TICKS + 10, 100)).unwrap();
     assert_eq!(length_of(&rig, clip), BAR_TICKS * 2);
     rig.notes.remove_note(clip, far.id).unwrap();
     rig.notes.remove_note(clip, near.id).unwrap();
     assert_eq!(length_of(&rig, clip), BAR_TICKS);
 
-    // One undo brings back both the note and the length.
     assert!(rig.service.undo());
     assert_eq!(rig.notes.notes(clip).unwrap().len(), 1);
     assert_eq!(length_of(&rig, clip), BAR_TICKS);
@@ -163,7 +157,6 @@ fn batch_note_operations_are_all_or_nothing() {
     assert_eq!(added.len(), 3);
     assert!(added.windows(2).all(|w| w[0].id < w[1].id), "ids are given out in a row");
 
-    // Moving a group in one step; the content length follows.
     let moved = rig
         .notes
         .update_notes(clip, added.iter().map(|n| (n.id, note(n.pitch + 1, n.start_tick + BAR_TICKS, n.length_ticks))).collect())
@@ -171,7 +164,6 @@ fn batch_note_operations_are_all_or_nothing() {
     assert_eq!(moved.iter().map(|n| n.pitch).collect::<Vec<_>>(), [61, 63, 65]);
     assert_eq!(length_of(&rig, clip), BAR_TICKS * 2);
 
-    // One bad edit cancels the whole batch.
     let bad = vec![(added[0].id, note(70, 0, 100)), (999, note(70, 0, 100))];
     assert!(matches!(rig.notes.update_notes(clip, bad), Err(e) if e.is(codes::notes::NOT_FOUND)));
     assert_eq!(rig.notes.notes(clip).unwrap()[0].pitch, 61, "the first edit was not applied");

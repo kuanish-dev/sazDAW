@@ -1,6 +1,3 @@
-// What changed in the project (an update of the project feed), taken into the interface's copy: the backend sends
-// only the parts that changed, the copy keeps the rest. The same rules as `ProjectChanges::apply` in Rust
-// (`daw-contracts/src/project_changes.rs`); a new project field is a new line here and there.
 import type { ListChanges, Project, ProjectChanges } from "../api/types";
 
 /** The list rebuilt in the order of `changes.ids`: each entity from `changed`, otherwise the one the copy has. */

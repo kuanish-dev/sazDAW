@@ -102,7 +102,6 @@ impl ProjectTemplates for TemplateFolder {
     fn save(&self, name: &str) -> Result<(), ContractError> {
         let folder = self.folder(name)?;
         let structure = structure_of(&self.view.snapshot(), &self.sample_params());
-        // Overwriting starts from a clean folder: the old template's sounds are not needed by the new one.
         if folder.exists() {
             fs::remove_dir_all(&folder).map_err(|e| settings::TEMPLATE_NOT_REPLACED.with("name", name.trim()).with("details", e))?;
         }
@@ -123,7 +122,6 @@ impl ProjectTemplates for TemplateFolder {
         if let Some(stem) = project_file.file_stem() {
             project.name = stem.to_string_lossy().into_owned();
         }
-        // Saving copies the template's sounds into the new project folder; then it opens like any project.
         self.storage.save(project_file, &project)?;
         self.files.load(project_file)
     }

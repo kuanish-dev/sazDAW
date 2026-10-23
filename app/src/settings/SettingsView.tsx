@@ -1,5 +1,3 @@
-// Settings page (VS Code settings-editor feel): section list on the left, the chosen section on the right. Which section is open is the shell's state
-// (`ui.settingsSection`), so menu items ("Audio…", "Error log…") open the right one directly.
 import { For, type JSX } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { t } from "../i18n";

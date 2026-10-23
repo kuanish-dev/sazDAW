@@ -1,4 +1,3 @@
-// Notifications (toasts) in the window corner: show, remove on timeout or by button; the message about a finished note take.
 import { createEffect, createSignal } from "solid-js";
 import type { RecordState } from "../api/types";
 import { t } from "../i18n";

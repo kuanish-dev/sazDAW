@@ -45,9 +45,6 @@ impl ProjectSampleCatalog {
 
 impl SampleCatalog for ProjectSampleCatalog {
     fn import(&self, path: &Path) -> Result<SampleInfo, ContractError> {
-        // The file is copied into the project folder, so the project does not depend on where it came from (a deleted
-        // pack leaves the project intact). A failed copy is an error, not a silent link to the source file. Without a
-        // project file (tests) there is nowhere to copy to.
         let adopted = match self.project.path() {
             Some(file) => self.assets.adopt(&file, path)?,
             None => path.to_path_buf(),
@@ -67,7 +64,6 @@ impl SampleCatalog for ProjectSampleCatalog {
                 return Err(samples::TOO_MANY.with("max", MAX_SAMPLES));
             }
             let id = project.alloc_id();
-            // The data goes in before the snapshot is published, so the engine sees it at once.
             self.store.insert(id, Arc::clone(&data));
             project.samples.push(SampleRef { id, name: name.clone(), path: path.to_path_buf(), markers: Vec::new() });
             Ok(id)
@@ -106,14 +102,12 @@ impl SampleCatalog for ProjectSampleCatalog {
         self.project.edit(&tr!("Delete sample", "Удалить сэмпл"), |project| {
             ops::check_sample(project, id)?;
             project.samples.retain(|s| s.id != id);
-            // A clip whose only sound this is goes away; a clip with other takes loses only this take.
             project.clips.retain(|c| !take_rules::is_only_sound(&c.content, id));
             for clip in &mut project.clips {
                 if clip.content.sample() == Some(id) || matches!(&clip.content, ClipContent::Audio { takes, .. } if takes.contains(&id)) {
                     take_rules::remove(&mut clip.content, id)?;
                 }
             }
-            // The data stays in the store: otherwise undo would bring the sample back without sound.
             for instrument in project.tracks.iter_mut().filter_map(|t| t.instrument.as_mut()) {
                 for name in sample_params.get(instrument.kind.as_str()).into_iter().flatten() {
                     if let Some(chosen) = instrument.params.get_mut(*name)

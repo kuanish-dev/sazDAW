@@ -1,8 +1,3 @@
-// Reverb graph on one time line, "now" a third of the way in. Left of it, the last 2 seconds of the live sound: the dry
-// input (line) and the reverb itself (area, the output minus its dry part), so its tail shows trailing the hits and dying
-// away after playback stops. Right of it, how a tail dies away from now: an outline from 0 dB that follows the room and
-// damping knobs at once, falling to −60 dB in the RT60 of the lows (upper edge) and of the highs (lower edge), and the
-// same fan filled from the reverb's level now. The math is `effects/reverbTail.ts`.
 import { For, Show, createMemo, createSignal } from "solid-js";
 import type { Id, ParamInfo, Params } from "../api/types";
 import { follow, historyPoints, pushReading, recentRms } from "./liveLevels";

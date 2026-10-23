@@ -1,4 +1,3 @@
-// Dropdown that acts as a button: picking an item calls `onPick`, and the list shows the placeholder again.
 import { For } from "solid-js";
 
 export interface PickOption {

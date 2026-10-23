@@ -1,5 +1,3 @@
-// One channel as a dot in a stage picture: a glow as strong as the channel sounds (its meter, like the track header's),
-// the dot in its track's color, its name, and a ring while selected. The picture places it and handles the mouse.
 import { Show } from "solid-js";
 import type { Id } from "../api/types";
 import { peakToMeter } from "../mixer/mixer";

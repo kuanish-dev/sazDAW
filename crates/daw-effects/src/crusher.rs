@@ -78,7 +78,6 @@ impl Effect for Crusher {
     fn reset(&mut self) {
         self.mix.snap();
         self.output.snap();
-        // The next frame takes a fresh sample.
         self.phase = self.hold;
         self.held = [0.0; 2];
     }

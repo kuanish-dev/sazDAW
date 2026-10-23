@@ -82,7 +82,6 @@ fn synth_window_state_goes_to_the_project_and_a_new_instance_sounds_the_same() {
     world.editors.store_states();
     assert!(world.states.writes.lock().unwrap().is_empty(), "opened the window, changed nothing: nothing to write");
 
-    // A 40 Hz cutoff almost mutes the saw (note 60): the sound shows whether the value got through the state.
     let cutoff = param_named(&world, "Cutoff, Hz");
     world.tracks.set_instrument_param(1, &cutoff, 40.0).unwrap();
     world.editors.sync(session.id).unwrap();
@@ -122,12 +121,10 @@ fn window_follows_a_state_changed_outside_and_reports_a_broken_one() {
     world.editors.store_states();
     let written = instrument_state(&world, 1).unwrap();
 
-    // "Undo": the state was removed from the project. The window returns to its initial state and does not write it back.
     world.tracks.0.lock().unwrap()[0].instrument.as_mut().unwrap().state = None;
     world.editors.sync(session.id).unwrap();
     world.editors.store_states();
     assert_eq!(world.states.writes.lock().unwrap().len(), 1, "the window took the project state instead of overwriting it");
-    // "Redo": the state is back, the window loads it again.
     world.tracks.0.lock().unwrap()[0].instrument.as_mut().unwrap().state = Some(written);
     world.editors.sync(session.id).unwrap();
     world.editors.store_states();
@@ -135,13 +132,11 @@ fn window_follows_a_state_changed_outside_and_reports_a_broken_one() {
     world.editors.close(session.id);
     assert!(world.log.recent(10).is_empty(), "log: {:?}", world.log.recent(10));
 
-    // A broken state: the window still opens, and the plugin's refusal is logged.
     let broken = PluginState { component: b"not a synth state".to_vec(), controller: Vec::new() };
     world.tracks.0.lock().unwrap()[0].instrument.as_mut().unwrap().state = Some(Arc::new(broken.clone()));
     let session = world.editors.open(target).expect("the window opens even with a bad state");
     world.editors.close(session.id);
     assert!(world.log.recent(10).iter().any(|e| e.message.contains("the saved state did not load")), "log: {:?}", world.log.recent(10));
-    // The sound instance with the same state is created (with the project params), the refusal is logged.
     let before = world.log.recent(100).len();
     let mut synth = world.instrument_factories[0].create(&Params::new(), Some(&broken)).expect("the instrument is created");
     assert!(play_note(&mut *synth, 20) > 0.0);
@@ -190,7 +185,6 @@ fn distortion_effect_state_round_trips_through_its_window() {
     world.editors.sync(session.id).unwrap();
     world.editors.close(session.id);
     let state = world.states.get(target).unwrap();
-    // The project knows all Distortion params: the window state may match the original, then there is nothing to write.
     if let Some(state) = state {
         let mut effect = world.effect_factories[0].create(&Params::new(), Some(&state)).expect("an effect from the state");
         effect.prepare(StreamConfig { sample_rate: RATE, channels: 2 });

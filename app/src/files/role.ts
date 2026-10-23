@@ -1,5 +1,3 @@
-// The project files role: new, open, save and autosave recovery (`project.ts`), and what is made from a project —
-// templates, an audio export — and what opening one leaves to say (`startup.ts`).
 import { defineRole, useRole } from "../core/roles";
 import { pluginsRole } from "../plugins/role";
 import { settingsRole } from "../settings/role";

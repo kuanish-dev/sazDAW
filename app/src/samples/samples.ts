@@ -1,4 +1,3 @@
-// Project sample catalog: which sounds the project has, their info, import and removal.
 import { audioFilter } from "../api/dialogs";
 import type { Id, SampleInfo } from "../api/types";
 import { sampleUsage } from "./sampleRules";
@@ -25,7 +24,6 @@ export interface Samples {
 
 export function createSamples(core: Core): Samples {
   const { api } = core;
-  // The sample list changes only together with `project.samples`, so that is how we know the cache is stale.
   let cache: { key: string; list: Promise<SampleInfo[] | undefined> } | null = null;
 
   const list = async () => {
@@ -33,7 +31,6 @@ export function createSamples(core: Core): Samples {
     if (cache?.key !== key) cache = { key, list: core.calls.run(api.samples.list()) };
     const current = cache;
     const result = await current.list;
-    // A failed answer is not cached: the next call asks again.
     if (!result && cache === current) cache = null;
     return result;
   };
@@ -46,7 +43,6 @@ export function createSamples(core: Core): Samples {
     async sampleInfo(id) {
       const found = (await list())?.find((s) => s.id === id);
       if (found) return found;
-      // The project may not have been re-read after an import yet: ask the backend once more.
       cache = null;
       return (await list())?.find((s) => s.id === id);
     },

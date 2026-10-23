@@ -1,5 +1,3 @@
-// Audio devices, their settings and status, input level, the master window for the visualizer, a node's window for its
-// editor, the live master meter, and recording audio from the input.
 import type { BackendError } from "../../i18n/errors";
 import type { Id } from "./model";
 

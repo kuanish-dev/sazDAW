@@ -39,7 +39,6 @@ fn window_state_is_an_undo_step_survives_save_and_load_and_keeps_the_synth_playi
     let state = synth_state(&controls, track).expect("the window state is in the project");
     assert_eq!(controls.history.undo_label().as_deref(), Some("Plugin state"));
 
-    // The synth recreated with the state plays.
     controls.transport.play();
     let sound = render(&mut session, 24_000);
     controls.transport.stop();
@@ -55,8 +54,6 @@ fn window_state_is_an_undo_step_survives_save_and_load_and_keeps_the_synth_playi
     assert_eq!(synth_state(&controls, track).as_deref(), Some(&*state), "after reopening the project the state is the same");
 
     assert!(controls.project.take_warnings().is_empty());
-    // Undoing the "Plugin state" edit in a reopened project is no longer possible (history starts at opening),
-    // so undo is checked on a new state write.
     let window = controls.plugin_editors.open(target).unwrap();
     controls.tracks.set_instrument_param(track, &cutoff_param(&controls), 2000.0).unwrap();
     controls.plugin_editors.sync(window.id).unwrap();

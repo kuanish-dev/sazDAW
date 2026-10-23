@@ -1,5 +1,3 @@
-// Pattern variation — an exact copy of the backend rules (`daw-project/src/variation.rs`): the same mulberry32 generator
-// and the same order of random numbers, so one seed gives the same pattern in the mock too.
 import { STEP_TICKS, type NewNote, type Note, type ScaleKey, type Variation } from "../api/types";
 import { inScale, random, roundAway } from "./noteTransforms";
 
@@ -88,7 +86,6 @@ export function varyGroup(group: Note[], others: Note[], v: Variation, seed: num
     if (!current) continue;
     let note = current;
     const downbeat = note.startTick % bar === 0;
-    // A downbeat is removed only under strong thinning, and no more than half of them.
     const remove = downbeat ? -v.density - 0.5 : -v.density;
     if (draw[0]! < remove) {
       kept[i] = null;

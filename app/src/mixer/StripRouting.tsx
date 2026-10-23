@@ -1,5 +1,3 @@
-// Mixer strip routing: inserts (effects along the signal path, "+" adds one at the end), sends to buses
-// (level, pre/post-fader, remove) and the main output. The strip model is `mixer/mixerStrips.ts`.
 import { For, Index, Show } from "solid-js";
 import type { GraphEdge, GraphNode, Id } from "../api/types";
 import { kindChoices } from "../common/catalog";
@@ -61,7 +59,6 @@ export function SendList(props: { model: StripModel }) {
   return (
     <div class="flex flex-col gap-0.5">
       <span class="label">{t().mixer.sends}</span>
-      {/* Index, not For: edges have no ids and are re-read as new objects, yet a row with a knob must survive a drag. */}
       <Index each={props.model.sends}>{(edge) => <SendRow edge={edge()} />}</Index>
       <Show when={targets().length > 0}>
         <PickSelect
@@ -116,7 +113,6 @@ export function OutputSelect(props: { model: StripModel }) {
       onChange={(e) => void graph.routeOutput(props.model.tail, Number(e.currentTarget.value))}
     >
       <Show when={!props.model.output}><option value="">{t().mixer.nowhere}</option></Show>
-      {/* `selected` on the option rather than `value` on the select: a value set before the options exist is lost by the browser. */}
       <For each={targets()}>{(target) => <option value={target.id} selected={target.id === props.model.output?.to}>{target.label}</option>}</For>
     </select>
   );

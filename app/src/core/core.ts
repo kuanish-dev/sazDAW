@@ -1,8 +1,3 @@
-// The shared core of the interface: what every role asks for its work, as named parts — the backend (`api`, system
-// dialogs, the window shell), the project copy (`projectSync.ts`), how a call runs (`calls.ts`), the notifications
-// (`notifications.ts`) and the playback tick (`playback.ts`). A role holds the core and asks the part it needs
-// (`core.calls.run(…)`, `core.copy.patchProject(…)`), the way the entities on the backend hold the project core. The UI
-// never gets the core, only what it may read of its parts (`roles.ts`: `useProjectCopy`, `usePlayback`…).
 import { createApi, type DawApi } from "../api/api";
 import type { SystemDialogs } from "../api/dialogs";
 import type { RpcClient } from "../api/rpc";

@@ -1,5 +1,3 @@
-// Piano roll sizes and coordinate mapping: pitch ↔ row, tick ↔ x, velocity ↔ bar height, controller value fraction ↔ y.
-// Pure functions, no DOM.
 import { clamp } from "../common/math";
 import { HIGH_PITCH, LOW_PITCH, MAX_VELOCITY, clampPitch } from "../common/pitch";
 
@@ -20,7 +18,6 @@ export const pitchAtY = (y: number) => clampPitch(HIGH_PITCH - Math.floor(y / RO
 export const tickX = (tick: number, pxPerTick: number) => KEYS_WIDTH + tick * pxPerTick;
 export const tickAtX = (x: number, pxPerTick: number) => Math.max(0, (x - KEYS_WIDTH) / pxPerTick);
 
-// Velocity lane under the grid: a note's bar grows upward from the bottom line.
 export const VELOCITY_HEIGHT = 72;
 /** Bottom line of the bars, and bar height at velocity 127. */
 const VELOCITY_BASE = VELOCITY_HEIGHT - 2;
@@ -33,7 +30,6 @@ export const velocityBarTop = (velocity: number) => VELOCITY_BASE - velocityBarH
 /** Velocity whose bar top lands at height `y` (1…127). */
 export const velocityAtY = (y: number) => clamp(Math.round(((VELOCITY_BASE - y) / VELOCITY_SPAN) * MAX_VELOCITY), 1, MAX_VELOCITY);
 
-// Controller lane under velocity: value fraction 0…1 (bottom … top) with top and bottom padding.
 export const CONTROLLER_HEIGHT = 72;
 const CONTROLLER_PAD = 6;
 const CONTROLLER_SPAN = CONTROLLER_HEIGHT - 2 * CONTROLLER_PAD;

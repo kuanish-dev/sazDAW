@@ -174,7 +174,6 @@ impl NoteEffectRack {
                 notes.send(chain.track, event);
             }
         }
-        // A removed chain lives until it releases its notes (`flush` above); after that the track notes go past.
         self.chains.retain(|c| !c.units.is_empty());
         notes.outgoing.sort_unstable_by_key(|n| (n.event.frame, n.seq));
     }

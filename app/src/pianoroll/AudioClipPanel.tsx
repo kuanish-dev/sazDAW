@@ -1,7 +1,3 @@
-// Panel of the selected audio clip: "Warp to tempo" (the sound's source tempo), pitch in semitones without changing length,
-// and takes: recording over a clip keeps earlier recordings as takes (position, length, warp and fades are shared); which
-// take plays on each part of the clip (the comp) is chosen in the take lanes `TakeLanes`.
-// Clip volume and fades are on the panel above the timeline. All edits go through the tracks role's clips (`useTracks().clips`).
 import { Show } from "solid-js";
 import type { Clip, Track } from "../api/types";
 import { clipLabel } from "../tracks/clipRules";

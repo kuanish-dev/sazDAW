@@ -1,4 +1,3 @@
-// Project menu (the button with the project name): files, templates, recent projects, export and jumps to settings sections (audio, plugins, error log).
 import { createSignal, For, onMount, Show } from "solid-js";
 import type { RecentProject } from "../api/types";
 import { t } from "../i18n";
@@ -19,7 +18,6 @@ export function ProjectMenu(props: { onClose: () => void }) {
   let root!: HTMLDivElement;
 
   onMount(() => void files.recent().then(setRecent));
-  // While a dialog is open on top, the menu under it stays open.
   closeOnOutside(() => root, () => !exporting() && !templatesOpen() && props.onClose());
 
   const choose = (action: () => Promise<void>) => () => {

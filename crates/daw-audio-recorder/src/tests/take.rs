@@ -51,7 +51,6 @@ fn estimated_latency_is_used_when_none_is_configured() {
 #[test]
 fn plugin_delay_compensation_is_trimmed_on_top_of_the_record_latency() {
     let w = world();
-    // 240 frames of compensation at 48 kHz (5 ms) on top of the manual 10 ms (480 frames).
     w.stats.latency.store(240, Ordering::Relaxed);
     w.record(AUDIO_TRACK);
     w.capture.push(&ramp(4_800));
@@ -86,7 +85,7 @@ fn a_take_shorter_than_the_latency_is_an_error_without_a_file() {
 #[test]
 fn a_take_over_a_spot_that_is_busy_but_not_covered_keeps_the_sound_but_makes_no_clip() {
     let w = world();
-    w.clips.clips.lock().unwrap().push(audio_clip(5, AUDIO_TRACK, 1_000, 100_000, 3)); // covered less than half, the recording is not inside
+    w.clips.clips.lock().unwrap().push(audio_clip(5, AUDIO_TRACK, 1_000, 100_000, 3));
     w.record(AUDIO_TRACK);
     w.capture.push(&ramp(48_000));
     let error = w.recorder.stop().unwrap_err();
@@ -101,12 +100,11 @@ fn a_take_over_a_spot_that_is_busy_but_not_covered_keeps_the_sound_but_makes_no_
 #[test]
 fn recording_over_a_clip_makes_a_new_take_aligned_to_the_clip_start() {
     let w = world();
-    // The clip starts 40 ticks (1000 frames at 120 BPM and 48 kHz) after the take start; it is trimmed by 200 frames.
     let mut clip = audio_clip(5, AUDIO_TRACK, 1_000, 500, 3);
     clip.offset_frames = 200;
     w.clips.clips.lock().unwrap().push(clip);
     w.record(AUDIO_TRACK);
-    w.capture.push(&ramp(48_000)); // 1 s = 1920 ticks: the clip is covered entirely
+    w.capture.push(&ramp(48_000));
     let changed = w.stop_one();
     assert_eq!(changed.id, 5, "the same clip");
     assert_eq!((changed.start_tick, changed.length_ticks), (1_000, 500), "the clip neither moves nor grows");
@@ -116,7 +114,6 @@ fn recording_over_a_clip_makes_a_new_take_aligned_to_the_clip_start() {
         "the new take is active, the previous one is kept"
     );
     let written = w.writer.written.lock().unwrap();
-    // The frame at the clip start (480 of cut latency + 1000) must become frame 200 of the new sound.
     assert_eq!(written[0].1.frames[200 * 2], 1_480.0);
     assert!(w.events().contains(&"take.add 5".to_string()) && !w.events().contains(&"clip.add".to_string()));
 }
@@ -124,7 +121,7 @@ fn recording_over_a_clip_makes_a_new_take_aligned_to_the_clip_start() {
 #[test]
 fn a_take_that_starts_late_gets_silence_in_front() {
     let w = world();
-    w.clips.clips.lock().unwrap().push(audio_clip(5, AUDIO_TRACK, 0, 3_000, 3)); // the take starts at 960: 1883 of 3000 are covered
+    w.clips.clips.lock().unwrap().push(audio_clip(5, AUDIO_TRACK, 0, 3_000, 3));
     w.record(AUDIO_TRACK);
     w.capture.push(&ramp(48_000));
     w.stop_one();
@@ -172,7 +169,7 @@ fn a_failing_track_does_not_lose_the_others() {
 #[test]
 fn a_neighbouring_clip_that_only_touches_is_not_a_collision() {
     let w = world();
-    w.clips.clips.lock().unwrap().push(audio_clip(5, AUDIO_TRACK, 0, 960, 3)); // ends exactly at the take start
+    w.clips.clips.lock().unwrap().push(audio_clip(5, AUDIO_TRACK, 0, 960, 3));
     w.record(AUDIO_TRACK);
     w.capture.push(&ramp(4_800));
     assert!(w.recorder.stop().is_ok());
@@ -181,10 +178,9 @@ fn a_neighbouring_clip_that_only_touches_is_not_a_collision() {
 #[test]
 fn loop_passes_become_takes_of_one_new_clip_on_the_loop_region() {
     let w = world();
-    // The take starts at the loop start; the beat-long loop [960, 1920) is 24,000 frames at 120 BPM and 48 kHz.
     w.transport.set_loop(Some((960, 1_920)));
     w.record(AUDIO_TRACK);
-    w.capture.push(&ramp(480 + 24_000 * 2 + 12_000)); // after the 480-frame latency cut: two whole passes and half a third
+    w.capture.push(&ramp(480 + 24_000 * 2 + 12_000));
     let clip = w.stop_one();
     assert_eq!((clip.id, clip.track, clip.start_tick), (107, AUDIO_TRACK, 960), "one clip at the loop start, made from the first pass");
     assert_eq!(
@@ -208,7 +204,7 @@ fn loop_passes_go_into_the_clip_under_the_loop() {
     w.clips.clips.lock().unwrap().push(audio_clip(5, AUDIO_TRACK, 960, 960, 3));
     w.transport.set_loop(Some((960, 1_920)));
     w.record(AUDIO_TRACK);
-    w.capture.push(&ramp(480 + 24_000 * 2)); // stopped right on the second jump: both passes are whole
+    w.capture.push(&ramp(480 + 24_000 * 2));
     let clip = w.stop_one();
     assert_eq!((clip.id, clip.start_tick, clip.length_ticks), (5, 960, 960), "the same clip, neither moved nor grown");
     assert_eq!(clip.content, ClipContent::Audio { sample: 8, takes: vec![3, 7, 8], comp: Vec::new() });
@@ -219,7 +215,6 @@ fn loop_passes_go_into_the_clip_under_the_loop() {
 #[test]
 fn a_pre_roll_before_the_loop_is_cut_from_the_first_pass() {
     let w = world();
-    // The take starts at 960, a beat before the loop [1920, 2880): the first pass runs 48,000 frames to the loop end.
     w.transport.set_loop(Some((1_920, 2_880)));
     w.record(AUDIO_TRACK);
     w.capture.push(&ramp(480 + 48_000 + 24_000));
@@ -233,7 +228,7 @@ fn a_pre_roll_before_the_loop_is_cut_from_the_first_pass() {
 #[test]
 fn a_take_started_past_the_loop_end_is_one_ordinary_take() {
     let w = world();
-    w.transport.set_loop(Some((0, 480))); // the take starts at 960
+    w.transport.set_loop(Some((0, 480)));
     w.record(AUDIO_TRACK);
     w.capture.push(&ramp(48_000));
     let clip = w.stop_one();

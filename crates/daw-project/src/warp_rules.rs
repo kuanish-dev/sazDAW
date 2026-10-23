@@ -130,11 +130,8 @@ mod tests {
 
     #[test]
     fn length_fits_whole_bars() {
-        // 2 seconds: 4 bars would be 480 BPM — no; 1 bar = 120 BPM.
         assert_eq!(bpm_from_length(96_000, 48_000), Some(120.0));
-        // 4 bars at 128 BPM = 7.5 s.
         assert_eq!(bpm_from_length(360_000, 48_000), Some(128.0));
-        // 3.2 s: 1 bar = 75, 2 bars = 150 → 150 is closer to 120 in octaves.
         assert_eq!(bpm_from_length(153_600, 48_000), Some(150.0));
         assert_eq!(bpm_from_length(48_000 * 100, 48_000), None, "too long for 16 bars at 70+");
         assert_eq!(bpm_from_length(0, 48_000), None);

@@ -184,7 +184,6 @@ impl Effect for Gate {
     }
 
     fn process(&mut self, interleaved: &mut [f32], sidechain: Option<&[f32]>) {
-        // As in the compressor: with a key shorter than the buffer, the gate listens to the signal past its end, no panic.
         let mut key = sidechain.filter(|_| self.use_sidechain).map(|key| key.chunks_exact(2));
         for frame in interleaved.chunks_exact_mut(2) {
             let source = key.as_mut().and_then(Iterator::next).unwrap_or(&frame[..]);
@@ -224,7 +223,6 @@ mod tests {
 
     #[test]
     fn opens_on_loud_signal_and_closes_after_hold_and_release() {
-        // 300 ms loud (−6 dB), then 500 ms quiet (−40 dB, below the −36 dB closing threshold).
         let input = segments(&[(0.5, 300), (0.01, 500)]);
         let mut output = input.clone();
         gate().process(&mut output, None);
@@ -278,7 +276,6 @@ mod tests {
         g.process(&mut output, Some(&key));
         assert!((rms(&output[4_800..]) / rms(&input[4_800..]) - 1.0).abs() < 0.01);
 
-        // Without the key the same quiet signal is gated.
         let mut alone = input.clone();
         build::<Gate>([("threshold", -30.0), ("sidechain", 1.0)]).process(&mut alone, None);
         assert!(rms(&alone[4_800..]) < rms(&input[4_800..]) * 0.01);

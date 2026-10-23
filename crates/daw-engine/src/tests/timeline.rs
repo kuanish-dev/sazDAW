@@ -59,10 +59,9 @@ fn edits_during_playback_are_picked_up_and_hanging_notes_are_released() {
     rig.note(10, 60, 0, 900);
     rig.publish();
     rig.transport.play();
-    rig.render(25 * 100); // the note already sounds
+    rig.render(25 * 100);
     assert!(rig.log().iter().any(|e| e.starts_with("on:60")));
 
-    // The user erased the clip notes while they sounded.
     rig.clear_notes();
     rig.publish();
     rig.render(25 * 1000);
@@ -91,7 +90,6 @@ fn a_note_clip_plays_its_notes_at_the_right_ticks() {
 fn content_repeats_over_a_longer_clip() {
     let mut rig = Rig::new();
     rig.add_track(10, MASTER);
-    // A 4-bar clip with one bar of content: four repeats.
     let clip = rig.note_clip(10, 0, 4 * BAR_TICKS, BAR_TICKS);
     rig.note_in(clip, 60, 0, 100);
     rig.publish();
@@ -109,8 +107,8 @@ fn a_clip_shorter_than_its_content_cuts_the_notes() {
     let mut rig = Rig::new();
     rig.add_track(10, MASTER);
     let clip = rig.note_clip(10, 960, 480, 960);
-    rig.note_in(clip, 60, 0, 960); // a note over the whole content
-    rig.note_in(clip, 62, 600, 100); // starts beyond the clip end: does not play
+    rig.note_in(clip, 60, 0, 960);
+    rig.note_in(clip, 62, 600, 100);
     rig.publish();
     rig.transport.play();
     let out = rig.render(2_000 * FRAMES_PER_TICK);
@@ -131,7 +129,6 @@ fn notes_after_the_clip_end_do_not_play() {
     rig.note_in(clip, 60, 100, 100);
     rig.publish();
     rig.transport.play();
-    // The window is wider than the clip and the content: no repeats after tick 480.
     rig.render(5 * 960 * FRAMES_PER_TICK);
     assert_eq!(rig.count("on:60"), 1);
 }
@@ -142,7 +139,7 @@ fn clip_offset_ticks_shifts_the_content_phase() {
     rig.add_track(10, MASTER);
     let clip = rig.note_clip(10, 0, 960, 960);
     rig.note_in(clip, 60, 100, 50);
-    rig.clip_mut(clip).offset_ticks = 100; // the clip starts at content tick 100
+    rig.clip_mut(clip).offset_ticks = 100;
     rig.publish();
     rig.transport.play();
     rig.render(1_000 * FRAMES_PER_TICK);
@@ -174,10 +171,9 @@ fn loop_region_repeats_the_timeline_section() {
     let clip = rig.note_clip(10, 0, 960, 960);
     rig.note_in(clip, 60, 0, 100);
     rig.project.loop_region = Some((0, 960));
-    rig.transport.set_loop(Some((0, 960))); // the transport applies the loop; the engine does not read it itself
+    rig.transport.set_loop(Some((0, 960)));
     rig.publish();
     rig.transport.play();
-    // Three passes of 960 ticks.
     rig.render(3 * 960 * FRAMES_PER_TICK + 10);
     assert_eq!(rig.count("on:60"), 4, "starts at ticks 0, 960, 1920, 2880 (the loop is joined without clicks)");
 }
@@ -199,15 +195,15 @@ fn seeking_releases_everything() {
 #[test]
 fn engine_does_not_panic_on_tracks_without_nodes_or_clips_on_missing_tracks() {
     let mut rig = Rig::new();
-    rig.add_track_only(10); // the track and instrument exist, the graph node does not
+    rig.add_track_only(10);
     rig.add_track(11, MASTER);
     rig.note(10, 60, 0, 960);
     rig.note(11, 62, 0, 960);
-    let ghost = rig.note_clip(99, 0, 960, 960); // track 99 does not exist at all
+    let ghost = rig.note_clip(99, 0, 960, 960);
     rig.note_in(ghost, 64, 0, 100);
     rig.samples.insert(300, constant_sample(5_000, 0.5));
-    rig.add_clip(98, 0, 960, ClipContent::audio(300)); // no audio track
-    rig.add_clip(10, 960, 960, ClipContent::audio(300)); // no Audio node
+    rig.add_clip(98, 0, 960, ClipContent::audio(300));
+    rig.add_clip(10, 960, 960, ClipContent::audio(300));
     rig.publish();
     rig.transport.play();
     rig.link.note_on(10, 60, 1.0);

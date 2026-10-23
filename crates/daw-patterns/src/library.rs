@@ -60,7 +60,6 @@ impl PatternLibrary for PatternBank {
 
     fn pattern(&self, id: &str) -> Result<DrumPattern, ContractError> {
         self.entries.iter().find(|e| e.def.id == id).map(Entry::pattern).ok_or_else(|| {
-            // A hint: patterns whose id contains the start of the request (e.g. `rock` → all rock grooves).
             let stem = id.split('_').next().unwrap_or(id);
             let similar: Vec<&str> = self.entries.iter().map(|e| e.def.id).filter(|known| known.contains(stem)).take(8).collect();
             if similar.is_empty() {

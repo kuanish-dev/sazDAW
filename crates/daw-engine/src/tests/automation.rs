@@ -54,7 +54,6 @@ fn volume_automation_follows_the_timeline_position() {
     assert!(at(100) < at(480) && at(480) < at(900), "the volume rises");
     assert!((at(480) - 0.25).abs() < 0.03, "about 0.5 · 0.5 in the middle");
 
-    // After a stop the params return to the project value.
     rig.transport.stop();
     rig.render(2_000);
     rig.transport.play();
