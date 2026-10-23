@@ -197,7 +197,6 @@ impl TempoMap {
         let elapsed = seconds - self.seconds[i];
         let ticks = match ramp_target(&self.tempos, i) {
             Some((to, span)) if to != from.bpm.get() => {
-                // Tempo at the end of the elapsed piece: b0 · e^(t · k · PPQ / 60), where k is the tempo rise per tick.
                 let slope = (to - from.bpm.get()) / span;
                 let bpm = from.bpm.get() * (elapsed * slope * f64::from(PPQ) / 60.0).exp();
                 (bpm - from.bpm.get()) / slope

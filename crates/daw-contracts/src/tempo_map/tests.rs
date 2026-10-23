@@ -34,7 +34,6 @@ fn a_constant_map_converts_like_the_tempo() {
 
 #[test]
 fn a_step_changes_the_tempo_exactly_at_its_tick() {
-    // 120 BPM for the first bar (2 s), then 60 BPM: the next bar takes 4 s.
     let map = TempoMap::new(vec![tempo(0, 120.0, false), tempo(3840, 60.0, false)], four_four()).unwrap();
     close(map.seconds_at(3840.0), 2.0);
     close(map.seconds_at(7680.0), 6.0);
@@ -47,13 +46,11 @@ fn a_step_changes_the_tempo_exactly_at_its_tick() {
 
 #[test]
 fn a_ramp_is_integrated_in_closed_form() {
-    // 60 → 120 BPM over 4 quarters: t = 60/PPQ · ln(b1/b0) / k, k = 60/3840 BPM per tick → 4·ln2 s.
     let map = TempoMap::new(vec![tempo(0, 60.0, false), tempo(3840, 120.0, true)], four_four()).unwrap();
     close(map.seconds_at(3840.0), 4.0 * 2f64.ln());
     close(map.tempo_at(1920.0).get(), 90.0);
     assert!(map.in_ramp(100.0));
     assert!(!map.in_ramp(3840.0));
-    // A numeric integral of the same range matches.
     let steps = 100_000;
     let numeric: f64 = (0..steps)
         .map(|i| {
@@ -62,7 +59,6 @@ fn a_ramp_is_integrated_in_closed_form() {
         })
         .sum();
     close(map.seconds_at(3840.0), numeric);
-    // After the ramp, exactly 120 BPM.
     close(map.seconds_at(3840.0 + 1920.0) - map.seconds_at(3840.0), 1.0);
 }
 
@@ -82,7 +78,6 @@ fn seconds_and_ticks_round_trip_through_ramps_and_steps() {
 
 #[test]
 fn bars_follow_signature_changes() {
-    // Two bars of 3/4 (2880 each), then 4/4.
     let map = TempoMap::new(vec![tempo(0, 120.0, false)], vec![signature(0, 3, 4), signature(5760, 4, 4)]).unwrap();
     assert_eq!(map.bar_tick(0), 0);
     assert_eq!(map.bar_tick(1), 2880);

@@ -134,7 +134,6 @@ impl Voice {
             lowpassed += brightness * (noise(rng) - lowpassed);
             self.line[(start + k) & MASK] = lowpassed;
         }
-        // Backwards, so every sample subtracts the original value `notch` samples earlier.
         let notch = ((pick * length as f32).round() as usize).clamp(1, length - 1);
         for k in (notch..length).rev() {
             self.line[(start + k) & MASK] -= self.line[(start + k - notch) & MASK];
@@ -197,7 +196,6 @@ impl Resonator {
         let output = self.b0 * input + self.z1;
         self.z1 = -self.a1 * output + self.z2;
         self.z2 = -self.b0 * input - self.a2 * output;
-        // A silent tail would decay into denormals, which are slow on some CPUs.
         if output.abs() < 1e-20 && self.z1.abs() < 1e-20 && self.z2.abs() < 1e-20 {
             self.z1 = 0.0;
             self.z2 = 0.0;
@@ -253,7 +251,6 @@ impl Engine {
         let tone = settings.tone.clamp(0.0, 1.0);
         let frequency = frequency(note);
         let t60 = (settings.ring * (196.0 / frequency).sqrt()).clamp(0.15, settings.ring * 3.0);
-        // A harder pluck is brighter as well as louder.
         let brightness = (0.15 + 0.8 * tone) * (0.6 + 0.4 * velocity);
         let voice = &mut self.voices[index];
         voice.tune(frequency, self.sample_rate, 0.5 - 0.42 * tone);

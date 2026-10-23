@@ -1,6 +1,3 @@
-// The built-in synth's picture: one cycle of the chosen waveform and the filter response (with its resonance peak) with
-// the cut markers.
-// Read-only (the knobs below change the values); drawn in the same style as the envelope graph.
 import { For, type JSX } from "solid-js";
 import { cutoffX, filterPath, wavePath } from "./synth";
 import { t } from "../i18n";

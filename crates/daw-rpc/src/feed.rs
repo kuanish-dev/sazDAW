@@ -59,7 +59,6 @@ impl ProjectFeed {
     /// revision with the same model (only the undo label changed) is an update with no changes and the new status.
     pub fn poll(&mut self, controls: &Controls) -> Option<ProjectUpdate> {
         let asked = self.whole.take();
-        // The revision is read before the copy: an edit in between shows as a new revision in the next poll.
         let revision = controls.view.revision();
         if !asked && self.revision == Some(revision) {
             return None;

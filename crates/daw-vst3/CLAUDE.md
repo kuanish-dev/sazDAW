@@ -66,7 +66,7 @@ The engine calls `Instrument::set_timing`/`Effect::set_timing(&BlockTiming)` bef
 
 ## Current limitations
 
-macOS only; plugin windows — see their section; additional output buses are not used; no sidechain; export runs in `kRealtime` mode (`instance/mod.rs: PROCESS_MODE`; `kOffline` would need a new `StreamConfig` field at every place one is created — not done, it does not affect the sound of most plugins); `ProcessContext` has no system time, SMPTE or chords; a plugin that crashes in `process` still brings the app down (the protection only finds and disables it).
+macOS only: elsewhere the crate builds (the Linux release build uses it), but `Bundle::load` refuses and `daw-bootstrap` gives the scanner no folders and no helper, so no plugin is ever found; plugin windows — see their section; additional output buses are not used; no sidechain; export runs in `kRealtime` mode (`instance/mod.rs: PROCESS_MODE`; `kOffline` would need a new `StreamConfig` field at every place one is created — not done, it does not affect the sound of most plugins); `ProcessContext` has no system time, SMPTE or chords; a plugin that crashes in `process` still brings the app down (the protection only finds and disables it).
 
 ## How to add a similar one
 

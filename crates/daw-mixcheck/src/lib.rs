@@ -75,7 +75,6 @@ impl MixCheck for MixChecker {
         findings.extend(rules::suspicious_params(project, &kinds));
         findings.extend(rules::routing(project));
         findings.extend(rules::automation_ranges(project, &kinds));
-        // Without clips there is nothing to listen to: only the data is checked.
         if !project.clips.is_empty() {
             match self.levels(project, from_tick, to_tick) {
                 Ok((tracks, master)) => {
@@ -83,13 +82,11 @@ impl MixCheck for MixChecker {
                     findings.extend(rules::master_sound(project, &master));
                 }
                 Err(error) => {
-                    // A failed render is a finding for whoever checks, and a log entry so the failure is not lost.
                     self.log.record(LogEntry::warn("analysis", format!("mix check: the sound was not rendered: {error}")));
                     findings.push(Finding::new(Severity::Error, "renderFailed", format!("The project sound was not rendered: {error}.")));
                 }
             }
         }
-        // The sort is stable: within one severity the rule order stays.
         findings.sort_by_key(|f| f.severity);
         findings
     }

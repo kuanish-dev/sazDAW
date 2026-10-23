@@ -1,5 +1,3 @@
-// Right-click menu of an audio clip on the timeline (`timelinePointer.ts` opens it): normalize (all selected audio clips
-// when the clip is among them), reverse, fade shapes (on a fade only that fade's shapes), delete.
 import { For, Show } from "solid-js";
 import type { FadeShape } from "../api/types";
 import { clipLabel } from "./clipRules";

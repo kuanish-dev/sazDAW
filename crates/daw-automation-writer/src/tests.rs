@@ -354,7 +354,7 @@ fn a_loop_jump_starts_a_new_stretch_and_mode_off_closes_the_pass() {
     rig.transport.seek(2_000);
     rig.writer.touch(VOLUME, 0.4, TouchEnd::Release).unwrap();
     rig.at(3_000);
-    rig.at(500); // the loop jumped back
+    rig.at(500);
     rig.at(800);
     rig.writer.set_mode(AutomationWriteMode::Off);
     let points = rig.points(&VOLUME);
@@ -371,7 +371,7 @@ fn writing_into_a_looped_clip_changes_its_pattern_and_the_seam_starts_a_new_stre
     rig.transport.seek(1_200);
     rig.writer.touch(VOLUME, 0.7, TouchEnd::Release).unwrap();
     rig.at(1_800);
-    rig.at(2_100); // the next repeat: pattern tick 100
+    rig.at(2_100);
     rig.at(2_300);
     rig.writer.set_mode(AutomationWriteMode::Off);
     let ticks: Vec<u32> = rig.points(&VOLUME).iter().map(|p| p.0).collect();

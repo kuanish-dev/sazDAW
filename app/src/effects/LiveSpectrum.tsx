@@ -1,6 +1,3 @@
-// Live spectrum of the sound coming out of a node, drawn inside the EQ and filter graphs behind their curve and handles
-// (FabFilter Pro-Q style). The sound comes from `listenToNode`; when playback stops the node goes silent and the levels
-// fall, so the picture fades out by itself. The math is `effects/spectrum.ts`.
 import { Show, createSignal } from "solid-js";
 import type { Id } from "../api/types";
 import type { PlotView } from "../common/plot";

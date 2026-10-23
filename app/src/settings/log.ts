@@ -1,4 +1,3 @@
-// Reads the error log for the "Error log" window. A failure of the log itself must not produce new notifications.
 import type { LogEntry } from "../api/types";
 import type { Core } from "../core/core";
 
@@ -12,7 +11,6 @@ export interface ErrorLog {
 export function createErrorLog(core: Core): ErrorLog {
   const { api } = core;
   return {
-    // The log is read from disk: a read failure is not written to the log (that would loop), only to the console.
     recent: (limit) => api.log.recent(limit).catch((error) => { console.warn("log.recent", error); return []; }),
     file: () => api.log.file().catch((error) => { console.warn("log.file", error); return null; }),
   };

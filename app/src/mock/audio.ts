@@ -1,5 +1,3 @@
-// A synthetic "drum loop" for developing the sample editor without real files.
-
 export const MOCK_SAMPLE_RATE = 48_000;
 export const MOCK_FRAME_COUNT = MOCK_SAMPLE_RATE * 4;
 const HIT_EVERY = 0.5;

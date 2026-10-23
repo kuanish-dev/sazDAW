@@ -1,6 +1,3 @@
-// Mouse on the ruler strip (what the signature and marker flags leave to it): a click sets the cue (the start position play
-// and stop return to) and moves the playhead there, a drag draws the loop; right-click on the cue flag removes the cue,
-// anywhere else it clears the loop. Each handler returns `true` if it owns the event, like `tempoPointer`/`markerPointer`.
 import type { TempoMap } from "../api/types";
 import { snapNearestInBars } from "../common/tempoMap";
 import { capture, localPoint } from "../common/pointer";

@@ -547,7 +547,6 @@ impl Synth {
         for (name, value) in params {
             synth.set_param(name, *value);
         }
-        // A new instrument starts at its values, not gliding from zero.
         synth.low_cut_octaves.jump();
         synth.high_cut_octaves.jump();
         synth.gain.jump();
@@ -593,7 +592,6 @@ impl Instrument for Synth {
         match kind {
             ControllerKind::PitchBend => self.engine.set_pitch_bend(value),
             ControllerKind::Cc { number: CC_MODULATION } => self.engine.set_modulation(value),
-            // The rest has no meaning for this synth: volume comes from the track, aftertouch is not used.
             ControllerKind::Cc { .. } | ControllerKind::Aftertouch => {}
         }
     }
@@ -692,7 +690,6 @@ impl InstrumentFactory for SynthFactory {
         ABOUT
     }
 
-    // A built-in instrument has no state of its own: everything is in the parameters.
     fn create(&self, params: &Params, _state: Option<&PluginState>) -> Result<Box<dyn Instrument>, ContractError> {
         Ok(Box::new(Synth::new(params)))
     }

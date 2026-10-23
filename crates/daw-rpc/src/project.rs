@@ -162,7 +162,6 @@ pub(crate) fn register(table: &mut RpcTable) {
          false — nothing changed since the mark. Fails if the mark was undone past or another project was opened.",
         |c, p: Squash| c.history.squash(p.since, &p.label),
     );
-    // The interface uses it as the default folder for new projects and exports.
     table.add("library.home", "Returns the user's home folder: the default place for new projects and files.", |_, ()| {
         Ok(std::env::var("HOME").unwrap_or_else(|_| "/".to_string()))
     });

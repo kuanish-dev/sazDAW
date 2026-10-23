@@ -1,5 +1,3 @@
-// The stage role: where each channel stands in the shared room, and the room (`stage.ts`); a moved place reports to live
-// automation writing.
 import { automationRole } from "../automation/role";
 import { defineRole, useRole } from "../core/roles";
 import { createStage } from "./stage";

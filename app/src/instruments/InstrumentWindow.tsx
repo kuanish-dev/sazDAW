@@ -1,5 +1,3 @@
-// Floating window with the selected track's instrument parameters: doesn't cover the rest of the interface, can be dragged.
-// On top — the track's MIDI effects (`NoteEffectsSection`): notes pass through them before the instrument.
 import { For, Show, createMemo, createSignal } from "solid-js";
 import { instrumentInfo, paramValue, paramValues } from "../common/catalog";
 import { isPluginKind } from "../plugins/pluginRules";

@@ -200,7 +200,6 @@ mod tests {
         let input = sine(hz, 0.5, 48_000);
         let mut output = input.clone();
         eq.process(&mut output, None);
-        // Skip the transient.
         (rms(&input[24_000..]), rms(&output[24_000..]))
     }
 
@@ -227,7 +226,6 @@ mod tests {
         let (before, after) = run(&[("low_cut", LOW_CUT_OFF), ("high_cut", HIGH_CUT_OFF)], 30.0);
         assert!((after / before - 1.0).abs() < 0.02, "off: {before} → {after}");
 
-        // An octave below the cutoff a 12 dB/oct high-pass is about −12 dB (×0.25); at the cutoff −3 dB (×0.71).
         let (before, after) = run(&[("low_cut", 400.0)], 200.0);
         assert!((after / before - 0.25).abs() < 0.05, "an octave below: {}", after / before);
         let (before, after) = run(&[("low_cut", 400.0)], 400.0);

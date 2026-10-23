@@ -1,5 +1,3 @@
-// Audio track input in the interface: input channel labels, which of them the device has, monitor modes.
-// Labels live in the dictionary: `t().tracks.inputs[channels]`, `t().tracks.monitorModes[mode]`.
 import type { AudioDevices, AudioSettings, InputChannels, MonitorMode } from "../api/types";
 
 /** Short label on the arm button. */

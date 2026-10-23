@@ -60,7 +60,6 @@ impl ClipProcessing for ProjectClipProcessing {
             return Ok(Vec::new());
         }
         let target = 10f32.powf(peak_db / 20.0);
-        // Measured before the edit: reading audio must not hold the project lock.
         let gains = ids
             .iter()
             .map(|&id| {
@@ -93,7 +92,6 @@ impl ClipProcessing for ProjectClipProcessing {
         }
         let total = self.samples.get(*sample).ok_or_else(|| samples::NOT_FOUND.with("id", sample))?.frame_count();
         let (_, to) = self.played_frames(&clip, *sample, &map)?;
-        // Frames [from, to) of the original are [total − to, total − from) of the reversed sound.
         let mirrored = total.saturating_sub(to.min(total)) as u64;
         let label = tr!("Reverse clip", "Развернуть клип");
         self.project.begin_group(&label);

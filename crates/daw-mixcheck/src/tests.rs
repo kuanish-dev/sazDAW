@@ -94,7 +94,6 @@ fn codes(findings: &[Finding]) -> Vec<&'static str> {
 
 #[test]
 fn silent_track_with_clips_is_an_error_with_its_bars() {
-    // The bass is silent in its bars (the sound in bar 4 is not under its clips and does not count); the lead sounds.
     let levels = report(vec![(1, vec![None, None, None, level(-6.0, -12.0)]), (2, vec![None, None, level(-3.0, -10.0), None])]);
     let findings = rules::track_sound(&project(), &levels);
     assert_eq!(codes(&findings), ["silentTrack"]);
@@ -156,8 +155,6 @@ fn muted_and_soloed_nodes_are_reported() {
 #[test]
 fn level_and_cutoff_params_at_their_minimum_are_suspicious() {
     let mut project = project();
-    // A volume of 0.32 % and a cutoff of 41 Hz (log scale 40..20,000) are suspicious; pitch -24 is not a level; an LFO
-    // depth at 0 is its default, off rather than lost; the lead is fine.
     let params = &mut project.tracks[0].instrument.as_mut().unwrap().params;
     params.extend([
         ("gain".to_string(), 0.0032),
@@ -171,7 +168,6 @@ fn level_and_cutoff_params_at_their_minimum_are_suspicious() {
     assert_eq!(codes(&findings), ["suspiciousParam", "suspiciousParam"]);
     assert!(findings.iter().all(|f| f.track == Some(1)));
     assert!(findings[1].message.contains("Cutoff, Hz"), "{}", findings[1].message);
-    // A parameter missing from the project takes its default (here the maximum): not suspicious.
     project.tracks[0].instrument.as_mut().unwrap().params.clear();
     assert!(rules::suspicious_params(&project, &kinds()).is_empty());
 }
@@ -186,7 +182,6 @@ fn unrouted_sources_and_empty_buses_are_reported_but_sidechain_keys_are_fine() {
     assert_eq!(codes(&findings), ["notRouted", "emptyBus"]);
     assert_eq!((findings[0].track, findings[1].node), (Some(2), Some(30)));
 
-    // The lead only keys a compressor: that is not a routing error.
     project.graph.nodes.push(Node {
         id: 20,
         name: "Comp".into(),

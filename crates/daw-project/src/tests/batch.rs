@@ -26,7 +26,6 @@ fn starts(rig: &Rig) -> Vec<(ClipId, u32)> {
 #[test]
 fn edit_clips_checks_the_final_state_so_clips_can_swap_and_shift_together() {
     let (rig, _, a, b) = two_clips();
-    // One by one, any of these moves would bump into the neighbour.
     let swapped = rig.clips.edit_clips(vec![(a, shift(BAR_TICKS)), (b, shift(0))]).unwrap();
     assert_eq!(swapped.iter().map(|c| (c.id, c.start_tick)).collect::<Vec<_>>(), [(a, BAR_TICKS), (b, 0)]);
 
@@ -39,7 +38,6 @@ fn edit_clips_checks_the_final_state_so_clips_can_swap_and_shift_together() {
 fn edit_clips_is_atomic_and_one_undo_step() {
     let (rig, _, a, b) = two_clips();
     let before = rig.clips.clips();
-    // The first edit is fine, the second is not (an overlap in the end): nothing changes and no undo step is recorded.
     let undo_label = rig.service.undo_label();
     let overlap = rig.clips.edit_clips(vec![(a, shift(BAR_TICKS / 2)), (b, shift(BAR_TICKS))]);
     assert!(matches!(overlap, Err(e) if e.is(codes::clips::NOTE_CLIPS_OVERLAP)));
@@ -108,7 +106,6 @@ fn copy_clips_fails_atomically_on_overlap_unknown_id_or_empty_list() {
     let (rig, _, a, b) = two_clips();
     let before = rig.clips.clips();
     let overlap = |r: Result<Vec<Clip>, ContractError>| matches!(r, Err(e) if e.is(codes::clips::NOTE_CLIPS_OVERLAP));
-    // The second copy would land on the original b.
     assert!(overlap(rig.clips.copy_clips(vec![a, b], BAR_TICKS)));
     assert!(overlap(rig.clips.copy_clips(vec![a], 0)), "the place is taken by the original");
     assert!(matches!(rig.clips.copy_clips(vec![a, 9999], BAR_TICKS * 8), Err(e) if e.is(codes::clips::NOT_FOUND)));
@@ -135,7 +132,6 @@ fn move_track_reorders_clamps_and_is_one_undo_step() {
     assert_eq!(order(&rig), [ids[0], ids[2], ids[1]]);
     assert!(rig.service.redo());
     assert_eq!(order(&rig), [ids[2], ids[1], ids[0]]);
-    // Graph nodes and clips are bound to ids, not positions.
     assert!(rig.graph.graph().source_of(ids[0]).is_some());
 }
 
@@ -173,7 +169,6 @@ fn add_note_clips_is_all_or_nothing() {
     let rig = Rig::new();
     let track = rig.tracks.add_track("Synth", Some("synth"), 60).unwrap();
     let undo_label = rig.service.undo_label();
-    // The second clip lands on the first from the same list; the third has a bad note; the fourth is on an unknown track.
     let overlapping = vec![NewNoteClip::empty(track, 0, Some(BAR_TICKS * 2)), NewNoteClip::empty(track, BAR_TICKS, None)];
     assert!(matches!(rig.clips.add_note_clips(overlapping), Err(e) if e.is(codes::clips::NOTE_CLIPS_OVERLAP)));
     let bad_note = NewNoteClip { notes: vec![NewNote { velocity: 0, ..super::note(60, 0, 240) }], ..NewNoteClip::empty(track, 0, None) };

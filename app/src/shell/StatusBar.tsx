@@ -1,6 +1,3 @@
-// Status bar at the bottom of the window (as in VS Code): recording state, project name with the unsaved dot, the hover
-// hint, tempo and time signature, audio device format, plugin latency, engine load and a shortcut to the error log.
-// Turns red while anything records. It only reads its roles; a click asks them.
 import { Show, createEffect, createSignal, on, type JSX } from "solid-js";
 import { formatDuration } from "../common/time";
 import { t } from "../i18n";
@@ -42,8 +39,6 @@ export function StatusBar() {
   const msg = () => t().shell.status;
   const transportMsg = () => t().project.transport;
 
-  // Audio format changes only on the settings page: read it at start and every time the settings page is left.
-  // `undefined` — not read yet (the item is hidden), "off" — the device is not running.
   const [audio, setAudio] = createSignal<AudioFormat | "off">();
   const refreshAudio = async () => {
     const [current, chosen] = await Promise.all([settings.audio.status(), settings.audio.settings()]);

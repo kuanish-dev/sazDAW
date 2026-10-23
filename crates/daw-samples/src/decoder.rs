@@ -83,7 +83,6 @@ fn read_packets(path: &Path, opened: &mut Opened, frames: &mut Vec<f32>) -> Resu
                 buffer.copy_to_slice_interleaved(&mut chunk);
                 frames.extend_from_slice(&chunk);
             }
-            // A broken packet is skipped: the rest of the sound is intact.
             Err(SymphoniaError::DecodeError(_)) => {}
             Err(error) => return Ok(Some(error.to_string())),
         }
@@ -162,7 +161,6 @@ mod tests {
         let dir = temp_dir("cut");
         let path = dir.join("cut.wav");
         write_wav(&path, 1, 44_100, 2_000);
-        // The header promises 2000 frames but half is on disk: this is how a partly downloaded or cut file looks.
         let bytes = std::fs::read(&path).unwrap();
         std::fs::write(&path, &bytes[..bytes.len() - 2_000]).unwrap();
         let log = Arc::new(MemoryLog::default());

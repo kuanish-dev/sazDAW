@@ -1,4 +1,3 @@
-// Sounds and samples: project folders and linked folders, import, waveform, markers, preview, extraction.
 import type { SampleInfo } from "../../api/types";
 import { cleanMarkers } from "../../samples/waveform";
 import { t } from "../../i18n";
@@ -26,7 +25,6 @@ export function libraryHandlers(w: MockWorld): HandlerSet {
     const inProject = !!root && (where === root || where.startsWith(`${root}/`));
     const linked = w.soundSources.find((s) => where === s || where.startsWith(`${s}/`));
     if (!inProject && !linked) throw outside;
-    // A project always has samples/ and exports/, even if the mock "file system" has no entries for them yet.
     const fallback = !inProject ? undefined : where === root ? [{ name: "samples", isDir: true }, { name: "exports", isDir: true }]
       : where === `${root}/samples` || where === `${root}/exports` ? [] : undefined;
     const entries = (inProject ? w.projectFiles[where] : w.files[where]) ?? fallback;
@@ -45,7 +43,6 @@ export function libraryHandlers(w: MockWorld): HandlerSet {
     w.must(w.project.samples.find((s) => s.id === id), fail("SM-001", { id }));
     w.edit(t().mock.undo.removeSample, (p) => {
       p.samples = p.samples.filter((s) => s.id !== id);
-      // A clip whose only sound this is goes away; a clip with other takes loses just this take.
       p.clips = p.clips.filter((c) => !isOnlySound(c.content, id));
       for (const clip of p.clips) {
         if (clip.content.type === "audio" && (clip.content.takes ?? []).includes(id)) clip.content = removeTake(clip.content, id);

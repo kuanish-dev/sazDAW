@@ -106,7 +106,6 @@ impl TrackControl for ProjectTracks {
             project.clips.retain(|c| c.track != id);
             project.tracks.retain(|t| t.id != id);
             ops::drop_instrument_lanes(project, id);
-            // An emptied folder goes away with its last track.
             folder_rules::gather(project);
             Ok(())
         })
@@ -127,34 +126,27 @@ impl TrackControl for ProjectTracks {
     }
 
     fn set_instrument(&self, id: TrackId, kind: &str, params: Params, name: Option<&str>) -> Result<(), ContractError> {
-        // The catalog is asked outside the project lock; the track itself is checked inside the edit, so a freeze from
-        // another thread cannot slip in between.
         let spec = self.spec(kind, &params)?;
         self.project.edit(&tr!("Change instrument", "Сменить инструмент"), |project| {
             let track = ops::track_mut(project, id)?;
             let current = track.instrument.as_ref().ok_or_else(|| tracks::NO_INSTRUMENT.with("id", id))?;
-            // The audio copy of a frozen track plays the old instrument's sound: a new kind would make it lie.
             if current.frozen.is_some() {
                 return Err(tracks::FROZEN.with("id", id));
             }
-            // Nothing to change: the edit leaves the project as it is and records no undo step.
             if current.kind == kind && params.is_empty() && name.is_none() {
                 return Ok(());
             }
-            // A plugin state belongs to its kind: the same kind keeps it, another kind forgets it.
             let state = track.instrument.take().filter(|old| old.kind == kind).and_then(|old| old.state);
             track.instrument = Some(InstrumentSpec { state, ..spec });
             if let Some(name) = name {
                 rename(project, id, name)?;
             }
-            // The old kind's parameters do not exist in the new one: their automation lanes would lose meaning.
             ops::drop_instrument_lanes(project, id);
             Ok(())
         })
     }
 
     fn set_monitor(&self, id: TrackId, mode: MonitorMode) -> Result<(), ContractError> {
-        // The same mode leaves the project unchanged, so the core records no undo step.
         self.project.edit(&tr!("Input monitoring", "Прослушивание входа"), |project| {
             let name = ops::track(project, id)?.name.clone();
             let node = ops::source_node(project, id).ok_or_else(|| tracks::NO_SOURCE_NODE.with("id", id))?;
@@ -182,7 +174,6 @@ impl TrackControl for ProjectTracks {
         {
             return Err(tracks::HEIGHT_OUT_OF_RANGE.with("height", height).with("min", MIN_TRACK_HEIGHT).with("max", MAX_TRACK_HEIGHT));
         }
-        // Keyed like a slider: a resize sent in several steps is one undo step.
         self.project.edit_keyed(&tr!("Track height", "Высота дорожки"), Some(format!("height:{id}")), |project| {
             ops::track_mut(project, id)?.height = height;
             Ok(())

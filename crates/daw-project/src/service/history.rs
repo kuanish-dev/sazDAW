@@ -43,7 +43,6 @@ impl History {
         if self.undo.len() > LIMIT
             && let Some(oldest) = self.undo.pop_front()
         {
-            // The state before the oldest step is gone; the bottom is now the state after it.
             self.root = oldest.seq;
         }
         self.redo.clear();
@@ -66,7 +65,6 @@ impl History {
         let from = if mark == self.root { 0 } else { self.undo.iter().position(|entry| entry.seq == mark)? + 1 };
         let mut after = self.undo.split_off(from);
         let Some(first) = after.pop_front() else { return Some(false) };
-        // The merged step keeps the newest number: a mark taken at the end of the change still names the top.
         let seq = after.back().map_or(first.seq, |last| last.seq);
         self.undo.push_back(Entry { seq, label: label.to_string(), project: first.project });
         Some(true)
@@ -89,7 +87,6 @@ impl History {
 impl ProjectService {
     fn travel(&self, step: impl FnOnce(&mut History, Project) -> Option<Project>) -> bool {
         let mut inner = self.lock();
-        // A history step in the middle of a group would break it: the group remembers a state that is gone.
         if inner.group.is_some() {
             return false;
         }
@@ -98,7 +95,6 @@ impl ProjectService {
         let Some(mut restored) = step(&mut inner.history, current) else {
             return false;
         };
-        // Ids are never reused, even when the creation of an entity is undone.
         restored.next_id = restored.next_id.max(next_id);
         inner.project = restored;
         inner.dirty = true;
@@ -132,11 +128,7 @@ impl HistoryControl for ProjectService {
     fn steps(&self) -> HistorySteps {
         let inner = self.lock();
         let label = |entry: &Entry| entry.label.clone();
-        HistorySteps {
-            done: inner.history.undo.iter().map(label).collect(),
-            // Redo pops from the end of its stack: the next redo is the last entry.
-            undone: inner.history.redo.iter().rev().map(label).collect(),
-        }
+        HistorySteps { done: inner.history.undo.iter().map(label).collect(), undone: inner.history.redo.iter().rev().map(label).collect() }
     }
 
     fn begin_group(&self, label: &str) {
@@ -159,7 +151,6 @@ impl HistoryControl for ProjectService {
             return false;
         }
         inner.history.record(&label, before);
-        // The next knob edit must not merge with the group into one step.
         inner.last_edit = None;
         true
     }
@@ -170,7 +161,6 @@ impl HistoryControl for ProjectService {
         if inner.project != group.before {
             let next_id = inner.project.next_id;
             inner.project = group.before;
-            // As with undo: ids given out inside the group are never given out again.
             inner.project.next_id = inner.project.next_id.max(next_id);
             inner.last_edit = None;
             self.sync(&mut inner);
@@ -187,7 +177,6 @@ impl HistoryControl for ProjectService {
 
     fn checkpoint(&self) -> HistoryMark {
         let mut inner = self.lock();
-        // A knob edit right after the mark must start a new step, not continue one made before it.
         inner.last_edit = None;
         inner.history.mark()
     }
@@ -198,14 +187,12 @@ impl HistoryControl for ProjectService {
             return Err(history::STEP_LABEL_EMPTY.err());
         }
         let mut inner = self.lock();
-        // Edits inside an open group are not steps yet: the merged step would miss them.
         if inner.group.is_some() {
             return Err(history::GROUP_OPEN.err());
         }
         let squashed = inner.history.squash(mark, label).ok_or_else(|| history::CHECKPOINT_GONE.with("mark", mark))?;
         if squashed {
             inner.last_edit = None;
-            // The model is the same, but the undo label changed: a new revision makes the interface re-read it.
             self.publish_snapshot(&mut inner);
         }
         Ok(squashed)

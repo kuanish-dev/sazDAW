@@ -1,4 +1,3 @@
-// Catalog lookups: instrument, effect and parameter descriptions; parameter values with defaults filled in.
 import type { Catalog, KindInfo, ParamInfo, Params } from "../api/types";
 
 export function instrumentInfo(catalog: Catalog | null, kind: string | undefined): KindInfo | undefined {

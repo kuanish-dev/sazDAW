@@ -1,8 +1,3 @@
-// Delay graph: one sound and its echoes on a time line — the dry sound at 0, then each echo where it comes and as loud
-// as it is (outlined bars, ping-pong ones marked L and R), with the tempo's beats dotted behind. Live, each bar fills
-// with the input that made it: the dry bar with the sound now, the first echo with the sound one delay ago, and so on, so
-// a hit runs along the bars and silence dies away through them after playback stops. The bars follow the knobs and the
-// tempo at once. The math is `effects/delayTaps.ts`.
 import { For, Index, Show, createMemo, createSignal } from "solid-js";
 import type { Id, ParamInfo, Params } from "../api/types";
 import { TAPS_FLOOR_DB, beatTimes, delayTaps, heardTaps } from "./delayTaps";
@@ -28,7 +23,6 @@ interface InputReading {
 
 export function DelayGraph(props: { node: Id; infos: ParamInfo[]; values: Params }) {
   const { tick } = usePlayback();
-  // A memo: the tick changes 30 times a second, the tempo rarely.
   const tempo = createMemo(() => tick().tempo);
   const taps = createMemo(() => delayTaps(props.infos, props.values, tempo()));
   const [history, setHistory] = createSignal<InputReading[]>([]);
@@ -69,7 +63,6 @@ export function DelayGraph(props: { node: Id; infos: ParamInfo[]; values: Params
               {(seconds) => <line x1={x(seconds)} x2={x(seconds)} y1="0" y2={BASE} stroke="var(--canvas-beat)" stroke-width="1" stroke-dasharray="1 3" />}
             </For>
             <line x1="0" x2={VIEW.width} y1={BASE} y2={BASE} stroke="var(--canvas-grid)" stroke-width="1" />
-            {/* The dry sound: outline by the mix, filled by the sound now. */}
             <rect x={x(0) - BAR_WIDTH / 2} y={BASE - height(d().dryDb)} width={BAR_WIDTH} height={height(d().dryDb)} fill="none" stroke="var(--color-muted)" stroke-width="1" />
             <rect x={x(0) - BAR_WIDTH / 2} y={BASE - height(heard()?.dry ?? -Infinity)} width={BAR_WIDTH} height={height(heard()?.dry ?? -Infinity)} fill="var(--color-muted)" fill-opacity="0.6" />
             <Index each={d().taps}>

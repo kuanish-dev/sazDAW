@@ -1,9 +1,3 @@
-// Multiband compressor graph: the band split on the frequency axis (20 Hz–20 kHz) over the live spectrum of the node's
-// output (`LiveSpectrum`). Thin lines are the shapes of the bands, the bright line what all of them together do to the
-// sound now (each band's gain minus its live gain reduction), and each band's reduction hangs from the top of its
-// stretch with its value. Dragging a split line moves the split (double-click resets it); the S and B under each band
-// toggle its solo and bypass; every change goes through `onChange` like a knob. The live reduction comes from the
-// engine's band gains (`bandGains.ts`). The math is `effects/multibandCurve.ts`.
 import { For, Index, Show, createMemo } from "solid-js";
 import type { Id, ParamInfo, Params } from "../api/types";
 import { reductionFraction } from "./dynamicsCurves";
@@ -43,7 +37,6 @@ export function MultibandGraph(props: { node: Id; infos: ParamInfo[]; values: Pa
   const onMove = (split: number, event: PointerEvent) => {
     const s = settings();
     if (event.buttons !== 1 || active !== split || !s) return;
-    // The SVG stretches to the panel width: convert the screen point into its viewBox units.
     const x = (localPoint(svg, event).x / svg.getBoundingClientRect().width) * VIEW.width;
     const update = dragSplit(s, split, x, VIEW);
     props.onChange(update.name, update.value);

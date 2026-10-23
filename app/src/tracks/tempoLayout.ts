@@ -1,5 +1,3 @@
-// Signature flags on the bar ruler ("7/8" right after the bar number): geometry shared by drawing (`tempoRender.ts`)
-// and mouse (`tempoPointer.ts`), like `markerLayout.ts` for markers.
 import type { TempoMap } from "../api/types";
 import { barIndex } from "../common/tempoMap";
 

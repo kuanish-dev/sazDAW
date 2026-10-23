@@ -29,7 +29,6 @@ impl KeyControl for ProjectKey {
         {
             return Err(notes::SCALE_ROOT_OUT_OF_RANGE.with("root", root));
         }
-        // The same key leaves the project equal, and the core records no undo step for that.
         self.project.edit(&tr!("Song key", "Тональность"), |project| {
             project.key = key;
             Ok(())

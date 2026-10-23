@@ -1,4 +1,3 @@
-// Connections on the graph canvas: the connection curve, the wire being dragged, the level slider and pre/post-fader toggle of the selected connection.
 import { Show } from "solid-js";
 import type { GraphEdge } from "../api/types";
 import { MAX_LEVEL } from "./graphRules";

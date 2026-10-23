@@ -1,6 +1,3 @@
-// Audio export without side effects: the choices of the export form and which apply to which format (as the backend
-// accepts them), the request built from the form, the file extension for a format, the range of the selected clips and a
-// short result summary for the message.
 import type { BitDepth, Clip, ExportFormat, ExportOptions, ExportRange, ExportResult, Id, Mp3Bitrate, Normalize } from "../api/types";
 import { t } from "../i18n";
 

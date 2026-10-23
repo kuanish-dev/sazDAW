@@ -1,8 +1,3 @@
-// The Tracks page: headers on the left (tracks, folders, automation lanes), timeline on the right, below them the clip
-// panel and the sound browser.
-// The page scrolls vertically as a whole; the toolbar and the ruler strip stay pinned at the top (sticky). The rows scroll
-// sideways in their own scroller, so the ruler lives outside it (CSS sticky does not work inside a scroller) in a clipped
-// container whose horizontal offset follows the rows'; `Timeline` renders the ruler canvas into it.
 import { Index, Match, Show, Switch, createMemo, createSignal, onCleanup, onMount } from "solid-js";
 import { ownedLanes } from "../automation/automationRules";
 import { BAR_GRID } from "../common/time";
@@ -65,14 +60,11 @@ export function TracksView() {
               <div class="flex items-center truncate px-3 text-[11px] leading-tight text-muted" style={{ height: `${RULER_HEIGHT}px` }}
                 title={t().tracks.view.rulerHintLong}>{t().tracks.view.rulerHint}</div>
             </div>
-            {/* Clipped, not scrollable by the user: its offset is copied from the rows' scroller below. */}
             <div ref={setRulerHost} class="min-w-0 flex-1 overflow-hidden" />
           </div>
           <div class="overflow-x-auto" onScroll={(e) => { rulerHost()!.scrollLeft = e.currentTarget.scrollLeft; }}>
             <div class="flex min-w-max">
               <div class="sticky left-0 z-10 w-80 shrink-0 border-r border-line bg-panel">
-                {/* `Index`, not `For`: rows are rebuilt on every project edit and `For` would recreate the headers
-                    in the middle of a knob turn; keyed by row index the header stays the same. */}
                 <Index each={rows()} fallback={<p class="p-3 text-sm text-muted">{t().tracks.view.empty}</p>}>
                   {(row, index) => (
                     <Switch>

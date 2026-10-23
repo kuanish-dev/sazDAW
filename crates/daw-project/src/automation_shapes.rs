@@ -41,7 +41,6 @@ fn period_offsets(shape: AutomationShape, period: u32) -> Vec<u32> {
     match shape {
         AutomationShape::Sine => (0..SINE_STEPS).map(|i| (u64::from(period) * u64::from(i) / u64::from(SINE_STEPS)) as u32).collect(),
         AutomationShape::Triangle => vec![0, half],
-        // A jump is two points a tick apart: the end of one level and the start of the next.
         AutomationShape::Saw => vec![0, period - 1],
         AutomationShape::Square => vec![0, half - 1, half, period - 1],
         AutomationShape::RampUp | AutomationShape::RampDown => vec![0],

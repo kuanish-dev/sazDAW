@@ -62,8 +62,6 @@ pub(crate) fn stretch_mapped(
         previous = Some(pos);
         out_pos += hop;
     }
-    // Dividing by the window sum: Hann windows at half-window steps sum to 1 except at the very start, where the first
-    // window has not reached full strength; there the division restores the original sound without a dip.
     (0..output_len * channels)
         .map(|i| {
             let w = weight[i / channels];
@@ -92,7 +90,6 @@ impl Guide {
         let coarse_len = window_len / DECIMATION;
         let coarse_target = target.div_euclid(d);
         let coarse_nominal = nominal.div_euclid(d);
-        // On a tie (silence) the nominal place stays.
         let mut best = (similarity(&self.coarse, coarse_nominal, coarse_target, coarse_len), coarse_nominal * d);
         for shift in -coarse_tolerance..=coarse_tolerance {
             let candidate = coarse_nominal + shift;
@@ -101,8 +98,6 @@ impl Guide {
                 best = (score, candidate * d);
             }
         }
-        // Refinement on the full signal within one decimation step (over the first half of the window, the part that
-        // overlaps the audio already built).
         let rough = best.1;
         let mut fine = (similarity(&self.full, rough, target, window_len / 2), rough);
         for candidate in rough - d..=rough + d {

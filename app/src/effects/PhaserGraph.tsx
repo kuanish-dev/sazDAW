@@ -1,7 +1,3 @@
-// Phaser graph: the response of each channel (left bright, right dimmer) from 20 Hz to 20 kHz at the LFO's position now,
-// over the live spectrum of the node's output (`LiveSpectrum`), with a dot at each channel's corner on the sweep between
-// `low` and `high`. The notches glide as the LFO turns (while the phaser sounds, `listenToNode`) and follow the knobs at
-// once. The math is `effects/phaserCurve.ts`.
 import { For, Show, createMemo, createSignal } from "solid-js";
 import type { Id, ParamInfo, Params } from "../api/types";
 import { FREQ_GRID_HZ, formatHz, freqX } from "./frequencyAxis";
@@ -60,7 +56,6 @@ export function PhaserGraph(props: { node: Id; infos: ParamInfo[]; values: Param
                 </>
               )}
             </For>
-            {/* The sweep's range: the corners travel between low and high. */}
             <rect
               x={freqX(VIEW, s().low)}
               y="0"

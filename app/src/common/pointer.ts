@@ -1,5 +1,3 @@
-// Shared mouse helpers: coordinates inside an element, pointer capture, selection and zoom modifiers,
-// closing popup menus on an outside click.
 import { onCleanup, onMount } from "solid-js";
 
 export interface LocalPoint {

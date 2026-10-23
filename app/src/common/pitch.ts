@@ -1,4 +1,3 @@
-// Note pitches and velocity: names, keys, the editor's working range, shared defaults.
 import { clamp } from "./math";
 
 /** Middle C (C4) is the default note: step-input pitch of a new track and the sampler's root note. */

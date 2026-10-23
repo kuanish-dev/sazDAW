@@ -31,8 +31,6 @@ pub(crate) fn isolate(project: &Project, track: TrackId) -> Result<Project, Cont
         }
         node
     }));
-    // Path edges keep their levels (they are part of the track's sound); the last insert goes to the master at level 1:
-    // the output level is repeated by the audio copy's edge.
     let mut edges: Vec<Edge> = path
         .windows(2)
         .map(|pair| {
@@ -94,7 +92,6 @@ impl TrackRender for OfflineExporter {
         let mut frames = vec![0.0f32; total as usize * channels];
         for chunk in frames.chunks_mut(CHUNK_FRAMES * channels) {
             engine.renderer.render(chunk);
-            // What the engine released (finished voices) is freed here, as during export.
             engine.dsp.collect_garbage();
         }
         Ok(TrackSound { start_tick: start, data: SampleData { sample_rate: rate, channels: StreamConfig::DEFAULT.channels, frames } })

@@ -64,7 +64,6 @@ impl DrumPartBuilder {
 
         let mut clip_ids = Vec::new();
         for placement in placements {
-            // Drums sent to one track make one clip: two note clips on one track must not overlap.
             let mut per_track: Vec<(TrackId, Vec<NewNote>)> = Vec::new();
             for hits in &placement.pattern.lanes {
                 let Some(target) = lane_tracks.iter().find(|t| t.lane == hits.lane && t.plays()) else { continue };
@@ -81,7 +80,6 @@ impl DrumPartBuilder {
                 }
             }
             for (track, notes) in per_track {
-                // The clip content is exactly the pattern; if the clip is longer (repeats), the beat loops.
                 let clip = self.clips.add_note_clip(NewNoteClip {
                     track,
                     start_tick: placement.start_tick,
@@ -113,7 +111,6 @@ impl DrumPartControl for DrumPartBuilder {
         let placements = plan(&*self.library, &request, &map)?;
         let mut lane_tracks = self.kit.resolve(&request, &placements)?;
 
-        // Occupied space is checked before any edit: either a clear refusal or the clips get replaced.
         let start = placements.first().map_or(0, |p| p.start_tick);
         let end = placements.last().map_or(start, |p| p.start_tick + p.length_ticks());
         let clips = self.clips.clips();
@@ -138,7 +135,6 @@ impl DrumPartControl for DrumPartBuilder {
         self.history.begin_group(LABEL.get());
         let result = self.apply(&placements, &mut lane_tracks, to_remove);
         if result.is_err() {
-            // A failure halfway: bring the project back as it was so half a part is not left behind.
             self.history.cancel_group();
         } else {
             self.history.end_group();

@@ -50,7 +50,6 @@ impl Host {
     /// (at least once per `FAULT_CHECK`), so the input opens within a quarter of a second.
     /// If it fails to open, one log entry per request; the engine shows "input closed" in the monitoring status.
     pub fn follow_monitoring(&mut self) {
-        // Without output the engine does not play: its last request is stale, no reason to hold the input.
         let wanted = self.renderer.is_some() && self.shared.tap.live().wanted();
         if !wanted {
             self.monitor_failed = false;
@@ -89,7 +88,6 @@ impl Host {
             return Err(audio::CAPTURE_ALREADY_RUNNING.err());
         }
         let format = self.open_input()?;
-        // Frames of the previous take must not reach the new one.
         self.shared.clear_capture();
         self.shared.tap.begin_capture();
         self.capturing = true;

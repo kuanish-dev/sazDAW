@@ -81,7 +81,6 @@ impl ProjectService {
 
     fn sync_instruments(&self, inner: &mut Inner) {
         for track in &inner.project.tracks {
-            // A frozen instrument is not created: the track's audio copy plays instead.
             let Some(spec) = track.sounding_instrument() else { continue };
             let key = self.instrument_key(spec);
             let dsp = &mut inner.dsp;

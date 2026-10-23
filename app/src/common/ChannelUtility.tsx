@@ -1,6 +1,3 @@
-// The channel utility of a track source or a bus, used by the mixer strip and the graph inspector: polarity (Ø both
-// sides, L and R one side), mono, the width knob (right-click: automation, MIDI) and the fine time alignment knob with
-// its value in milliseconds and in samples at the stream rate; ‹ › nudge it by one sample.
 import type { Id, Strip } from "../api/types";
 import {
   DELAY_RANGE, WIDTH_RANGE, flipBoth, formatDelayMs, formatDelaySamples, formatWidth, nudgeDelay,

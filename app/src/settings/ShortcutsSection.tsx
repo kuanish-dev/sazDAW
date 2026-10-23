@@ -1,5 +1,3 @@
-// Settings → Keyboard shortcuts: read-only help. Rows come from the same tables the keys work by
-// (window, clips, piano roll, keyboard piano, graph, automation pattern), so the help never drifts from the behavior.
 import { For } from "solid-js";
 import { keyboardPianoHelp } from "../keyboard/keyboard";
 import type { ShortcutHelp } from "../common/shortcuts";

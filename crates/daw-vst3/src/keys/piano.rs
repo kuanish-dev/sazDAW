@@ -147,7 +147,6 @@ impl KeyPlayer {
     pub fn press(&self, window: usize, key: KeyPress) -> bool {
         let mut state = self.state();
         if !key.down {
-            // Releases are caught from any window: a key may be pressed in a plugin window and released in another one.
             return match state.held.remove(&key.code) {
                 Some((track, pitch)) => {
                     self.live.note_off(track, pitch);

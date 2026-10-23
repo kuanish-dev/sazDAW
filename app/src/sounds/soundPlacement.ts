@@ -1,5 +1,3 @@
-// A sound from the browser put to work: onto the timeline, onto a track (as its instrument), as a new track or into the sample editor.
-// A file from disk is first copied into the project (import is idempotent), then the project sample is used.
 import { STEP_TICKS, type Id, type SampleInfo } from "../api/types";
 import { planDrop, sampleLengthTicks, type NewTrackKind, type SampleSource } from "../tracks/dropSample";
 import { DEFAULT_VELOCITY, MIDDLE_C } from "../common/pitch";
@@ -61,7 +59,6 @@ export function createSoundPlacement(core: Core, views: Views, samples: Pick<Sam
   /** Clip for the sound on the new track: the whole audio clip or a one-bar note clip with one note. */
   const clipFor = async (info: SampleInfo, kind: NewTrackKind, track: Id, start: number) => {
     if (kind === "block") return core.calls.run(api.clips.addAudio(track, start, info.id));
-    // A sixteenth long: the sampler plays the sound out by itself.
     const note = { pitch: MIDDLE_C, startTick: 0, lengthTicks: STEP_TICKS, velocity: DEFAULT_VELOCITY };
     return core.calls.run(api.clips.addNote({ track, startTick: start, notes: [note] }));
   };
@@ -105,7 +102,6 @@ export function createSoundPlacement(core: Core, views: Views, samples: Pick<Sam
       const track = await newTrackFor(info, kind);
       if (track === undefined) return;
       const clip = await clipFor(info, kind, track, start);
-      // Don't leave behind the empty track we just created.
       if (!clip) return core.calls.exec(api.tracks.remove(track));
       await views.showCreated({ clips: [clip.id] }, "tracks");
     },

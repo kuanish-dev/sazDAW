@@ -1,4 +1,3 @@
-// Tracks: adding (together with the graph source node), removing, name, color, instrument params.
 import type { Id, MonitorMode, NewTrack, NodeKind, Params, Project, TrackColor } from "../../api/types";
 import { neutralUtility } from "../../mixer/channelUtility";
 import { sourceOfTrack } from "../../graph/graphRules";
@@ -101,13 +100,11 @@ export function tracksHandlers(w: MockWorld): HandlerSet {
   h["tracks.move"] = ({ id, index }) => {
     w.track(w.project, id);
     if (!Number.isInteger(index) || index < 0) throw fail("RP-101", { method: "tracks.move", details: `invalid value: ${index}, expected usize` });
-    // As in the contract: a position past the end is clamped to the end.
     const target = Math.min(index, w.project.tracks.length - 1);
     return w.edit(t().mock.undo.moveTrack, (p) => {
       const from = p.tracks.findIndex((t) => t.id === id);
       const [track] = p.tracks.splice(from, 1);
       p.tracks.splice(target, 0, track!);
-      // As in the contract: a folder's tracks gather together at the topmost one.
       gatherFolders(p);
     });
   };
@@ -120,7 +117,6 @@ export function tracksHandlers(w: MockWorld): HandlerSet {
     return w.edit(t().mock.undo.changeInstrument, (p) => {
       w.track(p, id).instrument = { kind, params: values };
       if (name !== undefined) renameTrack(w, p, id, name);
-      // As in the contract: the old kind's params do not exist on the new one.
       p.automation = p.automation.filter((l) => !(l.target.type === "instrumentParam" && l.target.track === id));
     });
   };

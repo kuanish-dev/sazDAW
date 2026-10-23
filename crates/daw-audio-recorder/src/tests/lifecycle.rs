@@ -81,9 +81,9 @@ fn status_shows_time_peaks_per_track_lost_frames_and_monitor_problems() {
     w.record(AUDIO_TRACK);
     assert!(w.recorder.status().recording);
     w.capture.dropped.store(5, Ordering::Relaxed);
-    *w.devices.level.lock().unwrap() = InputLevel { left: 0.5, right: 0.25 }; // the audio host measures the level
+    *w.devices.level.lock().unwrap() = InputLevel { left: 0.5, right: 0.25 };
     *w.monitor.status.lock().unwrap() = MonitorStatus { listening: 1, input_rate: 44_100, output_rate: 48_000 };
-    w.capture.push(&[0.5, -0.25].repeat(24_000)); // 0.5 s
+    w.capture.push(&[0.5, -0.25].repeat(24_000));
     wait_until("status with time", || w.recorder.status().seconds >= 0.49);
     let status = w.recorder.status();
     assert_eq!((status.left, status.right), (0.5, 0.25), "{status:?}");
@@ -99,7 +99,7 @@ fn status_shows_time_peaks_per_track_lost_frames_and_monitor_problems() {
 
 #[test]
 fn hitting_the_length_limit_releases_input_and_transport_but_keeps_the_sound() {
-    let w = world_with(2_000); // 1000 stereo frames
+    let w = world_with(2_000);
     w.record(AUDIO_TRACK);
     w.capture.push(&ramp(1_500));
     wait_until("stop at the limit", || w.recorder.status().full);

@@ -1,5 +1,3 @@
-// Mock backend meters: plausible "live" node levels while the transport plays, with peak hold, effect gain reduction and
-// the band gains of band-split effects.
 import type { BandGainsReading, GainReductionReading, MeterReading } from "../api/types";
 import { hasStrip } from "../graph/graphRules";
 import type { MockWorld } from "./world";

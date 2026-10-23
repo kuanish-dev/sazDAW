@@ -7,7 +7,6 @@ use std::path::PathBuf;
 const USAGE: &str = "usage: cargo xtask bundle <package> [cargo build args, e.g. --release]";
 
 fn main() -> nih_plug_xtask::Result<()> {
-    // Errors are returned from `main`: Rust prints them and exits the process with a non-zero code.
     let root = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .parent()
         .ok_or_else(|| io::Error::other("the xtask folder is not inside the plugin folder"))?

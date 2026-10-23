@@ -1,4 +1,3 @@
-// M (mute) and S (solo) buttons of a node with a mixer strip: a track source or a bus.
 import type { Id } from "../api/types";
 import { t } from "../i18n";
 import { useGraph } from "../graph/role";

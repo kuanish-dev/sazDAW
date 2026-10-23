@@ -1,4 +1,3 @@
-// Clip group methods: edit, delete and copy several clips as one undo step.
 import type { Clip, ClipEdit, Id } from "../../api/types";
 import { t } from "../../i18n";
 import { applyEdit, checkLimit, checkNoOverlaps, checkRange } from "../clipRules";
@@ -11,7 +10,6 @@ const unique = (ids: Id[]) => [...new Set(ids)];
 export function clipGroupsHandlers(w: MockWorld): HandlerSet {
   const h: HandlerSet = {};
 
-  // All edits apply to the draft and overlaps are checked on the result, so a group can move edge to edge.
   h["clips.editMany"] = ({ changes }: { changes: { id: Id; edit: ClipEdit }[] }) =>
     changes.length === 0 ? [] : w.edit(t().mockEdits.history.editClips, (p) => {
       const ids = unique(changes.map((c) => c.id));

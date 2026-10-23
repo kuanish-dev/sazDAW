@@ -1,6 +1,3 @@
-// Track list rows with folders and automation lanes — what is seen top to bottom in the headers and on the timeline. Pure
-// functions shared by headers, canvas, mouse, sound drop and reordering: a folder row stands above its tracks, a collapsed
-// folder hides them; a track's automation lanes stand right under it, lanes of no track (buses, master) in a block at the end.
 import type { AutomationLane, Folder, Graph, Id, Track } from "../api/types";
 import { t } from "../i18n";
 import { sourceOfTrack } from "../graph/graphRules";

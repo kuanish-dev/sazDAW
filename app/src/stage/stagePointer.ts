@@ -1,5 +1,3 @@
-// Pointer work shared by the stage pictures: from the mouse to the picture's own units (metres of the room), dragging
-// a dot with the grab point kept under the mouse, and the off-stage chips dropped into the room.
 import type { Id } from "../api/types";
 import type { LocalPoint } from "../common/pointer";
 

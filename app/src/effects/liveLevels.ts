@@ -1,6 +1,3 @@
-// Levels of a node's live sound over time, for the effect pictures (`effects/*Graph.tsx`): how loud the newest stretch
-// of a window is, a short history of such readings that scrolls with time, and a follower that rises fast and falls
-// slowly, so a picture calms down and fades out when the sound stops instead of blinking off.
 import type { Point } from "../common/plot";
 
 /** How much of the newest sound one reading measures, seconds: about one poll interval, so consecutive readings cover

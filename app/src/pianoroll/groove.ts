@@ -1,6 +1,3 @@
-// Groove — an exact copy of the backend rules (`daw-project/src/groove.rs`): a table on the 1/16 grid (start offset in
-// ticks and velocity in percent per step) from a template or extracted from a source clip, and applying it to notes.
-// The mock answers with it; the interface takes the list of preset templates from here.
 import { STEP_TICKS, type GrooveTemplate, type Note } from "../api/types";
 import { t } from "../i18n";
 import { fit, roundAway } from "./noteTransforms";

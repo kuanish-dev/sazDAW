@@ -1,4 +1,3 @@
-// Left side of the "Drum part" dialog: patterns by role (grooves, fills…) and genre, with their grid, "Add to part" and "Listen".
 import { For, Show, createMemo, createSignal } from "solid-js";
 import type { DrumPattern, PatternRole } from "../api/types";
 import { ROLES, laneLabel, stylesOf } from "./drumPart";

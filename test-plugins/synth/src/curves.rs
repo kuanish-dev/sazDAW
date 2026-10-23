@@ -68,7 +68,6 @@ fn display(painter: &Painter, plot: Rect) {
 
 fn draw_line(painter: &Painter, plot: Rect, points: &[(f32, f32)], color: Color32) {
     let points: Vec<Pos2> = points.iter().map(|&(x, y)| to_screen(plot, x, y)).collect();
-    // A wide pale line under the main one gives the screen glow.
     painter.add(Shape::line(points.clone(), Stroke::new(5.0_f32, color.gamma_multiply(0.18))));
     painter.add(Shape::line(points, Stroke::new(1.6_f32, color)));
 }
@@ -96,7 +95,6 @@ pub fn draw_scope(painter: &Painter, plot: Rect, scope: &[f32]) {
     display(painter, plot);
     let start = scope_trigger(scope);
     let shown = &scope[start..start + scope.len() / 2];
-    // Quiet sound is not blown up to noise: the scale is at most ×20.
     let scale = 0.9 / peak(shown).max(0.045);
     let n = shown.len() as f32 - 1.0;
     let points: Vec<(f32, f32)> = shown.iter().enumerate().map(|(i, v)| (i as f32 / n, 0.5 + 0.5 * v * scale)).collect();

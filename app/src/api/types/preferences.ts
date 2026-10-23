@@ -1,5 +1,3 @@
-// App preferences (`preferences.*`) and the installed plugin list (`plugins.list`): a mirror of the backend JSON.
-
 export type ThemeChoice = "system" | "dark" | "light";
 export type AccentColor = "orange" | "blue" | "green" | "purple" | "red";
 export type TrackHeight = "compact" | "normal" | "tall";

@@ -1,6 +1,3 @@
-// Two-channel level meter with a green → yellow → red scale: the bar (linear peaks after decay, gliding between the
-// ~30 Hz readings), a peak-hold tick that waits a moment and then falls, and a clip light on top that stays lit for a
-// while after a peak at or above 0 dBFS. The ballistics are `mixer/mixer.ts: stepMeter`, applied in `mixer/levels.ts`.
 import { type MeterChannel, type MeterLevel, peakToMeter } from "../mixer/mixer";
 
 const SCALE = "linear-gradient(to top, var(--color-ok) 0%, var(--color-ok) 60%, #e9d24c 80%, var(--color-danger) 100%)";

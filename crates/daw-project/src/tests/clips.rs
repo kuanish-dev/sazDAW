@@ -40,14 +40,12 @@ fn note_clips_start_empty_and_repeat_their_content_metadata() {
     assert_eq!((created.track, created.start_tick, created.length_ticks), (track, 0, BAR_TICKS));
     assert_eq!(created.content, ClipContent::Notes(NoteContent::empty()));
 
-    // One bar drawn, the clip stretched to 8 bars: the content is one bar long, the longer clip repeats it.
     rig.notes.add_note(clip, note(60, 0, 240)).unwrap();
     rig.clips.edit_clip(clip, ClipEdit { length_ticks: Some(BAR_TICKS * 8), ..Default::default() }).unwrap();
     let stretched = content(&rig, clip);
     assert_eq!(stretched.loop_ticks, BAR_TICKS);
     assert_eq!(rig.clips.clips()[0].length_ticks, BAR_TICKS * 8);
 
-    // The default length is set on creation.
     let long = rig.clips.add_note_clip(NewNoteClip::empty(track, BAR_TICKS * 8, Some(BAR_TICKS * 4))).unwrap();
     assert_eq!((long.length_ticks, content(&rig, long.id).loop_ticks), (BAR_TICKS * 4, BAR_TICKS));
 }
@@ -89,7 +87,6 @@ fn splitting_a_note_clip_copies_notes_and_sets_the_offset() {
     assert_eq!(l.notes, r.notes, "both halves got a copy of the notes");
     assert_eq!(r.notes.len(), 2);
 
-    // The phase follows the loop length: the cut is on the second repeat of the bar.
     let again = rig.clips.split_clip(right.id, BAR_TICKS + 480).unwrap();
     assert_eq!(again.offset_ticks, 480, "(960 + 3360 - 960) % bar");
 
@@ -120,11 +117,9 @@ fn duplicate_clip_deep_copies_and_fails_when_the_place_is_taken() {
     assert_eq!((copy.track, copy.start_tick, copy.length_ticks), (track, BAR_TICKS, BAR_TICKS));
     assert_eq!(rig.notes.notes(copy.id).unwrap(), [note], "the copy has the same notes");
 
-    // Editing the copy leaves the original alone.
     rig.notes.remove_note(copy.id, note.id).unwrap();
     assert_eq!(rig.notes.notes(clip).unwrap().len(), 1);
 
-    // The place after the copy is free, the one after the original is not.
     assert!(rig.clips.duplicate_clip(clip).is_err(), "the place is taken by the copy");
     assert!(rig.clips.duplicate_clip(9999).is_err());
     assert_eq!(rig.clips.clips().len(), 2);
@@ -172,7 +167,6 @@ fn audio_clips_get_their_length_from_the_sample_and_tempo() {
     let sample = rig.catalog.import(Path::new("/music/loop.wav")).unwrap();
     let track = rig.tracks.add_track("Vocals", None, 60).unwrap();
     let clip = rig.clips.add_audio_clip(track, 0, sample.id).unwrap();
-    // 1 second at 120 BPM = 2 beats = 1920 ticks.
     assert_eq!(clip.length_ticks, 1920);
     assert_eq!(clip.content, ClipContent::audio(sample.id));
     assert!(matches!(rig.clips.add_audio_clip(track, 5000, 424242), Err(e) if e.is(codes::samples::NOT_FOUND)));
@@ -204,7 +198,6 @@ fn clip_with(track: TrackId, start_tick: u32, notes: Vec<NewNote>, loop_ticks: O
 fn note_clip_with_content_equals_empty_clip_then_replace_then_loop() {
     let rig = Rig::new();
     let track = rig.tracks.add_track("Synth", Some("synth"), 60).unwrap();
-    // The last note starts beyond the content length (dropped), the one before is longer than it (trimmed).
     let notes = vec![note(60, 0, 240), note(62, 1800, 600), note(64, 2000, 240)];
     for loop_ticks in [None, Some(1920)] {
         let start = if loop_ticks.is_none() { 0 } else { BAR_TICKS * 4 };

@@ -29,7 +29,6 @@ fn midi_and_live_methods_take_clip_and_track_params() {
     let track = add_synth(&table, c);
     let clip = add_clip(&table, c, &track);
 
-    // Param parsing passes: errors come from the implementation now, not from parsing (no file/device).
     let not_params = |r: Result<Value, daw_contracts::ContractError>| !r.is_err_and(|e| e.is(codes::rpc::BAD_PARAMS));
     assert!(not_params(table.call(c, "midi.exportClip", json!({ "clip": clip["id"], "path": "/nonexistent-dir/x.mid" }))));
     assert!(not_params(table.call(c, "midi.importInto", json!({ "clip": clip["id"], "path": "/nonexistent/x.mid" }))));
@@ -39,7 +38,6 @@ fn midi_and_live_methods_take_clip_and_track_params() {
     assert!(not_params(table.call(c, "live.noteOn", json!({ "track": track, "pitch": 60, "velocity": 0.8 }))));
     assert!(not_params(table.call(c, "live.noteOff", json!({ "track": track, "pitch": 60 }))));
 
-    // Old param names are rejected by parsing.
     let old = table.call(c, "live.noteOn", json!({ "channel": track, "pitch": 60, "velocity": 0.8 })).unwrap_err();
     assert!(old.is(codes::rpc::BAD_PARAMS), "{old}");
     let old = table.call(c, "midi.importInto", json!({ "pattern": 1, "channel": 1, "path": "x" })).unwrap_err();

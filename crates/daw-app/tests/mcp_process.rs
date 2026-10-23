@@ -82,7 +82,6 @@ fn the_attach_bridge_edits_the_session_of_the_running_application() {
     );
     assert_eq!(reply["result"]["isError"], false, "{reply}");
 
-    // The app window (this session) sees what the AI did.
     assert_eq!(controls.tracks.tracks().len(), 3, "kick, snare, hat");
     assert_eq!(controls.clips.clips().len(), 3);
     assert!(controls.history.can_undo(), "the AI's edit is undone from the window with a normal undo");
@@ -94,7 +93,6 @@ fn the_attach_bridge_edits_the_session_of_the_running_application() {
 
 #[test]
 fn the_bridge_explains_when_the_application_is_not_running() {
-    // No busy port: start and close a server right away to get a port that is surely free.
     let port = {
         let session = build_session(false);
         HttpEndpoint::start(Arc::new(McpServer::new(session.controls)), 0).unwrap().port()

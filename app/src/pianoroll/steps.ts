@@ -1,4 +1,3 @@
-// Step input: sixteenth-note steps of the clip content, pitch rows, which steps are on and which is playing.
 import { STEP_TICKS, type Note } from "../api/types";
 
 export const stepAt = (tick: number): number => Math.floor(tick / STEP_TICKS);

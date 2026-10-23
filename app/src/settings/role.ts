@@ -1,5 +1,3 @@
-// The settings role: the app preferences and the look made from them, the audio devices, the error log and what the app
-// says about itself.
 import { defineRole, useRole } from "../core/roles";
 import { type About, createAbout } from "./about";
 import { type Appearance, createAppearance } from "./appearance";

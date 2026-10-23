@@ -1,5 +1,3 @@
-// Mock backend clip rules: range, matching track, placement (overlaps and audio clip crossfades), warp and pitch.
-// Shared by the single and group methods.
 import type { Clip, ClipContent, ClipEdit, Id, Project, TempoMap } from "../api/types";
 import { PPQ } from "../api/types";
 import { clipEnd, trimmedClip } from "../tracks/clipRules";

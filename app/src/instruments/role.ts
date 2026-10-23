@@ -1,5 +1,3 @@
-// The instruments role: a track's MIDI effects before its instrument (`noteEffects.ts`); the instrument window itself is a
-// component of this folder.
 import { defineRole, useRole } from "../core/roles";
 import { createNoteEffects, type NoteEffects } from "./noteEffects";
 

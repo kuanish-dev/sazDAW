@@ -1,4 +1,3 @@
-// The chord part's rhythm: the strum patterns as buttons, each with its strokes drawn as arrows.
 import { For } from "solid-js";
 import type { StrumPattern } from "../api/types";
 import { strumArrows } from "./chordPart";

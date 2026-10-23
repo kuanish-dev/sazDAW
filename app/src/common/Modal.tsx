@@ -1,5 +1,3 @@
-// Modal window: dimmed backdrop, a flat dialog with a title strip and a close icon, content and buttons at the bottom;
-// Esc or a click outside closes it.
 import { Show, type JSX } from "solid-js";
 import { t } from "../i18n";
 import { IconClose } from "./icons";

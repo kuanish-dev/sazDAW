@@ -100,7 +100,6 @@ impl NoteControl for ProjectNotes {
         check_loop_ticks(loop_ticks)?;
         self.project.edit(&tr!("Clip content length", "Длина содержимого клипа"), |project| {
             set_loop_ticks(content_mut(project, clip)?, loop_ticks);
-            // The phase cannot go beyond the new length.
             ops::clip_mut(project, clip)?.offset_ticks %= loop_ticks;
             Ok(())
         })
@@ -114,7 +113,6 @@ impl NoteControl for ProjectNotes {
         let (label, transform) = match transform {
             NoteTransform::Quantize { .. } => (tr!("Quantize notes", "Квантовать ноты"), transform),
             NoteTransform::Humanize { timing_ticks, velocity, seed } => {
-                // Without a seed each call gets its own: humanizing again must not repeat the same shifts.
                 let seed = Some(seed.unwrap_or_else(random_seed));
                 (tr!("Humanize notes", "Очеловечить ноты"), NoteTransform::Humanize { timing_ticks, velocity, seed })
             }

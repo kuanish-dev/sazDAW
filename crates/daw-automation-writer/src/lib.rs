@@ -219,7 +219,6 @@ impl Inner {
                 if error.kind() == ErrorKind::NotFound {
                     gone.push(write.clip);
                 } else {
-                    // A full clip or a clash: writing this target stops, what was written before stays.
                     write.active = false;
                     failure = Some(error);
                 }
@@ -315,8 +314,6 @@ impl Inner {
             } else if let Some(local) = local.filter(|&l| l >= write.stretch.end()) {
                 write.dirty |= write.stretch.extend(local);
             } else {
-                // Left the clip, crossed the loop seam or the transport jumped back: a new stretch starts here with
-                // the same value.
                 let value = write.stretch.value();
                 resume.push(Resume { target: write.target.clone(), value, end: write.end, last_touch: write.last_touch });
             }
@@ -385,7 +382,6 @@ impl Drop for LiveAutomationWriter {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::Release);
         if let Some(worker) = lock(&self.worker).take() {
-            // A thread panic is already logged by the panic hook; here we only wait for the thread to end.
             let _ = worker.join();
         }
     }

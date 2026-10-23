@@ -237,7 +237,6 @@ pub(crate) fn suspicious_params(project: &Project, kinds: &Kinds) -> Vec<Finding
     for track in &project.tracks {
         let Some(spec) = track.sounding_instrument() else { continue };
         let Some(infos) = kinds.instruments.get(&spec.kind) else { continue };
-        // A parameter at its minimum by default (an LFO or envelope depth) is off there, not lost.
         for info in infos.iter().filter(|info| is_level_param(info) && !near_min(info, info.default)) {
             let value = spec.params.get(info.name).copied().unwrap_or(info.default);
             if near_min(info, value) {
@@ -317,7 +316,6 @@ pub(crate) fn automation_ranges(project: &Project, kinds: &Kinds) -> Vec<Finding
     let mut findings = Vec::new();
     for lane in &project.automation {
         let Some((min, max, what)) = lane_range(project, &lane.target, kinds) else { continue };
-        // Song ticks of the out-of-range points in each clip's first pattern repeat.
         let outside: Vec<(u32, f32)> = lane
             .clips
             .iter()

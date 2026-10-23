@@ -131,7 +131,6 @@ fn extracting_regions_is_one_undo_step_and_a_failure_midway_changes_nothing() {
     assert!(rig.service.undo());
     assert_eq!(rig.catalog.samples().len(), 1, "both regions went away with one undo");
 
-    // The second region cannot be written (the writer refuses): the first import is rolled back.
     let broken = Region { name: "readonly".into(), ..ok.clone() };
     assert!(matches!(rig.editor.extract_regions(source.id, &[ok.clone(), broken]), Err(e) if e.is(codes::samples::WAV_WRITE_FAILED)));
     assert_eq!(rig.catalog.samples().len(), 1, "the project is as it was");

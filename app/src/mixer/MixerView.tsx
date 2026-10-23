@@ -1,6 +1,3 @@
-// The Mixer page: track strips in order, then buses, the master and its live meters (`MasterMeters.tsx`) pinned to the
-// right edge. What a strip shows (inserts, output, sends) is decided by the pure `mixer/mixerStrips.ts`; here only the
-// layout and the open effect.
 import { For, Show, createMemo, createSignal } from "solid-js";
 import type { Id } from "../api/types";
 import { stripOrder } from "./mixerStrips";

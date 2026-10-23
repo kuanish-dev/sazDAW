@@ -1,4 +1,3 @@
-// The project file and everything around it: status, the project feed, recent projects, audio export, error log.
 import type { ProjectChanges } from "./model";
 
 export interface Status {

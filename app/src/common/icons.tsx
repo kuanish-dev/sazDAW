@@ -1,6 +1,3 @@
-// Interface icons: 16×16 line glyphs in the spirit of VS Code codicons, drawn in `currentColor` (the parent's text
-// color sets the icon color, hover included). Inline SVG on purpose — no icon font, package or network request.
-// A new icon: one more `export const` built on `Svg` with paths on the 16px grid (stroke 1.2, round joins).
 import type { JSX } from "solid-js";
 
 export interface IconProps {
@@ -21,8 +18,6 @@ function Svg(props: IconProps & { children: JSX.Element; filled?: boolean }) {
     </svg>
   );
 }
-
-// ── Views (activity bar) ──────────────────────────────────────────────
 
 /** Tracks: rows of lanes with clips. */
 export const IconTracks = (p: IconProps) => (
@@ -57,8 +52,6 @@ export const IconGear = (p: IconProps) => (
   </Svg>
 );
 
-// ── Transport ─────────────────────────────────────────────────────────
-
 export const IconPlay = (p: IconProps) => <Svg {...p} filled><path d="M4.5 2.8v10.4c0 .5.5.8.9.5l8-5.2a.6.6 0 0 0 0-1L5.4 2.3c-.4-.3-.9 0-.9.5Z" /></Svg>;
 export const IconPause = (p: IconProps) => <Svg {...p} filled><rect x="3.5" y="2.5" width="3" height="11" rx="0.6" /><rect x="9.5" y="2.5" width="3" height="11" rx="0.6" /></Svg>;
 export const IconStop = (p: IconProps) => <Svg {...p} filled><rect x="3" y="3" width="10" height="10" rx="1" /></Svg>;
@@ -77,8 +70,6 @@ export const IconSparkle = (p: IconProps) => (
   <Svg {...p} filled><path d="M8 1.5C8.5 5.4 10.6 7.5 14.5 8 10.6 8.5 8.5 10.6 8 14.5 7.5 10.6 5.4 8.5 1.5 8 5.4 7.5 7.5 5.4 8 1.5Z" /></Svg>
 );
 
-// ── General ───────────────────────────────────────────────────────────
-
 export const IconChevronDown = (p: IconProps) => <Svg {...p}><path d="M4.5 6.5 8 10l3.5-3.5" /></Svg>;
 export const IconChevronRight = (p: IconProps) => <Svg {...p}><path d="M6.5 4.5 10 8l-3.5 3.5" /></Svg>;
 export const IconClose = (p: IconProps) => <Svg {...p}><path d="M4 4l8 8M12 4l-8 8" /></Svg>;
@@ -90,8 +81,6 @@ export const IconFolder = (p: IconProps) => (
 export const IconNote = (p: IconProps) => <Svg {...p}><path d="M6 12V3.5l7-1.5v8.5" /><circle cx="4.3" cy="12" r="1.7" /><circle cx="11.3" cy="10.5" r="1.7" /></Svg>;
 export const IconError = (p: IconProps) => <Svg {...p}><circle cx="8" cy="8" r="6" /><path d="M5.8 5.8l4.4 4.4M10.2 5.8l-4.4 4.4" /></Svg>;
 export const IconPulse = (p: IconProps) => <Svg {...p}><path d="M1.5 8.5h3l1.5-4 2.5 8 2-6 1 2h3" /></Svg>;
-
-// ── Settings sections ─────────────────────────────────────────────────
 
 export const IconPerson = (p: IconProps) => <Svg {...p}><circle cx="8" cy="5" r="2.8" /><path d="M2.5 14c.4-3 2.6-4.5 5.5-4.5s5.1 1.5 5.5 4.5" /></Svg>;
 export const IconPaint = (p: IconProps) => (
@@ -114,8 +103,6 @@ export const IconKeyboard = (p: IconProps) => (
   <Svg {...p}><rect x="1" y="3.5" width="14" height="9" rx="1" /><path d="M3.5 6.5h1M6 6.5h1M8.5 6.5h1M11 6.5h1.5M3.5 9h1M11.5 9h1M5.5 10.5h5" /></Svg>
 );
 export const IconInfo = (p: IconProps) => <Svg {...p}><circle cx="8" cy="8" r="6" /><path d="M8 7.2v4M8 4.8v.1" /></Svg>;
-
-// ── Editing tools ─────────────────────────────────────────────────────
 
 export const IconPencil = (p: IconProps) => <Svg {...p}><path d="M10.5 2.5l3 3-8 8H2.5v-3Z" /><path d="M9 4l3 3" /></Svg>;
 export const IconScissors = (p: IconProps) => (
@@ -153,8 +140,6 @@ export const IconPaste = (p: IconProps) => (
 export const IconDuplicate = (p: IconProps) => <Svg {...p}><rect x="1.5" y="5" width="6" height="6" rx="0.8" /><rect x="8.5" y="5" width="6" height="6" rx="0.8" stroke-dasharray="2 1.4" /></Svg>;
 export const IconImport = (p: IconProps) => <Svg {...p}><path d="M8 2v8M4.5 6.5 8 10l3.5-3.5M2.5 11v2.5h11V11" /></Svg>;
 export const IconExport = (p: IconProps) => <Svg {...p}><path d="M8 10V2M4.5 5.5 8 2l3.5 3.5M2.5 11v2.5h11V11" /></Svg>;
-
-// ── Tracks, effects, misc ─────────────────────────────────────────────
 
 /** Drag handle: two columns of dots. */
 export const IconGripper = (p: IconProps) => (

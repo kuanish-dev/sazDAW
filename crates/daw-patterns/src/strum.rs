@@ -110,7 +110,6 @@ impl Strummer {
         let velocity = if stroke.soft { (f32::from(base) * SOFT) as u8 } else { base };
         let spread = if matches!(style, Style::Strings { .. }) { spread } else { 0 };
         let hit: Vec<(usize, u8)> = match (style, stroke.direction) {
-            // The bass plays only the down strokes.
             (Style::Bass { .. }, Direction::Up | Direction::Muted) => return,
             (_, Direction::Up) => notes.iter().rev().take(UP_STRINGS).copied().collect(),
             (_, Direction::Down | Direction::Muted) => notes.to_vec(),
@@ -140,7 +139,6 @@ pub(crate) fn progression_notes(bars: &[Vec<Chord>], strokes: &[Stroke], style: 
             let tick = bar * BAR_TICKS + stroke.step * STRUM_STEP_TICKS;
             let chord = if stroke.step >= STRUM_STEPS / 2 { chords.last() } else { chords.first() };
             let Some(&chord) = chord else { continue };
-            // A new chord: the fretting hand lets the old strings go.
             if previous.is_some_and(|previous| previous != chord) {
                 strummer.end_all(tick);
             }
@@ -187,10 +185,8 @@ mod tests {
     #[test]
     fn a_down_stroke_runs_up_the_strings_and_an_up_stroke_back_over_the_top_four() {
         let notes = notes("guitar", "six", &[&["C"]]);
-        // x32010 down from the A string, 20 ticks apart; the first stroke is the loudest and fades string by string.
         let first: Vec<_> = notes.iter().filter(|n| n.start_tick < STRUM_STEP_TICKS).map(|n| (n.start_tick, n.pitch, n.velocity)).collect();
         assert_eq!(first, [(0, 48, 110), (20, 52, 107), (40, 55, 104), (60, 60, 101), (80, 64, 98)]);
-        // The up stroke on step 3 (tick 1440): E4, C4, G3, E3.
         let up: Vec<_> = notes.iter().filter(|n| (1440..1440 + 100).contains(&n.start_tick)).map(|n| (n.start_tick, n.pitch)).collect();
         assert_eq!(up, [(1440, 64), (1460, 60), (1480, 55), (1500, 52)]);
     }
@@ -198,7 +194,6 @@ mod tests {
     #[test]
     fn a_string_rings_until_it_is_hit_again_and_the_part_ends_with_its_last_bar() {
         let notes = notes("guitar", "six", &[&["C"]]);
-        // The A string (C3) is hit only by the down strokes: at 0, 960 and 2880.
         let low: Vec<_> = notes.iter().filter(|n| n.pitch == 48).map(|n| (n.start_tick, n.length_ticks)).collect();
         assert_eq!(low, [(0, 960), (960, 1920), (2880, 960)]);
         assert!(notes.iter().all(|n| n.start_tick + n.length_ticks <= BAR_TICKS && n.validate(BAR_TICKS).is_ok()));

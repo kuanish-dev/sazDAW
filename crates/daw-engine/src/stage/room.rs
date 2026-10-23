@@ -68,7 +68,6 @@ impl RoomTail {
     pub fn set_shape(&mut self, shape: &RoomShape) {
         let rate = self.sample_rate;
         for (feedback, line) in self.feedback.iter_mut().zip(&self.lines) {
-            // −60 dB over the ring time: each pass of `length` frames keeps 10^(−3 · length / (rate · ring)).
             *feedback = 10f32.powf(-3.0 * line.len() as f32 / (rate * shape.ring_seconds));
         }
         self.wall = one_pole(shape.wall_hz, rate);

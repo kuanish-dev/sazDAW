@@ -24,7 +24,6 @@ struct Recent {
 }
 
 pub(crate) fn register(table: &mut RpcTable) {
-    // Writing to the log does not log its own failures: a log failure must not produce new entries.
     table.add("log.write", "Writes a message to the log.", |c, p: Write| {
         Ok(c.log.record(LogEntry { details: p.details, ..LogEntry::new(p.level, &p.source, p.message) }))
     });

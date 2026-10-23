@@ -84,7 +84,6 @@ fn project_folder_lifecycle_through_rpc() {
     assert_eq!(recent[0]["path"], file.display().to_string());
     assert_eq!(call(&table, c, "project.autosave", Value::Null), Value::Null);
 
-    // An edit: the autosave lies in the project folder and is restored.
     add_synth(&table, c);
     let autosave = root.join("Song/autosave/autosave.dawproj");
     std::fs::create_dir_all(autosave.parent().unwrap()).unwrap();
@@ -105,9 +104,7 @@ fn errors_and_frontend_reports_land_in_the_error_log() {
     let session = build_session(false);
     let (table, c) = (RpcTable::new(), &session.controls);
 
-    // A report from the interface.
     call(&table, c, "log.write", json!({ "level": "error", "source": "frontend", "message": "boom", "details": "stack" }));
-    // Refusals by the rules and invalid params are logged by themselves.
     assert!(table.call(c, "graph.connect", json!({ "from": 0, "to": 99, "level": 1.0, "sidechain": false })).is_err());
     assert!(table.call(c, "tracks.add", json!({ "nope": 1 })).is_err());
     assert!(table.call(c, "no.such", Value::Null).is_err());
@@ -122,7 +119,6 @@ fn errors_and_frontend_reports_land_in_the_error_log() {
     assert_eq!(rpc[1]["level"], "error", "invalid params are an error");
     assert!(rpc[1]["message"].as_str().unwrap().contains("tracks.add"));
     assert!(call(&table, c, "log.file", Value::Null).as_str().unwrap().ends_with("errors.log"));
-    // The error log doesn't produce entries about itself.
     assert_eq!(call(&table, c, "log.recent", json!({ "limit": 100 })).as_array().unwrap().len(), entries.len());
 }
 
@@ -173,7 +169,6 @@ fn export_takes_format_normalize_and_range_over_the_wire() {
     assert!(lufs <= -15.5, "not louder than the target: {lufs}");
     assert!(!dir.join("song.flac.render-tmp").exists(), "the temporary file is removed");
 
-    // Without normalization loudness comes too; the old request is a WAV, as before.
     let plain = call(&table, c, "project.export", with(json!({ "range": { "fromTick": 0, "toTick": 1920 } })));
     assert!(plain["files"][0].as_str().unwrap().ends_with("song.wav"));
     assert!(plain["loudnessLufs"].is_number() && plain["peakDb"].is_number());

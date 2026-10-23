@@ -40,7 +40,6 @@ pub(crate) fn template_table(template: GrooveTemplate) -> GrooveTable {
     let timing = |offsets: [i64; 4]| offsets.map(|offset| GrooveStep { offset, velocity: 100 }).to_vec();
     let steps = match template {
         GrooveTemplate::Swing { grid: SwingGrid::Eighth, percent } => {
-            // Sixteenths between eighths follow them: half the shift (like stretching the halves of a beat).
             let (eighth, sixteenth) = (swing_shift(960, percent), swing_shift(480, percent));
             timing([0, sixteenth, eighth, sixteenth])
         }
@@ -83,7 +82,6 @@ pub(crate) fn extract_groove(source: &NoteContent, bar: u32) -> Option<GrooveTab
         return None;
     }
     let len = (bar / STEP_TICKS).max(1) as usize;
-    // Per step: sum of offsets, sum of velocities, note count.
     let mut sums = vec![(0_i64, 0_i64, 0_i64); len];
     for note in &source.notes {
         let index = step_index(note.start_tick);

@@ -85,7 +85,6 @@ impl IsolatedScan {
             let text = std::fs::read_to_string(&answer).map_err(|error| format!("the scan helper left no answer: {error}"))?;
             serde_json::from_str(&text).map_err(|error| format!("unreadable answer from the scan helper: {error}"))
         });
-        // The file may be missing (the helper crashed earlier): then there is nothing to remove.
         std::fs::remove_file(&answer).ok();
         result
     }
@@ -97,7 +96,6 @@ impl IsolatedScan {
             match child.try_wait() {
                 Ok(Some(status)) => return Ok(status),
                 Ok(None) if Instant::now() >= deadline => {
-                    // A process that already exited may refuse to be killed; `wait` still reaps it then.
                     child.kill().ok();
                     child.wait().ok();
                     return Err(format!("the plugin did not answer within {} s (hung while loading)", self.timeout.as_secs()));

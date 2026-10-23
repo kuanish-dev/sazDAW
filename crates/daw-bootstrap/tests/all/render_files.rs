@@ -18,7 +18,7 @@ fn song_with_audio_clip_exports_to_wav_with_the_right_length() {
     controls.tempo.set_tempo(Bpm::new(120.0).unwrap()).unwrap();
     let info = controls.samples.import(&dir.join("loop.wav")).unwrap();
     let track = controls.tracks.add_track("Sound", None, 60).unwrap();
-    controls.clips.add_audio_clip(track, 1920, info.id).unwrap(); // from second 1
+    controls.clips.add_audio_clip(track, 1920, info.id).unwrap();
 
     let out_path = dir.join("mix.wav");
     let report = controls
@@ -34,7 +34,6 @@ fn song_with_audio_clip_exports_to_wav_with_the_right_length() {
             &|_| {},
         )
         .unwrap();
-    // The clip ends at second 2, plus a 0.5 s tail.
     assert_eq!(report.frames, (2.5 * 44_100.0) as u64);
     let (spec, samples) = read_wav(&out_path);
     assert_eq!((spec.channels, spec.sample_rate, spec.bits_per_sample), (2, 44_100, 16));
@@ -42,7 +41,6 @@ fn song_with_audio_clip_exports_to_wav_with_the_right_length() {
     assert!(rms(&samples[..44_100 * 2 / 2]) < 1e-4, "silence before the clip");
     assert!(rms(&samples[(1.2 * 44_100.0) as usize * 2..(1.8 * 44_100.0) as usize * 2]) > 0.1);
 
-    // Export does not touch live playback.
     assert_eq!(controls.transport.state(), TransportState::Stopped);
     render(&mut session, 1_000);
     std::fs::remove_dir_all(dir).ok();
@@ -70,13 +68,11 @@ fn stems_are_written_per_bus() {
     assert_eq!(report.files.len(), 4, "mix + 3 buses: {:?}", report.files);
 
     let mix = read_wav(&report.files[0]).1;
-    // The stem name contains the bus name (the exact name format is the export's business).
     let stem = |bus: &str| report.files.iter().find(|f| f.to_string_lossy().contains(bus)).cloned().unwrap();
     let drums = read_wav(&stem("Drums")).1;
     let bass = read_wav(&stem("Bass")).1;
     assert!(rms(&mix) > 0.02 && rms(&drums) > 0.01 && rms(&bass) > 0.005);
     assert_eq!(mix.len(), drums.len());
-    // Stems are not louder than the mix.
     assert!(peak(&drums) <= peak(&mix) + 1e-3 && peak(&bass) <= peak(&mix) + 1e-3);
     std::fs::remove_dir_all(dir).ok();
 }
@@ -105,11 +101,9 @@ fn project_survives_save_and_load_including_samples() {
     assert_eq!(other.controls.samples.samples()[0].id, info.id);
     assert_eq!(other.controls.graph.graph(), controls.graph.graph(), "the graph is saved and loaded whole");
 
-    // The loaded project plays the same.
     other.controls.transport.play();
     assert!(rms(&render(&mut other, 48_000)) > 0.02);
 
-    // Loading works without the source file, and the loss goes to the warnings.
     std::fs::remove_file(dir.join("proj/samples/kick.wav")).unwrap();
     let third = start(false);
     third.controls.project.load(&project_path).unwrap();
@@ -129,7 +123,6 @@ fn midi_export_and_import_round_trip() {
 
     let file = dir.join("bass.mid");
     controls.midi_files.export_clip(clip, &file).unwrap();
-    // The whole project is exported too (one file track per project track).
     controls.midi_files.export_project(&dir.join("all.mid")).unwrap();
     assert!(dir.join("all.mid").is_file());
 

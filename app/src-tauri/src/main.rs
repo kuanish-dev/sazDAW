@@ -109,7 +109,6 @@ fn spawn_telemetry(app: AppHandle, controls: Controls, mut feed: ProjectFeed) {
             if app.emit("tick", daw_rpc::tick(&controls)).is_err() {
                 return;
             }
-            // The window is closing: nobody can receive the event, and the next `tick` above ends the thread.
             if let Some(update) = feed.poll(&controls) {
                 let _ = app.emit("project", update);
             }
@@ -126,17 +125,13 @@ fn main() {
     install_panic_hook(controls.log.clone());
     let autosaver = session.start_autosave();
 
-    // The audio output lives while its handle lives; without sound the window still opens.
     let log = controls.log.clone();
     let _audio = session.start_audio().map_err(|error| log.record(LogEntry::error("audio", format!("could not open audio: {error}")))).ok();
 
-    // Both doors (the window and the AI server) ask the plugin windows before saving or rendering the project.
     let plugin_windows = Arc::new(PluginWindows::new(controls.plugin_editors.clone(), controls.log.clone()));
     let mut table = RpcTable::new();
     table.set_plugin_windows(plugin_windows.clone());
 
-    // Start = the last open project, if any.
-    // Runs in the background: the window opens right away and shows a loading indicator.
     let startup = Arc::new((Mutex::new(false), Condvar::new()));
     let ai_server = Arc::new(Mutex::new(None));
     {
@@ -144,9 +139,7 @@ fn main() {
         let (ai_slot, ai_controls, ai_windows) = (Arc::clone(&ai_server), controls.clone(), plugin_windows.clone());
         thread::spawn(move || {
             let _done = StartupDone(startup);
-            // If there is nothing to open, the window shows the welcome screen: the user creates a project.
             opener.open();
-            // The AI server starts after the project opens: AI must not edit a project that is still loading.
             *ai_slot.lock().unwrap_or_else(PoisonError::into_inner) = ai_server::start(&ai_controls, ai_windows);
         });
     }
@@ -173,24 +166,16 @@ fn main() {
             Ok(())
         })
         .build(tauri::generate_context!())
-        // The window was not created — nothing to work with: fail right away (the panic reaches the log through install_panic_hook).
         .expect("the app failed to start")
-        .run(|app, event| {
-            // Exit (including Cmd+Q on macOS, where the window is not "destroyed"): stop autosave,
-            // it removes its file if there are no unsaved edits.
-            match event {
-                // The main window was closed: plugin windows are useless without it (the app used to exit when the last window closed).
-                tauri::RunEvent::WindowEvent { label, event: tauri::WindowEvent::Destroyed, .. } if label == "main" => app.exit(0),
-                tauri::RunEvent::Exit => {
-                    let state = app.state::<Arc<AppState>>();
-                    // Plugin interfaces are closed before everything else is unloaded.
-                    state.plugin_windows.close_all();
-                    *state.autosaver.lock().unwrap_or_else(PoisonError::into_inner) = None;
-                    *state.ai_server.lock().unwrap_or_else(PoisonError::into_inner) = None;
-                    // Last: this is a normal exit, the next start must not take it for a plugin crash.
-                    state.controls.plugin_crash.end_session();
-                }
-                _ => {}
+        .run(|app, event| match event {
+            tauri::RunEvent::WindowEvent { label, event: tauri::WindowEvent::Destroyed, .. } if label == "main" => app.exit(0),
+            tauri::RunEvent::Exit => {
+                let state = app.state::<Arc<AppState>>();
+                state.plugin_windows.close_all();
+                *state.autosaver.lock().unwrap_or_else(PoisonError::into_inner) = None;
+                *state.ai_server.lock().unwrap_or_else(PoisonError::into_inner) = None;
+                state.controls.plugin_crash.end_session();
             }
+            _ => {}
         });
 }

@@ -48,7 +48,6 @@ impl HttpEndpoint {
                 if flag.load(Ordering::Relaxed) {
                     return;
                 }
-                // A connection dropped mid-request is the client's business: the server goes on, but leaves a trace in the log.
                 if let Err(error) = stream.and_then(|stream| serve(&server, stream, port)) {
                     server.log().record(LogEntry::warn("ai", format!("an AI server request was not served: {error}")));
                 }
@@ -65,10 +64,8 @@ impl HttpEndpoint {
 impl Drop for HttpEndpoint {
     fn drop(&mut self) {
         self.stop.store(true, Ordering::Relaxed);
-        // Wake `accept` up: without a new connection the thread would keep waiting.
         let _ = TcpStream::connect(SocketAddr::from((Ipv4Addr::LOCALHOST, self.port)));
         if let Some(thread) = self.thread.take() {
-            // A panic of the server thread is already in the log (the shared panic hook); nothing to add on close.
             let _ = thread.join();
         }
     }
@@ -156,7 +153,6 @@ fn answer(server: &McpServer, request: &Request, port: u16) -> Reply {
     };
     match server.handle_line(text) {
         Some(body) => Reply { status: "200 OK", extra: "", body },
-        // A notification: the reply has no body.
         None => Reply { status: "202 Accepted", extra: "", body: String::new() },
     }
 }

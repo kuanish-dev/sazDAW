@@ -1,6 +1,3 @@
-// The built-in synth's picture in the instrument window: one cycle of its waveform and its filter response.
-// The math mirrors the synth itself (`crates/daw-synth/src/osc.rs`, `filter.rs`, `engine.rs`): the same five waveforms,
-// a one-pole highpass (low cut) and a resonant 12 dB/octave lowpass (high cut).
 import { clamp } from "../common/math";
 
 /** Kind of the built-in synth in the instrument catalog. */
@@ -65,7 +62,6 @@ export function wavePath(index: number, width: number, height: number, pad: numb
   const points: [number, number][] = [];
   for (let i = 0; i <= STEPS; i++) {
     const t = i / STEPS;
-    // The square's jump is drawn as a vertical edge, not a slope between two samples.
     if (Math.round(index) === 3 && i === STEPS / 2) points.push([t, 0.5 + 0.45 * oscillator(index, t - 1e-6)]);
     points.push([t, 0.5 + 0.45 * oscillator(index, Math.min(t, 1 - 1e-6))]);
   }

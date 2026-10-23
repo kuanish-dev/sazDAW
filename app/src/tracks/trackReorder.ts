@@ -1,5 +1,3 @@
-// Reordering tracks by dragging the gripper handle: computes the gap between rows (tracks and folders) and hands it to the caller
-// on release; what it means (into a folder, out of one, just up or down) is decided by `tracks/trackRows.ts: planTrackDrop`.
 import { createSignal } from "solid-js";
 import type { Id } from "../api/types";
 import { type RowLayout, insertSlot, rowTop } from "./rowLayout";

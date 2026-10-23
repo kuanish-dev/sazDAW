@@ -33,7 +33,6 @@ fn instrument_preset_is_saved_applied_in_one_step_and_removed() {
     assert_eq!(controls.presets.list("sampler").unwrap(), ["Soft"]);
     assert!(controls.presets.list("eq").unwrap().is_empty(), "a preset belongs to its kind");
 
-    // Onto another track of the same kind: all params at once, in one undo step.
     let before = controls.view.snapshot();
     controls.presets.apply(EditorTarget::Instrument { track: other }, "Soft").unwrap();
     assert_eq!((instrument_param(controls, other, "gain"), instrument_param(controls, other, "attack")), (0.3, 0.05));
@@ -113,7 +112,7 @@ fn template_keeps_the_structure_and_sampler_sounds_but_not_clips() {
     assert!(
         matches!(controls.templates.create_project("No such", &dir.join("c/c.dawproj")), Err(e) if e.is(codes::settings::TEMPLATE_NOT_FOUND))
     );
-    controls.templates.save("Beat").unwrap(); // overwrite under the same name
+    controls.templates.save("Beat").unwrap();
     controls.templates.remove("Beat").unwrap();
     assert!(controls.templates.list().unwrap().is_empty());
     assert!(matches!(controls.templates.remove("Beat"), Err(e) if e.is(codes::settings::TEMPLATE_NOT_FOUND)));

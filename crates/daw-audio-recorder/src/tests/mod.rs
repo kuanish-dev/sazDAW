@@ -542,7 +542,6 @@ fn world_with(max_samples: usize) -> World {
         fail_start: Mutex::default(),
         dropped: AtomicU64::new(0),
     });
-    // A 10 ms latency = 480 frames at 48 kHz: a round number that makes the cut easy to check.
     let devices = Arc::new(FakeDevices {
         settings: Mutex::new(AudioSettings { record_latency_ms: Some(10.0), ..AudioSettings::default() }),
         level: Mutex::default(),

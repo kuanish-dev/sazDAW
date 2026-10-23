@@ -42,7 +42,6 @@ fn clear_content(project: &mut Project, options: ClearOptions) {
         project.tempo_map = TempoMap::default();
     }
     if options.remove_samples {
-        // The sounds stay in memory (the sample store is left alone): undo brings them back without reading files.
         project.samples.clear();
     }
 }

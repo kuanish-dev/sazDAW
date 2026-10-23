@@ -173,13 +173,13 @@ mod tests {
         assert_eq!(previous, None, "first start");
         map.write_slot(3, "vst3:surge_xt", "Surge XT");
         map.enter(3);
-        drop(map); // a "crash": no normal exit, the marker stays in the file
+        drop(map);
 
         let (map, previous) = GuardMap::open(&path).unwrap();
         assert_eq!(previous, Some(Mark { kind: "vst3:surge_xt".into(), name: "Surge XT".into() }));
         map.write_slot(0, "vst3:distortion", "Distortion");
         map.enter(0);
-        map.set_running(false); // a normal exit in the middle of processing
+        map.set_running(false);
         drop(map);
         let (map, previous) = GuardMap::open(&path).unwrap();
         assert_eq!(previous, None, "a normally closed session is not a crash");

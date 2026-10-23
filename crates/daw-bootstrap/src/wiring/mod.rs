@@ -37,16 +37,13 @@ pub(crate) enum Devices {
 }
 
 pub(crate) fn build(config: &SessionConfig, devices: &Devices) -> Session {
-    // All app failures (backend, interface, panics) go to one file next to the app state.
     let log: Arc<dyn AppLog> = Arc::new(FileLog::open(&config.state_dir.join("logs")));
     let (transport, clock) = create_transport();
     let metronome_settings = Arc::new(MetronomeSettingsFile::new(&config.state_dir, log.clone()));
     let (metronome, metronome_processor) = create_metronome(metronome_settings, log.clone());
     let engine = create_engine(clock, vec![metronome_processor]);
     let link = engine.link;
-    // Opening the preferences makes the saved language current, so it goes before anything that builds labels.
     let preferences: Arc<dyn PreferencesStore> = Arc::new(PreferencesFile::open(&config.state_dir, log.clone()));
-    // Freeing what the engine let go and logging its losses happen in their own thread while the engine lives.
     crate::engine_watch::spawn(Arc::downgrade(&link) as _, Arc::downgrade(&link) as _, log.clone());
 
     let bank: Arc<dyn SampleStore> = Arc::new(SampleBank::new());
@@ -54,7 +51,6 @@ pub(crate) fn build(config: &SessionConfig, devices: &Devices) -> Session {
     let assets: Arc<dyn AssetStore> = Arc::new(FsAssets);
     let storage: Arc<dyn ProjectStorage> = Arc::new(JsonStorage::new(log.clone()));
     let recent = Arc::new(RecentStore::open(&config.state_dir, log.clone()));
-    // The plugin crash marker is read before anything that can create a plugin: the report on the previous session and the guard of this one.
     let crash_guard = Arc::new(Vst3CrashGuard::open(&config.state_dir.join(plugins::GUARD_FILE), &*recent, &*storage, log.clone()));
     let catalogs =
         catalogs::build(config, devices, bank.clone(), PluginDeps { preferences: &preferences, marker: crash_guard.marker(), log: &log });
@@ -87,8 +83,6 @@ pub(crate) fn build(config: &SessionConfig, devices: &Devices) -> Session {
         log.clone(),
     );
     let parts = parts::build(&project, catalogs.instruments.clone(), link.clone(), &*log);
-    // Plugin windows write edits to the project through the same contracts as the interface; computer keys in an
-    // instrument window play live notes on its track.
     let plugin_editors = Arc::new(Vst3Editors::new(
         catalogs.directory,
         project.graph.clone(),
@@ -108,9 +102,7 @@ pub(crate) fn build(config: &SessionConfig, devices: &Devices) -> Session {
         processed.clone(),
         Arc::new(engines::OfflineEngines),
     ));
-    // Checking the work by ear (for the AI): levels come from the same offline engine as the export.
     let analysis: Arc<dyn MixAnalysis> = Arc::new(LevelMeter::new(exporter.clone()));
-    // The live loudness meter measures the playing master with the export's own BS.1770 meters.
     let master_meter = Arc::new(LiveMeter::new(link.clone(), log.clone()));
     let mix_check = Arc::new(MixChecker::new(
         analysis.clone(),
@@ -121,9 +113,7 @@ pub(crate) fn build(config: &SessionConfig, devices: &Devices) -> Session {
     ));
     let arrangement =
         arrangement::build(&config.state_dir, &project, exporter.clone(), storage.clone(), assets.clone(), catalogs.instruments.clone());
-    // Background jobs change the sound of tempo-fitted clips without a project edit: the watch refreshes the snapshot.
     crate::clip_audio_watch::spawn(Arc::downgrade(&project.service), processed, &*log);
-    // The starter beat is built with the same interfaces the user has.
     let demo = Arc::new(DemoBeat {
         tempo: project.tempo.clone(),
         tracks: project.tracks.clone(),

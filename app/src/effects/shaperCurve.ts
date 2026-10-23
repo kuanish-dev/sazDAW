@@ -1,11 +1,3 @@
-// The graph of the waveshaping effects — distortion, saturator, tape/console, bitcrusher (`effects/ShaperGraph.tsx`):
-// the transfer curve (an input sample → the output sample, both −1..1) and the live sound drawn on it and as waves. The
-// curves MIRROR `Shape::apply` and the drive/mix/output path of `crates/daw-effects/src/distortion.rs`, `shapes` with the
-// type weights of `saturator.rs`, `soft_knee`/`shape` with the mode characters and drive compensation of `tape.rs`, and
-// `quantize` with the mix/output path of `crusher.rs`: a change there must be repeated here. What shapes the sound over
-// time rather than sample by sample — the distortion's tone filter, the oversampling and DC blockers, the tape's head
-// bump and roll-off, the console's crosstalk, the crusher's downsampling — is left out of the curve; the live trace shows
-// it as a loop around the curve.
 import type { ParamInfo, Params } from "../api/types";
 import { namedParams } from "../common/catalog";
 import { clamp } from "../common/math";
@@ -23,7 +15,6 @@ const DISTORTION_SHAPES: readonly Transfer[] = [
   Math.tanh,
   (x) => clamp(x, -1, 1),
   (x) => {
-    // A triangle fold: period 4, range [-1, 1]; loud input folds back instead of flattening.
     const t = (((x + 1) % 4) + 4) % 4;
     return t < 2 ? t - 1 : 3 - t;
   },
@@ -63,7 +54,6 @@ export function tapeTransfer(infos: ParamInfo[], values: Params): Transfer | nul
   const { knee, bias } = TAPE_MODES[clamp(Math.trunc(s.mode), 0, TAPE_MODES.length - 1)]!;
   const drive = dbToGain(s.drive);
   const output = dbToGain(s.output);
-  // Driven into the knee and divided by the drive again: quiet samples keep their level, the peaks round off.
   return (x) => ((softKnee(x * drive + bias, knee) - softKnee(bias, knee)) / drive) * output;
 }
 

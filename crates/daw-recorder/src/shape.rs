@@ -19,7 +19,6 @@ pub(crate) fn finish_note(pitch: u8, velocity: f32, start: f64, end: f64, quanti
     let (start_tick, length) = if quantize > 0 {
         let unit = f64::from(quantize);
         let snapped = (position / unit).round() * unit;
-        // Rounding up to the loop end means the start of the next pass.
         let snapped = if snapped >= loop_len { 0.0 } else { snapped };
         (snapped as u32, ((raw_length / unit).round() * unit).max(unit) as u32)
     } else {
@@ -74,7 +73,6 @@ mod tests {
     fn notes_crossing_the_loop_end_are_clipped_to_it() {
         let note = finish_note(60, 1.0, 3_800.0, 4_300.0, 0, LOOP).unwrap();
         assert_eq!((note.start_tick, note.length_ticks), (3_800, 40));
-        // A note held longer than a whole pass does not cross the boundary either.
         let long = finish_note(60, 1.0, 100.0, 100.0 + 10.0 * f64::from(LOOP), 0, LOOP).unwrap();
         assert_eq!(long.start_tick + long.length_ticks, LOOP);
     }

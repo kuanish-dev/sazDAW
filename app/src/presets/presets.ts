@@ -1,5 +1,3 @@
-// Instrument and effect presets: list a kind's presets, save a target's settings, apply a preset (one undo step), delete.
-// The name is checked before sending by the same rules as the backend (`namedSave.ts`); refusals are shown as notifications.
 import type { EditorTarget } from "../api/types";
 import { t } from "../i18n";
 import type { Core } from "../core/core";

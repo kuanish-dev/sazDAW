@@ -21,7 +21,6 @@ fn signature(tick: u32, numerator: u8, denominator: u8) -> SignatureChange {
 fn a_note_after_a_tempo_change_starts_on_the_frame_of_the_map() {
     let mut session = start(false);
     let controls = session.controls.clone();
-    // 1920 ticks at 120 BPM is a second, 960 more at 60 BPM another second: a note at tick 2880 is at frame 96 000.
     controls.tempo.set_tempo_changes(vec![tempo(0, 120.0, false), tempo(1920, 60.0, false)]).unwrap();
     synth_track_with_note(&controls, note(60, 2880, 480));
     controls.transport.play();
@@ -44,7 +43,6 @@ fn metronome_accents_follow_a_three_four_to_four_four_change() {
     let controls = session.controls.clone();
     controls.metronome.set_enabled(true);
     controls.tempo.set_tempo(Bpm::new(120.0).unwrap()).unwrap();
-    // A 3/4 bar (2880 ticks), then 4/4: at 120 BPM a beat is 24 000 frames.
     controls.tempo.set_signature_changes(vec![signature(0, 3, 4), signature(2880, 4, 4)]).unwrap();
     controls.transport.play();
     let out = render(&mut session, 8 * 24_000 + 2_000);
@@ -58,7 +56,6 @@ fn export_length_follows_a_tempo_ramp() {
     let session = start(false);
     let controls = session.controls.clone();
     synth_track_with_note(&controls, note(60, 0, 480));
-    // The clip bar: 60 → 120 BPM smoothly takes 4·ln2 seconds.
     controls.tempo.set_tempo_changes(vec![tempo(0, 60.0, false), tempo(3840, 120.0, true)]).unwrap();
     let request = ExportRequest {
         sample_rate: 48_000,

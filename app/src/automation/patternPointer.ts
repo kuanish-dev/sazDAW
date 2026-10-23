@@ -1,8 +1,3 @@
-// Mouse on an automation clip's pattern (`PatternEditor`, one repeat: x from 0 to the clip's loop). Select tool: click on empty space adds a point, dragging empty space selects a box,
-// a point drags the selection (Shift-click toggles a point), the middle handle of a segment — or Alt-drag anywhere on
-// it — bends the segment. Pencil tool: dragging draws points on grid steps, replacing the points in the dragged span.
-// Right click deletes the point (or the whole selection it is part of). During a gesture the points are a draft;
-// release makes one edit.
 import type { AutoPoint } from "../api/types";
 import type { Range } from "./automationRules";
 import { insertPoint } from "./automationRules";

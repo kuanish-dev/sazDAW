@@ -1,6 +1,3 @@
-// MIDI learn: controller knobs on parameters. Mappings live in the project, so the list is read from the project copy
-// and is as fresh as it is; the parameter waiting for a knob is backend state of this run (the backend moves the
-// parameter when the knob turns).
 import { createSignal, onCleanup } from "solid-js";
 import type { MidiMapping, ParamTarget } from "../api/types";
 import { targetExists } from "../automation/automationRules";
@@ -27,7 +24,6 @@ export function createMidiLearn(core: Core, input: Pick<MidiInput, "connection">
     const state = await core.calls.run(api.midi.mappings());
     if (state) setLearning(state.learning);
   };
-  // A turned knob ends learning with a project edit (the new mapping): while waiting, any update may be that answer.
   onCleanup(core.copy.onLoaded(() => {
     if (learning() !== null) void readLearning();
   }));

@@ -1,5 +1,3 @@
-// Mouse on signature flags on the ruler: double-click or right-click opens the flag's menu (another signature, remove).
-// Each handler returns `true` if it owns the event (then markers and the ruler pointer don't get it).
 import { createSignal } from "solid-js";
 import type { TempoMap } from "../api/types";
 import { menuPoint, type MenuPoint } from "../common/ContextMenu";

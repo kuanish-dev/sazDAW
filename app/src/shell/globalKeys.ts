@@ -1,9 +1,3 @@
-// Window-wide shortcuts: transport, marker jumps, history, project files and (on the Tracks page) timeline clips.
-// Three ways a part of the window keeps keys from them, and only these three:
-// - a focused text field, or a list marked `data-owns-space` (the sound browser replays a sound on Space), keeps its keys;
-// - a focused panel marked `data-owns-keys` (piano roll, automation pattern) swallows what it handled (`preventDefault`):
-//   then clip keys don't reach the timeline, while the common ones (space, ⌘Z, ⌘S) work over it too;
-// - a view that gives Space its own meaning while it is shown, whatever has focus (the sample editor), `claimSpace`s it.
 import { codeLabel, type ShortcutHelp } from "../common/shortcuts";
 import { t, type Messages } from "../i18n";
 import type { FilesRole } from "../files/role";
@@ -60,7 +54,6 @@ export function installGlobalKeys(roles: WindowKeyRoles): () => void {
     const target = event.target as HTMLElement;
     if (event.defaultPrevented || target.closest(OWN_TEXT_KEYS)) return;
     const meta = event.metaKey || event.ctrlKey;
-    // Space works with any modifiers, the rest only with Cmd/Ctrl.
     const shortcut = SHORTCUTS.find((s) => s.code === event.code && (s.meta ? meta : true) && (s.alt ? event.altKey : true));
     if (!roles.copy.hasProject() && !shortcut?.withoutProject) return;
     if (shortcut) {
@@ -83,7 +76,6 @@ export function claimSpace(onSpace: () => void): () => void {
     if (event.code !== "Space" || (event.target as HTMLElement).closest("input, select, textarea")) return;
     event.preventDefault();
     event.stopImmediatePropagation();
-    // Blur the focused button, otherwise releasing Space would "press" it again.
     (document.activeElement as HTMLElement | null)?.blur?.();
     onSpace();
   };

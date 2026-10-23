@@ -106,7 +106,7 @@ mod tests {
         let mut voice = PreviewVoice::default();
         voice.start(ramp(1000), 0, 1000, false);
         let mut out = vec![0.0; 500 * 2];
-        voice.render(&mut out, 96_000); // the device is twice as fast, so the file goes twice as slow
+        voice.render(&mut out, 96_000);
         assert!((out[499 * 2] - 0.25 * GAIN).abs() < 0.02, "{}", out[499 * 2]);
     }
 

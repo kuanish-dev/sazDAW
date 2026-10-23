@@ -46,7 +46,7 @@ fn input_stays_open_until_both_watching_and_capture_are_done() {
 fn capture_start_clears_the_previous_take_and_the_loss_counter() {
     let mut rig = rig(None);
     rig.host.capture_start().unwrap();
-    feed(&rig, &vec![0.5; 2 * 48_000 * 6]); // six seconds into a five-second queue: one second is lost
+    feed(&rig, &vec![0.5; 2 * 48_000 * 6]);
     assert_eq!(rig.shared.tap().dropped(), 48_000);
     rig.host.capture_stop();
     rig.host.capture_start().unwrap();

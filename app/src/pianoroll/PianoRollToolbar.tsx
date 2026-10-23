@@ -1,5 +1,3 @@
-// Piano roll toolbars (two thin strips): keyboard octave, grid, zoom, MIDI files, selection edit buttons and musical edits (`NoteTools`).
-// It holds no editing logic.
 import { For } from "solid-js";
 import { GRID_CHOICES } from "../common/time";
 import { t } from "../i18n";

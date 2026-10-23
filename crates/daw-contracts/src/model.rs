@@ -583,7 +583,6 @@ impl Project {
         if bar_start >= end as f64 {
             return Some(end);
         }
-        // Signature changes sit on bar starts, so the bar holding the end keeps its signature to its own end.
         let bar = self.tempo_map.signature_at(bar_start).signature.ticks_per_bar();
         Some((bar_start + bar).round() as u64)
     }

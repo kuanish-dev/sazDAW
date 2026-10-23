@@ -1,4 +1,3 @@
-// The audio graph: effects, buses, connections, volume. Connection rules come from graph/graphRules (as in the backend).
 import { MAX_CHANNEL_DELAY_MS, MAX_WIDTH, MASTER_NODE, type GraphEdge, type Id, type KindInfo, type Params, type Project } from "../../api/types";
 import { neutralUtility } from "../../mixer/channelUtility";
 import { acceptsInput, canPreFader, hasStrip, hasVolume, MAX_LEVEL } from "../../graph/graphRules";
@@ -169,7 +168,6 @@ export function graphHandlers(w: MockWorld): HandlerSet {
       nodeOf(p, after);
       limitNodes(p);
       limitEdges(p);
-      // Post-fader outputs move to the effect with the same levels; sidechain and pre-fader sends stay on the node.
       const path = (e: GraphEdge) => e.from === after && !e.sidechain && !e.preFader;
       const moved = p.graph.edges.filter(path);
       p.graph.edges = p.graph.edges.filter((e) => !path(e));
@@ -192,7 +190,6 @@ export function graphHandlers(w: MockWorld): HandlerSet {
       if (!acceptsInput(nodeOf(p, node).kind)) throw fail("GR-103");
       limitNodes(p);
       limitEdges(p);
-      // The node's regular inputs move to the effect with the same levels; sidechain stays on the node.
       const moved = p.graph.edges.filter((e) => e.to === node && !e.sidechain);
       p.graph.edges = p.graph.edges.filter((e) => !(e.to === node && !e.sidechain));
       const id = pushEffect(p, info, values, x, y);
@@ -217,7 +214,6 @@ export function graphHandlers(w: MockWorld): HandlerSet {
         const level = clamp(input.level * output.level, 0, MAX_LEVEL);
         const same = p.graph.edges.find((e) => e.from === input.from && e.to === output.to && !e.sidechain);
         if (same) {
-          // A parallel path already existed: the signals add up.
           same.level = Math.min(MAX_LEVEL, same.level + level);
         } else {
           limitEdges(p);
@@ -228,7 +224,6 @@ export function graphHandlers(w: MockWorld): HandlerSet {
   });
   h["graph.setOutput"] = ({ node, target }) => w.edit(t().mock.undo.output, (p) => {
     nodeOf(p, node);
-    // Pre-fader sends stay (except a send to the new output itself: a pair has one connection).
     p.graph.edges = p.graph.edges.filter((e) => e.from !== node || e.sidechain || (e.preFader && e.to !== target));
     checkEdge(p, node, target, false);
     p.graph.edges.push({ from: node, to: target, level: 1, sidechain: false, preFader: false });

@@ -1,4 +1,3 @@
-// Project samples and sound files: sample info, waveform envelope, sound browser entries.
 import type { Id } from "./model";
 
 export interface SampleInfo {

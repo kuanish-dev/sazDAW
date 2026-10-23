@@ -22,7 +22,6 @@ fn note_transforms_work_through_rpc() {
         notes.as_array().unwrap().iter().map(|n| (n["pitch"].as_u64().unwrap(), n["startTick"].as_u64().unwrap())).collect::<Vec<_>>()
     };
 
-    // strength and ends are optional: by default exactly onto the line, length kept.
     let quantized = call(&table, c, "notes.quantize", json!({ "clip": clip, "grid": 240 }));
     assert_eq!(quantized.as_array().unwrap().len(), 2);
     assert_eq!(starts(), [(61, 0), (66, 480)]);
@@ -62,7 +61,6 @@ fn groove_works_through_rpc() {
     let clip = add_clip(&table, c, &track)["id"].clone();
     call(&table, c, "notes.addMany", json!({ "clip": clip, "notes": [NOTE(60, 0), NOTE(60, 240), NOTE(60, 480), NOTE(60, 720)] }));
 
-    // amount is optional: 1 by default.
     let swing = json!({ "type": "swing", "grid": "sixteenth", "percent": 58 });
     call(&table, c, "notes.groove", json!({ "clip": clip, "template": swing }));
     assert_eq!(timing(&table, c, &clip), [(0, 100), (278, 100), (480, 100), (758, 100)]);
@@ -73,7 +71,6 @@ fn groove_works_through_rpc() {
     assert!(table.call(c, "notes.groove", json!({ "clip": clip, "template": laid_back })).is_err(), "shift above 120");
     assert!(table.call(c, "notes.groove", json!({ "clip": clip, "template": { "type": "shuffle" } })).is_err(), "unknown template");
 
-    // Groove from a clip: the source has this same swing; a straight clip receives it.
     let straight = call(&table, c, "clips.addNote", json!({ "track": track, "startTick": 3840, "lengthTicks": null }))["id"].clone();
     call(&table, c, "notes.addMany", json!({ "clip": straight, "notes": [NOTE(62, 0), NOTE(62, 240)] }));
     call(&table, c, "notes.grooveFromClip", json!({ "clip": straight, "sourceClip": clip, "amount": 1 }));
@@ -97,7 +94,6 @@ fn variations_work_through_rpc() {
     let b = call(&table, c, "notes.vary", params);
     assert_eq!(a, b, "one seed, one result");
     call(&table, c, "history.undo", Value::Null);
-    // All params except clip are optional: an empty variation changes nothing.
     let same = call(&table, c, "notes.vary", json!({ "clip": clip }));
     assert_eq!(same.as_array().unwrap().len(), 8);
     assert!(table.call(c, "notes.vary", json!({ "clip": clip, "density": 3 })).is_err());

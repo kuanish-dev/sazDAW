@@ -1,5 +1,3 @@
-// Track folder actions: create, collapse, rename, recolor, move a track into or out of a folder,
-// mute/solo the whole folder. Errors are shown as notifications.
 import type { FolderEdit, Id } from "../api/types";
 import { nextFolderName } from "./trackRows";
 import type { Core } from "../core/core";

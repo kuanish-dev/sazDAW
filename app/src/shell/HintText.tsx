@@ -1,5 +1,3 @@
-// Hint in the status bar: explains the element under the cursor. Hints come from `title` (moved into `data-hint` so
-// the system tooltip doesn't get in the way) or from `data-hint`. Mounted only while hints are on (Settings → Appearance).
 import { createSignal, onCleanup, onMount } from "solid-js";
 import { t } from "../i18n";
 

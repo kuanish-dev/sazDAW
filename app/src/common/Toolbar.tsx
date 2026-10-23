@@ -1,5 +1,3 @@
-// View toolbars in the VS Code manner: a thin strip with a hairline bottom border, square icon buttons (optionally
-// with a text label) and hairline dividers between groups. Shared by the timeline, graph, piano roll and sample editor.
 import { Show, type JSX } from "solid-js";
 
 /** The strip itself; `class` adds placement (e.g. `sticky top-0`). */

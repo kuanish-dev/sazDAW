@@ -79,7 +79,6 @@ fn startup_does_not_scan_and_a_missing_cache_means_no_plugins() {
 fn startup_takes_plugins_from_the_cache_without_loading_their_files() {
     let state = temp_state("cache");
     std::fs::create_dir_all(&state).unwrap();
-    // There is no plugin file at this path: if startup tried to load it, a failure would appear in the log.
     std::fs::write(
         state.join("plugins.json"),
         r#"{"plugins":[{"path":"/missing/Ghost.vst3","class_id":[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16],
@@ -119,7 +118,6 @@ fn scanning_finds_distortion_remembers_it_and_the_next_start_restores_it() {
     let controls = &session.controls;
     assert!(!has_kind(controls, DISTORTION), "no plugin in the catalog before the button");
 
-    // The scan runs in the `daw-plugin-scan` helper (a separate process); `cargo test --workspace` or `cargo build` builds it.
     let report = match controls.plugins.scan() {
         Err(error) if error.is(codes::SCAN_HELPER_MISSING) => return eprintln!("SKIPPED: {error}"),
         result => result.unwrap(),
@@ -168,7 +166,6 @@ fn after_a_crash_inside_a_plugin_the_last_project_is_not_reopened_until_the_repo
     let (recent, storage, log) = (first.controls.recent.clone(), first.controls.storage.clone(), first.controls.log.clone());
     drop(first);
 
-    // A session that broke off in the middle of plugin processing: the mark is set and not cleared, there was no normal exit.
     let guard = daw_vst3::Vst3CrashGuard::open(&state.join("plugin-guard.bin"), &*recent, &*storage, log);
     let slot = guard.marker().claim("vst3:synth", "Synth").unwrap();
     std::mem::forget(slot.enter());

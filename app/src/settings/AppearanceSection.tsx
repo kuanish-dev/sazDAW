@@ -1,5 +1,3 @@
-// Settings → Appearance: language, theme, accent color, interface scale, track height and hint bar.
-// `settings/appearance.ts` applies them; this section only changes preferences through the action.
 import { For, createSignal } from "solid-js";
 import type { AppearancePreferences } from "../api/types";
 import { ACCENT_CHOICES, THEME_CHOICES, TRACK_HEIGHT_CHOICES, UI_SCALE_MAX, UI_SCALE_MIN, UI_SCALE_STEP } from "./preferenceRules";
@@ -32,7 +30,6 @@ export function AppearanceSection() {
   const msg = () => t().appearance;
   const set = (patch: Partial<AppearancePreferences>) =>
     void settings.preferences.update((p) => ({ ...p, appearance: { ...p.appearance, ...patch } }));
-  // While the slider is dragged we show the number and change the scale on release: otherwise the page slides away from under the mouse.
   const [scaleDraft, setScaleDraft] = createSignal<number | null>(null);
   const themes = () => THEME_CHOICES.map((value) => ({ value, label: msg().themes[value] }));
   const heights = () => TRACK_HEIGHT_CHOICES.map((value) => ({ value, label: msg().trackHeights[value] }));
@@ -75,7 +72,6 @@ export function AppearanceSection() {
             min={UI_SCALE_MIN} max={UI_SCALE_MAX} step={UI_SCALE_STEP} value={scaleDraft() ?? look().uiScale}
             onInput={(e) => setScaleDraft(Number(e.currentTarget.value))}
             onChange={(e) => {
-              // Read the value before clearing the draft: clearing re-renders the slider at the old scale.
               const uiScale = Number(e.currentTarget.value);
               setScaleDraft(null);
               set({ uiScale });

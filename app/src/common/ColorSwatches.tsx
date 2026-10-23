@@ -1,4 +1,3 @@
-// Picking a track or folder color from the project palette: color squares and "no color" (for right-click menus).
 import { For } from "solid-js";
 import { TRACK_COLORS, type TrackColor } from "../api/types";
 import { t } from "../i18n";

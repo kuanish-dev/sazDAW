@@ -189,10 +189,10 @@ mod tests {
     #[test]
     fn overflow_counts_lost_whole_frames_and_keeps_the_queue_consistent() {
         let tap = tap(true);
-        let (mut feed, mut source) = input_queue(tap.clone(), 2, 2); // capacity: 2 frames/s × 5 s = 10 frames
-        let block: Vec<f32> = (0..8).flat_map(|i| [i as f32, -(i as f32)]).collect(); // 8 frames
+        let (mut feed, mut source) = input_queue(tap.clone(), 2, 2);
+        let block: Vec<f32> = (0..8).flat_map(|i| [i as f32, -(i as f32)]).collect();
         feed.feed(&block);
-        feed.feed(&block); // 2 more frames fit, 6 are lost
+        feed.feed(&block);
         assert_eq!(tap.dropped(), 6);
         let mut out = Vec::new();
         assert_eq!(source.drain(&mut out), 10);

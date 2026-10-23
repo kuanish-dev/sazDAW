@@ -1,5 +1,3 @@
-// Sound browser next to the timeline. The single source of sounds is the project folder; "packs" (linked folders) exist
-// only for easy previewing: previewing copies nothing, a sound is copied into the project when it is taken into work.
 import { For, createEffect, createSignal, on, onCleanup } from "solid-js";
 import type { LibraryEntry, SampleInfo } from "../api/types";
 import type { SampleSource } from "../tracks/dropSample";
@@ -23,7 +21,6 @@ export function SoundBrowser() {
 const { preview } = samples;
 const { placement } = sounds;
   const places = createSoundPlaces();
-  // Which project folder files are already samples (for the row's "✕"): re-read on any change of the sample list.
   const [projectSamples, setProjectSamples] = createSignal<SampleInfo[]>([]);
   createEffect(on(() => project.samples.map((s) => s.id).join(","), async () => setProjectSamples(await samples.samples())));
   const { dir, entries, root, load, shown } = places;
@@ -32,7 +29,6 @@ const { placement } = sounds;
 
   onCleanup(() => preview.stopQuietly());
   createEffect(on(dir, () => setSelected(null), { defer: true }));
-  // A new project file (a copy from a pack, an extracted sound) appears in the list without a manual refresh.
   createEffect(on(() => project.samples.length, () => places.inProject() && void places.reload(), { defer: true }));
 
   const files = () => entries().filter((e) => !e.isDir);

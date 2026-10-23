@@ -89,7 +89,6 @@ fn flac_decodes_back_bit_exact_at_16_and_24_bits() {
         encode(&request, &audio).unwrap();
         let (rate, channels, decoded) = decode(&path);
         assert_eq!((rate, channels, decoded.len()), (44_100, 2, audio.len()));
-        // symphonia divides integers by 2^(bits-1), so multiplying restores them exactly.
         let scale = f64::from(1u32 << (bits - 1));
         let ints: Vec<i32> = decoded.iter().map(|&s| (f64::from(s) * scale) as i32).collect();
         assert!(ints == expected_ints(&audio, bits, request.dithers()), "{bits} bits, dither {:?}: not bit-exact", request.dithers());
@@ -111,13 +110,11 @@ fn mp3_decodes_with_about_the_right_duration_and_level() {
         let request = ExportRequest { mp3_bitrate: Some(bitrate), ..request(&path, ExportFormat::Mp3, BitDepth::Int16) };
         encode(&request, &audio).unwrap();
         let bytes = std::fs::metadata(&path).unwrap().len();
-        // Constant bitrate: 2 s ≈ bitrate·2/8 KB (plus the encoder delay frames).
         let expected = u64::from(bitrate) * 1000 / 8 * 2;
         assert!(bytes > expected * 9 / 10 && bytes < expected * 12 / 10, "{bitrate} kbps: {bytes} bytes");
         let (rate, channels, decoded) = decode(&path);
         assert_eq!((rate, channels), (44_100, 2));
         let seconds = decoded.len() as f32 / 2.0 / 44_100.0;
-        // Without the LAME tag the decoder hears the encoder delay and last-frame padding: up to ~0.08 s extra.
         assert!((2.0..2.1).contains(&seconds), "{bitrate} kbps: {seconds} s");
         let peak = decoded.iter().fold(0.0f32, |a, b| a.max(b.abs()));
         assert!((0.5..0.75).contains(&peak), "{bitrate} kbps: peak {peak}");

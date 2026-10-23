@@ -13,7 +13,6 @@ fn project_graph_json_has_tagged_node_kinds() {
     let session = build_session(false);
     let (table, c) = (RpcTable::new(), &session.controls);
     add_synth(&table, c);
-    // An audio track gives a source node of kind `audio`.
     call(&table, c, "tracks.add", json!({ "name": "Audio", "kind": null, "defaultPitch": 60 }));
     let bus = call(&table, c, "graph.addBus", json!({ "name": "Bass", "x": 10.0, "y": 20.0 }));
     let effect = call(&table, c, "graph.addEffect", json!({ "effect": "reverb", "x": 1.0, "y": 2.0 }));
@@ -103,14 +102,12 @@ fn graph_connect_errors_carry_their_codes() {
     let bus = call(&table, c, "graph.addBus", json!({ "name": "A", "x": 0.0, "y": 0.0 }));
     let effect = call(&table, c, "graph.addEffect", json!({ "effect": "reverb", "x": 0.0, "y": 0.0 }));
 
-    // Bus → effect is fine (a compressor on a bus); back into the bus after that is a loop.
     call(&table, c, "graph.connect", json!({ "from": bus, "to": effect, "level": 1.0, "sidechain": false }));
     let back = table.call(c, "graph.connect", json!({ "from": effect, "to": bus, "level": 1.0, "sidechain": false })).unwrap_err();
     assert!(back.is(codes::graph::EDGE_MAKES_LOOP), "{back}");
     let master = table.call(c, "graph.connect", json!({ "from": 0, "to": bus, "level": 1.0, "sidechain": false })).unwrap_err();
     assert!(master.is(codes::graph::MASTER_HAS_NO_OUTPUT), "{master}");
 
-    // A loop: effect → effect → the first one.
     let other = call(&table, c, "graph.addEffect", json!({ "effect": "reverb", "x": 0.0, "y": 0.0 }));
     call(&table, c, "graph.connect", json!({ "from": effect, "to": other, "level": 1.0, "sidechain": false }));
     let cycle = table.call(c, "graph.connect", json!({ "from": other, "to": effect, "level": 1.0, "sidechain": false })).unwrap_err();
@@ -136,20 +133,17 @@ fn graph_insert_effect_set_output_and_remove_keep_path_round_trip() {
         .clone();
     assert!(edges().iter().any(|e| e["from"] == source && e["to"] == 0), "source → master");
 
-    // Inserting an effect: source → effect → master, the direct connection is gone.
     let effect = call(&table, c, "graph.insertEffect", json!({ "after": source, "effect": "reverb", "x": 1.0, "y": 2.0 }));
     assert!(effect.is_number());
     assert!(edges().iter().any(|e| e["from"] == source && e["to"] == effect));
     assert!(edges().iter().any(|e| e["from"] == effect && e["to"] == 0));
     assert!(!edges().iter().any(|e| e["from"] == source && e["to"] == 0));
 
-    // Changing the output: source → bus; the connection to the effect is replaced.
     let bus = call(&table, c, "graph.addBus", json!({ "name": "Bass", "x": 0.0, "y": 0.0 }));
     call(&table, c, "graph.setOutput", json!({ "node": source, "target": bus }));
     assert!(edges().iter().any(|e| e["from"] == source && e["to"] == bus));
     assert!(!edges().iter().any(|e| e["from"] == source && e["to"] == effect));
 
-    // Removing an effect without breaking the path: after routing the output back to the effect and removing it, sound flows on.
     call(&table, c, "graph.setOutput", json!({ "node": source, "target": effect }));
     call(&table, c, "graph.removeEffectKeepPath", json!({ "id": effect }));
     assert!(graph()["nodes"].as_array().unwrap().iter().all(|n| n["id"] != effect));
@@ -178,7 +172,6 @@ fn graph_insert_effect_before_master_takes_its_inputs() {
     assert_eq!(edges().iter().filter(|e| e["to"] == limiter).count(), inputs_before);
     assert!(edges().iter().any(|e| e["from"] == bus && e["to"] == limiter));
 
-    // A compressor after the bus.
     let comp = call(&table, c, "graph.insertEffect", json!({ "after": bus, "effect": "reverb", "x": 0.0, "y": 0.0 }));
     assert!(edges().iter().any(|e| e["from"] == bus && e["to"] == comp));
     assert!(edges().iter().any(|e| e["from"] == comp && e["to"] == limiter));

@@ -1,4 +1,3 @@
-// Draws the sample waveform on canvas: time ruler, waveform, selection, slice markers, cursors. Only draws what it is given.
 import type { Waveform } from "../api/types";
 import { formatTime, rulerStep, xAtFrame, type Selection, type View } from "./waveform";
 import { fitCanvas, vline } from "../common/canvas";

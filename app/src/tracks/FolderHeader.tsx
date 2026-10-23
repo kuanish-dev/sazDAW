@@ -1,5 +1,3 @@
-// Folder row left of the timeline: collapse/expand chevron, color stripe, name (double-click — rename), track count
-// and M/S for all its tracks at once. Right-click — color and "Remove folder" (tracks stay in place).
 import { Show, createSignal } from "solid-js";
 import type { Folder, Track } from "../api/types";
 import { folderFlags } from "./trackRows";

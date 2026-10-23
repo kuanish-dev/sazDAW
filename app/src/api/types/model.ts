@@ -1,4 +1,3 @@
-// Project model: mirror of the Rust JSON (`daw-contracts::model`, camelCase): tracks, clips, notes, automation, samples.
 import type { Graph, GraphEdge, GraphNode } from "./graph";
 import type { Room } from "./stage";
 

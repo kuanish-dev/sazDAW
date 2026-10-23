@@ -91,7 +91,6 @@ impl SampleEditor for ProjectSampleEditor {
         if let Some(empty) = regions.iter().find(|r| r.from >= r.to || r.from >= frames) {
             return Err(samples::REGION_EMPTY.with("from", empty.from).with("to", empty.to).with("frames", frames));
         }
-        // All imports are one undo step; a failure halfway rolls back the regions already imported.
         self.project.begin_group(&tr!("Cut regions", "Вырезать области"));
         let result: Result<Vec<_>, _> = regions.iter().map(|region| self.extract(&data, region, &project_file)).collect();
         if result.is_err() {

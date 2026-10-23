@@ -62,7 +62,6 @@ fn route(message: InputMessage, track: TrackId, sink: &dyn LiveNoteSink, mapping
         InputMessage::On { pitch, velocity } => sink.note_on(track, pitch, velocity),
         InputMessage::Off { pitch } => sink.note_off(track, pitch),
         InputMessage::Cc { channel, number, value } => {
-            // 120–127 are channel mode messages (All Notes Off etc.): they do not go to the instrument as CCs.
             if !mappings.control_change(channel, number, value) && number <= MAX_CC_NUMBER {
                 sink.controller(track, ControllerKind::Cc { number }, from_7bit(value));
             }
@@ -102,7 +101,6 @@ impl MidiInputService {
 
 impl MidiInputControl for MidiInputService {
     fn devices(&self) -> Vec<String> {
-        // The contract returns only a list, so the failure is not lost but written to the log.
         let input = match Self::client() {
             Ok(input) => input,
             Err(error) => {
@@ -271,7 +269,6 @@ mod tests {
     fn listing_devices_never_fails_silently() {
         let log = Arc::new(MemoryLog::default());
         let service = MidiInputService::new(Arc::new(Silent), Arc::new(Volume7), log.clone());
-        // Without MIDI access the list is empty, but the reason must reach the log.
         if service.devices().is_empty() && MidiInputService::client().is_err() {
             assert_eq!(log.recent(10).len(), 1);
             assert_eq!(log.recent(10)[0].source, "midi");

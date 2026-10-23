@@ -431,7 +431,7 @@ fn armed_recording_holds_the_song_loop_once_until_disarmed() {
 fn disarming_while_playing_keeps_the_notes_played_since_the_last_poll() {
     let r = rig();
     r.play_from(0);
-    r.press(1, 60, 100.0, Some(300.0)); // played after the last poll: still in the engine's queue
+    r.press(1, 60, 100.0, Some(300.0));
     r.recorder.set_armed(false);
     let clips = r.clips.clips();
     assert_eq!(clips.len(), 1);
@@ -441,13 +441,12 @@ fn disarming_while_playing_keeps_the_notes_played_since_the_last_poll() {
 
 #[test]
 fn a_late_poll_still_binds_the_clip_under_the_first_note() {
-    // Polling lagged: the transport moved two bars ahead, while the note was played in the first bar.
     let r = rig();
     let id = r.clips.with_clip(1, 0, BAR_TICKS, 0, BAR_TICKS);
     *r.transport.position.lock().unwrap() = 2 * u64::from(BAR_TICKS);
     *r.transport.state.lock().unwrap() = TransportState::Playing;
     r.recorder.set_armed(true);
-    r.press(1, 62, 100.0, Some(400.0)); // the events are queued before the first poll
+    r.press(1, 62, 100.0, Some(400.0));
     r.recorder.poll_once();
     r.stop();
     assert_eq!(r.clips.clips().len(), 1, "the first bar clip is found, no second one is created");
@@ -563,7 +562,7 @@ fn quantize_is_applied_and_validated() {
 fn a_new_clip_starts_on_the_bar_of_the_current_time_signature() {
     let r = rig();
     r.tempo.set_time_signature(TimeSignature::new(3, 4).unwrap()).unwrap();
-    r.play_from(3_000); // a 3/4 bar is 2880 ticks: the cursor is in the second bar
+    r.play_from(3_000);
     r.press(1, 60, 3_000.0, Some(3_100.0));
     r.recorder.poll_once();
     r.stop();
@@ -594,8 +593,8 @@ fn controllers_go_into_the_take_clip_lane_in_one_undo_step() {
     r.play_from(0);
     let bend = ControllerKind::PitchBend;
     r.turn(1, bend, 0.5, 100.0);
-    r.turn(1, bend, 0.5, 150.0); // the same value: no point needed
-    r.turn(1, bend, -0.25, f64::from(BAR_TICKS) + 300.0); // the second pass replaces the first
+    r.turn(1, bend, 0.5, 150.0);
+    r.turn(1, bend, -0.25, f64::from(BAR_TICKS) + 300.0);
     r.recorder.poll_once();
     r.stop();
     let lanes = r.notes.lanes.lock().unwrap().get(&id).cloned().unwrap();

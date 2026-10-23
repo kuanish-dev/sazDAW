@@ -62,7 +62,6 @@ impl Fft {
         let bits = size.trailing_zeros();
         let twiddles = (0..size / 2)
             .map(|k| {
-                // In f64: the twiddles of a long transform keep their accuracy.
                 let angle = -std::f64::consts::TAU * k as f64 / size as f64;
                 Complex::new(angle.cos() as f32, angle.sin() as f32)
             })

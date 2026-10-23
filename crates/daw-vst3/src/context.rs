@@ -70,14 +70,10 @@ impl PluginClock {
         context.state = kContTimeValid;
         self.continuous = self.continuous.saturating_add(frames as i64);
         let Some(timing) = self.timing else { return };
-        // A stopped transport stands still: the position inside the segment does not grow.
         let moved = if timing.playing { self.offset as f64 } else { 0.0 };
         let tick = timing.start_tick + moved * timing.ticks_per_frame;
         context.projectTimeMusic = quarters(tick);
-        // Bars count from the segment's signature change: after "3/4 -> 4/4" the bar start is not a multiple of the new bar length.
         context.barPositionMusic = quarters(timing.bar_start(tick));
-        // Approximation: frames from the segment tempo, not the whole tempo map (the segment does not carry it). Plugins
-        // sync to `projectTimeMusic`; with tempo changes this field differs from the exact frame count.
         context.projectTimeSamples = if timing.ticks_per_frame > 0.0 { (tick / timing.ticks_per_frame).round() as i64 } else { 0 };
         context.tempo = timing.tempo.get();
         context.timeSigNumerator = i32::from(timing.time_signature.numerator());
@@ -120,7 +116,6 @@ mod tests {
     fn bar_position_counts_from_the_signature_change() {
         let mut clock = PluginClock::default();
         clock.start(f64::from(SR));
-        // 3/4 bars up to tick 2880, then 4/4: tick 7000 is in the second 4/4 bar (from 6720 = 7 quarters).
         let after_change = BlockTiming { time_signature: TimeSignature::FOUR_FOUR, signature_start: 2880.0, ..timing(7000.0, true) };
         clock.set_timing(&after_change);
         let mut context = empty_context();
@@ -137,7 +132,6 @@ mod tests {
     fn playing_segment_gives_tempo_signature_position_and_bar() {
         let mut clock = PluginClock::default();
         clock.start(f64::from(SR));
-        // A 3/4 bar = 2880 ticks; 4000 ticks is the second bar, starting at its 3rd quarter.
         clock.set_timing(&timing(4000.0, true));
         let mut context = empty_context();
         clock.fill(&mut context, 256);

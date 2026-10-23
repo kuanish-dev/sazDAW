@@ -88,7 +88,6 @@ mod tests {
 
     #[test]
     fn the_start_bar_is_found_through_signature_changes() {
-        // Two bars of 4/4, then 3/4: bar 3 (from zero) starts at 2 × 3840 + 2880.
         let map = four_four()
             .with_signatures(vec![
                 SignatureChange { tick: 0, signature: TimeSignature::FOUR_FOUR },

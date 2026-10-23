@@ -1,9 +1,6 @@
-// Theme colors for drawing code (canvas cannot see CSS classes). `settings/appearance.ts` sets the theme and accent as attributes
-// on the page root; here we only notice when they change so canvases redraw.
 import { createSignal } from "solid-js";
 
 const [look, setLook] = createSignal(0);
-// Whoever changes `data-theme`/`data-accent`, canvases reading `palette()` will redraw.
 if (typeof MutationObserver === "function") {
   new MutationObserver(() => setLook((n) => n + 1))
     .observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme", "data-accent"] });

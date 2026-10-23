@@ -88,8 +88,6 @@ impl Encoder for FlacEncoder {
             self.encode_pending()?;
         }
         let info = self.header.stream_info_mut();
-        // The block size is fixed (only the last block is shorter), as with the reference `flac`: `update_frame_info`
-        // would store the last block length as the minimum, and such a stream reads as a variable-block stream.
         info.set_block_sizes(BLOCK_FRAMES, BLOCK_FRAMES).map_err(flac_error)?;
         info.set_md5_digest(&self.context.md5_digest());
         info.set_total_samples(self.context.total_samples());

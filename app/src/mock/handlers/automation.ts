@@ -1,6 +1,3 @@
-// Automation: lanes, their clips (patterns of points repeated over the clip), shapes, and a simplified live write
-// (a touch while playing puts a point into the clip under the play position, or into a new clip from the bar start;
-// one undo step per play pass).
 import type { AutoPoint, AutomationClip, AutomationLane, Id, ParamTarget, Project, ShapeRequest } from "../../api/types";
 import { autoClipAt, overlapsAutoClips, paramValue, sameTarget } from "../../automation/automationRules";
 import {
@@ -197,8 +194,6 @@ export function automationHandlers(w: MockWorld): HandlerSet {
     w.automationWrite = mode;
     w.automationPass = false;
   };
-  // The real writer follows the play position and holds the lane; the mock only drops a point per touch: into the clip
-  // under the position (pattern-local), or into a clip from the bar start that grows to the position.
   h["automation.touch"] = ({ target, value }) => {
     if (w.automationWrite === "off" || w.state !== "playing") {
       w.automationPass = false;

@@ -1,5 +1,3 @@
-// Popover for an insert effect at a mixer strip: the same parameter panel as the graph inspector, plus "Remove".
-// Clicking outside or Esc closes it.
 import { Show } from "solid-js";
 import type { Id } from "../api/types";
 import { findNode, nodeLabel } from "../graph/graphRules";
@@ -23,7 +21,6 @@ export function EffectPopover(props: { open: OpenEffect; onClose: () => void }) 
   const graph = useGraph();
   const node = () => findNode(project.graph, props.open.node);
   const left = () => Math.max(GAP, Math.min(props.open.anchor.left, window.innerWidth - PANEL_WIDTH - GAP));
-  // No lower than the middle of the window: the panel is tall and wouldn't fit below.
   const top = () => Math.min(props.open.anchor.bottom + GAP, window.innerHeight / 2);
 
   const remove = () => {

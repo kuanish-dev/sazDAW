@@ -155,7 +155,6 @@ impl Voice {
             rear_shade: [hrtf::rear_shade(sample_rate); 2],
             walls: [OnePole::default(); 2],
             direct: DelayLine::new(DIRECT_FRAMES),
-            // A reflection's far ear hears it up to one interaural delay later still.
             early: DelayLine::new(((LONGEST_REFLECTION + interaural_delay(1.0)) * sample_rate).ceil() as usize),
         }
     }
@@ -197,7 +196,6 @@ impl Voice {
             self.early.push(dry);
             let shaped = self.pinna.process(self.air.process(dry, mix.air));
             self.direct.push(shaped);
-            // The reflections per ear, split into what comes from ahead or the side and what comes from behind.
             let mut ahead = [0.0f32; 2];
             let mut behind = [0.0f32; 2];
             for tap in &mix.taps {

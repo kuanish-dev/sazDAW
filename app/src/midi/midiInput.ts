@@ -1,5 +1,3 @@
-// Live MIDI input: available keyboards, connecting one to a track, switching the track and disconnecting.
-// The backend doesn't report what is connected, so this run's connection is remembered here (the MIDI section shows it).
 import { createSignal } from "solid-js";
 import type { Id } from "../api/types";
 import { t } from "../i18n";

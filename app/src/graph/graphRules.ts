@@ -1,6 +1,3 @@
-// Audio graph rules: a pure mirror of Rust `Graph::check_edge`/`upstream` and questions about nodes
-// (inputs and output, volume, mixer strip, whose source it is). A source only outputs sound, the master only
-// receives, effects and buses connect in any order without cycles. Used for instant hints; the backend has the last word.
 import type { Graph, GraphEdge, GraphNode, Id, NodeKind, Strip, Track } from "../api/types";
 import { t } from "../i18n";
 

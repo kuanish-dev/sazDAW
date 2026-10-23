@@ -1,4 +1,3 @@
-// Backend contract types (mirroring the Rust JSON), split by area; import them all from here.
 export * from "./audio";
 export * from "./catalog";
 export * from "./chords";

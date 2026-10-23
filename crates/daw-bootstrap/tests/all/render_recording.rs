@@ -19,7 +19,6 @@ fn live_playing_is_recorded_into_a_new_clip_as_one_undo_step() {
     assert!(wait_for(|| session.controls.record.status().take_notes == 1), "the note is recorded");
     let notes = recorded_notes(&session, track);
     assert_eq!(notes.len(), 1);
-    // A press is taken at the start of the block where it happened: accuracy within a block (512 frames ≈ 20 ticks).
     assert!((i64::from(notes[0].start_tick) - 100).abs() <= 21, "start = {}", notes[0].start_tick);
     assert!((i64::from(notes[0].length_ticks) - 480).abs() <= 21, "length = {}", notes[0].length_ticks);
     assert_eq!((notes[0].pitch, notes[0].velocity), (60, 127));
@@ -38,7 +37,6 @@ fn nothing_is_recorded_when_not_armed() {
     let mut session = start(false);
     let track = add_synth_track(&session.controls, "Synth");
 
-    // Not armed.
     session.controls.transport.play();
     render(&mut session, 2_000);
     session.controls.live_notes.note_on(track, 60, 1.0);
@@ -80,15 +78,14 @@ fn a_note_still_held_when_playback_stops_is_closed_at_that_moment() {
 fn a_note_in_the_second_loop_pass_replaces_the_first_pass() {
     let mut session = start(false);
     let track = start_recording(&mut session);
-    // A note placed before recording does not belong to the take and is not touched; the clip is one bar.
     let clip = note_clip(&session.controls, track, 0, 1);
     let before =
         session.controls.notes.add_note(clip.id, NewNote { pitch: 48, start_tick: 2_000, length_ticks: 240, velocity: 100 }).unwrap();
 
     render_ticks(&mut session, 100);
-    tap(&mut session, track, 60, 240); // the first pass
-    render_ticks(&mut session, 3_840 - 344 + 400); // play on to tick 400 of the second pass
-    tap(&mut session, track, 62, 240); // the second pass
+    tap(&mut session, track, 60, 240);
+    render_ticks(&mut session, 3_840 - 344 + 400);
+    tap(&mut session, track, 62, 240);
     finish_take(&mut session, 1);
 
     let notes = recorded_notes(&session, track);
@@ -105,7 +102,6 @@ fn a_note_in_the_second_loop_pass_replaces_the_first_pass() {
     let ClipContent::Notes(content) = &clips[0].content else { panic!("a note clip") };
     assert_eq!(content.loop_ticks, BAR_TICKS, "nor its content");
 
-    // One undo step brings back the initial state: neither 60 nor 62.
     assert!(session.controls.history.undo());
     assert_eq!(recorded_notes(&session, track), vec![before]);
 }
@@ -130,7 +126,7 @@ fn a_silent_second_pass_keeps_the_first() {
     let track = start_recording(&mut session);
     render_ticks(&mut session, 100);
     tap(&mut session, track, 60, 200);
-    render_ticks(&mut session, 4_500); // a whole second pass without a single note
+    render_ticks(&mut session, 4_500);
     finish_take(&mut session, 1);
     let notes = recorded_notes(&session, track);
     assert_eq!(notes.len(), 1);

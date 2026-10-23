@@ -1,5 +1,3 @@
-// Mouse on the controller lane: dragging draws points on grid steps (line points in the dragged span are replaced
-// by the drawn ones); right click removes the nearest point. During the gesture points are a draft; release makes one edit.
 import type { ControllerKind, ControllerPoint } from "../api/types";
 import { extendStroke, fromFraction, removeNear, startStroke, strokeOver, type PencilStroke } from "./controllers";
 import { capture, localPoint } from "../common/pointer";
@@ -39,7 +37,6 @@ export function createControllerPointer(deps: ControllerPointerDeps) {
   return {
     onDown(event: PointerEvent) {
       if (event.button === 2) {
-        // Search at the exact mouse position, not the grid: the point may have been placed with a different grid.
         const tick = tickAtX(localPoint(deps.canvas(), event).x, deps.pxPerTick());
         const left = removeNear(deps.points(), tick, GRAB_PX / deps.pxPerTick());
         if (left !== deps.points()) void deps.commit(left);

@@ -1,5 +1,3 @@
-// Geometry of section marker flags on the timeline ruler: where a flag is and whether the mouse hits it. Shared by drawing
-// (`markerRender.ts`) and mouse (`markerPointer.ts`). Flags sit in the lower half of the ruler: bar numbers use the upper half.
 import type { Marker } from "../api/types";
 
 export const MARKER_TOP = 15;

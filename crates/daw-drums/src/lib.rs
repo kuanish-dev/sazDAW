@@ -111,7 +111,6 @@ impl InstrumentFactory for DrumFactory {
         self.about
     }
 
-    // A built-in instrument has no state of its own: everything is in the parameters.
     fn create(&self, params: &Params, _state: Option<&PluginState>) -> Result<Box<dyn Instrument>, ContractError> {
         let mut drum = Drum::new(self.kind);
         for (name, value) in params {

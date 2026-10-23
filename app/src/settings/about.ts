@@ -1,4 +1,3 @@
-// About: information about the app itself for the settings section.
 import { t } from "../i18n";
 import type { Core } from "../core/core";
 

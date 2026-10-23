@@ -1,5 +1,3 @@
-// Node editor canvas: background grid, connections and the dragged wire (SVG), node cards, the selected connection's slider, a hint.
-// Camera and mouse come from outside (`GraphView`): the canvas only displays and forwards events.
 import { For, Show } from "solid-js";
 import type { GraphEdge, GraphNode, Id } from "../api/types";
 import { canPreFader } from "./graphRules";

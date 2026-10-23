@@ -9,7 +9,7 @@ fn audio_clips_play_through_the_audio_node_with_fades() {
     rig.add_audio_track(20, MASTER);
     rig.add_sample(300, constant_sample(5_000, 0.5));
     let clip = rig.add_clip(20, 960, 960, ClipContent::audio(300));
-    rig.clip_mut(clip).fade_in_ticks = 40; // 1000 frames
+    rig.clip_mut(clip).fade_in_ticks = 40;
     rig.publish();
     rig.transport.play();
     let start = 960 * FRAMES_PER_TICK;
@@ -28,7 +28,7 @@ fn fades_follow_their_shapes() {
     rig.add_sample(300, constant_sample(48_000, 0.5));
     let clip = rig.add_clip(20, 960, 960, ClipContent::audio(300));
     let edit = rig.clip_mut(clip);
-    edit.fade_in_ticks = 40; // 1000 frames
+    edit.fade_in_ticks = 40;
     edit.fade_in_shape = FadeShape::EqualPower;
     edit.fade_out_ticks = 40;
     edit.fade_out_shape = FadeShape::Exponential;
@@ -61,13 +61,13 @@ fn a_finished_audio_voice_hands_its_sample_to_the_control_side_instead_of_droppi
     rig.render(100);
     let while_playing = Arc::strong_count(&probe);
 
-    rig.render(5_000); // the sound (2000 frames) has ended
+    rig.render(5_000);
     assert_eq!(
         Arc::strong_count(&probe),
         while_playing,
         "the voice's reference waits in the garbage queue instead of being freed in place"
     );
-    rig.link.send(DspCommand::PreviewStop).unwrap(); // any command collects the garbage queue
+    rig.link.send(DspCommand::PreviewStop).unwrap();
     assert_eq!(Arc::strong_count(&probe), while_playing - 1, "the control side freed it");
 }
 
@@ -85,9 +85,9 @@ fn stopping_the_transport_hands_playing_audio_voices_to_the_control_side_too() {
     let while_playing = Arc::strong_count(&probe);
 
     rig.transport.stop();
-    rig.render(100); // a stop cuts off the voices
+    rig.render(100);
     assert_eq!(Arc::strong_count(&probe), while_playing, "cutting off a voice does not free the sound in the audio thread");
-    rig.link.collect_garbage(); // telemetry collects the queue regularly even without commands
+    rig.link.collect_garbage();
     assert_eq!(Arc::strong_count(&probe), while_playing - 1);
 }
 
@@ -116,10 +116,9 @@ fn entering_the_middle_of_an_audio_clip_resumes_at_the_right_place() {
     rig.add_sample(300, Arc::new(SampleData { sample_rate: SR, channels: 1, frames }));
     rig.add_clip(20, 0, 1920, ClipContent::audio(300));
     rig.publish();
-    rig.transport.seek(960); // half a second
+    rig.transport.seek(960);
     rig.transport.play();
     let out = rig.render(100);
-    // Position ≈ 24000 of 48000 → value ≈ 0.5.
     assert!((Rig::left(&out, 0) - 0.5).abs() < 0.01, "{}", Rig::left(&out, 0));
 }
 
@@ -135,11 +134,10 @@ fn garbage_that_does_not_fit_the_queue_is_leaked_and_counted() {
     }
     rig.publish();
     rig.transport.play();
-    // 1024 preview commands: each next one hands the previous sound to the queue (1023 of 1024 places).
     for _ in 0..1024 {
         rig.link.send(DspCommand::PreviewPlay { data: constant_sample(10, 0.1), from: 0, to: 10, looping: false }).unwrap();
     }
-    rig.render(512); // the voices of ten short clips finish and hand over their sound too
+    rig.render(512);
     assert!(rig.link.losses().leaked_garbage > 0, "{:?}", rig.link.losses());
 }
 

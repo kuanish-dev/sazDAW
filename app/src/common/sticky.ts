@@ -1,4 +1,3 @@
-// A "sticky" value for `<Show>` children: remembers the last non-empty value.
 import { createMemo } from "solid-js";
 
 /**

@@ -1,4 +1,3 @@
-// New sampler tracks for a sound: playing the whole sample (the sound browser) or a region of it (the sample editor).
 import type { Id, NewTrack, SampleInfo } from "../api/types";
 import { MIDDLE_C } from "../common/pitch";
 import { regionToParams, type Selection } from "../samples/waveform";

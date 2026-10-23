@@ -120,7 +120,6 @@ impl Inner {
             let (passes, new_notes): (Vec<u64>, Vec<NewNote>) = list.into_iter().unzip();
             match self.notes.add_notes(clip, new_notes) {
                 Ok(created) => state.takes.record(track, passes, created.into_iter().map(|n| n.id)),
-                // The clip may have vanished while recording (not found): expected; anything else means the notes are lost.
                 Err(error) => self.report_failure(state, "recorded notes were not added to the clip", &error),
             }
         }
@@ -138,7 +137,6 @@ impl Inner {
             return;
         }
         self.open_group(state);
-        // The user may have deleted the notes by hand (not found): expected; anything else leaves both passes in the clip.
         if let Err(error) = self.notes.remove_notes(clip, replaced) {
             self.report_failure(state, "notes of the previous pass were not removed from the clip", &error);
         }
@@ -152,7 +150,6 @@ impl Inner {
         }
         self.open_group(state);
         for (clip, kind, points) in changes {
-            // The clip may have vanished while recording (not found): expected; anything else means the controllers are lost.
             if let Err(error) = self.notes.set_controller_lane(clip, kind, points) {
                 self.report_failure(state, "recorded controllers were not written to the clip", &error);
             }
@@ -192,7 +189,6 @@ impl Inner {
         state.takes.clear();
         state.controllers.clear();
         state.failure_logged = false;
-        // The take starts no later than the first event: polling may lag, and the transport position may have moved on.
         let earliest = events.iter().map(|e| e.tick).fold(f64::MAX, f64::min);
         state.start_tick = if capturing { (self.transport.position_ticks() as f64).min(earliest) } else { earliest };
         state.pairing.restart(state.start_tick);
@@ -200,7 +196,6 @@ impl Inner {
 
     fn handle_events(&self, state: &mut State, events: Vec<RecordedEvent>) {
         let mut finished = Finished::new();
-        // Song seconds are needed to thin controllers by time.
         let map = self.tempo.tempo_map();
         for RecordedEvent { track, message, tick } in events {
             state.pairing.observe(tick);
@@ -229,7 +224,6 @@ impl Inner {
 
     /// The take ended (stop, pause, disarm): finish the held notes and close the undo step.
     fn finish_take(&self, state: &mut State) {
-        // On pause the position is still valid; after stop it is reset, so the last seen tick is used.
         let last = state.pairing.last_tick();
         let end = if self.transport.state() == TransportState::Paused { last.max(self.transport.position_ticks() as f64) } else { last };
         let tail = state.pairing.close_all(end, &state.takes, state.quantize);
@@ -240,7 +234,6 @@ impl Inner {
             state.group_open = false;
         }
         state.active = false;
-        // The take result stays in `takes` until the next take: the note counter is computed from it.
     }
 
     fn poll(&self) {
@@ -248,8 +241,6 @@ impl Inner {
         let events = self.source.drain();
         let capturing = self.source.is_armed() && self.transport.state() == TransportState::Playing;
 
-        // A take starts with playback while armed. The source collects events only while armed, so whatever is drained
-        // belongs to a take, even when it arrives after stop or disarm (the last notes before the poll).
         if (capturing || !events.is_empty()) && !state.active {
             self.begin_take(&mut state, capturing, &events);
         }
@@ -324,7 +315,6 @@ impl Drop for Recorder {
         self.hold_song_loop(false);
         self.stop.store(true, Ordering::Release);
         if let Some(worker) = lock(&self.worker).take() {
-            // A thread panic is already logged by the panic hook; here we only wait for the thread to end.
             let _ = worker.join();
         }
     }
@@ -332,7 +322,6 @@ impl Drop for Recorder {
 
 impl RecordControl for Recorder {
     fn set_armed(&self, armed: bool) {
-        // The hold comes before the first captured block and goes after the take is finished.
         if armed {
             self.hold_song_loop(true);
         }

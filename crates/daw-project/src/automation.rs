@@ -224,7 +224,6 @@ impl AutomationControl for ProjectAutomation {
             }
             ClipDrawing::Points { points } => normalize(points, loop_ticks)?,
         };
-        // One edit: an error at any step (a refused target, an overlap) rolls back the lane it may have created.
         self.project.edit(&tr!("Draw automation", "Нарисовать автоматизацию"), |project| {
             let existing = project.automation.iter().find(|lane| lane.target == target).map(|lane| lane.id);
             let lane = match existing {

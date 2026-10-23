@@ -15,7 +15,6 @@ fn undo_and_redo_restore_state_without_reusing_ids() {
     assert!(rig.service.redo());
     assert_eq!(rig.notes.notes(clip).unwrap(), [first]);
 
-    // Undoing the creation of a clip and a track and creating again does not reuse ids.
     assert!(rig.service.undo());
     assert!(rig.service.undo());
     assert!(rig.service.undo());
@@ -51,7 +50,6 @@ fn a_group_of_edits_is_a_single_undo_step() {
     assert!(rig.notes.notes(clip).unwrap().is_empty(), "all three notes went away with one undo");
     assert_eq!(rig.service.undo_label().as_deref(), Some("Add clip"));
 
-    // An empty group records nothing.
     rig.service.begin_group("Nothing");
     rig.service.end_group();
     assert_eq!(rig.service.undo_label().as_deref(), Some("Add clip"));
@@ -99,7 +97,6 @@ fn cancel_group_restores_the_state_records_nothing_and_closes_every_level() {
     assert_eq!(rig.service.undo_label().as_deref(), Some("Add clip"), "no step was recorded");
     assert!(!rig.service.end_group() && !rig.service.end_group(), "the remaining end_group calls do nothing");
 
-    // Ids from a cancelled group are not given out again.
     let next = rig.tracks.add_track("New", Some("synth"), 60).unwrap();
     assert!(next > created && track < created);
 }
@@ -145,7 +142,6 @@ fn steps_list_the_history_on_both_sides_of_the_current_point() {
     assert_eq!(rig.service.steps(), steps, "and changes nothing");
     assert_eq!(rig.notes.notes(clip).unwrap().len(), 1);
 
-    // A new edit drops the undone steps; a fresh baseline drops everything.
     rig.notes.add_note(clip, note(67, 240, 120)).unwrap();
     assert_eq!(rig.service.steps().done, ["Add track", "Add clip", "One", "Add note"]);
     assert!(rig.service.steps().undone.is_empty());
@@ -244,12 +240,10 @@ fn squash_fails_when_the_mark_has_left_the_history() {
     let (rig, _, clip) = rig_with_clip();
     let mark = rig.service.checkpoint();
     rig.notes.add_note(clip, note(60, 0, 120)).unwrap();
-    // Undone past the mark and then edited: the state at the mark is gone.
     assert!(rig.service.undo() && rig.service.undo(), "the note and the clip are undone");
     rig.tracks.add_track("Other", Some("synth"), 60).unwrap();
     assert!(rig.service.squash(mark, "AI: note").unwrap_err().is(codes::history::CHECKPOINT_GONE));
 
-    // A cleared history (a project opened or created) loses every mark, even one taken on an empty history.
     rig.service.mark_baseline();
     let fresh = rig.service.checkpoint();
     rig.service.mark_baseline();
@@ -259,8 +253,6 @@ fn squash_fails_when_the_mark_has_left_the_history() {
 
 #[test]
 fn a_mark_lives_while_its_state_is_still_in_the_step_limit() {
-    // The history keeps 200 steps (`LIMIT` in `service/history.rs`): 200 edits after the mark push the mark's own step
-    // out, and the state at the mark becomes the bottom of the history.
     let (rig, _, clip) = rig_with_clip();
     let edit = |i: u8| {
         rig.notes.add_note(clip, note(36 + i / 16, u32::from(i % 16) * 240, 120)).unwrap();
@@ -272,7 +264,6 @@ fn a_mark_lives_while_its_state_is_still_in_the_step_limit() {
     assert!(rig.notes.notes(clip).unwrap().is_empty());
     assert!(!rig.service.can_undo(), "the merged step was the whole history");
 
-    // One edit more, and the state at the mark is forgotten too.
     let mark = rig.service.checkpoint();
     (0..201).for_each(edit);
     assert!(rig.service.squash(mark, "AI: too many").unwrap_err().is(codes::history::CHECKPOINT_GONE));

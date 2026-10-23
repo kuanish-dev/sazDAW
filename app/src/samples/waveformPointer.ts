@@ -1,4 +1,3 @@
-// Mouse on the sample waveform: drag and edge selection, ruler markers (add, move, remove), wheel zoom and scroll.
 import {
   addMarker, frameAtX, moveMarker, nearestMarker, normalizeSelection, panBy, removeMarker, segmentAt, zoomAt, type Selection, type View,
 } from "./waveform";
@@ -57,7 +56,6 @@ export function createWaveformPointer(deps: WaveformPointerDeps) {
     capture(deps.canvas(), event);
     const { frame, onRuler } = locate(event);
     if (onRuler) {
-      // On the ruler: grab an existing marker or place a new one.
       const existing = nearestMarker(deps.markers(), frame, grabFrames());
       if (existing === null) deps.setDraftMarkers(addMarker(deps.markers(), frame, deps.total()));
       drag = { mode: "marker", original: existing, current: existing ?? frame };

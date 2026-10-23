@@ -1,10 +1,3 @@
-// The live sound of graph nodes for the effect pictures: an editor's graph, or every effect along a signal path at
-// once. One registry for the app: pictures ask to hear a node, the registry reads every node they show (at most
-// `MAX_WATCHED_NODES`) in one batched call about 30 times a second (`audio.nodeWindows`). Reading is what keeps the
-// engine capturing a node (`CAPTURE_LEASE_SECONDS`), so a node nobody shows any more is simply no longer read. It keeps a
-// cursor per node, so each read carries only the frames that are new, keeps each node's latest `NODE_WINDOW_FRAMES` and
-// hands every picture its node's whole window. While nothing is heard it does not poll, and the engine stops copying a
-// few seconds later.
 import { type Id, MAX_WATCHED_NODES, NODE_WINDOW_FRAMES, type NodeCursor, type NodeWindow } from "../api/types";
 import type { Core } from "../core/core";
 import { createPoller } from "../core/poller";

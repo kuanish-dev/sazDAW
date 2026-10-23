@@ -1,5 +1,3 @@
-// Audio clip fades: the curve of each shape (the same formulas as the engine, `FadeShape::gain` in
-// `crates/daw-contracts/src/clips.rs`) and the fade lengths a drag may set.
 import type { Clip, FadeShape } from "../api/types";
 import { clamp } from "../common/math";
 

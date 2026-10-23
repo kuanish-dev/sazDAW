@@ -141,7 +141,6 @@ impl EngineLink {
     }
 
     fn push_live(&self, event: LiveEvent) {
-        // The audio thread cannot keep up with the notes: the note is lost, but the caller does not wait; the loss shows in the log.
         if lock(&self.live).push(event).is_err() {
             self.telemetry.count(Loss::LiveNote, 1);
         }

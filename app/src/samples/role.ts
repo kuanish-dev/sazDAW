@@ -1,5 +1,3 @@
-// The samples role: which sounds the project has (`samples.ts`), everything done to one of them in the editor
-// (`sampleEditor.ts`) and auditioning a sound without changing the project (`preview.ts`).
 import { defineRole, useRole } from "../core/roles";
 import { shellRole } from "../shell/role";
 import { createPreview, type Preview } from "./preview";

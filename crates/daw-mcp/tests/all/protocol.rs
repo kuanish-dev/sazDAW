@@ -47,10 +47,8 @@ fn the_handshake_names_the_server_and_explains_the_ground_rules() {
     assert!(text.contains("`about`"), "the AI knows the catalog explains instruments and params: {text}");
     assert!(text.contains("history_checkpoint") && text.contains("history_squash"), "a request is one undo step: {text}");
     assert!(text.contains("automation_addDrawnClip") && text.contains("`params`"), "the AI knows the one-call shortcuts: {text}");
-    // The server replaces an unknown protocol version with its own instead of refusing.
     let other = ask(&server, 8, "initialize", json!({ "protocolVersion": "1999-01-01" }));
     assert_eq!(other["result"]["protocolVersion"], "2025-03-26");
-    // Notifications get no reply.
     assert!(server.handle(&json!({ "jsonrpc": "2.0", "method": "notifications/initialized" })).is_none());
     assert_eq!(ask(&server, 9, "ping", Value::Null)["result"], json!({}));
 }
@@ -92,13 +90,11 @@ fn tools_change_the_project_and_report_results_as_text() {
     assert!(!error, "{text}");
     let track: u32 = text.parse().expect("the method returned a track id");
 
-    // A method without params and a method without a result.
     let (error, status) = call(&server, "project_status", json!({}));
     assert!(!error && status.contains('{'), "{status}");
     let (error, text) = call(&server, "tempo_set", json!({ "bpm": 140 }));
     assert!(!error && text == "done", "{text}");
 
-    // A drum part on the track the AI has just created.
     let (error, text) = call(
         &server,
         "drums_build",
@@ -123,7 +119,6 @@ fn a_failing_method_is_a_readable_tool_error_not_a_protocol_error() {
     assert!(error && text.contains("no_such_pattern"), "{text}");
     let (error, text) = call(&server, "tracks_add", json!({ "name": 5 }));
     assert!(error && text.starts_with("RP-101: ") && text.contains("tracks.add"), "{text}");
-    // An unknown tool and an unknown protocol method are protocol errors.
     let reply = ask(&server, 3, "tools/call", json!({ "name": "no_such_tool", "arguments": {} }));
     assert_eq!(reply["error"]["code"], -32602);
     assert_eq!(ask(&server, 4, "resources/list", Value::Null)["error"]["code"], -32601);

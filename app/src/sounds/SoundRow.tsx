@@ -1,4 +1,3 @@
-// A file row in the sound browser: an "in project / pack" badge, the name, dragging and (when selected) action buttons.
 import { Show } from "solid-js";
 import type { LibraryEntry, SampleInfo } from "../api/types";
 import { t } from "../i18n";

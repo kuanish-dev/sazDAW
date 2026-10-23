@@ -52,7 +52,6 @@ fn levels_per_bar_match_the_exported_mix_for_a_known_tone() {
     controls.tempo.set_tempo(Bpm::new(120.0).unwrap()).unwrap();
     write_tone(&dir.join("tone.wav"), 0.5, 1.0);
     let sample = controls.samples.import(&dir.join("tone.wav")).unwrap();
-    // A tone in bar 2 (the first second of two), track and master volume at one.
     tone_track(controls, sample.id, 1, 1.0);
     controls.graph.set_volume(MASTER, 1.0).unwrap();
     let before = controls.view.snapshot();
@@ -66,11 +65,9 @@ fn levels_per_bar_match_the_exported_mix_for_a_known_tone() {
     assert_eq!(master.sections[0], None, "silence before the clip");
     assert_eq!(master.sections[2], None, "silence after the clip");
     let tone = master.sections[1].expect("the bar with the tone sounds");
-    // The RMS of a sine is 3 dB below the peak, and 3 dB more because the tone sounds for half the bar.
     assert!((tone.peak_db - tone.rms_db - 6.0).abs() < 0.2, "{tone:?}");
     assert!((tone.peak_db - db(0.5)).abs() < 0.1, "tone peak 0.5: {tone:?}");
 
-    // The same span by export: the peak and RMS of the second bar from the file.
     let path = dir.join("mix.wav");
     let request = ExportRequest {
         sample_rate: 48_000,
@@ -84,12 +81,10 @@ fn levels_per_bar_match_the_exported_mix_for_a_known_tone() {
     let bar = &mix[BAR_FRAMES * 2..(BAR_FRAMES * 2 * 2).min(mix.len())];
     let silent_rest = BAR_FRAMES as f32 / (bar.len() / 2) as f32;
     assert!((tone.peak_db - db(peak(bar))).abs() < 0.11, "peak: analysis {} and export {}", tone.peak_db, db(peak(bar)));
-    // In the export file the bar is cut at the clip end: compute the RMS over the whole bar (silence after that).
     let expected_rms = db(rms(bar)) - 10.0 * silent_rest.log10();
     assert!((tone.rms_db - expected_rms).abs() < 0.11, "RMS: analysis {} and export {expected_rms}", tone.rms_db);
     assert!(master.loudness_lufs.is_some());
 
-    // A track sounds the same at its own output (master at one); tracks without clips are absent.
     let tracks = levels(controls, LevelTargets::Track, BAR_TICKS * 3);
     assert_eq!(tracks.targets.len(), 1);
     assert_eq!(tracks.targets[0].sections, master.sections);
@@ -106,8 +101,6 @@ fn balance_hears_each_track_as_it_reaches_the_master() {
     controls.graph.set_volume(MASTER, 1.0).unwrap();
     write_tone(&dir.join("tone.wav"), 0.25, 4.0);
     let sample = controls.samples.import(&dir.join("tone.wav")).unwrap().id;
-    // The same tone in step four times: at full volume, at half volume (soloed), at full volume into a bus at half
-    // volume, and muted; plus a track without clips.
     let full = tone_track(controls, sample, 0, 1.0);
     let half = tone_track(controls, sample, 0, 0.5);
     let bused = tone_track(controls, sample, 0, 1.0);
@@ -124,7 +117,6 @@ fn balance_hears_each_track_as_it_reaches_the_master() {
     assert_eq!((report.from_tick, report.to_tick), (0, BAR_TICKS * 2), "4 s at 120 BPM");
     assert_eq!(report.tracks.iter().map(|t| t.track).collect::<Vec<_>>(), [full, half, bused, muted, empty]);
     let near = |value: Option<f32>, expected: f32| value.is_some_and(|v| (v - expected).abs() < 0.2);
-    // Solo is ignored: the mix is full + half + bused (the muted one is out), twice the full track's amplitude.
     for (index, relative) in [(0, -6.0), (1, -12.0), (2, -12.0), (3, -6.0)] {
         let track = &report.tracks[index];
         assert!(near(track.relative_lu, relative), "track {index} at {relative} LU: {track:?}, mix {:?}", report.mix);
@@ -150,19 +142,16 @@ fn balance_hears_ducking_and_a_gate_keyed_by_other_tracks() {
     let controls = &session.controls;
     controls.tempo.set_tempo(Bpm::new(120.0).unwrap()).unwrap();
     controls.graph.set_volume(MASTER, 1.0).unwrap();
-    // The keys play a lower tone than the tracks they key, so the difference renders do not cancel one in the other.
     write_tone(&dir.join("tone.wav"), 0.25, 4.0);
     write_sine(&dir.join("key.wav"), 0.25, 220.0, 4.0);
     let tone = controls.samples.import(&dir.join("tone.wav")).unwrap().id;
     let key_tone = controls.samples.import(&dir.join("key.wav")).unwrap().id;
     let params = |pairs: &[(&str, f32)]| pairs.iter().map(|(name, value)| ((*name).to_string(), *value)).collect::<daw_contracts::Params>();
-    // A track ducked hard by a compressor keyed by another one.
     let key = tone_track(controls, key_tone, 0, 1.0);
     let ducked = tone_track(controls, tone, 0, 1.0);
     let duck = params(&[("threshold", -40.0), ("ratio", 20.0), ("attack", 0.1), ("release", 50.0), ("sidechain", 1.0)]);
     let compressor = controls.graph.insert_effect(source_node(controls, ducked), "compressor", &duck, 0.0, 0.0).unwrap();
     controls.graph.connect(source_node(controls, key), compressor, 1.0, true).unwrap();
-    // A pad behind a gate that only another track opens; that track reaches the master only as the gate's key.
     let pad = tone_track(controls, tone, 0, 1.0);
     let opener = tone_track(controls, key_tone, 0, 1.0);
     let open = params(&[("threshold", -40.0), ("range", -80.0), ("attack", 0.1), ("sidechain", 1.0)]);
@@ -205,7 +194,6 @@ fn check_finds_a_silent_synth_track_with_gain_at_zero() {
     let gain = synth_param(controls, "gain");
     controls.tracks.set_instrument_param(tracks[0], gain.name, gain.min).unwrap();
 
-    // The synth smooths the volume from the default to zero in the first milliseconds: a click remains, not a sound.
     let per_track = levels(controls, LevelTargets::Track, BAR_TICKS * 2);
     let bass = &per_track.targets[0];
     assert!(bass.sections.iter().flatten().all(|l| l.rms_db < -45.0), "the bass without volume is inaudible: {bass:?}");
@@ -232,7 +220,6 @@ fn check_finds_clipping_on_master_with_its_bars() {
     controls.tempo.set_tempo(Bpm::new(120.0).unwrap()).unwrap();
     write_tone(&dir.join("hot.wav"), 0.9, 1.0);
     let sample = controls.samples.import(&dir.join("hot.wav")).unwrap();
-    // A quiet tone in bar 1, an overloaded one in bar 3 (three loud tracks and the master above one).
     tone_track(controls, sample.id, 0, 0.1);
     for _ in 0..3 {
         tone_track(controls, sample.id, 2, MAX_LEVEL);

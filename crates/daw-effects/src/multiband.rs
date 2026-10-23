@@ -227,7 +227,6 @@ impl Effect for Multiband {
             let four = self.four.next(self.smoothing);
             let mut left = self.channels[0].split(&self.splits, frame[0]);
             let mut right = self.channels[1].split(&self.splits, frame[1]);
-            // Three bands: the top band fades into band 3, which then hears and turns both.
             for bands in [&mut left, &mut right] {
                 bands[BANDS - 2] += (1.0 - four) * bands[BANDS - 1];
                 bands[BANDS - 1] *= four;

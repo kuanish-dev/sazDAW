@@ -1,4 +1,3 @@
-// Notes in the piano roll editor: fitting a note into the clip content and mouse hit testing.
 import { STEP_TICKS, type NewNote, type Note } from "../api/types";
 import { hitSpan, type HitZone } from "../tracks/clipRules";
 import { clamp } from "../common/math";

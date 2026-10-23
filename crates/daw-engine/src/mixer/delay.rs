@@ -55,7 +55,6 @@ impl DelayLine {
         let mut level = start;
         for (index, (input, output)) in source.chunks_exact(2).zip(target.chunks_exact_mut(2)).enumerate() {
             level += step;
-            // Read first, then write: this way a delay of exactly the ring length works too.
             let (mut left, mut right) = self.read(self.delay);
             if self.previous != self.delay {
                 let (old_left, old_right) = self.read(self.previous);
@@ -81,7 +80,6 @@ impl DelayLines {
     pub fn new() -> Self {
         let lines = (0..MAX_DELAY_LINES)
             .map(|_| {
-                // `resize` writes zeros explicitly (while `vec![0.0; n]` may take pages the system has not handed out yet).
                 let mut ring = Vec::with_capacity(MAX_PDC_FRAMES * 2);
                 ring.resize(MAX_PDC_FRAMES * 2, 0.0);
                 DelayLine { ring, write: 0, delay: 1, previous: 1, owner: None, used: false }

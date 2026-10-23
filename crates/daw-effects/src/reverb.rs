@@ -10,7 +10,6 @@ use daw_contracts::{Effect, L10n, ParamInfo, ParamKind, StreamConfig};
 use crate::biquad::{BUTTERWORTH_Q, Biquad, Coefficients};
 use crate::{EffectKind, clamp_param, number};
 
-// Settings of the classic Freeverb (Jezar): line lengths in frames at 44.1 kHz and knob scales.
 const COMB_TUNING: [usize; 8] = [1116, 1188, 1277, 1356, 1422, 1491, 1557, 1617];
 const ALLPASS_TUNING: [usize; 4] = [556, 441, 341, 225];
 const STEREO_SPREAD: usize = 23;
@@ -318,7 +317,6 @@ mod tests {
             let mut r = build::<Reverb>([("mix", 1.0), ("predelay", predelay)]);
             let mut buffer = impulse(24_000);
             r.process(&mut buffer, None);
-            // 30–90 ms: the combs answer after about 25 ms without a pre-delay.
             rms(&buffer[1_440 * 2..4_320 * 2])
         };
         assert!(early(0.0) > 1e-3);

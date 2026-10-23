@@ -1,5 +1,3 @@
-// What the stage pictures (the room from above, the side view) share: the room's shape and how it is heard, who stands
-// on the stage and where, and how a picture moves a channel. `StageView` makes it; the pictures only draw it and report the mouse.
 import type { Accessor } from "solid-js";
 import type { Id, Listening } from "../api/types";
 import type { RoomShape, Spot } from "./stageRules";

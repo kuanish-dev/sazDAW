@@ -1,5 +1,3 @@
-// Audition that loops until pressed again, without touching the project (the drum part and chord part dialogs):
-// remembers what is playing under a key, replays an edited request in place, and silences it when the dialog closes.
 import { createSignal, onCleanup } from "solid-js";
 
 /** What can loop a request: the `drums` or `chords` actions. */

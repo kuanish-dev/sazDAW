@@ -47,14 +47,12 @@ fn activity_led(painter: &egui::Painter, center: egui::Pos2, on: bool) {
 }
 
 pub fn create(params: Arc<SynthParams>, own_visuals: Arc<Visuals>) -> Option<Box<dyn Editor>> {
-    // Which plugin instance is shown now (the window may be open on a different one than the one sounding).
     let followed = Mutex::new(None::<Arc<Visuals>>);
     create_egui_editor(
         params.editor_state.clone(),
         (),
         |_, ()| {},
         move |ctx, setter, ()| {
-            // The oscilloscope, meter and keyboard are live: draw frame after frame.
             ctx.request_repaint();
             let visuals = visuals::follow(&own_visuals, &mut followed.lock().unwrap_or_else(std::sync::PoisonError::into_inner));
             let readout = take_readout(ctx);
@@ -64,13 +62,11 @@ pub fn create(params: Arc<SynthParams>, own_visuals: Arc<Visuals>) -> Option<Box
                 let settings = params.current_settings();
                 let painter = ui.painter().clone();
 
-                // Header: name and LCD.
                 painter.text(origin + vec2(2.0, 4.0), egui::Align2::LEFT_TOP, "SYNTH", egui::FontId::proportional(26.0), TEXT);
                 activity_led(&painter, origin + vec2(112.0, 18.0), visuals.is_sounding());
                 let (name, value) = readout.unwrap_or_else(|| ("WAVEFORM".into(), format!("{:?}", settings.waveform).to_uppercase()));
                 lcd(&painter, area(430.0, 0.0, 262.0, 40.0), &name, &value);
 
-                // Row 1: OSC, FILTER, OUTPUT.
                 let inner = section(&painter, area(0.0, 52.0, 250.0, 154.0), "OSCILLATOR");
                 let current = params.waveform.value();
                 for (i, (wave, shape)) in [
@@ -101,7 +97,6 @@ pub fn create(params: Arc<SynthParams>, own_visuals: Arc<Visuals>) -> Option<Box
                 let level = smoothed_level(ctx, level_from_peak(peak(&scope)));
                 meter(&painter, Rect::from_min_size(pos2(inner.right() - 22.0, inner.min.y + 3.0), vec2(14.0, 106.0)), level);
 
-                // Row 2: amp envelope.
                 let inner = section(&painter, area(0.0, 214.0, 692.0, 138.0), "AMP ENVELOPE");
                 draw_envelope(&painter, Rect::from_min_size(inner.min + vec2(3.0, 3.0), vec2(230.0, 92.0)), &settings);
                 let knobs: [(&FloatParam, &str); 5] = [

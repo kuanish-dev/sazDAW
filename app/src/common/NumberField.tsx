@@ -1,4 +1,3 @@
-// Numeric field: the value applies on Enter or blur, the wheel changes it, Esc cancels the input.
 import { createEffect, createSignal } from "solid-js";
 import { clamp } from "./math";
 

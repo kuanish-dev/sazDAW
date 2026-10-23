@@ -1,5 +1,3 @@
-// What the window shows: the activity bar tab, the open settings section and the instrument window, and showing what a
-// role just created (it is selected once the project copy has it).
 import { createSignal } from "solid-js";
 import type { Id, Project } from "../api/types";
 import type { Selection } from "../selection/selection";

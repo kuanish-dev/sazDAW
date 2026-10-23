@@ -1,5 +1,3 @@
-// "−  2.5 bars  +": a length shown in bars and changed by whole bars (a clip's content length, an automation clip and its
-// pattern). A length that is a fraction of bars (after live writing, an imported file) steps to the nearest whole bar.
 import { t } from "../i18n";
 import { IconAdd, IconMinus } from "./icons";
 

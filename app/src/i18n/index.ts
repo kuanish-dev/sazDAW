@@ -1,6 +1,3 @@
-// Interface languages: the current language (a signal), its dictionary `t()` and number agreement `plural` (`plural.ts`).
-// A leaf module: it knows nothing of the app, so every part may import it (the roles, the core, the mock, api).
-// `settings/appearance.ts` sets the language from preferences; the source of truth is `Preferences.language` in the backend.
 import { createSignal } from "solid-js";
 import { en } from "./en";
 import { ru } from "./ru";

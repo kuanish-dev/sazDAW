@@ -1,5 +1,3 @@
-// Kinds catalog of the mock backend (a copy of the backend's built-in instruments and effects) and the params of a new instance.
-// Labels come in the interface language at request time, like the real backend's answers.
 import type { Catalog, KindInfo, ParamInfo, Params } from "../api/types";
 import { clamp } from "../common/math";
 import { type ErrorCode, fail } from "./errors";
@@ -32,8 +30,6 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
     kind, label,
     params: [p("gain", q.volume, 0, 1.5, 1), p("tune", q.tuneSemitones, -12, 12, 0), p("decay", q.decayTimes, 0.3, 3, 1)],
   });
-  // Plucked strings (`daw-strings`): the same params, the kind's own defaults (ring s, brightness %, body %, volume %);
-  // the kinds played through an amp also have Drive (`drive`, its default).
   const plucked = (kind: string, label: string, [ring, tone, body, gain]: [number, number, number, number], drive?: number): KindInfo => ({
     kind, label,
     params: [
@@ -42,7 +38,6 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
       ...(drive === undefined ? [] : [p("drive", q.drivePercent, 0, 100, drive)]),
     ],
   });
-  // The EQ's bands, shared by the linear-phase EQ (`eq::PARAMS` in the backend).
   const eqParams = [
     p("low_cut", q.lowCutHz, 20, 1000, 20), p("low_gain", q.lowDb, -18, 18, 0), p("low_freq", q.lowHz, 40, 400, 100), p("mid_gain", q.midDb, -18, 18, 0),
     p("mid_freq", q.midHz, 200, 8000, 1000), p("mid_q", q.midQ, 0.3, 8, 1),
@@ -65,7 +60,6 @@ export function createMockCatalog(plugins: OfferedPlugins): Catalog {
       },
       {
         kind: "synth", label: k.synth,
-        // The order and ranges of `daw-synth/src/lib.rs: PARAMS`.
         params: [
           choice("waveform", q.waveform, choices.waveform, 2), p("osc2_level", q.osc2Level, 0, 100, 0),
           choice("osc2_waveform", q.osc2Waveform, choices.waveform, 2), p("osc2_semitones", q.osc2Semitones, -24, 24, 0),

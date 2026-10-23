@@ -65,7 +65,6 @@ pub fn process_curve(data: &SampleData, anchors: &[StretchAnchor], semitones: f3
     let origin = anchors[0].output;
     let output_len = (anchors[anchors.len() - 1].output - origin) as usize;
     let pitch = 2f64.powf(f64::from(semitones) / 12.0);
-    // Pitch works as with one stretch: time is stretched by another `pitch`, then frames are squeezed back.
     let wsola_len = (output_len as f64 * pitch).round() as usize;
     let source_at = |out: f64| source_frame(anchors, origin as f64 + out / pitch);
     let stretched = wsola::stretch_mapped(&data.frames, channels, data.sample_rate, wsola_len, source_at);
@@ -84,7 +83,6 @@ fn source_frame(anchors: &[StretchAnchor], output: f64) -> f64 {
 fn finish(data: &SampleData, stretched: Vec<f32>, channels: usize, output_len: usize) -> SampleData {
     let mut frames =
         if stretched.len() / channels == output_len { stretched } else { resample::resample(&stretched, channels, output_len) };
-    // Broken input (NaN/inf) must not turn into a full-scale click.
     for value in &mut frames {
         if !value.is_finite() {
             *value = 0.0;

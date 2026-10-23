@@ -1,6 +1,3 @@
-// Mock rules for audio clip takes and comping, as in the backend (`daw-project/src/take_rules.rs`): the clip's place
-// and length do not change, the active take is `content.sample`, the comp is `content.comp` (ascending, the first at 0,
-// neighbours are different takes, a single take means no comp). A refusal is a thrown backend error (`fail`).
 import type { ClipContent, CompSegment, Id } from "../api/types";
 import { compOf, takeAt, takesOf } from "../tracks/takes";
 import { fail } from "./errors";

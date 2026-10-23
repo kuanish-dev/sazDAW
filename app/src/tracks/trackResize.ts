@@ -1,6 +1,3 @@
-// Resizing a track's row by its header's bottom edge: while dragging, the height follows the pointer on screen
-// (`tracks.resize`) and is saved on release (`tracks.setHeight`, one undo step); a double-click returns the track to the
-// interface setting (Appearance → track height); with the edge focused, ↑/↓ change the height by a step.
 import type { Tracks } from "./tracks";
 import type { Track } from "../api/types";
 import { clamp } from "../common/math";

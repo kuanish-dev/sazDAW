@@ -38,7 +38,6 @@ impl Recording {
         self.pending = None;
         self.last_kept = Some((seconds, point.value));
         match self.recorded.last_mut() {
-            // The engine stamps events with the segment start tick: of several events on one tick the last one stays.
             Some(last) if last.tick == point.tick => last.value = point.value,
             _ => self.recorded.push(point),
         }
@@ -153,7 +152,6 @@ mod tests {
     fn dense_small_steps_are_thinned_but_the_last_value_survives() {
         let take = take(&[]);
         let mut cc = ControllerTake::default();
-        // The 14-bit wheel drifts in small steps every 3 ms: below a CC step, so one point per a bit over 10 ms.
         for step in 0..10u32 {
             cc.observe(1, &take, &play(ControllerKind::PitchBend, step as f32 * 0.0005, step, f64::from(step) * 0.003));
         }
@@ -182,7 +180,6 @@ mod tests {
         cc.observe(1, &take, &play(CC, 0.7, 500, 1.0));
         assert_eq!(points(&cc.take_changes(false)), [(0, 0.1), (50, 0.5), (500, 0.7), (900, 0.9)]);
 
-        // A new pass replaces what the previous one recorded.
         cc.observe(1, &take, &Played { pass: 1, ..play(CC, 0.3, 700, 5.0) });
         assert_eq!(points(&cc.take_changes(false)), [(0, 0.1), (100, 0.2), (700, 0.3), (900, 0.9)]);
         assert!(cc.take_changes(false).is_empty(), "nothing new, nothing to write");

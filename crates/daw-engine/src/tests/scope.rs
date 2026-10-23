@@ -43,7 +43,6 @@ fn the_first_read_of_the_window_starts_the_capture_and_carries_the_prepared_rate
 fn the_window_read_ends_with_the_rendered_master_in_mono_until_reads_stop() {
     let mut rig = Rig::new();
     let node = rig.add_track(10, MASTER);
-    // Panned left: the channels differ, so the window must hold their middle, not one of them.
     rig.set_strip(node, 1.0, -1.0, false, false);
     rig.publish();
     rig.link.master_window();
@@ -123,7 +122,6 @@ fn the_watched_effect_window_is_its_input_and_output_and_the_input_twice_while_b
     let fx = rig.add_fx(false, Box::new(Double));
     rig.connect(fx, MASTER, 1.0, false);
     let track = rig.add_track(10, fx);
-    // Panned left: the channels differ, so the window must hold their middle, not one of them.
     rig.set_strip(track, 1.0, -1.0, false, false);
     rig.publish();
     window_of(&rig, fx);
@@ -248,7 +246,6 @@ fn playback_from_the_song_start_marks_the_restart_frame() {
     rig.render(100);
     assert_eq!(rig.link.frames_after(0).restart, Some(100), "where playback from tick 0 started");
 
-    // The engine sees a start only after a segment rendered while stopped.
     rig.transport.stop();
     rig.render(100);
     rig.transport.seek(3_840);

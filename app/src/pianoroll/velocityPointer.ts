@@ -1,4 +1,3 @@
-// Mouse on the velocity lane: drag the nearest note's bar up or down; on a selected note the whole selected group changes.
 import type { NewNote, Note } from "../api/types";
 import { stripId } from "./noteFit";
 import type { NoteChange } from "./noteSelection";

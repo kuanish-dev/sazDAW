@@ -1,5 +1,3 @@
-// Vertical volume fader: mouse drag, wheel and arrow keys; double click resets to 0 dB. Outside a drag the cap glides
-// to a new value (a reset, a step, an undo); while dragging it follows the pointer exactly.
 import { createSignal } from "solid-js";
 import { clamp } from "./math";
 import { FADER_STEP, faderToVolume, nudgeFader, volumeToFader } from "../mixer/mixer";

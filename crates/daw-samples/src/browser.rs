@@ -31,10 +31,11 @@ impl ProjectSounds for FolderSounds {
 
     fn list(&self, dir: &Path) -> Result<Vec<LibraryEntry>, ContractError> {
         let target = fs::canonicalize(dir).map_err(|e| samples::FOLDER_OPEN_FAILED.with("path", dir.display()).with("details", e))?;
-        let allowed = self.root().into_iter().chain(self.sources.list()).any(|base| {
-            // A link to a vanished folder simply grants no access.
-            fs::canonicalize(base).is_ok_and(|base| target.starts_with(base))
-        });
+        let allowed = self
+            .root()
+            .into_iter()
+            .chain(self.sources.list())
+            .any(|base| fs::canonicalize(base).is_ok_and(|base| target.starts_with(base)));
         if !allowed {
             return Err(samples::FOLDER_NOT_ALLOWED.with("path", dir.display()));
         }

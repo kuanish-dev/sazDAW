@@ -1,6 +1,3 @@
-// "Chord part": a chord progression strummed on one track — a guitar, ukulele or bass (new or yours) or any instrument.
-// This file assembles the dialog: the key, the progression, the rhythm, the track, start, repeats and the request; the
-// chords are `ChordPalette`, the bars `ProgressionBars`, the rhythm `StrumPicker`.
 import { For, Show, createEffect, createSignal, on, onMount } from "solid-js";
 import type { ChordPartRequest, StrumPattern } from "../api/types";
 import {

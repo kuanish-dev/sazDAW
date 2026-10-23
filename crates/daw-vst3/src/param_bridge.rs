@@ -111,7 +111,6 @@ impl ParamBridge {
             return;
         }
         let value = value.clamp(0.0, 1.0);
-        // Echo: the plugin repeated what we set it to ourselves — no reason to touch the project.
         if !self.editing.contains(&id) && self.shown.get(&id).is_some_and(|shown| (shown - value).abs() < SAME) {
             return;
         }
@@ -189,7 +188,6 @@ impl ParamBridge {
         self.last_write.insert(id, now);
         let plain = self.scales.to_plain(id, value) as f32;
         if let Err(error) = self.project.write(&param_name::name(id), plain) {
-            // One log entry per window: when failing, a knob sends dozens of values per second.
             if !self.write_failed {
                 self.write_failed = true;
                 journal::error(
@@ -242,7 +240,6 @@ mod tests {
 
     #[test]
     fn project_gets_plain_values_and_the_window_normalized_ones() {
-        // Parameter 7 is a frequency 0..1000 Hz, parameter 9 a choice of three.
         let scales = ParamScales::new(vec![(7, ParamScale::continuous(|n| 1000.0 * n)), (9, ParamScale::indexed(2))]);
         let mut rig = rig_with(scales);
         rig.bridge.perform(7, 0.4, Instant::now());

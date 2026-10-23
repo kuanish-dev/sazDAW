@@ -53,7 +53,6 @@ impl PluginStates for ProjectPluginStates {
 
     fn set(&self, target: EditorTarget, state: PluginState) -> Result<(), ContractError> {
         let state = Arc::new(state);
-        // The same state leaves the model unchanged, so the core records no undo step.
         self.project.edit(LABEL.get(), |project| {
             *slot(project, target)? = Some(state);
             Ok(())

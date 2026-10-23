@@ -1,9 +1,3 @@
-// Transient shaper graph. Left: what the settings do to a model hit (silence, an instant rise, a fall) — the hit's level
-// (dashed) and the shaped level (bright) over 400 ms, so a harder or softer start and a longer or shorter tail show at
-// once while the knobs turn. Right: the last 2 seconds of the live sound as envelopes, in 5-ms steps — the input (line)
-// and the output (area) — and under them how much the shaper turned the sound (above the middle line: louder, below:
-// quieter). The model is `effects/transientShape.ts`; the live part comes from `listenToNode` and fades out when the
-// sound stops.
 import { For, createMemo, createSignal } from "solid-js";
 import type { Id, ParamInfo, Params } from "../api/types";
 import { namedParams } from "../common/catalog";

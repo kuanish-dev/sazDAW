@@ -1,5 +1,3 @@
-// Welcome screen while no project is open (VS Code "Welcome" page): Start links on the left, recent projects on the right,
-// over drifting waveforms (`WelcomeBackdrop`).
 import { For, Show, createSignal, onMount } from "solid-js";
 import type { RecentProject } from "../api/types";
 import { t } from "../i18n";
@@ -24,7 +22,6 @@ export function WelcomeScreen() {
   return (
     <div class="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-bg p-8" role="dialog" aria-label={t().shell.welcome.noProject}>
       <WelcomeBackdrop />
-      {/* The blocks rise in one after another (`anim-rise`, staggered by `animation-delay`). */}
       <div class="relative w-[760px] max-w-full">
         <h1 class="anim-rise text-[32px] font-light leading-tight">{t().shell.welcome.title}</h1>
         <p class="anim-rise mb-8 mt-2 max-w-xl text-sm text-muted" style={{ "animation-delay": "70ms" }}>{t().shell.welcome.intro}</p>

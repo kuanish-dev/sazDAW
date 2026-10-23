@@ -1,5 +1,3 @@
-// The automation role: automation lanes and their clips (`automation.ts`) and live writing, which every control that
-// moves a parameter reports to (`paramTouch.ts`).
 import { defineRole, useRole } from "../core/roles";
 import { selectionRole } from "../selection/role";
 import { shellRole } from "../shell/role";

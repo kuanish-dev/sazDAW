@@ -1,5 +1,3 @@
-// Rendering a track to audio: "Bounce to audio", "Freeze", "Unfreeze". Rendering is slow, so a busy indicator is shown
-// meanwhile; a backend refusal is a notification; on success the audio copy is selected.
 import type { Id } from "../api/types";
 import { t } from "../i18n";
 import type { Core } from "../core/core";

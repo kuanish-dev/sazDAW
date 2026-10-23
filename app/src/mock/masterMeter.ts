@@ -1,8 +1,3 @@
-// Mock live master meter (`audio.masterMeter`): plausible readings made from the mock master level (`meters.ts`) with
-// the backend's rules (`LiveMeter`): measuring from a reading for as long as readings come (`CAPTURE_LEASE_SECONDS`), a
-// fresh measurement after a lease without readings, the integration and the held
-// true peak since the reset or playback from the song start, the clip at `CLIP_DBTP`, and a vectorscope of the mock
-// music (`liveSound.ts`) with a little width. The mock does not run the BS.1770 math; it only has to look alive.
 import { CAPTURE_LEASE_SECONDS, CLIP_DBTP, type MasterReading, VECTOR_FRAMES } from "../api/types";
 import { mockLiveSamples } from "./liveSound";
 import type { MockWorld } from "./world";

@@ -1,6 +1,3 @@
-// In-memory backend for developing the interface in a browser without Rust (implements `RpcClient`). Mirrors the shape
-// of `daw-rpc` answers, with simplified checks. State lives in `MockWorld`, methods by area in `handlers/`; here only
-// assembly, the call, the `tick` stream and the project feed.
 import type { RpcClient } from "../api/rpc";
 import type { ProjectUpdate, Tick } from "../api/types";
 import { secondsAt, signatureAt, tempoAt, tickAtSeconds } from "../common/tempoMap";
@@ -68,7 +65,6 @@ export class MockRpc implements RpcClient {
       ...bounceHandlers(w), ...templatesHandlers(w), ...presetsHandlers(w), ...markersHandlers(w), ...foldersHandlers(w),
       ...noteEffectsHandlers(w),
     };
-    // The drum and chord part builders and the demo beat use the other methods, just as the backend uses its contracts.
     Object.assign(this.handlers, drumsHandlers(w, () => this.handlers), chordsHandlers(w, () => this.handlers));
     this.handlers["project.fillDemo"] = () => fillDemo(w, this.handlers);
     if (options.withProject !== false) {
@@ -80,7 +76,6 @@ export class MockRpc implements RpcClient {
   async call<T = void>(method: string, params?: unknown): Promise<T> {
     const handler = this.handlers[method];
     if (!handler) throw fail("RP-001", { method });
-    // Always answer asynchronously, like the real RPC.
     await Promise.resolve();
     return handler(params ?? {}) as T;
   }
@@ -124,7 +119,6 @@ export class MockRpc implements RpcClient {
     if (this.timer) return;
     this.lastTime = performance.now();
     this.timer = setInterval(() => this.step(), TICK_MS);
-    // In Node the timer must not keep the process alive.
     (this.timer as unknown as { unref?: () => void }).unref?.();
   }
 
@@ -135,10 +129,8 @@ export class MockRpc implements RpcClient {
     this.lastTime = now;
     const wrap = wrapRegion(w);
     if (w.state === "playing") {
-      // The position follows the tempo map: tempo changes and ramps as in the engine clock.
       const before = w.position;
       w.position = tickAtSeconds(w.project.tempoMap, secondsAt(w.project.tempoMap, w.position) + dt);
-      // As in the engine: only playback that crosses the end jumps back, a playhead already past it runs on.
       if (wrap && before < wrap[1] && w.position >= wrap[1]) w.position = wrap[0];
     }
     const tick: Tick = {

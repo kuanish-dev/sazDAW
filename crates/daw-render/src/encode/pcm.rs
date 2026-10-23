@@ -37,7 +37,6 @@ impl Tpdf {
         self.state ^= self.state << 13;
         self.state ^= self.state >> 7;
         self.state ^= self.state << 17;
-        // The top 53 bits, uniform in [0, 1).
         (self.state >> 11) as f64 / (1u64 << 53) as f64 - 0.5
     }
 

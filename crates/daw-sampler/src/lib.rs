@@ -358,7 +358,6 @@ impl Instrument for Sampler {
                     }
                 }
             }
-            // The sampler has no way to express the rest: volume and modulation come from parameters and effects.
             ControllerKind::Cc { .. } | ControllerKind::Aftertouch => {}
         }
     }
@@ -395,7 +394,6 @@ impl Instrument for Sampler {
                 let finished = if backwards { voice.position <= lo } else { voice.position >= hi };
                 if finished {
                     if settings.looping && !voice.releasing {
-                        // Wrapping inside the region without skipping a frame gives a click-free join.
                         voice.position += if backwards { span } else { -span };
                     } else {
                         *voice = Voice::IDLE;
@@ -449,11 +447,8 @@ impl InstrumentFactory for SamplerFactory {
         ABOUT
     }
 
-    // A built-in instrument has no state of its own: everything is in the parameters.
     fn create(&self, params: &Params, _state: Option<&PluginState>) -> Result<Box<dyn Instrument>, ContractError> {
         let id = params.get(SAMPLER_SAMPLE_PARAM).copied().unwrap_or(0.0) as u32;
-        // Without a sample (id 0) the instrument is created silent: a file can be set later. A sample that is not in the
-        // store is a failure the project reports, not a silent track nobody can explain.
         let data = match id {
             0 => None,
             id => Some(self.store.get(id).ok_or_else(|| samples::NOT_FOUND.with("id", id))?),

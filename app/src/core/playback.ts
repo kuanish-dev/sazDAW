@@ -1,4 +1,3 @@
-// The `tick` stream from the backend (~30 times per second) and derived playback positions for drawing.
 import { createEffect, createMemo, createSignal, onCleanup, untrack, type Accessor } from "solid-js";
 import type { RpcClient } from "../api/rpc";
 import type { Tick } from "../api/types";
@@ -38,7 +37,6 @@ function createSmoothPlayhead(tick: Accessor<Tick>): Accessor<number | null> {
       setPosition(null);
       return;
     }
-    // Read the shown position untracked: the effect changes it itself and must react only to the tick.
     base = rebase(current, performance.now(), untrack(position));
     setPosition(base.position);
     if (frame === 0 && base.ticksPerMs > 0) frame = requestAnimationFrame(loop);

@@ -12,7 +12,6 @@ fn loose_bus(rig: &mut Rig, volume: f32) -> NodeId {
 #[test]
 fn bus_compressor_processes_the_bus_output() {
     let mut rig = Rig::new();
-    // The effect is created before the bus (a smaller id): the order must still follow the connections, not the kind or id.
     let fx = rig.add_fx(false, Box::new(Double));
     let bus = loose_bus(&mut rig, 0.5);
     rig.connect(bus, fx, 1.0, false);
@@ -34,7 +33,6 @@ fn master_insert_chain_takes_all_sources() {
     rig.add_track(11, limiter);
     rig.note(10, 60, 0, 960);
     rig.note(11, 62, 0, 960);
-    // Master 0.25: the result stays below 1, where the device output limits nothing.
     *rig.node_kind(MASTER) = NodeKind::Master { volume: 0.25 };
     rig.publish();
     rig.transport.play();
@@ -74,20 +72,17 @@ fn solo_passes_through_a_bus_effect() {
     let other = rig.add_track(11, MASTER);
     rig.note(10, 60, 0, 960);
     rig.note(11, 62, 0, 960);
-    // Tracks at 0.5: the result stays below 1, where the device output limits nothing.
     rig.set_strip(soloed, 0.5, 0.0, false, false);
     rig.set_strip(other, 0.5, 0.0, false, false);
     rig.publish();
     rig.transport.play();
     assert!(near(Rig::left(&rig.render(2_000), 1_000), 0.75), "0.25 · ×2 + 0.25");
 
-    // Solo on a track: its path through the bus and effect is audible, the neighbouring track is silent.
     rig.set_strip(soloed, 0.5, 0.0, false, true);
     rig.publish();
     rig.render(100);
     assert!(near(Rig::left(&rig.render(2_000), 1_000), 0.5), "the solo track through the bus effect");
 
-    // Solo on the bus: the same, its input and output through the effect are audible.
     rig.set_strip(soloed, 0.5, 0.0, false, false);
     rig.set_strip(bus, 1.0, 0.0, false, true);
     rig.publish();

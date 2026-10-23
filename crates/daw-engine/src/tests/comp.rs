@@ -32,7 +32,6 @@ fn comp_switches_takes_at_the_boundary_with_a_short_crossfade() {
     let (mut rig, _, ramp) = comped_rig(vec![segment(0, 300), segment(960, 301), segment(1440, 300)]);
     let out = rig.render(1920 * FRAMES_PER_TICK);
     let boundary = 960 * FRAMES_PER_TICK;
-    // 10 ms at 48 kHz is 480 frames, 240 on each side of the seam.
     assert!(near(Rig::left(&out, boundary - 300), 0.5), "before the transition, the first take whole");
     let at = boundary + 1_000;
     assert!(near(Rig::left(&out, at), ramp.frames[at]), "the second take plays from the same clip position, not from its start");
@@ -40,7 +39,6 @@ fn comp_switches_takes_at_the_boundary_with_a_short_crossfade() {
     let expected = (0.5 + ramp.frames[boundary]) * std::f32::consts::FRAC_1_SQRT_2;
     assert!((middle - expected).abs() < 2e-3, "the seam middle: both at sin(π/4): {middle} instead of {expected}");
     assert!(near(Rig::left(&out, 1440 * FRAMES_PER_TICK + 300), 0.5), "the third part is the first take again");
-    // Without a crossfade the jump at the seam would be 0.5 − 0.25 = 0.25 per frame.
     let step = max_step(&out, 1, 1920 * FRAMES_PER_TICK);
     assert!(step < 5e-3, "the seam does not click: the largest jump is {step}");
 }
@@ -49,14 +47,12 @@ fn comp_switches_takes_at_the_boundary_with_a_short_crossfade() {
 fn comp_edits_while_playing_are_followed() {
     let (mut rig, clip, ramp) = comped_rig(vec![segment(0, 300), segment(960, 301)]);
     rig.render(200 * FRAMES_PER_TICK);
-    // The comp is removed: the whole clip is take 300, the second part's voice must not stay.
     let ClipContent::Audio { comp, .. } = &mut rig.clip_mut(clip).content else { unreachable!("an audio clip") };
     comp.clear();
     rig.publish();
     let out = rig.render(1_000 * FRAMES_PER_TICK);
     let after = (1_000 - 200) * FRAMES_PER_TICK;
     assert!(near(Rig::left(&out, after), 0.5), "after the former seam, the same take, without the second");
-    // And back: a comp during playback, the new part plays from its own position.
     let ClipContent::Audio { comp, .. } = &mut rig.clip_mut(clip).content else { unreachable!("an audio clip") };
     *comp = vec![segment(0, 300), segment(1500, 301)];
     rig.publish();

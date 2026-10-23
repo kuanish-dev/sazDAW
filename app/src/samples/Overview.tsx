@@ -1,4 +1,3 @@
-// Overview strip of the whole file under the waveform: a frame shows the main waveform's window and can be dragged.
 import { createEffect } from "solid-js";
 import type { Waveform } from "../api/types";
 import { viewFractions, type Selection, type View } from "./waveform";
@@ -64,7 +63,6 @@ export function Overview(props: {
           capture(canvas, e);
           const centre = frameAt(e);
           const inside = centre >= props.view.start && centre <= props.view.start + props.view.span;
-          // A press inside the frame holds it by that spot; outside, it centres the frame on the point.
           dragOffset = inside ? centre - props.view.start : props.view.span / 2;
           props.onPan(centre - dragOffset);
         }}

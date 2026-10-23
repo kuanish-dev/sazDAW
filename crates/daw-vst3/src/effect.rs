@@ -38,7 +38,6 @@ unsafe impl Send for Vst3Effect {}
 impl Vst3Effect {
     /// An effect with initial parameter values from the project (sent to the plugin in the first block).
     pub fn new(mut instance: PluginInstance, name: String, log: Arc<dyn AppLog>, params: &Params) -> Result<Self, String> {
-        // Check the format right at creation: a plugin without stereo/f32 cannot be used.
         instance.configure_effect()?;
         let runner = ProcessRunner::new(instance.in_buses(), instance.out_buses());
         let scales = instance.parameters().scales;
@@ -79,8 +78,6 @@ impl Effect for Vst3Effect {
 
     fn process(&mut self, interleaved: &mut [f32], _sidechain: Option<&[f32]>) {
         if self.ready {
-            // A plugin refusal leaves the block as is (pass-through); `BlockFaults` reports it to the log.
-            // "Plugin is processing" mark: if it crashes the app, the next start shows who is to blame.
             let ok =
                 self.instance.guarded(|instance| self.runner.run(instance.processor(), &mut self.pending, &mut self.clock, interleaved));
             self.faults.block(ok);

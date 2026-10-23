@@ -1,7 +1,3 @@
-// Row geometry of the track list: every row has its own height — a track its own (`Track.height`, set by dragging the
-// bottom edge of its header) or the interface setting (Appearance → track height), folder and automation lane rows the
-// setting. Headers, the timeline canvas, the mouse, sound drops and reordering all place rows through this, so they stay
-// aligned.
 import type { Track } from "../api/types";
 import { clamp } from "../common/math";
 import type { TrackRow } from "./trackRows";

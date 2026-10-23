@@ -24,7 +24,7 @@ fn a_comped_clip_sounds_the_same_live_and_in_the_export() {
     let one = controls.samples.import(&dir.join("take 1.wav")).unwrap().id;
     let two = controls.samples.import(&dir.join("take 2.wav")).unwrap().id;
     let track = controls.tracks.add_track("Voice", None, 60).unwrap();
-    let clip = controls.clips.add_audio_clip(track, 0, one).unwrap(); // 2 s = 3840 ticks
+    let clip = controls.clips.add_audio_clip(track, 0, one).unwrap();
     controls.takes.add_take(clip.id, two).unwrap();
     let comped = controls.takes.choose_take_range(clip.id, 0, 1920, one).unwrap();
     assert_eq!(comped.comp().len(), 2, "the first second is the first take, the second one the second");

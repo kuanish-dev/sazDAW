@@ -39,7 +39,6 @@ fn normalize_sets_the_gain_so_the_played_peak_hits_the_target() {
     assert!((normalized[0].gain - expected).abs() < 1e-4);
     assert_eq!(rig.service.undo_label().as_deref(), Some("Normalize"));
 
-    // Only the played range counts: after trimming the loud frame away the quiet part sets the gain (capped).
     rig.clips.edit_clip(clip.id, ClipEdit { length_ticks: Some(960), ..Default::default() }).unwrap();
     let quiet = rig.processing.normalize(vec![clip.id], DEFAULT_NORMALIZE_PEAK_DB).unwrap();
     assert_eq!(quiet[0].gain, MAX_CLIP_GAIN, "0.1 would need ×9.7, the gain stops at the maximum");
@@ -62,7 +61,6 @@ fn normalize_validates_the_level_and_the_clips_and_changes_nothing_on_error() {
 #[test]
 fn reverse_plays_the_same_piece_backwards_from_a_new_sample_in_one_undo_step() {
     let (rig, _, clip) = rig_with_audio(0.5, 100);
-    // The clip plays frames 12 000..36 000 of the sound (half a second from a quarter second in).
     let trimmed = rig.clips.trim_start(clip.id, 480).unwrap();
     let trimmed = rig.clips.edit_clip(trimmed.id, ClipEdit { length_ticks: Some(960), ..Default::default() }).unwrap();
     let samples_before = rig.catalog.samples().len();
@@ -91,7 +89,6 @@ fn reverse_needs_a_saved_project_an_audio_clip_and_a_single_take() {
     assert!(matches!(rig.processing.reverse(clip.id), Err(e) if e.is(codes::samples::REVERSE_NEEDS_SAVED_PROJECT)));
     assert_eq!(rig.clips.clips(), std::slice::from_ref(&clip), "nothing changed");
 
-    // Creating the project file starts a new empty project: the clip is made again inside it.
     rig.files.create(Path::new("/m/P/P.dawproj")).unwrap();
     let sample = rig.catalog.import(Path::new("/music/loop.wav")).unwrap();
     let track = rig.tracks.add_track("Vocals", None, 60).unwrap();

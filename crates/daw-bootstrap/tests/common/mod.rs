@@ -182,7 +182,6 @@ pub fn tap(session: &mut Session, track: TrackId, pitch: u8, hold_ticks: u32) {
 pub fn finish_take(session: &mut Session, expected: usize) {
     session.controls.transport.stop();
     render(session, 512);
-    // The take is finished when the undo group is closed: by then all events are processed.
     assert!(wait_for(|| session.controls.history.undo_label().as_deref() == Some("Recording")), "the take is closed");
     assert_eq!(session.controls.record.status().take_notes, expected, "notes in the take");
     session.controls.record.set_armed(false);

@@ -1,5 +1,3 @@
-// Knob: drag up/down (Shift is finer and without snapping), wheel, arrow keys, double-click resets to default.
-// While dragging, the knob snaps to the default value (and to zero); those points have ticks on the scale.
 import { For, createSignal } from "solid-js";
 import type { ParamInfo } from "../api/types";
 import { formatParam } from "./format";

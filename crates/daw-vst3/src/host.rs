@@ -33,7 +33,6 @@ impl IHostApplicationTrait for HostApplication {
     }
 
     unsafe fn createInstance(&self, _cid: *mut TUID, _iid: *mut TUID, obj: *mut *mut c_void) -> tresult {
-        // The host creates no messages (`IMessage`) or attribute lists: plugins do without them.
         if !obj.is_null() {
             // SAFETY: a non-null out pointer belongs to the calling plugin and is meant for one value.
             unsafe { *obj = std::ptr::null_mut() };

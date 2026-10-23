@@ -1,5 +1,3 @@
-// Editing the selected notes of the piano roll: copy and paste (the clipboard lives in `notes.ts`), duplicate,
-// quantize to grid, arrow nudging, delete, and the panel's hotkeys. Each action is one undo step.
 import type { Notes } from "./notes";
 import type { Id, NewNote, Note } from "../api/types";
 import { copyNotes, duplicateAt, moveNotes, pasteNotes, type NoteChange } from "./noteSelection";
@@ -26,7 +24,6 @@ const NOTE_KEYS: readonly NoteKey[] = [
   { keys: "⌘X", action: "cut", matches: (e, meta) => meta && e.code === "KeyX" },
   { keys: "⌘V", action: "paste", matches: (e, meta) => meta && e.code === "KeyV" },
   { keys: "⌘D", action: "duplicate", matches: (e, meta) => meta && e.code === "KeyD" },
-  // Not a bare Q: it plays a note on the piano keyboard (`keyboard/keyboard.ts`).
   { keys: "⌥Q", action: "quantize", matches: (e) => e.altKey && e.code === "KeyQ" },
   { keys: "← → ↑ ↓", action: "nudge", matches: (e) => e.key.startsWith("Arrow") },
 ] as const;
@@ -115,7 +112,6 @@ export function createNoteEditing(deps: NoteEditingDeps) {
     if ((event.target as HTMLElement).closest("input, select, textarea")) return;
     const key = NOTE_KEYS.find((k) => k.matches(event, event.metaKey || event.ctrlKey));
     const hasSelection = deps.selected().size > 0;
-    // Without a selection Esc and arrows are not ours: let them through (scrolling, window keys).
     if (!key || ((key.action === "deselect" || key.action === "nudge") && !hasSelection)) return;
     const runners: Record<NoteKeyAction, () => unknown> = {
       deselect: () => deps.setSelected(new Set<number>()),

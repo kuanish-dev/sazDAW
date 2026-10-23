@@ -18,8 +18,6 @@ fn frequency(buffer: &[f32]) -> f32 {
 /// returns the `to` rendered frames. Every piece of the window is checked: the ready sound may arrive mid-render, and
 /// then the window start is still quiet; such an attempt is repeated, otherwise the window frequency would come out low.
 fn listen_until_sound(session: &mut Session, from: usize, to: usize) -> Vec<f32> {
-    // A time limit, not an attempt count: under load (the whole test suite in parallel, a debug build) background
-    // stretching takes many times longer than in a single run.
     let deadline = std::time::Instant::now() + std::time::Duration::from_secs(60);
     while std::time::Instant::now() < deadline {
         session.controls.transport.stop();
@@ -50,15 +48,12 @@ fn a_pitched_and_warped_clip_sounds_shifted_live_and_in_the_export() {
     assert_eq!(warped.warp, Some(Warp { source_bpm: 60.0 }), "the tempo from the file name");
     assert_eq!(warped.length_ticks, 960, "a second at 60 BPM is one beat");
 
-    // At 120 BPM a beat is half a second: the sound is squeezed twice, and the pitch is an octave up (880 Hz), not doubled twice (1760).
     let out = listen_until_sound(&mut session, 4_000, 20_000);
     let freq = frequency(&out[4_000 * 2..18_000 * 2]);
     assert!((freq - 880.0).abs() < 25.0, "frequency {freq}");
     let after = render(&mut session, 10_000);
     assert!(rms(&after[6_000 * 2..]) < 1e-3, "the clip ended on the beat");
 
-    // A new tempo: the watch refreshes the snapshot, the sound stretches (a beat at 60 BPM is a second; while the new
-    // sound is computed, the old one plays for half a second).
     controls.tempo.set_tempo(Bpm::new(60.0).unwrap()).unwrap();
     let out = listen_until_sound(&mut session, 30_000, 40_000);
     let freq = frequency(&out[30_000 * 2..40_000 * 2]);
@@ -89,12 +84,11 @@ fn overlapping_audio_clips_play_a_crossfade() {
     controls.tempo.set_tempo(Bpm::new(120.0).unwrap()).unwrap();
     let info = controls.samples.import(&dir.join("tone.wav")).unwrap();
     let track = controls.tracks.add_track("Sound", None, 60).unwrap();
-    controls.clips.add_audio_clip(track, 0, info.id).unwrap(); // 0..1920
+    controls.clips.add_audio_clip(track, 0, info.id).unwrap();
     let second = controls.clips.add_audio_clip(track, 960, info.id).unwrap();
     assert_eq!(second.crossfades(&controls.clips.clips()), (960, 0));
     controls.transport.play();
     let out = render(&mut session, 48_000 * 3 / 2);
-    // The second half of the first second is a crossfade: the sound neither breaks off nor doubles.
     let fade = rms(&out[30_000 * 2..42_000 * 2]);
     let solo = rms(&out[5_000 * 2..20_000 * 2]);
     assert!(fade > solo * 0.5 && fade < solo * 1.5, "crossfade {fade}, one clip {solo}");

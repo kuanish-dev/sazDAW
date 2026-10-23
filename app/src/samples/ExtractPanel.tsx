@@ -1,4 +1,3 @@
-// Panel for extracting sound from a file: selection, name and root note of a new sampler track, slicing at markers, saving to WAV.
 import { For } from "solid-js";
 import { pitchName } from "../common/pitch";
 import { formatTime, type Selection } from "./waveform";

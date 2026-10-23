@@ -1,5 +1,3 @@
-// Clips on the timeline: bounds, mouse hits, placement on a track (overlaps and crossfades), edits a drag makes (trim the
-// start, resize, gain), content repeats, label, song end.
 import { PPQ, type Clip, type Id, type Project, type TempoMap } from "../api/types";
 import { t } from "../i18n";
 import type { Placement } from "./clipSelection";
@@ -63,7 +61,6 @@ export function trimmedClip(clip: Clip, start: number, map: TempoMap, sampleRate
     trimmed.offsetTicks = (((clip.offsetTicks + from - clip.startTick) % loop) + loop) % loop;
   } else {
     const framesFrom = (tick: number) => clip.offsetFrames + ticksToSourceFrames(clip, tick - clip.startTick, map, sampleRate);
-    // Nothing before the file start: the edge stops where the offset reaches zero.
     if (framesFrom(from) < 0) from = Math.max(0, Math.ceil(clip.startTick + sourceFramesToTicks(clip, -clip.offsetFrames, map, sampleRate)));
     trimmed.offsetFrames = Math.round(Math.max(0, framesFrom(from)));
   }

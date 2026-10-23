@@ -202,7 +202,6 @@ fn map(changes: &[(u32, f64, bool)]) -> TempoMap {
 
 #[test]
 fn warped_clip_stays_on_the_beat_across_a_tempo_change() {
-    // One stretch by the starting tempo would put beat 8 at 3.5 s instead of 4.0, half a second off.
     assert_beats_follow(&map(&[(0, 120.0, false), (3840, 90.0, false)]), 8);
 }
 
@@ -292,7 +291,6 @@ fn a_job_dropped_while_queued_and_wanted_again_is_still_computed() {
     assert!(cache.ready(&dropped).is_none());
     cache.retain(std::slice::from_ref(&first));
     assert!(cache.ready(&dropped).is_none(), "wanted again while it may still be queued");
-    // The project asks again only when `finished` grows, so the job must finish without another request.
     wait_finished(&cache, 2);
     assert!(cache.ready(&dropped).is_some());
     assert!(log.0.lock().unwrap().is_empty());

@@ -1,7 +1,3 @@
-// The live graph of a built-in effect, chosen by its kind: what the effect does, drawn from its params (it follows the
-// knobs at once), with the node's live sound over it (`nodeSound.ts`, faded out when the sound stops). Shown above the
-// knobs in the effect panel and for every effect along the signal path on the Graph page; nothing for a kind without a
-// graph (plugins). The EQ and filter handles change params like a knob.
 import { Match, Switch, createMemo } from "solid-js";
 import type { GraphNode, ParamInfo, Params } from "../api/types";
 import { effectInfo } from "../common/catalog";

@@ -1,4 +1,3 @@
-// Third-party (VST3) plugins among catalog kinds, filtering the installed plugin list and the question after a plugin crash.
 import type { PluginCrash, PluginInfo, PluginType } from "../api/types";
 import { t } from "../i18n";
 

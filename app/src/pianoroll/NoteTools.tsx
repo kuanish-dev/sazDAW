@@ -1,6 +1,3 @@
-// Musical note edits of the piano roll: Quantize / Humanize / Transpose / Fit to scale / Legato / Groove / Variation,
-// with small parameter panels. They work on the selected notes, or on all notes of the clip without a selection. The edit
-// logic itself is in the backend (`notes.quantize` etc.); here are only view parameters and calls to the piano roll role (`usePianoroll`).
 import { For, type JSX, Show, createMemo, createSignal } from "solid-js";
 import type { Id, Variation } from "../api/types";
 import { GROOVE_PRESETS } from "./groove";
@@ -199,8 +196,6 @@ function ToolButton(props: { label: string; open: boolean; disabled: boolean; on
 
 function ToolPanel(props: { label: string; onClose(): void; children: JSX.Element }) {
   let panel: HTMLDivElement | undefined;
-  // The panel opens to the right of its button: the buttons sit at the editor's left edge, so there is no room to the left.
-  // "Inside" includes the panel's own button: otherwise pressing the button would close the panel and the click reopen it.
   closeOnOutside(() => panel?.parentElement ?? undefined, props.onClose);
   return (
     <div

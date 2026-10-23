@@ -1,5 +1,6 @@
 # The checks from CLAUDE.md ("How it is checked"), the same commands in the same order.
-# Rust and plugins run on macOS only: the app is macOS-only (AppKit/objc2, CoreAudio, macOS VST3 bundles);
+# Rust and plugins run on macOS only: it is the main platform (AppKit/objc2, CoreAudio, macOS VST3 bundles; the Linux
+# release build without checks is linux-build.yml);
 # the frontend and licenses don't depend on the platform and run on Linux (faster and cheaper).
 name: CI
 

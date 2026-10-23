@@ -1,5 +1,3 @@
-// MIDI: one made-up keyboard for live input (connecting checks the device and track); export checks the clip.
-// MIDI learn: there is no knob, so it is "turned" at once and the mapping gets the first free CC from 20.
 import type { MidiMapping, ParamTarget, Project } from "../../api/types";
 import { sameTarget, targetRange } from "../../automation/automationRules";
 import { t } from "../../i18n";
@@ -20,12 +18,10 @@ const DEVICES = ["Mock Keys 49"] as const;
 export function midiHandlers(w: MockWorld): HandlerSet {
   const h: HandlerSet = {};
   h["midi.devices"] = () => [...DEVICES];
-  // Like the backend: a project without note clips exports a file with only the tempo map.
   h["midi.exportProject"] = () => undefined;
   h["midi.exportClip"] = ({ clip }) => {
     if (w.clip(w.project, clip).content.type !== "notes") throw fail("NT-110", { id: clip });
   };
-  // The browser has no files: the chosen "file" never has notes.
   h["midi.importInto"] = ({ clip }) => {
     if (w.clip(w.project, clip).content.type !== "notes") throw fail("NT-110", { id: clip });
     throw fail("MD-171");

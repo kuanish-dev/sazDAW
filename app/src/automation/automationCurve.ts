@@ -1,6 +1,3 @@
-// The automation curve formula and lane shapes — mirrors of the backend (`daw-contracts` `curve_shape`/`value_at`,
-// `daw-project` `automation_shapes.rs`), so the lane is drawn exactly as the engine plays it and the mock draws the
-// same shapes.
 import { BAR_TICKS, type AutoPoint, type AutomationClip, type AutomationLane, type AutomationShape, type ShapeRequest } from "../api/types";
 import { clamp } from "../common/math";
 

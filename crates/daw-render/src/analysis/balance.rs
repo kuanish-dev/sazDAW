@@ -23,7 +23,6 @@ impl LevelMeter {
     pub(super) fn balance_of(&self, project: &Project, from: u32, to: u32) -> Result<BalanceReport, ContractError> {
         let frames = project.tempo_map.frames_between(f64::from(from), f64::from(to), ANALYSIS_SAMPLE_RATE).round() as u64;
         let mix = without_solo(project);
-        // One stereo copy of the range at the analysis rate: about 23 MB a minute, at most `MAX_ANALYSIS_SECONDS` long.
         let mut heard = Vec::with_capacity(frames as usize * 2);
         self.render(&mix, from, frames, |chunk| heard.extend_from_slice(chunk))?;
         let mut mix_meter = LoudnessMeter::new();
@@ -36,7 +35,6 @@ impl LevelMeter {
             let source = project.graph.source_of(track.id).ok_or_else(|| tracks::NOT_FOUND.with("id", track.id))?;
             let strip = source.kind.strip().copied().unwrap_or_default();
             let plays = project.clips.iter().any(|c| c.track == track.id && c.overlaps(u64::from(from), u64::from(to)));
-            // A track without clips in the range adds nothing and needs no render.
             let levels = match (plays, strip.mute) {
                 (false, _) => SILENT,
                 (true, false) => self.difference(&without(&mix, track.id), from, &heard)?,

@@ -1,5 +1,3 @@
-// Project file actions: create, open, save, restore autosave, and the warnings opening a project leaves.
-// Rendering the song to audio is `files/audioExport.ts`.
 import { projectFilter } from "../api/dialogs";
 import type { RecentProject } from "../api/types";
 import { joinPath, parentDir, projectFileFor, withExtension } from "../common/format";
@@ -73,7 +71,6 @@ export function createProjectFiles(core: Core, preferences: AppPreferences): Pro
     if (!(await proceedIfSafe())) return null;
     const chosen = await dialogs.saveFile({
       title: t().project.newProjectTitle,
-      // A new project goes to the projects folder from preferences: that is what it is set for.
       defaultPath: joinPath(await projectsFolder(), t().project.newProjectName),
     });
     return chosen ? projectFileFor(chosen) : null;
@@ -85,7 +82,6 @@ export function createProjectFiles(core: Core, preferences: AppPreferences): Pro
       if (!file) return;
       const created = await core.calls.withBusy(t().project.creating, async () => {
         if (!(await core.calls.attempt(api.project.create(file)))) return false;
-        // The beat goes into the already created project and is saved at once, so the file isn't left empty.
         return !withDemo || ((await core.calls.attempt(api.project.fillDemo())) && (await core.calls.attempt(api.project.save(file))));
       });
       if (created) core.notifications.toast("info", t().project.created);

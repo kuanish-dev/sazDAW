@@ -1,5 +1,3 @@
-// Toolbar strip above the graph canvas: add an effect or bus, delete the selection, arrange nodes, show the signal path,
-// zoom.
 import type { KindInfo } from "../api/types";
 import { kindChoices } from "../common/catalog";
 import { t } from "../i18n";

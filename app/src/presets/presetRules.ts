@@ -1,5 +1,3 @@
-// Preset and template names: the same rules as the backend (`check_preset_name` in `daw-contracts/src/presets.rs`).
-// Used by input fields (a hint before sending); the mock checks names with codes (`mock/handlers/presets.ts`).
 import { t } from "../i18n";
 
 export const MAX_PRESET_NAME_CHARS = 64;

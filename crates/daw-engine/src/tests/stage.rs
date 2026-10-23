@@ -45,18 +45,15 @@ fn a_channel_on_the_stage_plays_from_its_place_and_off_it_pans_as_before() {
     rig.publish();
     rig.transport.play();
     let out = rig.render(4_000);
-    // The left wall of a mid-size room is about 6 m away: quieter than the track's own 0.5, and all on the left.
     assert!(Rig::left(&out, 3_000) > 0.15, "hard left, equal power: {}", Rig::left(&out, 3_000));
     assert!(Rig::right(&out, 3_000) < 0.01);
 
-    // At the wall behind the listener, about 5 m away: two speakers play it in the middle, like the wall ahead.
     place(&mut rig, source, 0.0, -1.0, 0.0);
     rig.publish();
     rig.render(20_000);
     let far = rig.render(1_000);
     assert!(Rig::left(&far, 500) < 0.25 && near(Rig::left(&far, 500), Rig::right(&far, 500)), "far behind, in the middle");
 
-    // Off the stage: the balance pan of the strip again.
     rig.node_kind(source).strip_mut().unwrap().stage = None;
     rig.node_kind(source).strip_mut().unwrap().pan = 1.0;
     rig.publish();
@@ -75,7 +72,6 @@ fn the_stage_places_a_channel_after_its_inserts() {
     rig.connect(insert, MASTER, 1.0, false);
     rig.note(10, 60, 0, 960);
     dry_room(&mut rig);
-    // On the left: if the stage ran before the insert, the insert would silence it entirely.
     place(&mut rig, source, -1.0, 0.0, 0.0);
     rig.publish();
     rig.transport.play();
@@ -93,7 +89,6 @@ fn the_shared_room_rings_on_after_the_sound_stops() {
         place(&mut rig, source, 0.3, 0.5, 0.2);
         rig.publish();
         rig.transport.play();
-        // The note sounds for 960 ticks = 24 000 frames; 0.3 s after it ends:
         let out = rig.render(40_000);
         peak(&out, 0, 38_000..40_000)
     };

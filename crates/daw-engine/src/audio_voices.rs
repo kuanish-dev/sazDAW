@@ -117,12 +117,9 @@ impl AudioVoices {
         let map = &snapshot.project.tempo_map;
         let clip_start = f64::from(clip.start_tick);
         let ratio = f64::from(data.sample_rate) / f64::from(sample_rate);
-        // The part starts inside the segment or we entered its middle; how much of the clip sound has passed comes from the tempo map.
         let (start_frame, from_tick) =
             if span.start >= timing.start_tick { (timing.frame_at(span.start), span.start) } else { (0, timing.start_tick) };
         let position = origin + map.frames_between(clip_start, from_tick, sample_rate) * ratio;
-        // The sound has already ended while the clip goes on (the clip is longer than the sound): nothing to play, no
-        // voice is started, otherwise it would be born and die every block, cluttering the release queue.
         if position as usize + 1 >= data.frame_count() {
             return;
         }
@@ -203,14 +200,12 @@ impl AudioVoice {
         if self.fade_out > 0.0 && remaining < self.fade_out {
             gain *= self.fade_out_shape.gain(remaining / self.fade_out);
         }
-        // Equal power: sin² + cos² = 1, so the volume does not dip in the middle of the overlap.
         if self.crossfade_in > 0.0 && local < self.crossfade_in {
             gain *= (local / self.crossfade_in * FRAC_PI_2).sin();
         }
         if self.crossfade_out > 0.0 && remaining < self.crossfade_out {
             gain *= (remaining / self.crossfade_out * FRAC_PI_2).sin();
         }
-        // A seam between comp takes is the same equal-power crossfade: the incoming part rises while the previous one fades.
         let into_span = tick - self.span.start;
         if self.span.fade_in > 0.0 && into_span < self.span.fade_in {
             gain *= (into_span.max(0.0) / self.span.fade_in * FRAC_PI_2).sin();

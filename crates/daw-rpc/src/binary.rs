@@ -52,7 +52,6 @@ impl BinaryReply for Vec<NodeWindow> {
             put_u32(&mut out, window.watch);
             out.extend_from_slice(&window.end.to_le_bytes());
             put_u32(&mut out, window.sample_rate);
-            // The contract pairs input and output frame by frame, so one count serves both.
             put_u32(&mut out, count(window.input.len()));
             put_samples(&mut out, &window.input);
             put_samples(&mut out, &window.output);

@@ -1,4 +1,3 @@
-// Project: file, folder, recent projects, autosave, export, undo and redo.
 import type { HistorySteps, Project, ProjectChanges, Status } from "../../api/types";
 import { pathForFormat } from "../../files/exportAudio";
 import { t } from "../../i18n";
@@ -34,7 +33,6 @@ export function projectHandlers(w: MockWorld): HandlerSet {
   const h: HandlerSet = {};
   h["project.get"] = () => w.clone(w.project);
   h["project.status"] = () => projectStatus(w);
-  // Built anew on each call, in the current language: the interface re-reads the catalog after a language switch.
   h["catalog.get"] = () => w.catalog;
   h["project.new"] = () => { w.install(emptyProject(), null, false); };
   h["project.create"] = ({ path }) => {
@@ -74,18 +72,15 @@ export function projectHandlers(w: MockWorld): HandlerSet {
     if (range === "loop" && !w.project.loopRegion) throw fail("EX-353");
     const file = pathForFormat(path, format ?? "wav");
     const stem = file.replace(/(\.[^.]+)$/, `_3_${t().mock.demo.drums}$1`);
-    // Loudness and peak are plausible fakes: normalization "reaches" the target, but not above the −1 dBTP ceiling.
     const loudnessLufs = normalize ? Math.min(normalize.lufs, (normalize.truePeakDb ?? -1) - 6) : -18.3;
     return { files: stems ? [file, stem] : [file], frames: 441000, loudnessLufs, peakDb: loudnessLufs + 6 };
   };
   h["history.undo"] = () => w.step(w.undoStack, w.redoStack);
   h["history.redo"] = () => w.step(w.redoStack, w.undoStack);
-  // `step` pops redo from the end of its stack: the next redo is listed first.
   h["history.list"] = (): HistorySteps => ({
     done: w.undoStack.map((entry) => entry.label),
     undone: w.redoStack.map((entry) => entry.label).reverse(),
   });
-  // A mark is the undo depth; squashing folds every step after it into one (the backend's `HistoryControl::squash`).
   h["history.checkpoint"] = () => w.undoStack.length;
   h["history.squash"] = ({ since, label }: { since: number; label: string }) => {
     const first = w.undoStack[since];

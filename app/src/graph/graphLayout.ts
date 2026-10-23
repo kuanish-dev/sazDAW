@@ -1,5 +1,3 @@
-// Node editor geometry: card sizes, port positions, edge curves, column layout, placement of an inserted effect,
-// port hit-testing and screen -> world coordinate conversion. Pure functions without DOM.
 import type { GraphEdge, GraphNode, Id } from "../api/types";
 import { acceptsInput, hasOutput, isSource } from "./graphRules";
 import { clamp } from "../common/math";

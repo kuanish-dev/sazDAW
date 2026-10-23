@@ -58,7 +58,6 @@ fn insert_before_a_bus_keeps_sidechains_and_chains_in_front() {
     let bus = rig.graph.add_bus("Bus", 0.0, 0.0).unwrap();
     rig.graph.set_output(src, bus).unwrap();
     let first = rig.graph.insert_effect_before(bus, "eq", &Params::new(), 0.0, 0.0).unwrap();
-    // Before an effect works too: the effect's sidechain input stays with it.
     let key = source(&rig, rig.tracks.add_track("Kick", Some("synth"), 60).unwrap());
     rig.graph.connect(key, first, 0.5, true).unwrap();
     let second = rig.graph.insert_effect_before(first, "eq", &Params::new(), 0.0, 0.0).unwrap();

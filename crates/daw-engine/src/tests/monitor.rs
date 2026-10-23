@@ -130,10 +130,10 @@ fn the_input_choice_of_the_track_picks_the_channels() {
 #[test]
 fn a_short_input_is_silence_and_a_counted_loss() {
     let (mut rig, input) = rig_with_input(MonitorMode::On, Some(SR));
-    input.push(700, 0.5, 0.5); // a 512 block and a 128 margin are there
+    input.push(700, 0.5, 0.5);
     assert!(near(Rig::left(&rig.render(512), 100), 0.5));
     assert_eq!(rig.link.losses().monitor_underruns, 0);
-    let out = rig.render(512); // 188 frames are left
+    let out = rig.render(512);
     assert!(near(Rig::left(&out, 100), 0.5), "what arrived sounds");
     assert!(near(Rig::left(&out, 300), 0.0), "the block tail is quiet");
     assert_eq!(rig.link.losses().monitor_underruns, 1);

@@ -191,7 +191,6 @@ impl Arpeggiator {
     }
 
     fn next_random(&mut self) -> u32 {
-        // xorshift32: no memory and no locks.
         let mut x = self.random;
         x ^= x << 13;
         x ^= x >> 17;
@@ -289,14 +288,12 @@ impl NoteEffect for Arpeggiator {
         loop {
             let step = self.step_tick(k);
             let step_frame = (step < clock.end()).then(|| clock.frame(step));
-            // An input on a step's frame is in time for that step: a note pressed exactly on the grid sounds at once.
             if let Some(&event) = input.get(next).filter(|e| step_frame.is_none_or(|frame| e.frame <= frame)) {
                 next += 1;
                 if let Some(base) = self.take(event, timing.playing, clock.tpf) {
                     if let Some((_, off)) = &mut self.sounding {
                         *off += base - clock.base;
                     }
-                    // The press frame's tick is 0: step 0 sounds first.
                     clock.base = base;
                     k = 0;
                 }

@@ -1,7 +1,3 @@
-// The Stage page: drag the instruments around a room and hear them move. The room from above (left/right, near/far),
-// the side view (near/far, height), the channel list and the shared room's settings. Where each channel stands is the
-// project's (`StageControl`, through the stage role, `useStage`); the geometry is `stage/stageRules.ts`. While a dot is being
-// dragged the pictures show the dragged place itself, so a project re-read that is a move behind cannot pull it back.
 import { Show, createMemo, createSignal } from "solid-js";
 import { DEFAULT_STAGE_PLACE, type Id, type Listening, type ParamTarget, type Room } from "../api/types";
 import { formatPan } from "../mixer/mixer";

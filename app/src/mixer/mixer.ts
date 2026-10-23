@@ -1,4 +1,3 @@
-// Volume and pan: dB, meter scale, fader curve, meter ballistics (peak fall-off, peak hold, clip light).
 import { t } from "../i18n";
 import { clamp } from "../common/math";
 

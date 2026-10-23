@@ -1,5 +1,3 @@
-// Right-click menu: sits above everything (`fixed` at the click point), closes on a pick, an outside click and Esc.
-// Items are `MenuItem`s; the content is decided by whoever opens the menu.
 import type { JSX } from "solid-js";
 import { IconCheck } from "./icons";
 import { closeOnOutside } from "./pointer";

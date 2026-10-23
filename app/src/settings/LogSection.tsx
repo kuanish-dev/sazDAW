@@ -1,4 +1,3 @@
-// Settings → Log & about: version, error log file path, recent entries and Copy all.
 import { For, Show, createSignal, onMount } from "solid-js";
 import type { LogEntry } from "../api/types";
 import { language, t } from "../i18n";

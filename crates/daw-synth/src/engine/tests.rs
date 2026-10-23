@@ -130,7 +130,6 @@ fn settled_level(s: &Settings, note: u8) -> f32 {
 
 #[test]
 fn modulation_wheel_opens_the_filter() {
-    // A sine at 880 Hz with a 100 Hz cutoff is almost inaudible; full modulation raises the cutoff to 1600 Hz.
     let s = Settings { high_cut_hz: 100.0, ..open_sine() };
     let closed = settled_level(&s, 81);
     let mut e = engine();
@@ -189,7 +188,6 @@ fn noise_has_no_pitch() {
     render(&mut e, &s, 4800);
     let out = render(&mut e, &s, SR as usize);
     assert!(frequency(&out) > 2_000.0, "white noise crosses zero far more often than a low note: {}", frequency(&out));
-    // A filter open near the top lets a sharp signal overshoot a little (at most 1.31 at 18 kHz).
     assert!(out.iter().all(|v| v.abs() < 1.35));
 }
 
@@ -282,7 +280,6 @@ fn the_lfo_bends_the_pitch_for_vibrato() {
     let mut e = engine();
     e.note_on(69, 1.0, &s);
     let out = render(&mut e, &s, SR as usize);
-    // A sine LFO at 1 Hz: up around a quarter of its cycle, down around three quarters.
     let (up, down) = (frequency(&out[seconds(0.15)..seconds(0.35)]), frequency(&out[seconds(0.65)..seconds(0.85)]));
     assert!(up > 455.0 && down < 425.0, "{up} / {down}");
 }
@@ -294,7 +291,6 @@ fn a_synced_lfo_follows_the_song_tempo() {
         ..open_sine()
     };
     let mut e = engine();
-    // 120 BPM: one beat is half a second, so the square is on for 0.25 s and off for 0.25 s.
     e.set_timing(0.0, 120.0 / 60.0 / f64::from(SR), true, s.lfo.sync_beats);
     e.note_on(69, 1.0, &s);
     let out = render(&mut e, &s, SR as usize);
@@ -302,7 +298,6 @@ fn a_synced_lfo_follows_the_song_tempo() {
     assert!(window_peak(&out, 0.3, 0.45) < 1e-3);
     assert!(window_peak(&out, 0.55, 0.7) > 0.9, "the next beat");
 
-    // A segment starting half a beat into the song puts the LFO in the off half.
     e.set_timing(10.5, 120.0 / 60.0 / f64::from(SR), true, s.lfo.sync_beats);
     assert!(peak(&render(&mut e, &s, seconds(0.2))[seconds(0.02)..]) < 1e-3);
 }

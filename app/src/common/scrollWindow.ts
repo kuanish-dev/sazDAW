@@ -1,5 +1,3 @@
-// The horizontally visible part of wide content inside a scroller. Timeline canvases draw only this part:
-// a canvas spanning the whole track on a retina screen is hundreds of megabytes of pixels, and every redraw stalls the screen.
 import { createSignal, onCleanup, onMount, type Accessor } from "solid-js";
 
 /** Window in content coordinates: starting at `left`, `width` CSS pixels wide. */

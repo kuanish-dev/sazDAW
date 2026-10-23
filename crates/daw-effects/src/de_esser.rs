@@ -165,7 +165,6 @@ mod tests {
     #[test]
     fn loud_sibilance_is_turned_down_by_at_most_the_range_and_split_band_spares_the_lows() {
         let (de_esser, output) = render(&[], &voice(0.5));
-        // 24 dB over the threshold at 6:1 is 20 dB: the 10-dB range caps it (×0.316).
         assert!((kept(&output, 6_500.0, 0.5) - 0.316).abs() < 0.03, "{}", kept(&output, 6_500.0, 0.5));
         assert!((kept(&output, 200.0, 0.3) - 1.0).abs() < 0.03, "the lows stay: {}", kept(&output, 200.0, 0.3));
         assert!((de_esser.gain_reduction_db().unwrap() - 10.0).abs() < 0.5);

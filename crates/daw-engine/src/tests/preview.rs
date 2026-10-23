@@ -13,7 +13,6 @@ fn preview_plays_over_a_stopped_transport_and_reports_its_position() {
     let position = rig.link.preview_position().expect("playing");
     assert!((2_900..3_100).contains(&position), "position in file frames: {position}");
 
-    // Play the region to the end: the voice goes silent and the position disappears.
     let out = rig.render(8_000);
     assert_eq!(rig.link.preview_position(), None);
     assert_eq!(Rig::left(&out, 7_900), 0.0);
@@ -70,7 +69,6 @@ fn starting_playback_silences_a_running_preview_but_a_later_preview_still_plays(
     assert_eq!(rig.link.preview_position(), None, "starting the transport turned the preview off");
     assert!(out.iter().all(|v| *v == 0.0), "nothing sounds: the timeline has no clips");
 
-    // Previewing during playback is allowed: only the moment of starting stops it.
     rig.link.send(DspCommand::PreviewPlay { data: long, from: 0, to: 200_000, looping: false }).unwrap();
     rig.render(512);
     assert!(rig.link.preview_position().is_some());

@@ -132,7 +132,6 @@ impl Meters {
         meter.node.store(node, Ordering::Relaxed);
         meter.count.store(gains.len() as u32, Ordering::Relaxed);
         for ((&db, cut), boost) in gains.iter().zip(&meter.cuts).zip(&meter.boosts) {
-            // `max` drops a NaN: a broken band reads as 0 dB.
             cut.fetch_max((-db).max(0.0).to_bits(), Ordering::Relaxed);
             boost.fetch_max(db.max(0.0).to_bits(), Ordering::Relaxed);
         }

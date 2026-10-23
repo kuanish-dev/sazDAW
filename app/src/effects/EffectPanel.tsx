@@ -1,6 +1,3 @@
-// Effect settings panel (graph inspector and the mixer's effect popover): bypass, presets, plugin window, the sidechain
-// source picker for effects that read a key, the effect's live graph (`EffectGraph`), and generic controls for every
-// parameter (the bare `sidechain` switch is replaced by the picker).
 import { For, Show } from "solid-js";
 import type { GraphNode } from "../api/types";
 import { effectInfo, paramValue } from "../common/catalog";

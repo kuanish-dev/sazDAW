@@ -1,5 +1,3 @@
-// The MIDI role: live input from keyboards (`midiInput.ts`) and MIDI learn, controller knobs on parameters
-// (`midiLearn.ts`).
 import { defineRole, useRole } from "../core/roles";
 import { createMidiInput, type MidiInput } from "./midiInput";
 import { createMidiLearn, type MidiLearn } from "./midiLearn";

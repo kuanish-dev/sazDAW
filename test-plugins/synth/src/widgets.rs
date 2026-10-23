@@ -18,8 +18,6 @@ pub const AMBER: Color32 = Color32::from_rgb(0xff, 0xa2, 0x3a);
 pub const LCD_BG: Color32 = Color32::from_rgb(0x0b, 0x14, 0x10);
 pub const LCD_TEXT: Color32 = Color32::from_rgb(0x6c, 0xf0, 0xa4);
 
-// ---------- section panel ----------
-
 /// A section with its title on a strip; returns the area for the content.
 pub fn section(painter: &Painter, rect: Rect, title: &str) -> Rect {
     painter.rect_filled(rect, 7.0, PANEL);
@@ -29,16 +27,12 @@ pub fn section(painter: &Painter, rect: Rect, title: &str) -> Rect {
     Rect::from_min_max(rect.min + vec2(10.0, 28.0), rect.max - vec2(10.0, 8.0))
 }
 
-// ---------- LCD ----------
-
 pub fn lcd(painter: &Painter, rect: Rect, top: &str, bottom: &str) {
     painter.rect_filled(rect, 4.0, LCD_BG);
     painter.rect_stroke(rect, 4.0, Stroke::new(1.0_f32, Color32::from_rgb(0x05, 0x08, 0x07)), StrokeKind::Inside);
     painter.text(rect.min + vec2(10.0, 5.0), Align2::LEFT_TOP, top, FontId::monospace(11.0), LCD_TEXT.gamma_multiply(0.6));
     painter.text(rect.min + vec2(10.0, 19.0), Align2::LEFT_TOP, bottom, FontId::monospace(15.0), LCD_TEXT);
 }
-
-// ---------- knob ----------
 
 const ARC_START: f32 = 0.75 * PI;
 const ARC_SWEEP: f32 = 1.5 * PI;
@@ -86,7 +80,6 @@ pub fn knob<P: Param>(ui: &mut Ui, setter: &ParamSetter, param: &P, label: &str,
     }
 
     let p = ui.painter();
-    // Scale: 11 ticks around and a track under the amber arc.
     for i in 0..=10 {
         let angle = ARC_START + ARC_SWEEP * i as f32 / 10.0;
         p.line_segment([polar(center, radius + 7.0, angle), polar(center, radius + 11.0, angle)], Stroke::new(1.0_f32, DIM));
@@ -95,7 +88,6 @@ pub fn knob<P: Param>(ui: &mut Ui, setter: &ParamSetter, param: &P, label: &str,
     if value > 0.001 {
         p.add(Shape::line(arc(center, radius + 5.0, value), Stroke::new(3.0_f32, AMBER)));
     }
-    // Body: shadow, outer ring, top highlight, top cap.
     p.circle_filled(center + vec2(0.0, 2.5), radius + 1.0, Color32::from_black_alpha(110));
     p.circle_filled(center, radius, Color32::from_rgb(0x4a, 0x50, 0x5e));
     p.circle_filled(center + vec2(0.0, 0.8), radius - 1.5, Color32::from_rgb(0x2a, 0x2e, 0x38));
@@ -105,8 +97,6 @@ pub fn knob<P: Param>(ui: &mut Ui, setter: &ParamSetter, param: &P, label: &str,
     p.line_segment([polar(center, radius * 0.25, angle), polar(center, radius * 0.72, angle)], Stroke::new(2.6_f32, Color32::WHITE));
     p.text(center + vec2(0.0, radius + 22.0), Align2::CENTER_TOP, label, FontId::proportional(10.0), DIM);
 }
-
-// ---------- choice button with LED ----------
 
 fn wave_glyph(waveform: Waveform, area: Rect) -> Vec<Pos2> {
     (0..=40)
@@ -145,8 +135,6 @@ pub fn wave_button(ui: &mut Ui, rect: Rect, id: &str, waveform: Waveform, select
     response
 }
 
-// ---------- level meter ----------
-
 /// A vertical meter of LED segments: green, yellow, red at the top.
 pub fn meter(painter: &Painter, rect: Rect, level: f32) {
     const SEGMENTS: usize = 14;
@@ -165,8 +153,6 @@ pub fn meter(painter: &Painter, rect: Rect, level: f32) {
         painter.rect_filled(segment, 1.5, if i < lit { color } else { color.gamma_multiply(0.14) });
     }
 }
-
-// ---------- keyboard ----------
 
 fn is_black(note: u8) -> bool {
     matches!(note % 12, 1 | 3 | 6 | 8 | 10)

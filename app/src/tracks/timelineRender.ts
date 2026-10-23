@@ -1,8 +1,3 @@
-// Draws the track rows of the timeline on a canvas: row backgrounds (including folder rows), grid, loop, clips (with notes and
-// waveform; audio clips with their fade curves, fade handles and gain line), collapsed folder clip summaries, crossfades of
-// overlapping audio clips, automation lane rows (`laneRender.ts`), section marker lines (`markerRender.ts`), the cue line, the marquee.
-// Grid bars follow the tempo map (bars vary in length). The ruler strip above the rows is its own canvas (`rulerRender.ts`).
-// The canvas is the size of the visible window (`window`): only what's visible is drawn, in whole-timeline coordinates.
 import { BAR_TICKS, type Clip, type Id, type Marker, type TempoMap } from "../api/types";
 import { clipEnd, crossfades, repeatTicks, type Crossfade } from "./clipRules";
 import { fadeGain, type FadeEdge } from "./fades";
@@ -85,7 +80,6 @@ function drawGrid(ctx: CanvasRenderingContext2D, view: TimelineView, h: number, 
     ctx.fillRect(left, rowTop(i, view.layout), width, rowHeight(i, view.layout));
   });
   const last = Math.min(view.bars * BAR_TICKS, (left + width) / view.pxPerTick);
-  // Bars and beats follow signature changes: bars vary in length.
   for (const line of gridLines(view.tempoMap, left / view.pxPerTick, last)) {
     vline(ctx, line.tick * view.pxPerTick, 0, h, line.bar !== null ? P.bar : P.grid);
   }
@@ -151,7 +145,6 @@ function drawFade(ctx: CanvasRenderingContext2D, clip: Clip, rect: PixelRect, ed
   if (width < 1) return;
   const shape = edge === "in" ? clip.fadeInShape : clip.fadeOutShape;
   const steps = Math.max(2, Math.ceil(width / FADE_STEP_PX));
-  // The fade-in rises from the left edge, the fade-out falls to the right edge.
   const curve = Array.from({ length: steps + 1 }, (_, i) => {
     const progress = i / steps;
     const x = edge === "in" ? rect.x + progress * width : rect.x + rect.w - progress * width;

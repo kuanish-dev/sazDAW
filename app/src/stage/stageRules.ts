@@ -1,7 +1,3 @@
-// The virtual stage's geometry for the stage view: the room's measures, where a stage point is relative to the
-// listener (who stands in the middle of the room, ears halfway up, facing ahead), the way back from a point in the room
-// to a stage place, and what the listener hears from it (distance, level, direction). It mirrors
-// `crates/daw-engine/src/stage/geometry.rs` (`RoomShape::of`, `position`, `direct_gain`): change both together.
 import type { Id, Project, Room } from "../api/types";
 import { hasStrip } from "../graph/graphRules";
 import { clamp } from "../common/math";

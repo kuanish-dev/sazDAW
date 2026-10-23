@@ -261,7 +261,6 @@ impl Effect for Delay {
             let dry = [frame[0], frame[1]];
 
             let feed = if self.ping_pong {
-                // Crossed echo: the left feeds the right line and back; the input goes into the left one.
                 [dry[0] + echo[1] * self.feedback, echo[0] * self.feedback]
             } else {
                 [dry[0] + echo[0] * self.feedback, dry[1] + echo[1] * self.feedback]
@@ -305,12 +304,10 @@ mod tests {
 
     #[test]
     fn synced_time_follows_the_tempo() {
-        // (choice, quarter notes): 1/4, dotted 1/8, 1/16 triplet.
         for (sync, quarters) in [(2.0, 1.0), (6.0, 0.75), (10.0, 1.0 / 6.0)] {
             for bpm in [90.0, 120.0, 174.0] {
                 let mut d = build::<Delay>([("sync", sync), ("feedback", 0.0), ("mix", 1.0)]);
                 d.set_timing(&timing(bpm));
-                // Set the new time before the first sound at once: compare the time itself, not a crossfade to it.
                 d.reset();
                 let expected = 60.0 / bpm * quarters * f64::from(SR);
                 let echo = first_echo(&mut d) as f64;
@@ -341,7 +338,6 @@ mod tests {
             }
             d.process(chunk, None);
         }
-        // The dry sine and the echo add up, so the step is larger than for one sine, but far from a click (~0.3).
         assert!(max_step(&signal) < sine_step * 4.0, "{} with {sine_step}", max_step(&signal));
     }
 
@@ -370,7 +366,6 @@ mod tests {
         let mut d = build::<Delay>([("time", 50.0), ("feedback", 0.8), ("mix", 1.0), ("ping_pong", 1.0)]);
         let mut buffer = impulse(10_000);
         d.process(&mut buffer, None);
-        // The first echo is on the left (from the input), the second on the right.
         assert!(buffer[2_400 * 2] > 0.5 && buffer[2_400 * 2 + 1].abs() < 1e-5);
         assert!(buffer[4_800 * 2 + 1] > 0.1 && buffer[4_800 * 2].abs() < 1e-5);
     }

@@ -1,4 +1,3 @@
-// Folders that file dialogs start in.
 import type { DawApi } from "../api/api";
 
 /**

@@ -1,5 +1,3 @@
-// Interface error collection: everything uncaught and everything sent to console.error goes to the log on disk.
-// Job: turn any error into a record, don't repeat the same one in a row, and never break the app itself.
 import type { LogLevel, LogRecord } from "../api/types";
 
 export interface ErrorReporter {
@@ -59,7 +57,6 @@ export function createErrorReporter(write: (record: LogRecord) => Promise<unknow
     };
     target.addEventListener("error", onError);
     target.addEventListener("unhandledrejection", onRejection);
-    // Errors the framework only prints to the console are recorded too.
     const original = output.error.bind(output);
     fallback = { error: original };
     output.error = (...args: unknown[]) => {

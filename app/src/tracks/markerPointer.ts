@@ -1,6 +1,3 @@
-// Mouse on section marker flags (timeline ruler): click moves the playhead to the marker, drag moves it (by bars),
-// double-click renames, right-click deletes; Alt + double-click on an empty part of the ruler adds a new marker.
-// Each handler returns `true` if it owns the event (then the clip pointer doesn't get it).
 import { createSignal } from "solid-js";
 import type { Id, Marker, TempoMap } from "../api/types";
 import type { Markers } from "./markers";

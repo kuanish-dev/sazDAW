@@ -1,5 +1,3 @@
-// Timeline clip actions: creation, group edits, the clip clipboard, splitting and trimming, tempo warping, pitch,
-// fades, normalize and reverse of audio clips, takes and comping. The loop region is the transport's (`transport/transport.ts`).
 import type { Clip, ClipEdit, FadeShape, Id } from "../api/types";
 import { groupEnd, isEditChanged } from "./clipSelection";
 import type { FadeEdge } from "./fades";

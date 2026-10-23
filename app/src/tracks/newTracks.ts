@@ -1,4 +1,3 @@
-// Shared step for sound actions: sampler tracks are created in one batch as a single edit, and the first one is selected.
 import type { Id, NewTrack } from "../api/types";
 import type { Core } from "../core/core";
 import type { Views } from "../shell/views";

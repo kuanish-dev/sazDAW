@@ -43,7 +43,6 @@ pub(super) fn unrolled(clip: &Clip, content: &NoteContent) -> Vec<FileNote> {
     let (offset, length) = (u64::from(clip.offset_ticks), u64::from(clip.length_ticks));
     let mut out = Vec::new();
     let mut cycle = 0u64;
-    // Repeat k starts in the clip at k·loop − offset.
     while cycle * loop_ticks < length + offset {
         for note in &content.notes {
             let start = (cycle * loop_ticks + u64::from(note.start_tick)).checked_sub(offset);
@@ -133,8 +132,6 @@ fn meta_track<'a>(map: &TempoMap, author: &'a str) -> Vec<TrackEvent<'a>> {
 }
 
 fn note_track(track: &FileTrack, channel: u4) -> Vec<TrackEvent<'_>> {
-    // (tick, order, message): on one tick note offs first, then controllers (bend and pedal already apply to the note),
-    // then note ons.
     let mut timeline: Vec<(u32, u8, MidiMessage)> = Vec::new();
     for note in &track.notes {
         timeline.push((note.start, 2, MidiMessage::NoteOn { key: u7::new(note.pitch), vel: u7::new(note.velocity) }));

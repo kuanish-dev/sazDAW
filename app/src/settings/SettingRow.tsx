@@ -1,5 +1,3 @@
-// Shared building blocks of the settings page: section title, group of rows, a "label — value" row,
-// a switch and a Copy button. Layout only: values and actions come from the section.
 import { Show, createSignal, type JSX } from "solid-js";
 import { t } from "../i18n";
 

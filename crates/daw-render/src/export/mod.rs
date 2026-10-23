@@ -26,7 +26,6 @@ impl Exporter for OfflineExporter {
         let span = range::span(&project, request)?;
         let path = file_for_format(&request.path, request.format);
         let stems = if request.stems { stems::stem_buses(&span.project.graph) } else { Vec::new() };
-        // Progress parts: the mix, the stems and, when normalizing, writing the mix from the temporary file.
         let parts = (stems.len() + 1 + usize::from(request.normalize.is_some())) as f32;
         let part = |index: usize| move |p: f32| progress((index as f32 + p) / parts);
 
@@ -40,7 +39,6 @@ impl Exporter for OfflineExporter {
         };
         let mut files = vec![path.clone()];
         let first_stem = 1 + usize::from(request.normalize.is_some());
-        // Stems get the same gain as the mix, so together they still add up to it.
         for (index, (bus, name)) in stems.iter().enumerate() {
             let mut reduced = span.project.clone();
             reduced.graph = stems::stem_graph(&span.project.graph, *bus);

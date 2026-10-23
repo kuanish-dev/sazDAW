@@ -1,4 +1,3 @@
-// Track actions: instrument tracks (note clips) and audio tracks (audio clips). Backend errors are shown as toasts.
 import type { Id, MonitorMode, TrackColor } from "../api/types";
 import { instrumentInfo } from "../common/catalog";
 import { defaultPitchFor, nextTrackName } from "./trackRules";

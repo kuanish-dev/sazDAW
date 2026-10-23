@@ -1,8 +1,3 @@
-// Mock sound for the live pictures: the master window for the visualizer (`audio.masterWindow`) and a node's window for
-// the effect visuals (`audio.nodeWindows`). Both get a stretch of plausible "music" synthesized at the transport position —
-// a bass with harmonics, a chord, a little air and noise, and a kick on every beat. The mock does not run the node's
-// effect: its input and output are the same music, so an EQ shows it whatever its bands and a distortion's trace lies on
-// the 1:1 line.
 import { secondsAt, tempoAt } from "../common/tempoMap";
 import type { MockWorld } from "./world";
 
@@ -28,7 +23,6 @@ export function mockLiveSamples(w: MockWorld, sampleRate: number, frames: number
   if (level === 0) return samples;
   const map = w.project.tempoMap;
   const end = secondsAt(map, w.position);
-  // Beats counted in seconds from the start: exact for a constant tempo, close enough for a picture otherwise.
   const beat = 60 / tempoAt(map, w.position);
   for (let i = 0; i < frames; i++) {
     const t = end - (frames - i) / sampleRate;

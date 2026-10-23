@@ -54,7 +54,6 @@ fn render_range(instrument: &mut dyn Instrument, buffer: &mut [f32], from: usize
 /// Plays one instrument's schedule over the whole buffer; instruments add their sound, so voices simply layer.
 fn render_voice(instrument: &mut dyn Instrument, events: &mut [Event], buffer: &mut [f32]) {
     let total = buffer.len() / 2;
-    // On one frame the release goes first, then the new press.
     events.sort_by_key(|e| (e.frame, e.on));
     let mut cursor = 0;
     for event in events.iter() {
@@ -109,7 +108,6 @@ pub(crate) fn play_loop(
 }
 
 pub(crate) fn stop(dsp: &dyn DspSink) {
-    // The engine may have stopped together with the app: then there is nothing to stop.
     let _ = dsp.send(DspCommand::PreviewStop);
 }
 
@@ -149,7 +147,6 @@ mod tests {
     #[test]
     fn events_fire_exactly_at_their_frame_even_across_chunk_edges() {
         let mut buffer = vec![0.0_f32; 2_000 * 2];
-        // Note 50 from frame 700 to 1100 (across the chunk edge at 1024), then note 30 from frame 1100 with no gap.
         let mut events = vec![event(1100, true, 30), event(700, true, 50), event(1100, false, 50), event(1500, false, 30)];
         render_voice(&mut Held { pitch: None }, &mut events, &mut buffer);
         let at = |frame: usize| buffer[frame * 2];
@@ -159,7 +156,6 @@ mod tests {
 
     #[test]
     fn the_tail_after_the_loop_is_folded_onto_its_start_and_loud_buffers_are_scaled_down() {
-        // A 4-frame loop with a 2-frame tail: frames 4 and 5 are added to 0 and 1.
         let mut buffer = vec![0.0_f32; 6 * 2];
         buffer[0] = 0.25;
         buffer[8] = 0.5;

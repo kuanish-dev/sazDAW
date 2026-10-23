@@ -1,5 +1,3 @@
-// Screen for when the whole interface crashed (shown by `ErrorBoundary` in `index.tsx`): the cause is already in
-// the log, the user can try again.
 import { t } from "../i18n";
 
 export function CrashScreen(props: { error: unknown; onRetry: () => void }) {

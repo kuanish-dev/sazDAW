@@ -1,6 +1,3 @@
-// The room from the side: the listener's head in the middle at ear height, facing ahead (right), the floor and the
-// ceiling, and every channel on the stage by how far behind or ahead (left → right) and how high (bottom → top) it
-// stands. Dragging a dot sets its depth and height; its left/right stays (that is the room from above).
 import { For, createMemo } from "solid-js";
 import type { Id } from "../api/types";
 import { clamp } from "../common/math";
@@ -47,7 +44,6 @@ export function StageSide(props: { scene: StageScene }) {
   return (
     <svg ref={svg} viewBox={`${view().x} ${view().y} ${view().width} ${view().height}`} class="block h-auto w-full select-none" role="img" aria-label={t().stage.sideView}>
       <rect x={-halfDepth()} y={-half()} width={shape().depth} height={shape().height} fill="var(--canvas-bg)" stroke="var(--canvas-bar)" stroke-width={unit() * 0.2} />
-      {/* Ear height: a dot on this line sounds level with the listener; above or below it takes the height cue. */}
       <line x1={-halfDepth()} x2={halfDepth()} y1="0" y2="0" stroke="var(--canvas-beat)" stroke-width={unit() * 0.12} stroke-dasharray={`${unit() * 0.6} ${unit() * 0.6}`} />
       <rect
         x={-(halfDepth() - WALL_GAP)} y={-(half() - WALL_GAP)} width={shape().depth - 2 * WALL_GAP} height={shape().height - 2 * WALL_GAP}

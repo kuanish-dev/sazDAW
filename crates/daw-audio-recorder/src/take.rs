@@ -56,11 +56,8 @@ impl Inner {
         }
         let settings = self.deps.devices.settings();
         let output_rate = self.deps.devices.status().sample_rate;
-        // Plus plugin delay compensation (PDC): the master sounds that much later than the transport position, and the
-        // musician playing along is late by the same amount.
         let skip = latency_frames(settings.record_latency_ms, settings.buffer_frames, output_rate, format.sample_rate)
             + to_frames(self.deps.stats.latency().seconds(), format.sample_rate);
-        // Cut the start: input audio arrives later than where it belongs on the track by the latency.
         if skip * channels >= data.len() {
             return Err(audio::TAKE_SHORTER_THAN_LATENCY.err());
         }
@@ -85,7 +82,6 @@ impl Inner {
         let mut failures = Vec::new();
         for take in takes {
             let name = take.name.clone();
-            // More than one pass means playback jumped back at the loop end during the take.
             let placed = match (passes.as_slice(), loop_region) {
                 ([_, _, ..], Some(region)) => self.place_passes(&take, &passes, region, &map, format.sample_rate, &project_file),
                 _ => self.place(take, start_tick, &map, format.sample_rate, &project_file),
@@ -109,7 +105,6 @@ impl Inner {
         let clips = self.deps.clips.clips();
         let covered = covered_clip(&clips, take.track, u64::from(start_tick), end.ceil() as u64).cloned();
         if let Some(clip) = &covered {
-            // The audio frame at the clip start must become frame `offset_frames` (shared by all takes).
             let lead = map.frames_between(f64::from(start_tick), f64::from(clip.start_tick), rate).round() as i64;
             let shift = i64::try_from(clip.offset_frames).unwrap_or(i64::MAX) - lead;
             if !align(&mut take.sound, take.channels, shift) {
@@ -146,8 +141,6 @@ impl Inner {
         for (number, pass) in passes.iter().enumerate() {
             let mut sound = take.sound[pass.frames.start * width..pass.frames.end * width].to_vec();
             let lead = map.frames_between(f64::from(pass.start_tick), f64::from(anchor), rate).round() as i64;
-            // A pass that ends before the clip starts has nothing to play there: the contract drops it, as a single take
-            // loses its part before the clip.
             if !align(&mut sound, take.channels, i64::try_from(offset).unwrap_or(i64::MAX) - lead) {
                 continue;
             }

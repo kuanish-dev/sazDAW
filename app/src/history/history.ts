@@ -1,5 +1,3 @@
-// Edit history: undo and redo of project edits (each backend edit or group is one step), the list of steps for the
-// history panel and walking to a step in it. Errors are notifications.
 import type { HistorySteps } from "../api/types";
 import type { Core } from "../core/core";
 
@@ -16,7 +14,6 @@ export interface EditHistory {
 
 export function createEditHistory(core: Core): EditHistory {
   const { api } = core;
-  // One step at a time, as the undo/redo buttons do: every step stays an ordinary undo or redo for the backend.
   const walk = async (count: number) => {
     const step = count < 0 ? api.history.undo : api.history.redo;
     for (let i = 0; i < Math.abs(count); i++) {

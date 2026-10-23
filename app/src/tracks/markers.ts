@@ -1,4 +1,3 @@
-// Song structure actions: section markers on the timeline ruler and jumping between them. Errors are notifications.
 import { PPQ, type Id } from "../api/types";
 import { neighbourMarker, nextMarkerName } from "./markerRules";
 import { barStart } from "../common/tempoMap";
@@ -26,7 +25,6 @@ export function createMarkers(core: Core): Markers {
     add,
     addAtPlayhead: () => add(barStart(core.copy.project.tempoMap, core.playback.tick().positionTicks)),
     async move(id, tick) {
-      // The flag stays where it was dropped without waiting for the backend.
       core.copy.patchProject((p) => {
         const marker = p.markers.find((m) => m.id === id);
         if (marker) marker.tick = tick;

@@ -1,6 +1,3 @@
-// Math for the live master meter (`mixer/MasterMeters.tsx`): where loudness and the phase correlation sit on the
-// panel's scales, how its numbers read, and the vectorscope's mid/side picture of the newest stereo frames (mono stands
-// upright, one channel alone leans 45° towards its side, opposite channels lie flat).
 import { clamp } from "../common/math";
 
 /** The loudness bars' scale, LUFS: quieter than −54 hardly matters for a mix, 0 is full scale. */

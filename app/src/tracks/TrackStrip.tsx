@@ -1,4 +1,3 @@
-// Track mixer strip in its header: volume and pan, M/S and level meter; all of it lives in the graph's source node.
 import { Show } from "solid-js";
 import type { GraphNode } from "../api/types";
 import { isSource } from "../graph/graphRules";

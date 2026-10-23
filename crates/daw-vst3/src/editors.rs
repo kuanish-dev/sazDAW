@@ -138,7 +138,6 @@ impl Vst3Editors {
         }
         match self.states.set(entry.target, captured.clone()) {
             Ok(()) => entry.editor.state().agreed(Some(Arc::new(captured.clone())), Some(captured)),
-            // The target was removed from the project: the window will close, there is nowhere to write — not a failure.
             Err(error) if error.kind() == ErrorKind::NotFound => entry.editor.state().settle(),
             Err(error) => {
                 journal::error(&*self.log, format!("plugin window \"{}\": the state was not written to the project: {error}", entry.title));
@@ -159,7 +158,6 @@ impl PluginEditors for Vst3Editors {
         let saved = self.states.get(target)?;
         let (editor, title) = self.build(&source, &resolved)?;
         let mut entry = OpenEditor { target, title: title.clone(), editor, key_window: None };
-        // Right away: from the start the window shows the saved state and the project values, not the plugin's defaults.
         self.adopt(&mut entry, saved, Instant::now())?;
         let session = EditorSession {
             id: self.next_id.fetch_add(1, Ordering::Relaxed),
@@ -196,7 +194,6 @@ impl PluginEditors for Vst3Editors {
     }
 
     fn close(&self, id: EditorId) {
-        // Close outside the lock: the window's `Drop` calls into the plugin and the project.
         let closed = lock(&self.open).remove(&id);
         if let Some(mut entry) = closed {
             if let Some(window) = entry.key_window {
@@ -229,8 +226,6 @@ fn on_main_thread() -> bool {
 impl Drop for Vst3Editors {
     fn drop(&mut self) {
         if !on_main_thread() && (!lock(&self.open).is_empty() || self.keys.has_monitor()) {
-            // Removing a plugin view or the AppKit monitor off the main thread is undefined behaviour. Better a leak until the app
-            // exits than a crash: the windows and the monitor are deliberately kept, and the reason is in the log.
             journal::error(
                 &*self.log,
                 "plugin windows dropped off the main thread: windows and the key monitor are kept until exit".into(),

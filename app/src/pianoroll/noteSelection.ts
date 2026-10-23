@@ -1,4 +1,3 @@
-// Selected notes: marquee, group move, clipboard, duplication and what a mouse gesture changed.
 import type { Id, NewNote, Note } from "../api/types";
 import { clamp } from "../common/math";
 import { HIGH_PITCH, LOW_PITCH, clampPitch } from "../common/pitch";
@@ -28,7 +27,6 @@ export function notesInRect(notes: Note[], rect: TickPitchRect): Note[] {
 /** Moves notes in time and pitch; start never goes below zero, pitch stays in the editor range. */
 export function moveNotes(notes: Note[], deltaTick: number, deltaPitch: number): NoteChange[] {
   if (notes.length === 0) return [];
-  // The group moves as a whole: limits come from the outermost notes so the shape is not distorted.
   const minStart = Math.min(...notes.map((n) => n.startTick));
   const minPitch = Math.min(...notes.map((n) => n.pitch));
   const maxPitch = Math.max(...notes.map((n) => n.pitch));

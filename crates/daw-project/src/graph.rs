@@ -261,8 +261,6 @@ impl GraphControl for ProjectGraph {
         self.project.edit(&tr!("Insert effect", "Вставить эффект"), |project| {
             ops::node(project, after)?;
             ops::limit(project.graph.edges.len(), MAX_EDGES, graph::TOO_MANY_EDGES)?;
-            // Post-fader outputs of the node move to the effect with the same levels; sidechains and pre-fader sends
-            // are branches, not the track path: they stay with the node.
             let path = |e: &Edge| !e.sidechain && !e.pre_fader;
             let moved: Vec<Edge> = project.graph.outgoing(after).filter(|e| path(e)).copied().collect();
             project.graph.edges.retain(|e| e.from != after || !path(e));
@@ -286,7 +284,6 @@ impl GraphControl for ProjectGraph {
                 return Err(graph::SOURCE_HAS_NO_INPUT.err());
             }
             ops::limit(project.graph.edges.len(), MAX_EDGES, graph::TOO_MANY_EDGES)?;
-            // Regular inputs of the node move to the effect with the same levels; the sidechain stays with the node.
             let moved: Vec<Edge> = project.graph.incoming(node).filter(|e| !e.sidechain).copied().collect();
             project.graph.edges.retain(|e| e.to != node || e.sidechain);
             let id = push_effect(project, effect, name, params, x, y)?;
@@ -314,7 +311,6 @@ impl GraphControl for ProjectGraph {
                     project.graph.check_edge(input.from, output.to, false)?;
                     let level = (input.level * output.level).clamp(0.0, MAX_LEVEL);
                     if let Some(edge) = project.graph.edges.iter_mut().find(|e| same_edge(input.from, output.to)(e)) {
-                        // A parallel path already existed: the sounds add up.
                         edge.level = (edge.level + level).min(MAX_LEVEL);
                     } else {
                         ops::limit(project.graph.edges.len(), MAX_EDGES, graph::TOO_MANY_EDGES)?;
@@ -335,7 +331,6 @@ impl GraphControl for ProjectGraph {
     fn set_output(&self, node: NodeId, target: NodeId) -> Result<(), ContractError> {
         self.project.edit(&tr!("Output", "Выход"), |project| {
             ops::node(project, node)?;
-            // Pre-fader sends stay (except a send to the new output itself: a pair has one edge).
             project.graph.edges.retain(|e| e.from != node || e.sidechain || (e.pre_fader && e.to != target));
             project.graph.check_edge(node, target, false)?;
             project.graph.edges.push(Edge { from: node, to: target, level: 1.0, sidechain: false, pre_fader: false });

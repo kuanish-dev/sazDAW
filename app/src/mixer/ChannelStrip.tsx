@@ -1,6 +1,3 @@
-// Mixer strip: track color stripe, name (double-click — rename) and kind, inserts, sends, output, the channel utility
-// (polarity, mono, width, time alignment), pan, fader with meter and M/S. Clicking a track's strip selects the track so
-// the other pages show the same one.
 import { Show, createMemo, createSignal } from "solid-js";
 import type { GraphNode, Id, Track } from "../api/types";
 import { instrumentInfo } from "../common/catalog";

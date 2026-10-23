@@ -15,7 +15,6 @@ fn pattern_name(controls: &Controls) -> String {
     controls.patterns.pattern("rock_basic").unwrap().name
 }
 
-// One test: the steps share the global language and must run in order.
 #[test]
 fn startup_applies_the_saved_language_and_a_change_relabels_the_catalog() {
     let state = std::env::temp_dir().join(format!("daw-language-{}", std::process::id()));

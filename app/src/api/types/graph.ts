@@ -1,4 +1,3 @@
-// Audio processing graph: nodes (track sources, effects, buses, master) and the connections between them.
 import type { Id, Params } from "./model";
 import type { StagePlace } from "./stage";
 

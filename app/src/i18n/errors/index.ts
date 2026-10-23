@@ -1,5 +1,3 @@
-// Backend errors in the interface language. The backend sends `{ code, params, message }` (`daw_contracts::ContractError`):
-// English is its `message`; other languages translate by `code` with the dictionaries here.
 import { language } from "..";
 import { ruErrors } from "./ru";
 

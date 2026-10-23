@@ -71,7 +71,6 @@ fn print_clip(controls: &Controls, clip: u32) {
         eprintln!("the clip has no notes (an audio clip?)");
         return;
     };
-    // At most 32 steps (two 4/4 bars): this is the console width limit, not a song bar.
     let length = controls.clips.clips().iter().find(|c| c.id == clip).map_or(0, |c| c.length_ticks.min(BAR_TICKS * 2));
     let row: String =
         (0..(length / STEP_TICKS)).map(|s| if notes.iter().any(|n| n.start_tick == s * STEP_TICKS) { 'x' } else { '.' }).collect();

@@ -1,9 +1,3 @@
-// Dynamics graph of the compressor, limiter and gate. Left: the static transfer curve (input level → output level) with
-// the thresholds dashed and the sound now as a dot on it (input level against output level, so attack and release show
-// as the dot leaving the curve). Right: the last seconds of input level (line), output level (area) and gain reduction
-// (hanging from the top) against the same thresholds. Under them the gain reduction meter, and for a gate whether it is
-// open. The curve follows the knobs at once; the live parts come from `listenToNode` and the engine's gain reduction and
-// fade out when the sound stops. The math is `effects/dynamicsCurves.ts` with the effect's own curve module.
 import { For, Index, Show, createMemo, createSignal } from "solid-js";
 import type { Id } from "../api/types";
 import { CURVE_FLOOR_DB, type DynamicsCurve, HISTORY_SECONDS, curvePath, levelFraction, levelY } from "./dynamicsCurves";
@@ -65,7 +59,6 @@ export function DynamicsGraph(props: { node: Id; curve: DynamicsCurve; label: st
   const live = createMemo(() => {
     const h = history();
     const outputArea: Point[] = h.map((r) => [toX(r.at), toY(r.output)]);
-    // Reduction hangs from the top on the same dB scale as the levels: R dB of it reaches down to the −R dB line.
     const reductionArea: Point[] = h.map((r) => [toX(r.at), toY(-r.reduction)]);
     return {
       input: linePath(historyPoints(h, (r) => r.input, toX, toY, CURVE_FLOOR_DB)),
@@ -88,7 +81,6 @@ export function DynamicsGraph(props: { node: Id; curve: DynamicsCurve; label: st
             </>
           )}
         </For>
-        {/* 1:1 — what an untouched signal would do. */}
         <line x1="0" y1={SIZE} x2={SIZE} y2="0" stroke="var(--color-muted)" stroke-width="1" stroke-dasharray="3 3" opacity="0.6" />
         <For each={props.curve.thresholds}>
           {(db) => <line x1={at(db)} x2={at(db)} y1="0" y2={SIZE} stroke="var(--color-muted)" stroke-width="1" stroke-dasharray="2 2" />}

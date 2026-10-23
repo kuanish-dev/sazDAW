@@ -106,7 +106,6 @@ impl LoudnessMeter {
     pub(crate) fn push(&mut self, interleaved: &[f32]) {
         for frame in interleaved.chunks_exact(2) {
             self.peak.push(frame[0], frame[1]);
-            // The short-term loudness changes only when a 100 ms step ends.
             if self.loudness.push(frame[0], frame[1])
                 && let Some(short_term) = self.loudness.short_term()
             {
@@ -131,7 +130,6 @@ mod tests {
 
     #[test]
     fn meter_gives_peak_and_rms_per_section_and_null_for_silence() {
-        // Section 1 is a -6 dBFS sine (RMS 3 dB below the peak), section 2 silence, section 3 a constant 0.5.
         let mut audio = sine(1000.0, -6.0, 1.0, true, true);
         audio.extend(vec![0.0; 48_000 * 2]);
         audio.extend(vec![0.5; 48_000 * 2]);
@@ -151,9 +149,6 @@ mod tests {
 
     #[test]
     fn loudness_meter_holds_the_loudest_three_seconds_and_the_true_peak() {
-        // 4 s of a quiet sine, then 4 s of a sine 20 dB louder: the loudest 3 s are the loud part only, the integrated
-        // loudness gates the quiet part out (more than 10 LU below; the blocks across the change pull it down a little),
-        // the true peak is the loud sine's.
         let mut audio = sine(1000.0, -40.0, 4.0, true, true);
         audio.extend(sine(1000.0, -20.0, 4.0, true, true));
         let mut meter = LoudnessMeter::new();

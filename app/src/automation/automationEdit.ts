@@ -1,5 +1,3 @@
-// Editing an automation clip pattern in the interface: selection moves, deletion, copy and paste. Pure functions over point
-// lists; selection is a set of point indices into the list it was made on.
 import type { AutoPoint } from "../api/types";
 import { clamp } from "../common/math";
 

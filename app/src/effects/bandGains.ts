@@ -1,5 +1,3 @@
-// The live band gains of a band-split effect for its graph: follows the tick stream and holds each reading for a moment
-// (`effects/bandGainRules.ts`), so the graph moves with the sound without flicker.
 import { type Accessor, createEffect, createSignal, on } from "solid-js";
 import type { Id } from "../api/types";
 import { bandGainsOf, holdBandGains } from "./bandGainRules";

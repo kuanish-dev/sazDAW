@@ -1,5 +1,3 @@
-// Starting the window: the shared core over the backend `composition.ts` picked (Tauri or the mock), the registry of
-// roles made from it, and the order the first things happen in.
 import type { SystemDialogs } from "./api/dialogs";
 import type { RpcClient } from "./api/rpc";
 import type { AppShell } from "./api/shell";

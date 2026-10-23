@@ -1,5 +1,3 @@
-// The progression bar by bar: a bar shows its chord, or two when it is split; the selected chord is the one the next
-// picked chord replaces. Each bar can be split or joined (½) and removed; "+ Bar" adds one repeating the last chord.
 import { For, Index } from "solid-js";
 import { type ChordCell, addBar, removeBar, toggleSplit } from "./chordPart";
 import { t } from "../i18n";

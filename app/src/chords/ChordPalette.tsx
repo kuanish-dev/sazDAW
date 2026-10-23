@@ -1,5 +1,3 @@
-// The chords to pick from: the key's own chords as buttons, and any chord by root and type. A picked chord goes to the
-// dialog, which puts it into the selected bar.
 import { For, createSignal } from "solid-js";
 import { type KeyMode, QUALITIES, ROOTS, chordSymbol, keyChords } from "./chordPart";
 import { t } from "../i18n";

@@ -44,7 +44,6 @@ impl Plugin for Synth {
     const AUDIO_IO_LAYOUTS: &'static [AudioIOLayout] =
         &[AudioIOLayout { main_input_channels: None, main_output_channels: NonZeroU32::new(2), ..AudioIOLayout::const_default() }];
 
-    // Not only notes: the host sends pitch bend and CC (mod wheel) — in VST3 these are parameters from `IMidiMapping`.
     const MIDI_INPUT: MidiConfig = MidiConfig::MidiCCs;
     const MIDI_OUTPUT: MidiConfig = MidiConfig::None;
     const SAMPLE_ACCURATE_AUTOMATION: bool = true;
@@ -62,7 +61,6 @@ impl Plugin for Synth {
 
     fn initialize(&mut self, _layout: &AudioIOLayout, config: &BufferConfig, _ctx: &mut impl InitContext<Self>) -> bool {
         self.engine.prepare(config.sample_rate);
-        // A window opened on another plugin instance (as the DAW host does) finds this one by its sound.
         visuals::register(&self.visuals);
         true
     }
@@ -86,7 +84,6 @@ impl Plugin for Synth {
                     NoteEvent::NoteOn { note, velocity, .. } => self.engine.note_on(note, velocity),
                     NoteEvent::NoteOff { note, .. } => self.engine.note_off(note, settings.release),
                     NoteEvent::Choke { .. } => self.engine.all_notes_off(settings.release),
-                    // nih-plug gives bend as 0..1 with the middle at 0.5.
                     NoteEvent::MidiPitchBend { value, .. } => self.engine.set_pitch_bend(value * 2.0 - 1.0),
                     NoteEvent::MidiCC { cc: MODULATION_CC, value, .. } => self.engine.set_modulation(value),
                     _ => {}
@@ -117,9 +114,6 @@ impl Vst3Plugin for Synth {
     const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] = &[Vst3SubCategory::Instrument, Vst3SubCategory::Synth];
 }
 
-// The warning comes from the foreign macro `vst3_com::vtable` inside `nih_export_vst3!` (an extra `;`
-// in an expression); it cannot be fixed in our code. The compiler ignores an attribute on the macro call itself,
-// so the call is wrapped in a module and the warning is silenced only there.
 #[allow(semicolon_in_expressions_from_non_local_macros, reason = "an extra `;` in the foreign vst3_com macro, not in our code")]
 mod vst3_export {
     use super::Synth;

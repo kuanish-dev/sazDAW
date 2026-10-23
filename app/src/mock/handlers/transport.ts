@@ -1,6 +1,3 @@
-// Transport: play, pause, seek, the cue (start position), the song loop, metronome (tempo and time signature are in
-// `tempo.ts`). The position wraps in `MockRpc.step` by `songLoop.ts`. Playback from the song start restarts the live
-// master meter's integration, as in the engine.
 import { resetMasterMeter } from "../masterMeter";
 import { capturing, closeTake, startTake } from "../take";
 import type { MockWorld } from "../world";

@@ -1,5 +1,3 @@
-// The audio stream's sample rate, for showing a channel's time alignment in samples. Read once when a view mounts: the
-// rate changes only on the settings page, and leaving it mounts the views again. Until it is read, the engine's default.
 import { type Accessor, createSignal, onMount } from "solid-js";
 import { useSettings } from "../settings/role";
 

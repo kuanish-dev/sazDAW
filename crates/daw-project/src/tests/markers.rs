@@ -56,7 +56,6 @@ fn bad_marker_requests_fail_and_change_nothing() {
     assert!(matches!(rig.markers.add_marker(0, "More"), Err(e) if e.is(MARKER_PLACE_TAKEN)), "a taken tick");
     assert!(matches!(rig.markers.edit_marker(other, Some(0), None), Err(e) if e.is(MARKER_PLACE_TAKEN)), "moving onto another marker");
     assert!(matches!(rig.markers.add_marker(BAR_TICKS * 2, "   "), Err(e) if e.is(MARKER_NAME_EMPTY)));
-    // Characters, not bytes, count: a Cyrillic letter is two bytes in UTF-8.
     let long = "я".repeat(MAX_MARKER_NAME + 1);
     assert!(matches!(rig.markers.add_marker(BAR_TICKS * 2, &long), Err(e) if e.is(MARKER_NAME_TOO_LONG)));
     assert!(matches!(rig.markers.add_marker(MAX_CLIP_TICK + 1, "Far"), Err(e) if e.is(MARKER_TICK_OUT_OF_RANGE)));

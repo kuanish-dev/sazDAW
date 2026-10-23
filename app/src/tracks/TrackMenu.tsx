@@ -1,5 +1,3 @@
-// Track menu on right-click of its header: color, folders (new from the track, move into, take out), bounce to audio
-// and freeze. The header doesn't grow: everything rare lives here rather than as buttons.
 import { For, Show } from "solid-js";
 import type { Track } from "../api/types";
 import { t } from "../i18n";
@@ -27,7 +25,6 @@ const { folders, bounce } = tracks;
         <MenuItem onClose={props.onClose} onPick={() => void folders.takeOut(id())}>{t().tracks.menu.takeOut}</MenuItem>
       </Show>
       <MenuLabel>{t().tracks.menu.sound}</MenuLabel>
-      {/* A frozen track must be unfrozen first: the backend doesn't bounce it. */}
       <Show when={props.track.instrument?.frozen == null}>
         <MenuItem onClose={props.onClose} onPick={() => void bounce.bounce(id())}>{t().tracks.menu.bounce}</MenuItem>
       </Show>

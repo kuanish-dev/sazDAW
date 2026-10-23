@@ -1,5 +1,3 @@
-// "Sidechain from": picks the key source of a compressor or gate among tracks and buses; one backend call replaces the
-// previous key inputs and switches the effect's key on (or off for "None").
 import { For } from "solid-js";
 import type { Id } from "../api/types";
 import { findNode, nodeLabel, sidechainCandidates, sidechainSource } from "../graph/graphRules";
@@ -13,7 +11,6 @@ export function SidechainPicker(props: { effect: Id }) {
   const { project } = useProjectCopy();
   const graph = useGraph();
   const current = () => sidechainSource(project.graph, props.effect);
-  // The current key stays in the list even if it is not a track or bus (connected by a wire in the graph).
   const options = () => {
     const graph = project.graph;
     const list = sidechainCandidates(graph, props.effect);

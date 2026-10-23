@@ -47,7 +47,6 @@ impl AutomationPlayer {
         self.active = true;
         for (index, lane) in snapshot.project.automation.iter().take(MAX_LANES).enumerate() {
             if held.contains(lane.id) {
-                // Forget the sent value: when the hold ends, the lane value is sent again.
                 self.forget(index);
                 continue;
             }

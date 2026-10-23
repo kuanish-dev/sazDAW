@@ -1,5 +1,3 @@
-// Actions on the notes of a note clip: editing, musical group edits (quantize, legato, groove, variation…), controller lanes,
-// step input, the note clipboard and MIDI file exchange. Errors are shown as notifications.
 import { createSignal } from "solid-js";
 import { MIDI_FILTER } from "../api/dialogs";
 import {
@@ -30,8 +28,6 @@ export interface Notes {
   /** Manual length of the looped content (turns off auto length). */
   setLoopTicks(clip: Id, loopTicks: number): Promise<void>;
 
-  // Musical group edits — the logic lives in the backend (the AI calls it over RPC too). No `ids` — all notes of the clip;
-  // each edit is one undo step; the answer is the group's notes after the edit.
   /** Pull starts (with `ends`, ends too) toward the `grid`-tick grid by `strength` 0…1. */
   quantize(clip: Id, ids: Id[] | undefined, grid: number, strength?: number, ends?: boolean): Promise<Note[] | undefined>;
   /** Randomly shift starts by ±`timingTicks` and velocity by ±`velocity`. */
@@ -67,7 +63,6 @@ export interface Notes {
 
 export function createNotes(core: Core): Notes {
   const { api } = core;
-  // A signal, not a plain variable: the Paste button's enabled state depends on it.
   const [clipboard, setClipboard] = createSignal<NoteClipboard | null>(null);
   const trackOfClip = (clip: Id) => trackById(core.copy.project, clipById(core.copy.project, clip)?.track ?? null);
   /**

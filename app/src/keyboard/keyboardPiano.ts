@@ -1,5 +1,3 @@
-// Computer keyboard as a piano on the selected track: base octave and held notes (highlighted by the piano roll).
-// Works on any tab and in dialogs; does not interfere with text input or Cmd/Ctrl/Alt shortcuts.
 import { createSignal } from "solid-js";
 import type { LiveNotes } from "./live";
 import type { Id } from "../api/types";

@@ -23,7 +23,6 @@ fn quantize_moves_starts_to_the_grid_and_is_one_undo_step() {
     let (rig, clip, _) = clip_with(vec![note(60, 100, 200), note(62, 130, 50), note(64, 500, 300)]);
     let changed = rig.notes.transform_notes(clip, None, quantize(240, 1.0, false)).unwrap();
     assert_eq!(changed.len(), 3);
-    // 100 → 0, 130 → 240 (closer to 240), 500 → 480; the length stays.
     assert_eq!(shape(&rig, clip), [(60, 0, 200), (62, 240, 50), (64, 480, 300)]);
     assert!(rig.service.undo());
     assert_eq!(shape(&rig, clip), [(60, 100, 200), (62, 130, 50), (64, 500, 300)], "one undo step");
@@ -37,7 +36,6 @@ fn quantize_strength_moves_part_of_the_way_and_ends_snap_too() {
 
     let (rig, clip, _) = clip_with(vec![note(60, 100, 200), note(62, 250, 10)]);
     rig.notes.transform_notes(clip, None, quantize(240, 1.0, true)).unwrap();
-    // End 300 → 240; a short note's end does not collapse onto its start but goes to the next line.
     assert_eq!(shape(&rig, clip), [(60, 0, 240), (62, 240, 240)]);
 }
 
@@ -72,7 +70,6 @@ fn transforms_check_targets_and_parameters_without_changing_anything() {
     assert_eq!(shape(&rig, clip), before);
     assert_eq!(rig.service.undo_label(), label, "errors record no undo steps");
 
-    // Only the selected notes.
     rig.notes.transform_notes(clip, Some(vec![ids[1]]), quantize(240, 1.0, false)).unwrap();
     assert_eq!(shape(&rig, clip), [(60, 100, 200), (62, 240, 50)]);
 }
@@ -153,7 +150,6 @@ fn fit_to_scale_moves_to_the_nearest_degree_and_ties_go_down() {
 #[test]
 fn legato_extends_each_note_to_the_next_start_of_the_group() {
     let (rig, clip, ids) = clip_with(vec![note(60, 0, 100), note(64, 0, 900), note(62, 480, 100), note(65, 960, 50), note(40, 300, 10)]);
-    // Note 40 is not in the group: legato ignores its start.
     rig.notes.transform_notes(clip, Some(ids[..4].to_vec()), NoteTransform::Legato).unwrap();
     assert_eq!(shape(&rig, clip), [(60, 0, 480), (64, 0, 480), (62, 480, 480), (65, 960, 50), (40, 300, 10)]);
     assert!(rig.service.undo());
@@ -163,8 +159,6 @@ fn legato_extends_each_note_to_the_next_start_of_the_group() {
 
 #[test]
 fn humanize_numbers_match_the_frontend_mock() {
-    // `app/src/pianoroll/noteTransforms.ts: humanizeGroup` (mulberry32) gives the same numbers: the mock must match the
-    // backend.
     let (rig, clip, _) = clip_with(vec![note(60, 480, 240), note(62, 960, 240)]);
     let changed = rig.notes.transform_notes(clip, None, NoteTransform::Humanize { timing_ticks: 30, velocity: 20, seed: Some(7) }).unwrap();
     let got: Vec<(u32, u8)> = changed.iter().map(|n| (n.start_tick, n.velocity)).collect();

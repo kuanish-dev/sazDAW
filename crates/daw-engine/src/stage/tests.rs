@@ -175,7 +175,6 @@ fn the_outer_ear_is_flat_ahead_darker_behind_and_moves_its_notch_with_height() {
     assert!(db(pinna_gain(behind, 1_100.0), 1.0) > 1.5, "and gains a little body around 1 kHz");
     assert!(db(pinna_gain(behind, 200.0), 1.0).abs() < 0.5, "the lows stay");
 
-    // The notch: about 12 kHz straight above, about 4.6 kHz straight below.
     let above = PinnaCue { rear: 0.0, elevation: 1.0 };
     let below = PinnaCue { rear: 0.0, elevation: -1.0 };
     assert!(pinna_gain(above, 12_180.0) < pinna_gain(above, 4_620.0) * 0.7);
@@ -219,7 +218,6 @@ fn a_source_on_the_right_sounds_on_the_right_and_far_is_quieter() {
     let mut voice = Voice::new(RATE);
     let out = steady(&mut voice, spot(1.0, 0.0, 0.0), &hall, 0.5, 20);
     let (l, r) = (out[SEGMENT * 2 - 2], out[SEGMENT * 2 - 1]);
-    // The right wall of a mid-size room is about 6 m away: quieter, and all on the right.
     assert!(r > 0.1 && l < 0.01, "equal power, hard right: {l} {r}");
 
     let mut near = Voice::new(RATE);
@@ -252,8 +250,6 @@ fn a_dragged_source_glides_without_jumps() {
     let mut biggest = 0.0f32;
     for segment in 0..40 {
         let mut buffer = [0.5; SEGMENT * 2];
-        // The target jumps from corner to corner, ahead up high and then through the listener's head to behind down
-        // low: what is heard must still move smoothly (the outer ear's tone turns from ahead to behind on the way).
         let target = if segment < 20 { spot(1.0, 1.0, 1.0) } else { spot(-1.0, -1.0, -1.0) };
         voice.process(&mut buffer, target, &hall, None);
         for frame in buffer.chunks_exact(2) {
@@ -330,7 +326,6 @@ fn voices_stay_with_their_channels_and_pass_on_when_they_leave() {
     assert_ne!(first, second);
     assert_eq!(stage.bind(1), Some(first), "the same channel keeps its voice");
 
-    // Channel 1 leaves and 3 comes in the same snapshot: 3 may take 1's voice, 2 keeps its own.
     stage.keep(2);
     stage.release_others();
     assert_eq!(stage.bind(2), Some(second));

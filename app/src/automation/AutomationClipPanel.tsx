@@ -1,6 +1,3 @@
-// Clip panel of a selected automation clip (instead of the piano roll): the lane name, the clip length and the pattern
-// length in bars, the point tools, drawing a shape over the whole pattern, and the pattern editor itself
-// (`PatternEditor`). Changes go through `actions.automation`.
 import { For, type JSX, createSignal } from "solid-js";
 import { BAR_TICKS, type AutomationClip, type AutomationLane, type AutomationShape } from "../api/types";
 import { targetLabel, targetRange } from "./automationRules";

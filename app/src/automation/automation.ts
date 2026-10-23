@@ -1,5 +1,3 @@
-// Actions on parameter automation: lanes (timeline rows), their clips and pattern points (with a point clipboard),
-// shapes, and live writing (Touch/Latch) of the moves made by controls while the song plays.
 import type { AutoPoint, AutomationClip, AutomationClipEdit, AutomationWriteMode, Id, ParamTarget, ShapeRequest } from "../api/types";
 import { laneOfTarget } from "./automationRules";
 import { copySelected, pasteAt, type PointClip } from "./automationEdit";

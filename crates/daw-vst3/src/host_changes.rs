@@ -41,7 +41,6 @@ impl IParamValueQueueTrait for ValueQueue {
     }
 
     unsafe fn addPoint(&self, _sample_offset: i32, _value: ParamValue, _index: *mut i32) -> tresult {
-        // Input queues are read-only for the plugin.
         kResultFalse
     }
 }
@@ -68,12 +67,10 @@ impl IParameterChangesTrait for ParamChanges {
         if index >= self.count.get() {
             return std::ptr::null_mut();
         }
-        // A pointer without a reference count increment: the host owns the queue, the plugin does not release it.
         self.queues.get(index).and_then(ComWrapper::as_com_ref::<IParamValueQueue>).map_or(std::ptr::null_mut(), |queue| queue.as_ptr())
     }
 
     unsafe fn addParameterData(&self, _id: *const ParamID, _index: *mut i32) -> *mut IParamValueQueue {
-        // The host does not accept the plugin's output changes: `null` is the regular refusal.
         std::ptr::null_mut()
     }
 }

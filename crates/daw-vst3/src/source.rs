@@ -72,7 +72,6 @@ impl PluginSource {
         let bundle = if let Some(bundle) = cached.as_ref() {
             bundle.clone()
         } else {
-            // The plugin list came from the cache: the plugin may have been removed since. Say so plainly.
             if !self.info.path.exists() {
                 return Err("the plugin file is gone from disk; scan plugins again".into());
             }
@@ -80,7 +79,6 @@ impl PluginSource {
             *cached = Some(bundle.clone());
             bundle
         };
-        // Under the lock (`cached` is still alive): instances of this bundle are created one at a time.
         PluginInstance::create(bundle, &self.info.class_id)
     }
 

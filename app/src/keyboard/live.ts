@@ -1,5 +1,3 @@
-// "Live" notes on a track (computer keyboard, piano roll audition). These are not project edits:
-// no notifications, but failures go to the log (console.error -> errorReporter).
 import type { Id } from "../api/types";
 import type { Core } from "../core/core";
 

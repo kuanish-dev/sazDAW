@@ -1,4 +1,3 @@
-// Dropping a sample on the timeline: on dragover computes the insertion spot (a clip "ghost"), on drop asks the action to create a clip.
 import { createSignal, type Accessor } from "solid-js";
 import type { Clip, Id, TempoMap, Track } from "../api/types";
 import { planDrop, type SampleSource } from "./dropSample";
@@ -25,7 +24,6 @@ export function ghostAt(
   const lengthTicks = o.lengthTicks ?? barLengthAt(o.tempoMap, startTick);
   const plan = planDrop(o.tracks.filter((t): t is Track => t !== null), o.clips, o.tracks[row]?.id ?? null, startTick, lengthTicks);
   if (!plan) return null;
-  // A clip ghost sits exactly where the clip will; an instrument drop lights the whole row.
   const rect = spanRect(startTick, lengthTicks, row, o.pxPerTick, o.layout);
   return {
     track: plan.track,

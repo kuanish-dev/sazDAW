@@ -1,9 +1,3 @@
-// The multiband compressor's graph (`effects/MultibandGraph.tsx`): where the crossover splits the sound, the shape
-// of every band, and what all the bands together do to the sound now. MIRRORS `crates/daw-effects/src/multiband.rs`
-// and its Linkwitz–Riley crossover `crossover.rs`: each split at least at the one below it; band b is the low side of
-// split b (two Butterworth low-passes) after the high sides of the splits below it and through the all-passes of the
-// splits above it, the top band the high sides of all; with three bands the top two play as one with band 3's settings;
-// a bypassed band passes at 0 dB, a soloed band silences the others: a change there must be repeated here.
 import type { ParamInfo, Params } from "../api/types";
 import { BUTTERWORTH_Q, type Coefficients, type Complex, allPass, chainResponse, complexDb, pass } from "./biquad";
 import type { ParamUpdate } from "../common/catalog";

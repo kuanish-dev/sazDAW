@@ -1,7 +1,3 @@
-// The UI's copy of the project: project, status and kinds catalog come from the backend. The project and its status
-// come by themselves from the backend's project feed (`RpcClient.onProject`): the whole project first, then after each
-// edit only what changed, taken in by `core/projectChanges.ts` — a moved fader brings one graph node, not every note
-// of the song. `reload` asks the feed for the whole project again.
 import { batch, createSignal, onCleanup } from "solid-js";
 import { createStore, produce, reconcile, unwrap } from "solid-js/store";
 import type { DawApi } from "../api/api";
@@ -80,8 +76,6 @@ export function createProjectSync(deps: ProjectSyncDeps) {
   const take = (update: ProjectUpdate) => {
     if (!update.whole && !whole) return;
     whole = true;
-    // The changed parts on top of the copy (a whole project replaces all of it); reconciling skips the unchanged ones at
-    // once (they are the store's own objects).
     const next = applyChanges(unwrap(project), update.changes);
     batch(() => {
       setProject(reconcile(next, { key: "id", merge: true }));
@@ -122,7 +116,6 @@ export function createProjectSync(deps: ProjectSyncDeps) {
     onLoaded: hear,
     whenHas(has: (project: Project) => boolean) {
       if (has(unwrap(project))) return Promise.resolve();
-      // Ids are never reused, so a wait for something removed before it came only stays pending.
       return new Promise<void>((resolve) => {
         const stop = hear((next) => {
           if (!has(next)) return;

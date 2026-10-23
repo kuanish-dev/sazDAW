@@ -1,6 +1,3 @@
-// Draws an automation clip's pattern (one repeat) on a canvas and converts value ↔ height for it. Only draws what it's
-// given; coordinates start at the pattern's beginning. Bent segments follow the same formula as the engine
-// (`automation/automationCurve`); every segment has a bend handle in its middle.
 import type { AutoPoint, TempoMap } from "../api/types";
 import { ratioToValue, valueToRatio, type Range } from "./automationRules";
 import { curveShape } from "./automationCurve";
@@ -97,7 +94,6 @@ export function drawAutomation(canvas: HTMLCanvasElement, v: AutomationView) {
     ctx.arc(middle.x, middle.y, HANDLE_RADIUS, 0, Math.PI * 2);
     ctx.stroke();
   });
-  // Selected points are lighter and ringed in ink: with the blue accent, "accent" and "blue" are the same color.
   ctx.strokeStyle = P.ink;
   points.forEach((p, i) => {
     const selected = v.selected.has(i);

@@ -1,6 +1,3 @@
-// Musical edits of a group of notes — an exact copy of the backend rules (`daw-project/src/note_transforms.rs`): the mock
-// answers with them, and the interface takes the scale list and degree highlighting from here. Integer rounding and the
-// mulberry32 generator match Rust, so one humanize seed gives the same result in the mock too.
 import { PPQ, type Note, type Scale } from "../api/types";
 import { t } from "../i18n";
 
@@ -88,7 +85,6 @@ export function random(seed: number) {
 export function humanizeGroup(group: Note[], timingTicks: number, velocity: number, seed: number, limit: number): Note[] {
   const rng = random(seed);
   return group.map((note) => {
-    // Both numbers are always drawn: one seed gives the same offsets with any settings.
     const dt = rng.offset(timingTicks);
     const dv = rng.offset(velocity);
     const v = Math.min(Math.max(note.velocity + dv, 1), 127);

@@ -135,7 +135,6 @@ fn bounce_is_one_undo_step() {
     s.bounce.bounce(bass, 0.0).unwrap();
     assert_eq!(s.rig.service.undo_label().as_deref(), Some("Bounce to audio «Bass»"));
     assert!(s.rig.service.undo());
-    // Ids are not given out again after undo: the `next_id` counter does not roll back.
     assert_eq!(Project { next_id: before.next_id, ..s.rig.service.snapshot() }, before);
     assert!(!s.rig.service.can_undo(), "exactly one step");
 }

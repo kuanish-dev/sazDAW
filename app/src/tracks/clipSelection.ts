@@ -1,4 +1,3 @@
-// Clip selection and group move: pure functions, no DOM or state.
 import type { Clip, ClipEdit, Id } from "../api/types";
 import { clipEnd } from "./clipRules";
 import { laneOf, type Lanes } from "./trackRows";
@@ -57,7 +56,6 @@ export function moveGroup(group: Clip[], tracks: Lanes, deltaTick: number, delta
     group.every((c) => {
       const from = tracks[rowOf(c)];
       const to = tracks[rowOf(c) + shift];
-      // A folder row (`null`) does not accept clips: moving through it jumps to the track beyond.
       return from != null && to != null && isAudioTrack(from) === isAudioTrack(to);
     });
   let shift = deltaRows;

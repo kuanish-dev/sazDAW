@@ -47,7 +47,6 @@ fn plugins_list_has_the_agreed_shape() {
     let list = call(&table, c, "plugins.list", Value::Null);
     assert_eq!((list["folders"].clone(), list["plugins"].clone()), (json!([]), json!([])), "the test session has no plugins");
 
-    // The dev-only fixture synth (`test-plugins/synth`), when built, shows the shape of one entry.
     let Some(dir) = fixture_synth_dir() else { return };
     let session = daw_bootstrap::build_headless_session_in(&fixture_config("list", dir));
     let c = &session.controls;
@@ -110,7 +109,6 @@ fn a_disabled_plugin_leaves_the_catalog_is_remembered_and_a_project_with_it_open
     assert!(error.is(codes::plugins::NOT_FOUND), "{error}");
     drop(session);
 
-    // Next run: the disabled list is the same; a project using the plugin opens without it and with a warning.
     let session = daw_bootstrap::build_headless_session_in(&state);
     let c = &session.controls;
     call(&table, c, "plugins.scan", Value::Null);

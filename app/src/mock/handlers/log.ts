@@ -1,4 +1,3 @@
-// Error log: in the browser without Rust it lives in memory (only the real backend writes it to disk).
 import type { LogEntry } from "../../api/types";
 import type { HandlerSet } from "./types";
 

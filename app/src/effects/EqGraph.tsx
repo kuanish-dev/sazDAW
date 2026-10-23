@@ -1,7 +1,3 @@
-// EQ graph: the frequency response curve (20 Hz–20 kHz, ±18 dB) with draggable band handles over the live spectrum of
-// the node's output (`LiveSpectrum`). Dragging sets frequency and gain, the wheel over the middle handle sets its width
-// (Q), double-click resets the band; every change goes through `onChange` like a knob. An optional caption (the
-// linear-phase EQ's latency) sits in the top corner. The math is in `effects/eqCurve`.
 import { For, Index, Show, createMemo } from "solid-js";
 import type { Id, ParamInfo, Params } from "../api/types";
 import { EQ_GRID_DB, type EqHandle, HANDLE_PARAMS, dragEqHandle, eqCurvePath, eqHandles, eqSpec, gridY, wheelQ } from "./eqCurve";
@@ -23,7 +19,6 @@ export function EqGraph(props: { node: Id; infos: ParamInfo[]; values: Params; c
   const onMove = (handle: EqHandle, event: PointerEvent) => {
     const s = spec();
     if (event.buttons !== 1 || active !== handle || !s) return;
-    // The SVG stretches to the panel width: convert the screen point into its viewBox units.
     const rect = svg.getBoundingClientRect();
     const point = localPoint(svg, event);
     const x = (point.x / rect.width) * VIEW.width;
@@ -72,7 +67,6 @@ export function EqGraph(props: { node: Id; infos: ParamInfo[]; values: Params; c
             <Show when={props.caption}>
               {(caption) => <text x={VIEW.width - 3} y="9" text-anchor="end" font-size="8" fill="var(--color-muted)">{caption()}</text>}
             </Show>
-            {/* `Index`, not `For`: handle objects are rebuilt on every value change, and a recreated element would lose the pointer capture mid-drag. */}
             <Index each={eqHandles(s(), props.values, VIEW)}>
               {(h) => (
                 <g

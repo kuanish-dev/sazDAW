@@ -1,5 +1,3 @@
-// Audio graph actions: effects and buses, connections under graph rules (no cycles), faders of sources, buses
-// and master, effect parameters, card layout. Errors (e.g. "would create a cycle") are notifications; sliders update immediately.
 import type { GraphNode, Id, ParamTarget, Polarity } from "../api/types";
 import { findNode, hasOutput, hasStrip, hasVolume, nextBusName } from "./graphRules";
 import type { Core } from "../core/core";
@@ -78,7 +76,6 @@ export function createProcessingGraph(core: Core, touch: ParamTouch): Processing
       for (const p of positions) await moveNode(p.id, p.x, p.y);
     },
     connect: (from, to, level, sidechain) => {
-      // Connecting an existing pair again moves its level: that is a parameter move live writing may record.
       if (core.copy.project.graph.edges.some((e) => e.from === from && e.to === to && e.sidechain === sidechain)) {
         touch.moved({ type: "edgeLevel", from, to, sidechain }, level);
       }
@@ -122,7 +119,6 @@ export function createProcessingGraph(core: Core, touch: ParamTouch): Processing
     },
     removeEffectKeepPath: (id) => core.calls.exec(api.graph.removeEffectKeepPath(id)),
     async routeOutput(from, to) {
-      // Copies, not references: the project is re-read after the first call.
       const post = core.copy.project.graph.edges.filter((e) => e.from === from && !e.sidechain && !e.preFader).map((e) => ({ ...e }));
       const sends = post.slice(1).filter((e) => e.to !== to);
       if (!(await core.calls.attempt(api.graph.setOutput(from, to)))) return;

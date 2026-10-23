@@ -1,5 +1,3 @@
-// Waveform of the selected sample for the editor: file info, view window, envelope of the visible window and an overview of the whole file.
-// The window waveform is requested with a short delay (wheel zoom fires dozens of events); stale replies are dropped.
 import { createEffect, createSignal, on, onCleanup } from "solid-js";
 import type { Id, Waveform } from "../api/types";
 import { clampView, fitAll, type View } from "./waveform";
@@ -22,7 +20,6 @@ const { editor } = useSamples();
 
   const total = () => meta()?.frameCount ?? 0;
 
-  // Sample changed: reset the window and load the size and overview.
   createEffect(on(deps.sample, async (id) => {
     setWave(null);
     setOverview(null);

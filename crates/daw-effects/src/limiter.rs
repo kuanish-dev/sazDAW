@@ -97,7 +97,6 @@ impl Effect for Limiter {
             let right = frame[1] * self.input_gain;
             let peak = left.abs().max(right.abs());
             let needed = if peak > self.ceiling { self.ceiling / peak } else { 1.0 };
-            // Instant attack, the return to 1.0 follows the release.
             self.gain = if needed < self.gain { needed } else { 1.0 + self.release_coef * (self.gain - 1.0) };
             let gain = self.gain.min(needed);
             frame[0] = (left * gain).clamp(-self.ceiling, self.ceiling);
@@ -131,7 +130,6 @@ mod tests {
         let mut quiet = sine(300.0, 0.1, 4_800);
         limiter.process(&mut quiet, None);
         assert_eq!(limiter.gain_reduction_db(), Some(0.0));
-        // A constant level of 1.0 against a -6 dB ceiling: 6 dB of reduction.
         let mut loud = vec![1.0; 4_800];
         limiter.process(&mut loud, None);
         assert!((limiter.gain_reduction_db().unwrap() - 6.0).abs() < 0.01);

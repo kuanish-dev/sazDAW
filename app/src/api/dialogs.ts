@@ -1,5 +1,3 @@
-// Contract of the system dialogs (picking files and folders, confirmations) and shared file filters.
-// Implementations: `tauriDialogs.ts` (app) and `mock/MockDialogs.ts` (browser); `composition.ts` picks one.
 import { t } from "../i18n";
 
 export interface FileFilter {
@@ -27,7 +25,6 @@ export interface ConfirmButtons {
   cancel: string;
 }
 
-// Filters with a translated name are functions: the name follows the current language.
 export const projectFilter = (): FileFilter => ({ name: t().project.fileTypes.project, extensions: ["dawproj"] });
 export const WAV_FILTER: Readonly<FileFilter> = { name: "WAV", extensions: ["wav"] } as const;
 export const FLAC_FILTER: Readonly<FileFilter> = { name: "FLAC", extensions: ["flac"] } as const;

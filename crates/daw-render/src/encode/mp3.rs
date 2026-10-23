@@ -18,7 +18,6 @@ pub(super) fn check(sample_rate: u32, bitrate: u32) -> Result<(), ContractError>
     if bitrate_of(bitrate).is_none() {
         return Err(unsupported_bitrate(bitrate));
     }
-    // LAME checks the rate itself when the encoder starts: what it refuses here it would refuse after the render too.
     builder(sample_rate, bitrate)?.build().map(|_| ()).map_err(lame_error)
 }
 

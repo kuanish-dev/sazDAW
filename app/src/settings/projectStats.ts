@@ -1,4 +1,3 @@
-// Project summary for the "Project" section in settings: counts of things and the song length.
 import type { Project } from "../api/types";
 import { songEnd } from "../tracks/clipRules";
 import { barIndex, barTick, secondsAt } from "../common/tempoMap";

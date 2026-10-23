@@ -180,7 +180,6 @@ impl Effect for DynamicEq {
     }
 
     fn process(&mut self, interleaved: &mut [f32], sidechain: Option<&[f32]>) {
-        // A key shorter than the buffer (should not happen): past its end the signal itself drives the bands, no panic.
         let mut key = sidechain.filter(|_| self.use_sidechain).map(|key| key.chunks_exact(2));
         for frame in interleaved.chunks_exact_mut(2) {
             let source = key.as_mut().and_then(Iterator::next).map_or([frame[0], frame[1]], |k| [k[0], k[1]]);
@@ -241,7 +240,6 @@ mod tests {
         assert!((kept(&quiet, 1_000.0, 0.01) - 1.0).abs() < 0.01, "−40 dB is below the threshold: untouched");
 
         let (eq, loud) = render(&CUT_AT_1K, &sine(1_000.0, 0.5, SR as usize), None);
-        // 24 dB over the threshold at 4:1 would be 18 dB; the band's gain caps it at 12 dB (×0.25).
         assert!((kept(&loud, 1_000.0, 0.5) - 0.25).abs() < 0.03, "{}", kept(&loud, 1_000.0, 0.5));
         assert!((eq.band_gains_db()[2] + 12.0).abs() < 0.5, "band 3 reports its gain: {:?}", eq.band_gains_db());
         assert!(eq.band_gains_db().iter().enumerate().all(|(i, g)| i == 2 || *g == 0.0));
@@ -277,7 +275,6 @@ mod tests {
     #[test]
     fn moving_a_band_does_not_click() {
         let input = sine(900.0, 0.5, SR as usize);
-        // The steps of the settings the band moves between, held still: louder with the boost, so the largest counts.
         let held = |gain: f32, freq: f32| {
             max_step(&render(&[&CUT_AT_1K[..], &[("band3_gain", gain), ("band3_freq", freq)]].concat(), &input, None).1)
         };

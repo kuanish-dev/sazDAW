@@ -1,4 +1,3 @@
-// Time in ticks: bar:beat:tick, seconds, grid snapping and grid choices.
 import { BAR_TICKS, PPQ, STEP_TICKS, type TimeSignature } from "../api/types";
 import { t } from "../i18n";
 

@@ -1,7 +1,3 @@
-// Track and folder colors: a project palette name (`TRACK_COLORS`) → the on-screen shade (names: `t().controls.colors`).
-// The same in both themes: a clip or strip is a colored plate with dark text. A track without its own color takes one by
-// its number in the project — not its row, which changes when folders collapse — so the header, the mixer strip and the
-// clips always agree.
 import type { Clip, Id, Track, TrackColor } from "../api/types";
 
 export const TRACK_COLOR_HEX: Readonly<Record<TrackColor, string>> = {

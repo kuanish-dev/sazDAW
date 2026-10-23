@@ -56,7 +56,6 @@ fn implementation_crates_depend_only_on_contracts() {
             continue;
         }
         let deps = runtime_daw_dependencies(&manifest);
-        // The MCP protocol is a layer over RPC: it also sees `daw-rpc` (the method table), but not the implementations.
         let allowed: &[&str] = if name == "daw-mcp" { &["daw-contracts", "daw-rpc"] } else { &["daw-contracts"] };
         assert!(
             deps.iter().all(|d| allowed.contains(&d.as_str())),

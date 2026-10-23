@@ -37,7 +37,6 @@ impl LevelMeter {
             let count = (frames - done).min(CHUNK_FRAMES as u64) as usize;
             let chunk = &mut buffer[..count * 2];
             engine.renderer.render(chunk);
-            // What the engine released (finished voices) is freed here, as during export.
             engine.dsp.collect_garbage();
             sink(chunk);
             done += count as u64;
@@ -62,7 +61,6 @@ impl MixAnalysis for LevelMeter {
         let silent = || Measured { level: None, loudness_lufs: None, sections: vec![None; sections.len()] };
         let mut targets = Vec::new();
         for target in targets_of(project, request.per, from, to)? {
-            // A track without clips in the range is silent and needs no render.
             let measured = match &target.project {
                 Some(reduced) => self.measure(reduced, from, &ends)?,
                 None => silent(),
@@ -133,7 +131,6 @@ fn sections(map: &TempoMap, from: u32, to: u32, bars: u32) -> Vec<Section> {
 fn section_ends(map: &TempoMap, from: u32, sections: &[Section]) -> Vec<u64> {
     let ends: Vec<u64> =
         sections.iter().map(|s| map.frames_between(f64::from(from), f64::from(s.to_tick), ANALYSIS_SAMPLE_RATE).round() as u64).collect();
-    // A very short section could round to zero frames; end frames must strictly increase or the meter would skip them.
     ends.iter()
         .scan(0u64, |last, &end| {
             *last = end.max(*last + 1);
@@ -235,13 +232,11 @@ mod tests {
     fn sections_follow_bars_and_are_cut_by_the_range() {
         let map = TempoMap::default();
         assert_eq!(ticks(&sections(&map, 0, 3840 * 8, 4)), [(1, 0, 15360), (5, 15360, 30720)]);
-        // Starts mid bar 2, ends mid bar 4, one bar per section.
         assert_eq!(ticks(&sections(&map, 5000, 13000, 1)), [(2, 5000, 7680), (3, 7680, 11520), (4, 11520, 13000)]);
     }
 
     #[test]
     fn sections_follow_signature_changes() {
-        // Two bars of 4/4, then 3/4: bars 3 and 4 are 2880 ticks each.
         let three = SignatureChange { tick: 7680, signature: TimeSignature::new(3, 4).unwrap() };
         let map =
             TempoMap::default().with_signatures(vec![SignatureChange { tick: 0, signature: TimeSignature::FOUR_FOUR }, three]).unwrap();
@@ -251,7 +246,6 @@ mod tests {
     #[test]
     fn section_ends_are_frames_from_the_range_start() {
         let map = TempoMap::constant(Bpm::new(120.0).unwrap(), TimeSignature::FOUR_FOUR);
-        // 120 BPM, 48 kHz: a bar is 2 s = 96,000 frames.
         let ends = section_ends(&map, 1920, &sections(&map, 1920, 3840 * 3, 1));
         assert_eq!(ends, [48_000, 144_000, 240_000]);
     }
@@ -265,7 +259,6 @@ mod tests {
         assert_eq!(range(&project, None, None).unwrap(), (0, 9600));
         assert_eq!(range(&project, Some(960), None).unwrap(), (960, 9600));
         assert!(matches!(range(&project, Some(9600), None), Err(e) if e.is(export::RANGE_BACKWARDS)));
-        // 120 BPM: 10 minutes = 300 bars.
         project.tempo_map = TempoMap::constant(Bpm::new(120.0).unwrap(), TimeSignature::FOUR_FOUR);
         assert!(range(&project, None, Some(3840 * 300)).is_ok());
         assert!(matches!(range(&project, None, Some(3840 * 301)), Err(e) if e.is(export::ANALYSIS_TOO_LONG)));

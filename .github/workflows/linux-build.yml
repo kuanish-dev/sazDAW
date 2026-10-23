@@ -1,0 +1,58 @@
+# A release build of SazDAW for Linux: the .deb and the .AppImage as workflow artifacts. Only the build: the checks are
+# in ci.yml. Ubuntu 22.04 is the oldest base the bundles are meant for (they need its glibc or newer).
+# What Linux lacks (VST3 plugins and their windows) is in README.md, "Platform".
+name: Linux build
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: linux-build-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  CARGO_INCREMENTAL: 0
+
+jobs:
+  bundle:
+    name: Linux release bundle (.deb, .AppImage)
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # The Tauri window (WebKitGTK), ALSA for audio and MIDI (cpal, midir), D-Bus for the window library;
+      # patchelf and file for the AppImage.
+      - name: System libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libwebkit2gtk-4.1-dev libgtk-3-dev librsvg2-dev libasound2-dev libdbus-1-dev patchelf file
+
+      - uses: dtolnay/rust-toolchain@stable
+
+      - uses: Swatinem/rust-cache@v2
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: app/package-lock.json
+
+      - name: npm ci
+        working-directory: app
+        run: npm ci
+
+      # The bundle kinds and the license files that ship with them come from app/src-tauri/tauri.linux.conf.json.
+      - name: tauri build
+        working-directory: app
+        run: npx tauri build
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: SazDAW-linux-x86_64
+          path: |
+            target/release/bundle/deb/*.deb
+            target/release/bundle/appimage/*.AppImage
+          if-no-files-found: error

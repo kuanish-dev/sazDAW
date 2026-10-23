@@ -128,7 +128,6 @@ fn a_bus_aligns_its_mixed_inputs_and_the_master_aligns_the_bus_with_a_dry_track(
     for track in [10, 11, 12] {
         rig.note(track, 60, 0, 960);
     }
-    // Master 0.5: the sum of three paths stays below 1, where the device output limits nothing.
     *rig.node_kind(MASTER) = NodeKind::Master { volume: 0.5 };
     rig.publish();
     rig.transport.play();
@@ -152,7 +151,6 @@ fn the_sidechain_key_is_aligned_with_the_main_input() {
     rig.publish();
     rig.transport.play();
     let out = rig.render(1_000);
-    // In the master: the key through the probe (delayed to 100) and the key track itself (also aligned to 100).
     assert_eq!(first_sound(&out), Some(100));
     assert!(near(Rig::left(&out, 100), 1.0), "key 0.5 + track 0.5 from the same frame");
 }
@@ -181,7 +179,6 @@ fn a_changed_latency_is_picked_up_by_the_next_snapshot() {
     rig.connect(fx, MASTER, 1.0, false);
     rig.add_track(10, fx);
     rig.add_track(11, MASTER);
-    // A 960-tick note = 24 000 frames.
     rig.note(10, 60, 0, 960);
     rig.note(11, 62, 0, 960);
     rig.publish();
@@ -193,7 +190,6 @@ fn a_changed_latency_is_picked_up_by_the_next_snapshot() {
     rig.publish();
     let out = rig.render(15_000);
     assert_eq!(rig.link.latency().frames, 300);
-    // The note ends at frame 24 000: both paths go silent together 300 frames later.
     let end = 24_000 + 300 - 10_000;
     assert!(near(Rig::left(&out, end - 1), 1.0), "both paths up to the end: {}", Rig::left(&out, end - 1));
     assert!(near(Rig::left(&out, end), 0.0), "silence after the end, not half: {}", Rig::left(&out, end));
@@ -214,7 +210,6 @@ fn a_latency_above_the_limit_is_clamped_and_counted() {
     let out = rig.render(1_000);
     assert!(rig.link.losses().latency_clamped >= 1);
     assert_eq!(rig.link.latency().frames, MAX_PDC_FRAMES as u32 + 10, "the total latency is honest");
-    // The effect does not delay the sound, and the dry path delay line is at the limit: only it sounds in the first thousand frames.
     assert!(near(Rig::left(&out, 500), 0.5));
 }
 
@@ -224,7 +219,6 @@ fn running_out_of_delay_lines_is_counted() {
     let fx = rig.add_fx(false, Box::new(Claims(10)));
     rig.connect(fx, MASTER, 1.0, false);
     rig.add_track(1, fx);
-    // Every dry track needs its own delay line.
     for track in 0..=MAX_DELAY_LINES as TrackId {
         rig.add_track(100 + track, MASTER);
     }

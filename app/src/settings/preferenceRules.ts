@@ -1,5 +1,3 @@
-// App preferences: defaults, allowed limits (the same the backend checks), choices for
-// pickers and derived values (effective theme, track row height).
 import type { AccentColor, Preferences, ThemeChoice, TrackHeight } from "../api/types";
 import { t } from "../i18n";
 

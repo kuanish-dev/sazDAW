@@ -1,4 +1,3 @@
-// Sound browser: what lies in the project folder and in linked folders ("packs"), plus the links themselves.
 import type { LibraryEntry } from "../api/types";
 import { t } from "../i18n";
 import type { Core } from "../core/core";

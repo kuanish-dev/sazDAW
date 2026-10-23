@@ -1,6 +1,3 @@
-// Russian texts of backend error codes. Keys are the codes of `daw_contracts::codes`; `{name}` placeholders take the
-// error's params. English texts are not here: the backend sends them as `message`. A Rust test
-// (`codes::tests::interface_translates_every_code`) checks that every registered code is translated and none is stale.
 export const ruErrors: Record<string, string> = {
   "AT-010": "Полоса автоматизации {id} не найдена",
   "AT-011": "Клип автоматизации {id} не найден в полосе {lane}",

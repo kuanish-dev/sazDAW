@@ -1,5 +1,3 @@
-// Sample editor math: visible waveform window, selection, slice markers, converting a region
-// into sampler parameters. Everything is in file frames; no DOM.
 import { clamp } from "../common/math";
 
 export interface View {

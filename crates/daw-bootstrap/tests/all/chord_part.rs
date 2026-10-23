@@ -116,12 +116,12 @@ fn the_preview_sounds_without_changing_the_project_and_the_built_part_plays() {
     c.history.mark_baseline();
     c.chord_preview.play(request(new(UKULELE_KIND), "eight", &[&["C"], &["Am"]])).unwrap();
 
-    let bar = 96_000; // 120 BPM, 48 kHz: a bar is 2 s
+    let bar = 96_000;
     let (first, second) = (peak(&render(&mut session, bar)), peak(&render(&mut session, bar)));
     assert!(first > 0.05 && second > 0.05, "both bars sound: {first}, {second}");
     assert!(c.tracks.tracks().is_empty() && !c.history.can_undo(), "the preview changes nothing");
     c.chord_preview.stop();
-    render(&mut session, 4_800); // the command reaches the engine
+    render(&mut session, 4_800);
     assert!(peak(&render(&mut session, bar)) < 0.01, "silence after stop");
 
     let error = c.chord_preview.play(ChordPartRequest { repeat: 9, ..request(new(GUITAR_KIND), "six", &[&["C"], &["G"]]) }).unwrap_err();

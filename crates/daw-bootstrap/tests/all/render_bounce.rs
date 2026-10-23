@@ -91,7 +91,6 @@ fn bounce_sounds_like_the_track_and_is_one_undo_step() {
     let sample = controls.samples.samples().into_iter().find(|s| Some(s.id) == clips[0].content.sample()).unwrap();
     assert!(sample.path.starts_with(song.dir.join("song/samples")), "the WAV is in the project sounds folder: {}", sample.path.display());
 
-    // The copy's WAV is the track sound alone: the same frames as in the mix before the bounce, from its first bar (+1 s of tail).
     let (spec, bounced) = read_wav(&sample.path);
     assert_eq!((spec.channels, spec.sample_rate), (2, RATE));
     assert_eq!(bounced.len(), (3 * BAR_FRAMES + RATE as usize) * 2, "bars 2–4 and the tail");
@@ -101,7 +100,6 @@ fn bounce_sounds_like_the_track_and_is_one_undo_step() {
         "the pause between clips is silent"
     );
 
-    // The original is muted, the copy sounds instead: the project sounds as before.
     assert!(controls.graph.graph().node(source_node(controls, song.bass)).unwrap().kind.strip().unwrap().mute);
     assert_same_sound(&before_mix, &export(&song, "after.wav"), "mix after the bounce");
 
@@ -122,7 +120,6 @@ fn freeze_keeps_the_sound_without_the_instrument_and_unfreeze_brings_it_back() {
     assert_eq!(spec.frozen, Some(copy));
     assert_same_sound(&before_mix, &export(&song, "frozen.wav"), "frozen project");
 
-    // Without the copy the frozen track is silent: there is no instrument.
     controls.graph.set_mute(source_node(controls, copy), true).unwrap();
     assert!(peak(&export(&song, "silent.wav")) < 1e-4, "the instrument is frozen, so the track is silent");
     controls.history.undo();

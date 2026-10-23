@@ -334,7 +334,6 @@ impl Engine {
             }
             return;
         }
-        // A free voice, otherwise the oldest one.
         let index = self
             .voices
             .iter()
@@ -376,7 +375,6 @@ impl Engine {
         let glide = if s.glide > 0.0 { 1.0 - (-SETTLE / (s.glide * sr)).exp() } else { 1.0 };
         let pitch_settle = (-SETTLE / (s.pitch_decay.max(0.0005) * sr)).exp();
         let pitch_lfo = lfo * s.lfo.pitch_cents / 100.0;
-        // The mod wheel and the LFO move every voice's cutoff the same way; each voice adds its own envelope.
         let cutoff_octaves = self.modulation * MODULATION_OCTAVES + lfo * s.lfo.filter_octaves;
         let max_cutoff = 0.45 * sr;
         let osc2_share = 1.0 / (1.0 + s.osc2_level);
@@ -415,7 +413,6 @@ impl Engine {
                 *out += filter.lowpass(&coefficients, x * scale);
             }
         }
-        // At its minimum the low cut is off, not a 20 Hz filter: even that slightly reshapes a square (overshoot).
         let low_alpha =
             if s.low_cut_hz <= LOW_CUT_OFF_HZ { 0.0 } else { 1.0 - (-std::f32::consts::TAU * s.low_cut_hz.min(max_cutoff) / sr).exp() };
         let gain = s.gain * (1.0 - s.lfo.volume * (1.0 - lfo) * 0.5);

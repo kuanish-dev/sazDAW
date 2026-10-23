@@ -1,6 +1,3 @@
-// MIDI controller lane under velocity (collapsible so it does not take space from the note grid): lane choice (pitch bend,
-// mod wheel, sustain, expression, aftertouch, "Other CC…"; lanes with points are marked with a dot) and the lane canvas. Assembly only:
-// drawing — `controllerRender`, mouse — `controllerPointer`, editing — `usePianoroll().setControllerLane` (one edit per gesture).
 import { For, Show, createEffect, createSignal } from "solid-js";
 import type { ControllerKind, ControllerPoint } from "../api/types";
 import { MAX_CC_NUMBER, controllerFromKey, controllerKey, controllerLabel, laneChoices, lanePoints, lanesOf, sameKind } from "./controllers";
@@ -48,7 +45,6 @@ export function ControllerLaneView(props: ControllerLaneProps) {
   const pointer = createControllerPointer({
     canvas: () => canvas, kind, points: saved, pxPerTick: () => props.pxPerTick, step: () => props.step,
     endTick: () => props.viewLength, setDraft,
-    // The action shows the lane at once, so the draft is dropped after it without the lane flashing its old shape.
     commit: (points) => notes.setControllerLane(props.clip.id, kind(), points),
   });
 
@@ -84,7 +80,6 @@ export function ControllerLaneView(props: ControllerLaneProps) {
         </button>
         <select class="field !h-6 text-xs" aria-label={t().pianoRoll.controller} value={controllerKey(kind())} onChange={(e) => {
           choose(e.currentTarget.value);
-          // "Other CC…" is not a lane: the list keeps showing the current one until a number is chosen.
           e.currentTarget.value = controllerKey(kind());
         }} title={t().pianoRoll.laneHint}>
           <For each={laneChoices(props.clip.content, extra())}>

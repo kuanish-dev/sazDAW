@@ -99,14 +99,12 @@ impl Engine {
                     if let Some(old) = self.instruments.remove(track) {
                         self.bin.throw(Garbage::Instrument(old));
                     }
-                    // The latency of a removed instrument no longer takes part in compensation.
                     self.rebind = true;
                 }
                 DspCommand::SetNoteEffects { track, chain } => {
                     if let Some(old) = self.note_effects.set(track, chain) {
                         self.bin.throw(Garbage::NoteEffects(old));
                     }
-                    // The bypass and params of the new chain come from the snapshot.
                     self.rebind = true;
                 }
                 DspCommand::AddEffect { node, effect } => {
@@ -152,10 +150,8 @@ impl Engine {
                 }
             }
             if timing.playing && self.link.is_recording_armed() {
-                // The musician plays along with what they hear, and they hear the master delayed by compensation.
                 let tick = self.heard(timing).start_tick.max(0.0);
                 let recorded = RecordedEvent { track: event.track, message: event.message, tick };
-                // The recording queue is full: the event is lost, but the audio thread does not block; the loss shows in the log.
                 if self.recorded.push(recorded).is_err() {
                     self.link.telemetry.count(Loss::RecordedEvent, 1);
                 }
@@ -261,7 +257,6 @@ impl Engine {
         let plan = self.playback.plan(snapshot.as_deref(), timing, sample_rate, &mut self.bin);
         if plan.release_all {
             self.instruments.all_notes_off();
-            // The chase for the new position (if playing) comes as segment events, after the reset.
             self.instruments.reset_controllers();
             self.note_effects.release_all();
         }
@@ -269,24 +264,19 @@ impl Engine {
             self.resend_all_params();
         }
 
-        // Starting playback stops the preview: a long sound from the browser must not drag on over it.
         if plan.started {
             let old = self.preview.stop();
             self.bin.throw_sample(old);
         }
 
-        // Plugins that follow the beat get the transport position (not shifted by PDC, like the source notes).
         self.instruments.set_timing(timing);
         self.mixer.set_timing(timing);
         self.play_events(timing, frames);
 
         self.playback.render_audio(&mut self.mixer, timing, frames, sample_rate, &mut self.bin);
-        // The input goes into the buffers of the listening audio tracks before the mixer: from there it goes through their fader and effects.
         let underrun = self.listener.render(&mut self.mixer, &self.link.monitor, frames, sample_rate);
         self.link.telemetry.count(Loss::MonitorUnderrun, u64::from(underrun));
         self.mixer.process(frames, &self.link.telemetry.meters, &self.link.telemetry.node_tap);
-        // The live meter gets the mix as it is exported: before the preview voice, the mono check, the clamp and the
-        // metronome. Playback from the song start starts its integration over where the start reaches the master.
         if plan.started && timing.start_tick < 1.0 {
             self.link.telemetry.meter_tap.mark_restart(self.latency);
         }
@@ -295,10 +285,8 @@ impl Engine {
             let finished = self.preview.render(self.mixer.master_mut(frames), sample_rate);
             self.bin.throw_sample(finished);
         }
-        // The visualizer gets the music with the preview, before the clamp and the metronome (`EngineStats::master_window`).
         self.link.telemetry.scope.write(self.mixer.master(frames));
         self.link.telemetry.set_preview_position(self.preview.position());
-        // After the segment's captures: a lease that runs out with this segment still had it copied.
         self.link.telemetry.clock.advance(frames);
         self.snapshot = snapshot;
     }
@@ -342,7 +330,6 @@ impl AudioRenderer for Engine {
         for processor in &mut self.post_processors {
             processor.prepare(config);
         }
-        // `prepare` may reset object params to defaults, so the project values are restored.
         self.resend_all_params();
     }
 
@@ -357,7 +344,6 @@ impl AudioRenderer for Engine {
         let mut done = 0;
         while done < total {
             let wanted = (total - done).min(SEGMENT_FRAMES);
-            // The tempo comes from the project map in the snapshot: the clock cuts segments at its points.
             let map = self.snapshot.as_ref().map_or(&self.no_snapshot_map, |snapshot| &snapshot.project.tempo_map);
             let timing = self.clock.advance(wanted, self.config.sample_rate, map);
             let frames = timing.frames.clamp(1, wanted);

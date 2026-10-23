@@ -59,7 +59,6 @@ mod tests {
 
     #[test]
     fn names_are_made_safe() {
-        // Non-ASCII names pass through unchanged.
         assert_eq!(sanitize_name("Мой/трек: 1?"), "Мой_трек_ 1_");
         assert_eq!(sanitize_name("  .. "), "Project");
         assert_eq!(sanitize_name(""), "Project");

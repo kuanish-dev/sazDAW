@@ -1,4 +1,3 @@
-// Composition root: the only place that picks the implementations of the backend link, system dialogs and the window shell.
 import type { SystemDialogs } from "./api/dialogs";
 import type { RpcClient } from "./api/rpc";
 import type { AppShell } from "./api/shell";

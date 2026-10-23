@@ -49,7 +49,6 @@ fn dto(pattern: DrumPattern) -> PatternDto {
 }
 
 pub(crate) fn register(table: &mut RpcTable) {
-    // Without params, all patterns; `{ style, role }` narrows the list.
     table.add(
         "patterns.list",
         "Lists the drum pattern library: grooves, fills, breaks, intros, endings (with grids). Filters: style and role.",
@@ -65,7 +64,6 @@ pub(crate) fn register(table: &mut RpcTable) {
     );
     table.add("patterns.get", "Returns one drum pattern by id.", |c, p: Id| c.patterns.pattern(&p.id).map(dto));
     table.add("drums.build", "Builds a drum part from patterns in sequence: drum tracks and clips in one undo step. What plays each drum is set by lanes (a built-in sound, your track, your sample, silence).", |c, p: DrumPartRequest| c.drum_part.build(p));
-    // Preview: the project doesn't change; it loops until `drums.stopPreview` is called.
     table.add(
         "drums.preview",
         "Previews a drum part in a loop without changing the project (same request as drums.build; up to 16 bars).",

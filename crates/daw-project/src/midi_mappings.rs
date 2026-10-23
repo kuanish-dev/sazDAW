@@ -82,7 +82,6 @@ impl ProjectMidiMappings {
             }
             ParamTarget::EffectParam { node, param } => graph.set_effect_param(*node, param, value),
             ParamTarget::InstrumentParam { track, param } => self.deps.tracks.set_instrument_param(*track, param, value),
-            // The edge already exists (the target was checked): another `connect` only changes its level.
             ParamTarget::EdgeLevel { from, to, sidechain } => graph.connect(*from, *to, value, *sidechain),
         }
     }
@@ -97,7 +96,6 @@ impl ProjectMidiMappings {
             Ok(())
         });
         if let Err(error) = result {
-            // The target may have been deleted while waiting for the knob: no mapping is created, the cause goes to the log.
             self.deps.log.record(LogEntry::warn("midi", format!("MIDI controller CC {cc} was not assigned: {error}")));
         }
     }
@@ -152,9 +150,7 @@ impl MidiMappingControl for ProjectMidiMappings {
                 .map(|m| (m.target.clone(), m.min + (m.max - m.min) * level))
                 .collect()
         });
-        // Edits come after the read: the project lock must not be held, the parameter owners take it themselves.
         for (target, value) in &moves {
-            // The writer hears of the move first: while it writes, the move joins the pass's undo step.
             if let Err(error) = self.deps.writer.touch(target.clone(), *value, TouchEnd::Idle) {
                 let message = format!("MIDI controller CC {cc}: the move was not written as automation: {error}");
                 self.deps.log.record(LogEntry::warn("midi", message));

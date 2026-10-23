@@ -17,10 +17,8 @@ pub(crate) fn fit_length(content: &mut NoteContent, bar: u32) {
     }
     let bar = bar.max(1);
     let last_note = content.notes.iter().map(Note::end_tick).max().unwrap_or(0);
-    // A controller point at tick t occupies the content up to t + 1: otherwise the automatic length would cut it off.
     let last_point = content.controllers.iter().filter_map(|lane| lane.points.last()).map(|p| p.tick + 1).max().unwrap_or(0);
     let last_end = last_note.max(last_point);
-    // A non-4/4 bar may not divide the limit evenly: then the content stops at the limit instead of going past it.
     content.loop_ticks = (last_end.div_ceil(bar).max(1) * bar).min(MAX_CLIP_LOOP_TICKS);
 }
 

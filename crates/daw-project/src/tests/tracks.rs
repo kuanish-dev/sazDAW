@@ -184,7 +184,6 @@ fn a_track_has_its_own_height_until_reset_and_a_drag_is_one_undo_step() {
     let height = || rig.tracks.tracks()[0].height;
     assert_eq!(height(), None, "a new track follows the interface setting");
 
-    // A drag sends several heights in a row: they merge into one undo step.
     for px in [80, 64, 48] {
         rig.tracks.set_height(track, Some(px)).unwrap();
     }

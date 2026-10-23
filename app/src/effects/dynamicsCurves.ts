@@ -1,7 +1,3 @@
-// The graph of the dynamics effects — compressor, limiter, gate (`effects/DynamicsGraph.tsx`): a square transfer
-// curve (input level → output level) with the effect's thresholds marked and the live sound as a dot on it, and beside
-// it the history of the last seconds: input level, output level and gain reduction against the same thresholds. Each
-// effect gives its static curve from its own mirror module (`compressorCurve.ts`, `limiterCurve.ts`, `gateCurve.ts`).
 import { clamp } from "../common/math";
 import { type PlotView, dbY } from "../common/plot";
 

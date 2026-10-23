@@ -150,7 +150,6 @@ impl Rig {
         renderer.prepare(StreamConfig { sample_rate: SR, channels: 2 });
         let mut project = Project::empty();
         project.tempo_map = TempoMap::constant(Bpm::new(120.0).unwrap(), TimeSignature::FOUR_FOUR);
-        // Master volume 1.0 so the numbers in tests are round.
         project.graph.node_mut(MASTER).unwrap().kind = NodeKind::Master { volume: 1.0 };
         Self {
             renderer,

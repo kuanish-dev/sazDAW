@@ -43,11 +43,9 @@ fn a_part_creates_the_drum_tracks_and_a_clip_per_drum_per_step() {
 
     assert_eq!(report.bars, 4);
     assert_eq!(report.created_tracks, ["Kick", "Snare", "Hi-hat", "High tom", "Mid tom", "Low tom"]);
-    // rock_basic: kick, snare, hat; the fill: kick, snare, tom×3, hat → 3 + 6 clips.
     assert_eq!(report.clips.len(), 3 + 6);
     assert_eq!(c.tracks.tracks().len(), 6);
 
-    // The rock beat plays the first three bars and loops one bar: a 3-bar clip with 1 bar of content.
     let kick = track_of(c, "kick");
     let first = c.clips.clips().into_iter().filter(|c| c.track == kick).min_by_key(|c| c.start_tick).unwrap();
     assert_eq!((first.start_tick, first.length_ticks), (0, 3 * BAR_TICKS));
@@ -55,7 +53,6 @@ fn a_part_creates_the_drum_tracks_and_a_clip_per_drum_per_step() {
     assert_eq!(content.loop_ticks, BAR_TICKS);
     assert!(!content.auto_length, "the content length is fixed");
 
-    // Kick notes: the "X... .... X... ...." pattern in the first bar and the fill in the fourth.
     let kick_notes = notes_of(c, "kick");
     assert_eq!(kick_notes[0], (0, 115));
     assert_eq!(kick_notes[1], (8 * STEP_TICKS, 115));
@@ -66,7 +63,6 @@ fn a_part_creates_the_drum_tracks_and_a_clip_per_drum_per_step() {
 fn the_start_bar_counts_bars_of_the_signature_map() {
     let session = build_session(false);
     let c = &session.controls;
-    // Bars 0–1 in 4/4, then 3/4: bar 4 (from zero) starts at 2 × 3840 + 2 × 2880.
     let three_four = TimeSignature::new(3, 4).unwrap();
     c.tempo
         .set_signature_changes(vec![
@@ -79,7 +75,6 @@ fn the_start_bar_counts_bars_of_the_signature_map() {
     let clip = c.clips.clips().into_iter().find(|clip| clip.track == kick).unwrap();
     assert_eq!(clip.start_tick, 2 * BAR_TICKS + 2 * 2880);
 
-    // Taken space is counted from the same map bar: a part one bar earlier runs into the clip.
     let error = c.drum_part.build(request(3, &[("rock_basic", 1)], false)).unwrap_err();
     assert!(error.is(patterns::PLACE_TAKEN) && param(&error, "from") == Some("3"), "{error}");
 }
@@ -100,7 +95,6 @@ fn the_whole_part_is_one_undo_step() {
 fn a_part_that_fails_midway_leaves_the_previous_part_alone() {
     let session = build_session(false);
     let c = &session.controls;
-    // Tracks almost up to the limit: enough for the first part (3 drums), not for the second (3 more toms).
     let filler: Vec<_> = (0..daw_contracts::MAX_TRACKS - 5)
         .map(|i| daw_contracts::NewTrack {
             name: format!("Empty {i}"),
@@ -180,7 +174,6 @@ fn assign(request: DrumPartRequest, lanes: &[(&str, LaneTarget)]) -> DrumPartReq
 fn a_drum_can_play_on_the_users_own_track_and_the_built_in_one_is_not_created() {
     let session = build_session(false);
     let c = &session.controls;
-    // Your own track with its own sound: a sampler with root note 48.
     let mine = c.tracks.add_track("My kick", Some("sampler"), 48).unwrap();
     let report = c
         .drum_part
@@ -231,7 +224,6 @@ fn several_drums_can_share_one_track_and_get_one_clip_per_step() {
     assert!(report.created_tracks.is_empty());
     assert_eq!(report.clips.len(), 1, "three drums on one track make one clip");
     let notes = c.notes.notes(report.clips[0]).unwrap();
-    // kick: 0, 8; snare: 4, 12; hat: 0, 2, 4, … — hits at the same pitch and time merge into one.
     let mut starts: Vec<u32> = notes.iter().map(|n| n.start_tick / STEP_TICKS).collect();
     starts.dedup();
     assert_eq!(starts, (0..16).step_by(2).collect::<Vec<u32>>(), "and exactly one note per moment");

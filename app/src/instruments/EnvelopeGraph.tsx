@@ -1,5 +1,3 @@
-// Instrument volume envelope graph: points A, H, D, S, R are dragged with the mouse.
-// Only stages whose parameters the instrument has are drawn.
 import { For, Show, createMemo } from "solid-js";
 import type { ParamInfo } from "../api/types";
 import { dragEnvelope, envelopeSpec, layoutEnvelope, type Handle } from "./envelope";
@@ -44,7 +42,6 @@ export function EnvelopeGraph(props: {
     const s = spec();
     const l = layout();
     if (!s || !l) return;
-    // The SVG stretches to the panel width: convert the screen point into its viewBox units.
     const rect = svg.getBoundingClientRect();
     const point = localPoint(svg, event);
     const x = (point.x / rect.width) * WIDTH;

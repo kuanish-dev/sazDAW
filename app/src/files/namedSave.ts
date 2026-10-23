@@ -1,5 +1,3 @@
-// Saving under a name the user typed (presets, project templates): the name is checked by the backend's rules before
-// sending, a taken name asks before replacing, and the result is a toast.
 import { presetNameProblem } from "../presets/presetRules";
 import type { Core } from "../core/core";
 

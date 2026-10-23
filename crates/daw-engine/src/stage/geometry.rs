@@ -161,8 +161,6 @@ impl RoomShape {
     pub fn cues(&self, spot: Spot, reflectivity: f32) -> Cues {
         let source = self.position(spot);
         let distance = source.distance().max(NEAREST);
-        // Each wall's image of the source: the source mirrored in the wall's plane (the walls are half the room's
-        // measure away from the listener on each side).
         let images = [
             Position { x: -self.width - source.x, ..source },
             Position { x: self.width - source.x, ..source },

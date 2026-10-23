@@ -38,6 +38,5 @@ fn main() {
             commands::Outcome::Quit => break,
         }
     }
-    // A normal exit: the next start must not mistake it for a plugin crash.
     controls.plugin_crash.end_session();
 }
